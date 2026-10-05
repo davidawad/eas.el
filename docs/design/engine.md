@@ -129,6 +129,7 @@ reads:
 ```json
 {
   "size": {"w": 800, "h": 420, "cell": [7, 14]},
+  "background": "#fcfcfb", "config": {..},
   "views": [{
     "id": "price", "bounds": [0, 0, 800, 300],
     "scales": {"x": {"type": "time", "domain": [..], "range": [40, 790]},
@@ -273,9 +274,22 @@ AGENTS.md already sets.
 
 - A gallery of `test/conformance/*.vl.json` specs, one or more per
   supported feature. For each one: native compile, then SVG, then PNG
-  via rsvg, compared with `bin/chart build` output using `bin/chart diff`
-  and a pixel threshold. Geometry has to match Vega's, not just look
-  similar.
+  via rsvg, compared with bin/chart's PNG and a pixel threshold.
+  Geometry has to match Vega's, not just look similar.
+- bin/chart's output is committed: `test/conformance/ref/NAME.png` with
+  `ref/manifest.json` (spec hash without usermeta, PNG hash, and the
+  time zone the references were built in), so the oracle needs only
+  rsvg-convert. With bin/chart on PATH the references are rebuilt and a
+  stale manifest hash fails; `easel-conformance-update-refs` rewrites
+  them.
+- Canvas sizes differ by Vega's few pixels of overhang padding, and
+  `bin/chart diff` scores any size mismatch as total, so images are
+  compared in Elisp: aligned on their union canvas, the size delta
+  reported (and bounded) separately from the differing-pixel ratio.
+- The native default theme is bin/chart's (`chart theme --json`,
+  vendored in `test/conformance/bin-chart-default-theme.json` and
+  checked against bin/chart when it is installed); a spec's `config`
+  and a caller's theme override it.
 - `supported.json` is generated from the passing gallery. It is the
   machine-readable answer to "can the native engine draw this?", and
   `check` and `describe` read it. A feature is supported only if a
@@ -287,6 +301,7 @@ AGENTS.md already sets.
   time.
 - Text-backend goldens are exact strings. Scene goldens are JSON. Both
   are reviewed as diffs (`EASEL_UPDATE_GOLDEN=1 make test`).
+- Measured results: engine-spikes.md section 8.
 
 ## 7. Accretion: how the system grows
 

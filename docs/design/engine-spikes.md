@@ -155,6 +155,9 @@ that the patched scene equals a full compile after every event.
 
 ## 7. Geometry against Vega-Lite 6.4.1 (a stand-in, not bin/chart)
 
+Superseded by section 8: against the real bin/chart this stand-in's
+gallery passed 0 of 47, because its defaults were not bin/chart's.
+
 bin/chart is not installed on this box, so the conformance oracle has
 not run, and supported.json marks every feature `"oracle":
 "unverified"`. To catch geometry bugs before it runs,
@@ -480,3 +483,62 @@ layout to cells. Parity is therefore defined through data space:
 other through the scales (legend entries map to the same entry), and
 `easel-parity-state` compares domains, selections, the hovered and
 clicked datum, history depth and drag mode, within a relative 1e-9.
+## 8. Geometry against bin/chart's references (fc-qx1.21)
+
+The oracle compares native SVG, rasterized by rsvg-convert, with the
+PNGs bin/chart built for every gallery spec. Those PNGs are committed
+in test/conformance/ref with a manifest of spec and PNG hashes and the
+zone they were built in, so the oracle runs wherever rsvg-convert does.
+`bin/chart diff` scores any canvas size difference as 1.0, so images
+are compared in Elisp (easel-png.el). Both are padded onto their union
+canvas and aligned by ink profiles, then by a local search. The size
+delta is reported apart from the differing-pixel ratio and bounded at
+8px. A pixel differs at pixelmatch's YIQ threshold 0.1.
+
+Result: 47 of 47 within their unchanged thresholds, every canvas the
+reference's size to the pixel. Worst ratios: encoding-bin 0.017/0.05,
+composition-vconcat 0.016/0.12, mark-rect 0.013/0.05; median 0.005.
+These were measured on Linux, where rsvg-convert draws Arial as
+Liberation Sans. The remainder is glyph rasterization. vl-convert with
+Liberation Sans in the same zone redraws the references at 0.2–1.0%,
+also at the same sizes.
+
+What it took, each one a measurement of bin/chart (read off its
+scenegraph via vl-convert and Vega's source):
+- The theme is bin/chart's (`chart theme --json`, vendored with its
+  hash). It gives a 480x300 continuous view, 11/12px axis fonts, tick 4,
+  label padding 4, no x grid, no view stroke and 4px bar end radii.
+- Text is measured with Arial's advance widths (vl-convert resolves
+  sans-serif to Arial), not Vega's headless 0.8em guess. The SVG names
+  Arial (then Liberation Sans) for the generic family.
+- Canvas extents follow Vega's autosize "pad": ceil of the union of axis
+  bounds (ticks with their 1px stroke, visible labels, titles), legend
+  boxes and mark bounds (symbols sqrt(size)/2, strokes their full width).
+  Clipped views count no marks: zoomed views, and any view with a param
+  bound to scales.
+- Text bounds use vega-scenegraph's baseline offsets (top 0.79em,
+  middle 0.30em, bottom -0.21em, rounded).
+- Axis lines sit on the half pixel. Band axes are offset -0.5
+  (axisBand.tickOffset) with ticks rounded and labels not.
+- Overlap removal is Vega's: parity or greedy (log), and the last label
+  is restored when fewer than three survive. Nominal axes are never
+  thinned.
+- Legends follow Vega's layout. An entry is max(ceil(sqrt(size) +
+  strokeWidth), labelFontSize) wide. Rows are separated by their bounds
+  plus rowPadding 2, entries start titlePadding 5 below the title, and
+  legends sit 18px right of the plot, or of faceted series marks
+  overhanging it. Gradients get max(2, 2*floor(length/100)) labels.
+  Size and opacity legends are drawn.
+- Marks: stacks round only their end (cornerRadiusEnd) and ranged bars
+  all corners; binned bars keep a 1px gap; ticks span the band (paddings
+  0.25/0.125) or 5px; aggregate titles are titleCase(op) of field.
+- The references were built in America/Chicago, and Vega draws "time"
+  scales and timeUnits in local time. A UTC date-only string reads as
+  1 March there, not 2 March. `easel-time-zone` (nil = UTC, the
+  default) gives native compile Vega's local-time semantics. The
+  manifest records the zone, and the oracle compiles SVG in it.
+
+Cost: the oracle adds about 12 s to `make test` for 47 specs. Most of
+that is decoding PNGs in Elisp (about 80 ms per 600x350 image).
+Comparison skips identical runs with `compare-strings` and is about
+20 ms.

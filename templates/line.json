@@ -10,7 +10,8 @@
       "y": {"type": "field", "of": "data", "default": "value", "doc": "quantitative y column"},
       "title": {"type": "string", "default": ""},
       "description": {"type": "string", "default": "One quantitative series over time (or any ordered x), optionally split by a series field.", "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"},
-      "points": {"type": "boolean", "default": false, "doc": "draw a point at every datum"}
+      "points": {"type": "boolean", "default": false, "doc": "draw a point at every datum"},
+      "crosshair": {"type": "boolean", "default": false, "doc": "a rule and point follow the pointer, snapping to the nearest x; the readout lists the tooltip fields"}
     },
     "example": "examples/line.data.json"
   },
@@ -34,6 +35,36 @@
     {
       "x-easel:when": "points",
       "spec": {
+        "mark": {"type": "point", "filled": true},
+        "encoding": {
+          "x": {"field": {"x-easel:slot": "x"}, "type": "temporal"},
+          "y": {"field": {"x-easel:slot": "y"}, "type": "quantitative"}
+        }
+      }
+    },
+    {
+      "x-easel:when": "crosshair",
+      "spec": {
+        "name": "crosshair-hit",
+        "params": [{"name": "crosshair", "select": {"type": "point", "on": "pointermove", "nearest": true, "encodings": ["x"]}}],
+        "mark": {"type": "rule", "opacity": 0},
+        "encoding": {"x": {"field": {"x-easel:slot": "x"}, "type": "temporal"}}
+      }
+    },
+    {
+      "x-easel:when": "crosshair",
+      "spec": {
+        "name": "crosshair-rule",
+        "transform": [{"filter": {"param": "crosshair", "empty": false}}],
+        "mark": {"type": "rule", "color": "gray"},
+        "encoding": {"x": {"field": {"x-easel:slot": "x"}, "type": "temporal"}}
+      }
+    },
+    {
+      "x-easel:when": "crosshair",
+      "spec": {
+        "name": "crosshair-point",
+        "transform": [{"filter": {"param": "crosshair", "empty": false}}],
         "mark": {"type": "point", "filled": true},
         "encoding": {
           "x": {"field": {"x-easel:slot": "x"}, "type": "temporal"},

@@ -542,3 +542,55 @@ Cost: the oracle adds about 12 s to `make test` for 47 specs. Most of
 that is decoding PNGs in Elisp (about 80 ms per 600x350 image).
 Comparison skips identical runs with `compare-strings` and is about
 20 ms.
+## 9. The crosshair as shipped (fc-qx1.2)
+
+Same box as the fc-qx1.14 sections (4 vCPU EPYC-Rome, Emacs 30.1, no
+X), byte-compiled. The `line` template's `"crosshair": true` slot adds
+Vega-Lite's idiom: a point selection `{on: pointermove, nearest: true,
+encodings: ["x"]}` and a rule and point layer filtered by it.
+
+Which layer holds the param is a measured choice. Vega-Lite has no
+`nearest` for line marks, so the param can't sit on the line. Mean
+dispatch ms per pointermove at 10k rows and 800x400, with each variant
+adding layers to the same line:
+
+| param on | other layers | before parse cache | after |
+|---|---|---|---|
+| line (not valid Vega-Lite) | filtered rule | 90.7 | 23.9 |
+| point per datum, opacity condition | filtered rule | 215.0 | 72.8 |
+| rule per datum, opacity condition | none | n/a | 38.3 |
+| invisible rule per datum (**shipped**) | filtered rule + point | 166.3 | 51.8 |
+
+- **Points hit-test linearly, rules by bisect.** A point mark's grid
+  index scans every item when `nearest` measures only x. Rules are
+  x-sorted, so they bisect. The param therefore sits on an invisible
+  rule layer (`crosshair-hit`).
+- **Parsing dates was most of the cost.** Each move re-tests every
+  row's date string against the selection (the filter, and conditions),
+  and parsed each string every time: 37% of a 10k move. `easel-time-parse`
+  now memoizes strings in a bounded table (200k entries, then cleared).
+
+Terminal redraw (`scripts/easel-spikes/crosshair-cost.el`, 100x30
+cells, one pointermove one cell to the right plus one redraw, batch
+and so without redisplay):
+
+| rows | redraw | ms/move | cells written/move |
+|---|---|---|---|
+| 1k | patch (`easel-mode-patch-text`) | 29.2 | 51 |
+| 1k | full rewrite (before) | 23.5 | 2,888 |
+| 10k | patch | 106.7 | 51 |
+| 10k | full rewrite | 94.0 | 2,875 |
+
+Breakdown of a 1k move: dispatch 4.7, text render 18.8, patch 3.7,
+inspect for the header readout 0.7. At 10k: 45.0, 50.5, 5.0 and 7.3.
+
+**Decisions:**
+- Terminal hover patches only changed cells, as section 5 decided. The
+  diff costs about 5 ms of Lisp per move. That buys back the redisplay
+  difference section 5 measured: 47.3 ms for a full grid against 5.5 ms
+  for one column.
+- GUI redraws stay idle-coalesced (8.8). The header-line readout
+  updates on each move, before the redraw, and lists every field in
+  `encoding.tooltip` (`easel-crosshair-readout`).
+- The 10k text move is now dominated by rendering the whole grid
+  (50 ms). Rendering only the units that changed belongs to `fc-qx1.9`.

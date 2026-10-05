@@ -1,0 +1,6 @@
+{
+ "concat_layer_voyager_result": {
+  "ink": 0.45,
+  "why": "Text-dense (title, two-line labels, axis labels are most of the ink): the remaining differences are glyph antialiasing at sub-pixel offsets (positions match bin/chart to the pixel; union-canvas ratio 0.03)."
+ }
+}

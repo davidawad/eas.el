@@ -329,10 +329,13 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
 - Emacs cannot composite images. Any change re-rasterizes the whole
   SVG, and the image cache churns (Image Cache). So crosshair and
   streaming designs depend on measured re-raster latency.
-- To verify: whether librsvg in Emacs ignores SVG `<title>` tooltips
-  (assumed), and the `:map` and hover cost at 1k and 10k areas.
-- The latency budget is a hypothesis to measure: hover feedback under
-  50 ms at 10k points.
+- librsvg in Emacs ignores SVG `<title>`, and `:map` hover costs under
+  5 ms even at 10k areas (measured on Linux/Xvfb in `fc-qx1.23`;
+  engine-spikes.md section 8).
+- The latency budget, hover feedback under 50 ms, holds at 1k rows on
+  Linux/Xvfb only once GC is controlled. It fails at 10k rows and at
+  the default GC threshold, so redraws stay idle-coalesced (spikes
+  section 8.8).
 
 ## 10. Layout and extraction
 

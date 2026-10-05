@@ -101,23 +101,19 @@ changed cells, about 5.5 ms. A full re-render happens only on domain
 changes (zoom, pan, push), and those are idle-coalesced. Drags are
 synthesized from down, motion and up.
 
-## Unmeasured (needs a GUI Emacs, librsvg, macOS or other terminals)
+## Unmeasured on the fc-qx1.14 box
 
-| item | why not measured here | what it gates |
-|---|---|---|
-| librsvg re-raster of 100/1k/10k-mark SVG after a one-element change, image-cache growth, `image-flush` | no X/NS build, no librsvg | `.2`: full re-render per pointer move vs idle-coalesced redraw with a header-line readout |
-| `posn-object-x-y` event rate under `track-mouse`; whether `:scale`/HiDPI coordinates need dividing by the scale | no GUI frame | `.18`/`.19` GUI glue (`easel-glue` divides by the image `:scale` provisionally) |
-| `:map` hover cost at 100/1k/10k areas; help-echo and pointer per area | no GUI frame | `.1`, `.5` |
-| Whether librsvg in Emacs shows SVG `<title>` tooltips (assumed ignored) | no librsvg | `.1` (the renderer emits no `<title>`; tooltips go through help-echo) |
-| xterm-mouse with real iTerm2 and kitty clients, and tmux forwarding real (not injected) mouse input | no macOS, no kitty, no attached client | `.8` |
+This box had no GUI build, so the table below was left open. Section 8
+(fc-qx1.23) measured every row that an X server can reach, on
+**Linux/Xvfb**. The **Status** column says what is still open.
 
-Until the librsvg number exists, the runtime **defaults to
-idle-coalesced GUI redraws** (one redraw per idle tick, latest state
-wins) with the readout in the header line. That stays correct whether
-re-rasterization turns out fast or slow, and per-move redraw can be
-switched on once it is measured. Hypothesis to verify: hover feedback
-under 50 ms at 10k points. The Lisp half (bisect plus one-path
-serialize) is about 2.5 ms at 10k.
+| item | status |
+|---|---|
+| librsvg re-raster of 100/1k/10k-mark SVG after a one-element change, image-cache growth, `image-flush` | Linux/Xvfb: measured (§8.1, §8.2). macOS/NS: open |
+| `posn-object-x-y` event rate under `track-mouse`; `:scale` division | Linux/Xvfb: measured (§8.3, §8.5). True HiDPI (NS backing scale, GTK `GDK_SCALE`): open |
+| `:map` hover cost at 100/1k/10k areas; help-echo and pointer per area | Linux/Xvfb: measured (§8.4) |
+| whether librsvg in Emacs shows SVG `<title>` tooltips | Linux/Xvfb: it does not (§8.6). NS: open, but NS renders through the same librsvg |
+| xterm-mouse through a tmux client | injected at the client's terminal (§8.7). Real iTerm2/kitty clients and a real mouse: open |
 
 ## 6. Runtime hover through the real engine (fc-qx1.19)
 
@@ -243,3 +239,209 @@ a terminal at 1k rows, and 44 ms and 110 ms at 10k.
   cap limits recompiles, and the idle timer still collapses redraws.
   Re-measure once the GUI numbers (fc-qx1.23) exist. A GUI-only cap
   could then be higher.
+## 8. GUI frame on Linux/Xvfb (fc-qx1.23)
+
+**Linux/Xvfb**: Debian trixie, 4 vCPU Intel Xeon (Skylake), Xvfb
+21.1.16 at 1600x1000x24 with no window manager, and GNU Emacs 30.1
+`emacs-lucid` (X11, Lucid, **Cairo**, librsvg 2.60) with DejaVu fonts.
+`scripts/easel-spikes/gui/setup-linux.sh` installs all of this without
+root. `run.sh SPIKE.el OUT` runs one spike against byte-compiled easel.
+Raw outputs are `raster.el`, `hover.el`, `motion.el` and
+`../tmux-forward.sh`.
+
+This box is slower than the fc-qx1.14 box. The batch `dispatch-cost.el`
+hover here is 12.0 ms at 1k and 91.0 ms at 10k, against 4.5 and 38.7 in
+section 6, so it is about 2.5x slower. Divide the Lisp-side numbers below
+by about 2.5 to compare them with sections 2 and 6. Rasterization was
+not measured on the faster box. Xvfb rasterizes in software, which a
+real X server does too, since Emacs rasterizes SVG on the CPU through
+librsvg and Cairo.
+
+### 8.1 librsvg re-raster (`raster.el`)
+
+These are the ms to show a new 800x400 image: `create-image`, swap the
+`display` property, `(redisplay t)`. Each image is new, so each one
+rasterizes. A forced redisplay of an image already in the cache takes
+**0.8–1.9 ms**, so nearly all of the cost below is librsvg.
+
+| SVG content | raster + redisplay, mean (p95) |
+|---|---|
+| empty `<svg>` | 12.6 (24.1) |
+| 30 `<text>` labels | 21.2 (29.8) |
+| one `<path>`, 800 vertices | 15.2 (21.2) |
+| 100 `<rect>` | 15.6 (29.9) |
+| 1,000 `<rect>` | 74.2 (105.5) |
+| 10,000 `<rect>` | 809 (1170) |
+| 100 bars + crosshair, crosshair moved | 14.4 (18.5) |
+| 1,000 bars + crosshair, crosshair moved | 90.7 (169.0) |
+| 10,000 bars + crosshair, crosshair moved | 613.5 (700.3) |
+
+The cost is a fixed ~11 ms plus ~0.065 ms per discrete element. A
+single path is nearly free. The whole SVG is rasterized again whichever
+element changed.
+
+### 8.2 Image cache (`raster.el`)
+
+Every 800x400 image adds **1.28 MB** to `image-cache-size`. After 100
+distinct images it held 129 MB, after 200 it held 257 MB (152 MB after
+300, after a partial eviction), and RSS grew by up to 274 MB.
+`clear-image-cache` returned it. When the replaced image is passed to
+`image-flush` on each step, the cache stays at **2.56 MB** (two images)
+and RSS grows by 0.4 MB over 300 steps.
+
+**Fixed:** `easel-mode-redraw` now calls `image-flush` on the image it
+replaces. Before this, every hover leaked one image until eviction.
+
+### 8.3 Pointer coordinates and `:scale` (`hover.el`)
+
+The pointer was warped to known offsets inside the image:
+
+- `posn-object-x-y` is in **display** pixels: at `:scale 2` a warp to
+  display (150, 75) reads (150, 75). Dividing by a numeric `:scale`
+  gives scene pixels.
+- The C hit test reads `:map` in **display** pixels: at `:scale 2`, area
+  (100,50)-(200,100) was hit at display (150, 75).
+- **Bug, fixed:** when `create-image` is given no `:scale`, it adds
+  `:scale default`. `easel-mode-redraw` passed none, and the glue
+  computed `(float (or :scale 1))`, which signalled
+  `wrong-type-argument` on **every** GUI pointer event, so GUI hover
+  never worked. `easel-svg-image` now pins `:scale` (default 1, because
+  the scene is compiled at window pixels), scales `:map` to display
+  pixels and passes `:original-map`. `easel-mode-event-px` divides only
+  by a numeric scale. `easel-glue-test.el` covers all three, and those
+  tests fail on the old code.
+- **Bug, fixed:** `create-image` given `:map` without `:original-map`
+  calls `image-size` twice (`image--compute-original-map`), which
+  rasterizes the SVG twice more on every redraw. Before the fix, a
+  redraw of 100 points (SVG, `:map`, insert) took 125.7 ms; after it,
+  47.8 ms. At 1k
+  points it went from 888.6 to 247.0 ms, and the 1k redisplay went from
+  902.7 to 614.4 ms.
+- Xvfb setup only: until an X frame is focused and has received one
+  button press, Emacs reports **no** `mouse-movement`, from warps or
+  from XTEST motion, even with `track-mouse`. Clicks and keys do
+  arrive. The harness focuses the frame and clicks once in `*scratch*`.
+  A desktop with a window manager focuses frames itself.
+- Not measured: true HiDPI. Neither Xvfb nor Lucid has a device scale.
+  NS (backing scale factor) and GTK (`GDK_SCALE`) remain open. The glue
+  now asks only for a numeric `:scale`, which it sets itself.
+
+### 8.4 `:map` hover cost (`hover.el`)
+
+This is the time from a pointer warp to the `mouse-movement` that Lisp
+reads. The C side looks up the hot spot and delivers help-echo in that
+interval. 200 warps per row:
+
+| `:map` areas | mean ms | p95 ms | help-echo deliveries |
+|---|---|---|---|
+| 0 | 3.38 | 5.66 | 0 |
+| 100 | 3.35 | 5.05 | 188 |
+| 1,000 | 3.37 | 7.31 | 194 |
+| 10,000 | 4.13 | 9.23 | 198 |
+
+The lookup is linear but cheap: 10k areas add under 1 ms. What `:map`
+really costs is building it in Lisp (section 4) and the extra
+rasterization `create-image` did before the fix (8.3).
+
+### 8.5 Real motion through the engine (`motion.el`, xdotool)
+
+This used a real `easel-view-mode` buffer: the shipped keymap, glue and
+reducer, with a crosshair (filter idiom) on an 800x400 line chart.
+xdotool, as a separate X client, sent 150 moves across the plot, either
+at 125 Hz (8 ms apart, a typical mouse) or as a flood. Each redraw was
+followed by `(redisplay t)` so that rasterization falls inside the timing.
+"Lag" is the time from xdotool's last move to the end of the frame that
+shows it. Results at 125 Hz:
+
+| `gc-cons-threshold` | rows | redraw | events handled | redraws during motion | handler mean ms | redraw+raster mean ms | lag ms |
+|---|---|---|---|---|---|---|---|
+| 800 KB (default) | 1k | idle | 14 | 12 | 24.5 | 76.0 | 200 |
+| 800 KB | 1k | per-move | 14 | 11 | 116.5 | 90.2 | 229 |
+| 800 KB | 10k | idle | 6 | 3 | 191.0 | 109.7 | 409 |
+| 800 KB | 10k | per-move | 7 | 4 | 256.0 | 87.2 | 416 |
+| 64 MB | 1k | idle | 29 | 27 | 8.5 | 34.8 | **21** |
+| 64 MB | 1k | per-move | 30 | 27 | 44.4 | 33.8 | **45** |
+| 64 MB | 10k | idle | 13 | 10 | 70.3 | 46.8 | 202 |
+| 64 MB | 10k | per-move | 13 | 10 | 113.1 | 50.9 | 138 |
+
+A flood (all 150 moves within 39–101 ms) was handled as 2–3 events in
+every configuration. The final position was always reached, with lag
+from 33 to 50 ms at 1k/64 MB and from 141 to 286 ms elsewhere.
+
+What this shows:
+- **Emacs already coalesces pointer motion.** X motion is not queued.
+  While Lisp is busy, the next `mouse-movement` carries the latest
+  position, so a slow redraw lowers the update rate (about 10 Hz at the
+  default GC threshold, about 22 Hz at 64 MB) but never builds a
+  backlog. The idle timer fires between events during motion, so idle
+  and per-move redraw draw almost the same frames.
+- **GC is the biggest single cost.** At the default threshold a 1k
+  hover collects 2.5–3 times per move, which is 80–97 ms of a 123–141 ms
+  move (`raster.el`, 15 moves). Every collection traces the whole heap,
+  including the view's rows and scene. At 64 MB the same move is
+  **41.7 ms (p95 50.8)**: dispatch 5.6, redraw 7.1, raster 29.0. A
+  10k-row move is 116.5 ms: dispatch 48, raster 45.
+
+### 8.6 SVG `<title>` (`hover.el`)
+
+The same 20-bar SVG with a `<title>` in every bar was hovered for
+0.6 s on each of 5 bars, with `tooltip-mode` on and a 0.1 s delay:
+
+- without `:map`, `x-show-tip` was called 0 times and help-echo was
+  delivered 0 times. librsvg does not draw the title text either: see
+  `title-map-nil.png` in the run artifacts.
+- with a `:map` (positive control), the area help-echo tooltips showed
+  ("area 14", "area 15").
+
+**Confirmed:** Emacs ignores `<title>`. Tooltips go through `:map`
+help-echo, and the renderer keeps emitting no `<title>`.
+
+### 8.7 Mouse through a tmux client (`tmux-forward.sh`)
+
+`tty-mouse.sh` injected reports into Emacs's own pane. This test runs
+Emacs in an inner tmux server, attaches an inner tmux **client** from a
+pane of an outer tmux (standing in for the user's terminal) and injects
+SGR reports as that client's terminal input. The inner server therefore
+has to parse them and re-encode them for Emacs. With the inner
+`mouse on`, and again with `mouse off`, Emacs decoded exactly what it
+decoded in section 5: `down-mouse-1`, `mouse-1`, `mouse-movement` with a
+button held, `mouse-movement` with no button, `wheel-up`. Positions
+were the same, (9 . 3) and (19 . 3). The inner server turned on
+`?1000h ?1002h ?1003h ?1006h` on the client's terminal in both modes,
+because when tmux's own mouse handling is off it forwards the modes the
+pane asks for. Drags again arrived as down/motion/up with no
+`drag-mouse-1`.
+
+### 8.8 Decisions
+
+- **The redraw default stays idle-coalesced. It is not flipped.**
+  Per-move redraw misses the 50 ms budget at Emacs's default GC
+  threshold: 123–141 ms per move at 1k rows on this box. Even if all of
+  it scaled down with the CPU, that would be 50–56 ms on the fc-qx1.14
+  box. At 10k rows it misses at any threshold.
+  The two strategies also draw almost the same frames, because Emacs
+  coalesces motion itself (8.5). Idle-coalescing is never worse and
+  gives up only one idle tick.
+- The budget is reachable at 1k rows once GC is controlled (21–45 ms
+  lag). That work belongs to `fc-qx1.9`, which should bind a large
+  `gc-cons-threshold` around dispatch+redraw and collect on idle, in the
+  style of gcmh. Setting it globally is the user's choice, not a
+  package's.
+- In a GUI frame, discrete marks cost ~0.065 ms each to rasterize
+  (100 → 15 ms, 1k → 74 ms). For hover inside the budget, keep a redraw
+  at about 300 discrete elements or fewer. Section 2 set the cap at
+  ~1k. Series stay single paths, which are nearly free.
+- The glue fixes found here (pinned `:scale`, `:map` in display pixels
+  with `:original-map`, `image-flush` of the replaced image) are in
+  `easel-svg.el` and `easel-mode.el`.
+
+### 8.9 Still open (needs macOS/NS or real terminals)
+
+- NS (macOS) Emacs: raster and redisplay cost through the NS port,
+  coordinates under a Retina backing scale, and whether the NS port also
+  drops motion until the first click.
+- A real HiDPI X or GTK setup (`GDK_SCALE=2`, a pgtk build).
+- Real iTerm2 and kitty clients with a physical mouse, including the
+  report rate and SGR-pixel (1016) support, and tmux forwarding from
+  them. Here tmux forwarding was checked only with injected input.
+- A recorded human hover session for the perceived update rate.

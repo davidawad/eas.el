@@ -211,7 +211,7 @@ The same verbs are available everywhere, and all of them return the
 | `dispatch VIEW EVENT` | applies an event/v1 and returns the new inspect |
 | `log VIEW` | the recent event log |
 | `selection VIEW --as rows\|org\|json` | the selected data |
-| `bench SPEC` | measured compile, render and hover latency as JSON |
+| `bench [SPEC]` | measured compile, render and hover latency as JSON; with no SPEC the 1k/10k/100k ladder, `--budget` checks it for regressions (`fc-qx1.9`) |
 | `doctor` | eager `(:name :status :detail :remediation)` rows |
 
 Entry points:
@@ -264,7 +264,8 @@ Vega itself does with no interaction.
 `INVALID_INPUT`, `PARSE_ERROR`, `NOT_FOUND`, `SLOT_MISSING`,
 `SLOT_TYPE`, `SHAPE_INVALID` (with `index`), `FIELD_MISSING`,
 `UNSUPPORTED_FEATURE` (with path), `TRANSFORM_UNKNOWN`,
-`VIEW_NOT_FOUND`, `EVENT_INVALID`, `ENGINE_FAILED`. Codes shared with
+`VIEW_NOT_FOUND`, `EVENT_INVALID`, `ENGINE_FAILED`, `BUDGET_EXCEEDED`
+(a benchmark stage over its regression limit). Codes shared with
 `bin/chart` mean the same thing in both. Every failure carries at least
 one `next` command. In Lisp they map to `define-error` children of
 `easel-error` with data `(MESSAGE :code CODE ...)`, the convention
@@ -347,10 +348,14 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
 - librsvg in Emacs ignores SVG `<title>`, and `:map` hover costs under
   5 ms even at 10k areas (measured on Linux/Xvfb in `fc-qx1.23`;
   engine-spikes.md section 8).
-- The latency budget, hover feedback under 50 ms, holds at 1k rows on
-  Linux/Xvfb only once GC is controlled. It fails at 10k rows and at
-  the default GC threshold, so redraws stay idle-coalesced (spikes
-  section 8.8).
+- The latency budget is hover feedback under 50 ms. The first measurement
+  (spikes section 8.8) met it at 1k rows on Linux/Xvfb only once GC was
+  controlled, and missed it at 10k rows. `fc-qx1.9` made the engine's
+  part of a hover independent of N for point selections (0.24 ms at
+  10k, 0.26 ms at 100k) and defers GC until idle while a chart is in
+  use. What remains is rasterization in a GUI frame and the text redraw
+  in a terminal. Redraws stay idle-coalesced, and `make bench` guards
+  the numbers in CI (spikes section 9).
 
 ## 10. Layout and extraction
 

@@ -594,3 +594,152 @@ inspect for the header readout 0.7. At 10k: 45.0, 50.5, 5.0 and 7.3.
   `encoding.tooltip` (`easel-crosshair-readout`).
 - The 10k text move is now dominated by rendering the whole grid
   (50 ms). Rendering only the units that changed belongs to `fc-qx1.9`.
+
+## 10. Performance budget (fc-qx1.9)
+
+Box: the fc-qx1.14 box class (Linux 6.8, 4 vCPU AMD EPYC-Rome, GNU
+Emacs 30.1 `--without-x`). The ladder ran byte-compiled in batch, so
+these are Lisp-side numbers. librsvg and redisplay are not included
+(see section 8 for those).
+
+### 10.1 The ladder: `bench` with no SOURCE
+
+`bin/easel bench` (Lisp: `(easel-agent "bench")`, `easel-bench.el`)
+measures two fixed workloads at 1k, 10k and 100k points and reports
+JSON: `easel-bench/v1` with one rung per size, and each stage as
+`{mean, max, reps}` in ms. The workloads are an 800x400 line with the
+Vega-Lite crosshair idiom (a rule layer filtered by a nearest
+pointermove point selection), the same chart as text at 100x30, and a
+scatter of the same rows. `make bench` runs it against byte-compiled
+copies and checks it with `--budget`. Mean ms from `make bench`, GC
+deferred as the glue runs it (10.4):
+
+| stage | 1k | 10k | 100k |
+|---|---|---|---|
+| compile-svg (whole scene) | 4.4 | 31.5 | 357 |
+| render-svg (scene -> SVG string) | 3.1 | 3.1 | 3.1 |
+| compile-text | 3.7 | 30.3 | 357 |
+| render-text (scene -> grid) | 7.7 | 14.8 | 22.6 |
+| hover-first (first pointermove, builds indexes) | 1.2 | 7.7 | 82 |
+| **hover** (pointermove: reduce, hit-test, patch, inspect) | **0.26** | **0.24** | **0.26** |
+| hover-svg (hover + SVG redraw, before librsvg) | 3.7 | 3.7 | 3.4 |
+| hover-text (hover + text redraw) | 8.5 | 16.0 | 24.9 |
+| hit-line (one easel-hit, x-sorted index) | 0.007 | 0.007 | 0.007 |
+| compile-points (scatter scene) | 3.9 | 38 | 379 |
+| hit-points (one easel-hit, grid index) | 0.030 | 0.10 | 0.92 |
+| lttb (N points -> 800) | 0.70 | 3.2 | 26.0 |
+
+The hypothesis from fc-qx1.14, hover feedback under 50 ms at 10k
+points, holds on the Lisp side: 0.24 ms for the hover and 3.7 ms with
+the SVG redraw. Adding the section 8.1 raster cost for one path plus a
+few labels (about 15–21 ms on the slower Xvfb box) gives an estimated
+20–25 ms per GUI move at 10k. That estimate has not been measured end
+to end in a GUI frame. hover-first at 100k (82 ms) is paid once per
+view, by the first move.
+
+### 10.2 What made hover flat
+
+Before, measured on this box with `scripts/easel-spikes/dispatch-cost.el`
+(section 6's script), then after:
+
+| spec | N | hover before | hover after |
+|---|---|---|---|
+| rule per datum, opacity condition | 1k / 10k / 100k | 4.6 / 39.0 / 348.9 | 0.3 / 0.3 / 0.4 |
+| Vega-Lite idiom: rule layer filtered by the param | 1k / 10k / 100k | 2.4 / 24.4 / 219.0 | 0.3 / 0.2 / 0.3 |
+
+A profile of the 100k filter idiom put 77% of a hover in the
+`{"param": "hover"}` filter, which tested every row against the store,
+and 22% in `inspect`, which re-summarised every visible row.
+
+- `easel-params-index.el` answers a bare `{"param": NAME}` filter on a
+  point selection from a hash of each row's tuple over the store's
+  fields. The hash is built once per rows vector and held in a weak
+  table. Keys normalise values the way `easel-params--same` compares
+  them (numbers as floats, date strings as epoch ms). The same index
+  bounds which rows `easel-compile-patch` re-tests for conditional
+  encodings. Interval stores, and integers past 2^53, fall back to the
+  row-by-row test. ERT checks the index against that test over mixed
+  numbers, floats, -0.0, dates and strings, and checks that patched
+  scenes equal full compiles.
+- `easel-view--visible-summary` caches its summary per mark rows
+  vector and x domain, so a hover reuses it and a zoom recomputes it.
+
+### 10.3 Hit-testing and LTTB
+
+The grid index for point marks was built at compile time and then
+never read: `easel-hit-mark` scanned every item and allocated a
+candidate per item. One query cost **1.88 ms at 1k, 13.5 ms at 10k and
+113.6 ms at 100k**. `easel-hit--grid` now searches square rings of
+cells outwards (columns only for x-only), stopping once no unvisited
+cell can hold anything nearer. It returns exactly what the scan
+returns, ties included (ERT compares the two over 100 pointers in both
+modes), and costs 0.03 / 0.10 / 0.92 ms. Items with a width keep the
+scan, because a box's distance can undercut its cell's bound. The
+x-sorted bisect stays at 7 µs, matching section 3.
+
+LTTB costs about 0.26 µs per input point. Compile runs it only when a
+series has more points than pixel columns, so it is part of compile at
+large N, not of hover.
+
+Text render grows with N on this workload because the drawing does:
+at 100k the sine swings about 430 times across 100 columns, so each of
+the 192 decimated segments is a full-height braille line. Looking up a
+dot's text properties once per braille column instead of once per dot
+cut render-text from 22.1 to 14.8 ms at 10k and from 40.9 to 22.6 ms at
+100k. Goldens are unchanged.
+
+### 10.4 GC: deferred until idle
+
+Section 8.5 found GC to be the largest single GUI cost at the default
+threshold. Binding the threshold around the handler alone does not
+fix that, because when the binding unwinds the collection simply runs
+right after the handler. `easel-gc.el` therefore works like gcmh. The
+first chart event raises `gc-cons-threshold` to
+`easel-gc-cons-threshold` (64 MB). After `easel-gc-idle-delay` (1 s)
+of idle time it collects once and puts the user's value back. It never
+lowers a larger value and leaves alone a value someone else changed in
+the meantime. Setting `easel-gc-cons-threshold` to nil turns it off.
+Batch runs are left alone. The raise lasts only while a chart is in
+use, so the design rule that a permanent global threshold is the
+user's choice still holds.
+
+In batch the effect is small, because the heap is small: hover-svg at
+1k is 4.1 ms mean (max 5.0) deferred against 5.7 (max 16.6) at the
+default 800 KB (`bench --gc default`). A long-running GUI session
+traces a much larger heap on every collection, which is where section
+8.5 measured 80–97 ms of GC per move. The end-to-end gain in a GUI
+frame is **unmeasured** on this box, which has no display. Re-run
+`scripts/easel-spikes/gui/motion.el` to measure it.
+
+### 10.5 The regression budget in CI
+
+`src/easel/bench-budget.json` holds this box's reference means, a
+`tolerance` (2.5), a `floor-ms` (2) and the machine's calibration time
+(best of five runs of a fixed Lisp workload, 34.7 ms here). A stage
+fails when its mean is above
+`max(reference x tolerance, floor) x factor`, where `factor` is this
+run's calibration over the reference's, clamped to [0.5, 8]. A slower
+runner therefore gets proportionally looser limits. Results are
+compared only when both are byte-compiled or both interpreted; a
+skipped comparison fails `make bench`. A failure is
+`BUDGET_EXCEEDED`, which names the stage and size in its evidence.
+`make bench-budget` re-measures the references.
+Targets are reported, not enforced: `hover` at 10k under 50 ms
+(`met: true`, 0.24 ms).
+
+Checked by hand: an `EMACS` wrapper that switched the index off (the
+pre-fc-qx1.9 hover path) made `make bench` exit 1 with "hover at 10000
+points 16.0 ms > 1.9 ms; hover-svg at 10000 points 19.4 ms > 8.3 ms".
+CI runs `make bench` on the Emacs 30.1 job and uploads the JSON.
+
+**Decisions:**
+- Hover cost no longer depends on N for point selections. The 50 ms
+  budget is spent on rasterization (GUI) or the text redraw
+  (terminal), not on the engine.
+- The idle-coalesced redraw from section 8.8 stays. With hover at
+  0.3 ms, per-move redraw is worth re-measuring on a GUI box against
+  `motion.el`.
+- Still open: hover-first at 100k (82 ms) could be built at open or on
+  idle; brushing (interval stores) still tests every row; compile at
+  100k (357 ms) is linear and is paid on zoom, pan and push; the text
+  redraw at 100k (25 ms) could patch only changed cells (section 5).

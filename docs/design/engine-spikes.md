@@ -202,3 +202,44 @@ replaced by a measurement:
 - a bar's continuous dimension is padded by continuousBandSize (5px).
 - timeUnit ordinal axes keep labels horizontal and title the unit
   hyphenated, e.g. "date (year-month-date)".
+
+## 8. Live data: the cost of one push frame (fc-qx1.7)
+
+`scripts/easel-spikes/run-compiled.sh scripts/easel-spikes/push-cost.el`
+uses byte-compiled sources. The spec is a line with a pointermove
+crosshair (the filter idiom from section 6) at 800x400, holding N rows
+in a full window. A frame is one `easel-dispatch` of a windowed push of
+K new rows: append, trim, reduce and a full recompile. The data
+changed, so the selection patch does not apply. Mean ms in batch:
+
+| N | K | push frame | SVG serialize | text compile+render 100x30 |
+|---|---|---|---|---|
+| 1,000 | 1 | 8.0 | 5.1 | 17.7 |
+| 1,000 | 50 | 7.0 | 4.2 | 15.9 |
+| 10,000 | 1 | 41.5 | 2.4 | 63.3 |
+| 10,000 | 50 | 39.4 | 2.4 | 61.5 |
+
+K barely matters, so batching rows costs nothing. What costs is the
+number of frames. A terminal frame also pays the full grid rewrite
+plus redisplay from section 5 (47.3 ms). That puts a whole frame at
+about 13 ms of Lisp in a GUI frame (librsvg not included) and 65 ms in
+a terminal at 1k rows, and 44 ms and 110 ms at 10k.
+
+**Decisions:**
+- `x-easel.stream.max-fps` defaults to **5**. That is a 200 ms
+  interval. The worst measured case is a 10k-row terminal chart at
+  110 ms, so Emacs stays about 45% idle for input. A 1k-row GUI chart
+  stays about 94% idle. At 10 fps the 10k terminal case would use the
+  whole interval. Values above 30 are rejected.
+- Pushes are queued and coalesced. A frame takes everything queued
+  since the last frame, as one windowed push event, so the log replays
+  exactly the frames that were drawn.
+- Streams pause while a drag is in progress (brush or pan) and for
+  `easel-stream-hover-hold` (2 s) after the last pointer event. Neither
+  glue reports the pointer leaving reliably, and in a terminal, point
+  is always over the chart, so the hold has to lapse. On pointerleave,
+  or once the hold lapses, the queue catches up in one frame.
+- The buffer redraw stays idle-coalesced, as section 5 decided. The
+  cap limits recompiles, and the idle timer still collapses redraws.
+  Re-measure once the GUI numbers (fc-qx1.23) exist. A GUI-only cap
+  could then be higher.

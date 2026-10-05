@@ -19,16 +19,27 @@
 (require 'eas-glyph)
 (require 'eas-hit)
 (require 'eas-arc)
+(require 'eas-text-arc)
 (require 'eas-axis-extra)
 (require 'eas-symbols)
 (require 'eas-marks-image)
+(require 'eas-scale)
 
 (defface eas-axis '((t :inherit shadow)) "Face for eas axis lines and grid." :group 'faces)
 (defface eas-label '((t :inherit default)) "Face for eas tick labels." :group 'faces)
 (defface eas-title '((t :inherit bold)) "Face for eas chart and axis titles." :group 'faces)
 
+(defvar eas-text-trace nil
+  "When non-nil, a function called with COL ROW for every in-grid cell a
+mark item draws (whether or not a higher-priority glyph wins the cell),
+while `eas-text-trace-item' names the item as (VIEW-ID MARK-ID INDEX).
+eas-text-check.el uses it to prove every item lands in a cell.")
+
+(defvar eas-text-trace-item nil
+  "The (VIEW-ID MARK-ID INDEX) being drawn, for `eas-text-trace'.")
+
 (cl-defstruct (eas-text--grid (:constructor eas-text--grid-make))
-  cols rows cw ch chars props prio dots dot-props)
+  cols rows cw ch chars props prio dots dot-props dot-prio cover)
 
 (defun eas-text--new (scene)
   "An empty grid sized for SCENE."
@@ -39,16 +50,28 @@
          (n (* cols rows)))
     (eas-text--grid-make :cols cols :rows rows :cw cw :ch ch
                            :chars (make-vector n ?\s) :props (make-vector n nil)
-                           :prio (make-vector n -1) :dots (make-vector n 0) :dot-props (make-vector n nil))))
+                           :prio (make-vector n -1) :dots (make-vector n 0) :dot-props (make-vector n nil)
+                           :dot-prio (make-vector n -1) :cover (make-vector n 0.0))))
 
-(defun eas-text--put (g col row char props prio)
-  "Put CHAR with PROPS at COL ROW of grid G when PRIO wins."
+(defvar eas-text--dot-prio 2
+  "Priority of the braille dots being drawn: a cell shows its dots
+unless a glyph of higher priority holds it.")
+
+(defun eas-text--put (g col row char props prio &optional cover)
+  "Put CHAR with PROPS at COL ROW of grid G when PRIO wins.
+COVER ranks a bar's glyph (`eas-text--coverage'): within one priority
+\(one mark) it takes a cell only from a lower rank, so a bar's thin end
+cannot replace its neighbour's full block."
   (when (and (< -1 col (eas-text--grid-cols g)) (< -1 row (eas-text--grid-rows g)))
-    (let ((i (+ col (* row (eas-text--grid-cols g)))))
-      (when (>= prio (aref (eas-text--grid-prio g) i))
+    (let* ((i (+ col (* row (eas-text--grid-cols g))))
+           (old (aref (eas-text--grid-prio g) i)))
+      (when (and eas-text-trace eas-text-trace-item) (funcall eas-text-trace col row))
+      (when (and (>= prio old)
+                 (or (null cover) (> prio old) (> cover (aref (eas-text--grid-cover g) i))))
         (aset (eas-text--grid-chars g) i char)
         (aset (eas-text--grid-props g) i props)
-        (aset (eas-text--grid-prio g) i prio)))))
+        (aset (eas-text--grid-prio g) i prio)
+        (aset (eas-text--grid-cover g) i (or cover 1.0))))))
 
 (defun eas-text--string (g x y text align props prio)
   "Put TEXT anchored at pixel X Y with ALIGN into grid G.
@@ -58,14 +81,35 @@ Multi-line TEXT puts each line on the next row down."
                       (split-string text "\n"))
     (eas-text--string-1 g x y text align props prio)))
 
-(defun eas-text--string-1 (g x y text align props prio)
-  "Put one-line TEXT anchored at pixel X Y with ALIGN into grid G."
+(defun eas-text-string-span (cols cw ch x y text align &optional rows)
+  "(ROW START . END) of the cells one-line TEXT anchored at pixel X Y with
+ALIGN takes on a canvas COLS cells wide (ROWS high) of CW x CH pixel
+cells.  Text that would run off any side is moved in, as long as it fits:
+a label centred on the canvas's last pixel row still shows."
   (let* ((len (string-width text))
-         (c (round (/ x (float (eas-text--grid-cw g)))))
-         (start (pcase align ("left" c) ("right" (- c len)) (_ (round (- (/ x (float (eas-text--grid-cw g))) (/ len 2.0))))))
-         (row (floor (/ y (float (eas-text--grid-ch g))))))
+         (c (round (/ x (float cw))))
+         (start (pcase align ("left" c) ("right" (- c len)) (_ (round (- (/ x (float cw)) (/ len 2.0))))))
+         (start (if (<= len cols) (max 0 (min start (- cols len))) start)))
+    (cons (let ((row (floor (/ y (float ch))))) (if rows (max 0 (min row (1- rows))) row))
+          (cons start (+ start len)))))
+
+(defvar eas-text--clamp-rows nil
+  "Non-nil while drawing text that is moved onto the grid's first or last
+row rather than lost past it: tick labels and text marks.  Titles are
+not, so one placed off the canvas cannot cover the labels it sits by.")
+
+(defun eas-text--string-1 (g x y text align props prio)
+  "Put one-line TEXT anchored at pixel X Y with ALIGN into grid G.
+A double-width character takes two cells; the second holds 0, which
+`eas-text--compose' leaves out."
+  (let* ((span (eas-text-string-span (eas-text--grid-cols g) (eas-text--grid-cw g) (eas-text--grid-ch g)
+                                     x y text align (and eas-text--clamp-rows (eas-text--grid-rows g))))
+         (row (car span)) (col (cadr span)))
     (dotimes (k (length text))
-      (eas-text--put g (+ start k) row (aref text k) props prio))))
+      (let ((w (char-width (aref text k))))
+        (eas-text--put g col row (aref text k) props prio)
+        (dotimes (j (1- w)) (eas-text--put g (+ col 1 j) row 0 props prio))
+        (setq col (+ col w))))))
 
 (defun eas-text--col (g x) "Cell column of pixel X." (floor (/ x (float (eas-text--grid-cw g)))))
 (defun eas-text--row (g y) "Cell row of pixel Y." (floor (/ y (float (eas-text--grid-ch g)))))
@@ -76,10 +120,12 @@ Multi-line TEXT puts each line on the next row down."
     (when (and (<= (aref clip 0) col) (< col (aref clip 2)) (<= (aref clip 1) row) (< row (aref clip 3))
                (< -1 col (eas-text--grid-cols g)) (< -1 row (eas-text--grid-rows g)))
       (let ((i (+ col (* row (eas-text--grid-cols g)))))
+        (when (and eas-text-trace eas-text-trace-item) (funcall eas-text-trace col row))
         (aset (eas-text--grid-dots g) i
               (logior (aref (eas-text--grid-dots g) i)
                       (aref (aref eas-glyph-braille-dots (mod dy 4)) (mod dx 2))))
-        (aset (eas-text--grid-dot-props g) i props)))))
+        (aset (eas-text--grid-dot-props g) i props)
+        (aset (eas-text--grid-dot-prio g) i (max eas-text--dot-prio (aref (eas-text--grid-dot-prio g) i)))))))
 
 (defun eas-text--dasher (dash)
   "Function of no arguments telling whether the next dot of a DASH stroke shows.
@@ -136,8 +182,8 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
           (if (= (aref p 0) (aref q 0)) (aref p 1)
             (+ (aref p 1) (* (- (aref q 1) (aref p 1)) (/ (- x (aref p 0)) (float (- (aref q 0) (aref p 0))))))))))))
 
-(defun eas-text--series (g view mark item clip)
-  "Draw line or area ITEM of MARK in VIEW."
+(defun eas-text--series (g view mark item clip prio)
+  "Draw line or area ITEM of MARK in VIEW at PRIO."
   (let* ((points (plist-get item :points))
          (anchors (eas-hit--anchors item))
          (axs (vconcat (mapcar (lambda (p) (aref p 0)) anchors)))
@@ -152,55 +198,130 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
         (cl-loop with pxs = (eas-text--xs points) with bxs = (eas-text--xs base)
                  for col from (aref clip 0) below (aref clip 2)
                  for cx = (* (+ col 0.5) (eas-text--grid-cw g))
-                 for top = (eas-text--interp points cx pxs)
-                 for bottom = (eas-text--interp base cx bxs)
+                 for p = (eas-text--interp points cx pxs)
+                 for q = (eas-text--interp base cx bxs)
+                 ;; A band (errorband, ranged area) may give its lower edge first.
+                 for top = (and p q (min p q))
+                 for bottom = (and p q (max p q))
                  when (and top bottom)
                  do (cl-loop for row from (max (aref clip 1) (floor top ch)) below (min (aref clip 3) (ceiling bottom ch))
                              for y0 = (* row ch) for y1 = (* (1+ row) ch)
                              for covered = (- (min y1 bottom) (max y0 top))
                              do (cond
-                                 ((>= covered (- ch 0.01)) (eas-text--put g col row ?█ (funcall props-fn cx) 1))
+                                 ((>= covered (- ch 0.01)) (eas-text--put g col row ?█ (funcall props-fn cx) prio))
                                  ((and (> top y0) (> covered 0))
-                                  (let ((e (round (* 8 (/ covered ch)))))
-                                    (when (> e 0) (eas-text--put g col row (eas-glyph-lower e) (funcall props-fn cx) 1))))
-                                 ((>= covered (/ ch 2.0)) (eas-text--put g col row ?█ (funcall props-fn cx) 1)))))
-      (let ((show-p (and (plist-get item :strokeDash) (eas-text--dasher (plist-get item :strokeDash)))))
+                                  ;; At least an eighth: a thin stacked slice still lands in a cell.
+                                  (eas-text--put g col row (eas-glyph-lower (max 1 (round (* 8 (/ covered ch)))))
+                                                 (funcall props-fn cx) prio))
+                                 ((>= covered (/ ch 2.0)) (eas-text--put g col row ?█ (funcall props-fn cx) prio))
+                                 ;; A slice that is only a sliver against this cell's
+                                 ;; top edge (a stacked slice at the plot's top) still
+                                 ;; marks its place.
+                                 ((and (> covered 0) (>= top y0) (<= bottom y1)
+                                       (< (aref (eas-text--grid-prio g) (+ col (* row (eas-text--grid-cols g)))) prio))
+                                  (eas-text--put g col row (if (>= covered (* 0.375 ch)) ?▀ ?▔) (funcall props-fn cx) prio)))))
+      (let ((show-p (and (plist-get item :strokeDash) (eas-text--dasher (plist-get item :strokeDash))))
+            (eas-text--dot-prio prio))
         (dotimes (k (max 0 (1- (length points))))
           (let ((p (aref points k)) (q (aref points (1+ k))))
             (eas-text--dot-line g (aref p 0) (aref p 1) (aref q 0) (aref q 1) props-fn clip show-p))))
       (when (= (length points) 1)
-        (let ((p (aref points 0))) (eas-text--dot-line g (aref p 0) (aref p 1) (aref p 0) (aref p 1) props-fn clip))))))
+        (let ((p (aref points 0)) (eas-text--dot-prio prio))
+          (eas-text--dot-line g (aref p 0) (aref p 1) (aref p 0) (aref p 1) props-fn clip))))))
 
-(defun eas-text--rect (g view mark item clip i)
-  "Draw bar, rect or brush ITEM (index I) of MARK with eighth blocks."
+(defun eas-text--vglyph (a b)
+  "Glyph for a fill covering A..B (fractions of a cell from its top)."
+  (let ((d (- b a)))
+    (cond ((>= d 0.94) ?█)
+          ((>= b 0.94) (eas-glyph-lower (max 1 (round (* 8 d)))))
+          ((<= a 0.06) (if (>= d 0.375) ?▀ ?▔))
+          ((>= d 0.5) ?█)
+          (t ?━))))
+
+(defun eas-text--hglyph (a b)
+  "Glyph for a fill covering A..B (fractions of a cell from its left)."
+  (let ((d (- b a)))
+    (cond ((>= d 0.94) ?█)
+          ((<= a 0.06) (eas-glyph-left (max 1 (round (* 8 d)))))
+          ((>= b 0.94) (if (>= d 0.375) ?▐ ?▕))
+          ((>= d 0.5) ?█)
+          (t ?┃))))
+
+(defun eas-text--coverage (char)
+  "Rank of fill glyph CHAR where two bars of one mark share a cell: a
+full block, then eighth blocks by size (they read to an eighth), then
+the coarse half and edge glyphs.  Stacked segments meet on the lower
+segment's eighth block, as stacked areas do."
+  (cond ((memq char '(?█ ?▒)) 2.0)
+        ((seq-position eas-glyph-blocks char) (+ 1 (/ (seq-position eas-glyph-blocks char) 8.0)))
+        ((seq-position eas-glyph-left-blocks char) (+ 1 (/ (seq-position eas-glyph-left-blocks char) 8.0)))
+        ((memq char '(?▀ ?▐)) 0.5)
+        (t 0.125)))
+
+(defun eas-text--falling (char)
+  "CHAR as a falling ranged bar draws it: shaded where at least 3/8 of
+the cell is covered, its thin ends as they are."
+  (if (memq char '(?█ ?▀ ?▐ ?▄ ?▅ ?▆ ?▇ ?▌ ?▋ ?▊ ?▉)) ?▒ char))
+
+(defun eas-text--cells (p len size)
+  "(FIRST . END) cells of SIZE pixels a span from P of LEN pixels rounds to.
+A span narrower than a cell takes the cell holding its middle."
+  (let ((a (round p size)) (b (round (+ p len) size)))
+    (if (> b a) (cons a b)
+      (let ((m (floor (+ p (/ len 2.0)) size))) (cons m (1+ m))))))
+
+(defun eas-text--zero (view channel)
+  "Pixel of zero on VIEW's continuous CHANNEL scale, when its domain holds 0."
+  (let* ((scale (plist-get (plist-get view :scales) channel)) (d (plist-get scale :domain)))
+    (when (and (member (plist-get scale :type) '("linear" "pow" "sqrt" "symlog")) (vectorp d) (= (length d) 2)
+               (numberp (aref d 0)) (numberp (aref d 1)) (<= (min (aref d 0) (aref d 1)) 0 (max (aref d 0) (aref d 1))))
+      (eas-scale-apply scale 0))))
+
+(defun eas-text--rect (g view mark item clip prio)
+  "Draw bar, rect or brush ITEM of MARK at PRIO.
+A bar's ends take eighth or half blocks in the direction it grows, so
+its baseline and value land on their own cells.  A ranged bar whose
+second value lies below its first (:rise :false, a falling candle) is
+shaded, a rising one solid; color tells them apart too."
   (let* ((cw (eas-text--grid-cw g)) (ch (eas-text--grid-ch g))
          (x (plist-get item :x)) (y (plist-get item :y)) (w (plist-get item :w)) (h (plist-get item :h))
          (orient (plist-get item :orient))
-         (props (if (equal (plist-get mark :mark) "brush")
+         (brush (equal (plist-get mark :mark) "brush"))
+         (props (if brush
                     (list 'face (list :background "#555555") 'eas-brush (plist-get mark :param))
                   (eas-text--item-props view mark item (plist-get item :datum))))
-         (c0 (if (equal orient "horizontal") (floor x cw) (round x cw)))
-         (c1 (max (1+ c0) (if (equal orient "horizontal") (ceiling (+ x w) cw) (round (+ x w) cw))))
-         (r0 (if (equal orient "vertical") (floor y ch) (round y ch)))
-         (r1 (max (1+ r0) (if (equal orient "vertical") (ceiling (+ y h) ch) (round (+ y h) ch))))
-         (brush (equal (plist-get mark :mark) "brush"))
-         (vertical (equal orient "vertical")) (horizontal (equal orient "horizontal")))
-    (ignore i)
-    (cl-loop for row from (max r0 (aref clip 1)) below (min r1 (aref clip 3))
+         (vertical (equal orient "vertical")) (horizontal (equal orient "horizontal"))
+         (falling (eq (plist-get item :rise) :false))
+         ;; The end standing on the scale's zero (the baseline) fills its
+         ;; cell; only the value end shows a partial block.
+         (zero (and (or vertical horizontal) (not (plist-get item :rise))
+                    (eas-text--zero view (if vertical :y :x))))
+         (lo (if vertical y x)) (hi (+ lo (if vertical h w)))
+         (snap-lo (and zero (< (abs (- zero lo)) 0.5)))
+         (snap-hi (and zero (< (abs (- zero hi)) 0.5)))
+         (cols (if horizontal (cons (floor x cw) (ceiling (- (+ x w) 0.001) cw)) (eas-text--cells x w cw)))
+         (rows (if vertical (cons (floor y ch) (ceiling (- (+ y h) 0.001) ch)) (eas-text--cells y h ch)))
+         (c0 (car cols)) (c1 (max (1+ c0) (cdr cols)))
+         (r0 (car rows)) (r1 (max (1+ r0) (cdr rows))))
+    ;; A zero-length bar (a value of 0) draws nothing, as in SVG.
+    (unless (or (and vertical (< h 0.01)) (and horizontal (< w 0.01)))
+     (cl-loop for row from (max r0 (aref clip 1)) below (min r1 (aref clip 3))
              do (cl-loop for col from (max c0 (aref clip 0)) below (min c1 (aref clip 2))
                          for char = (cond
                                      (brush nil)
-                                     ((and vertical (= row r0))
-                                      (eas-glyph-lower (round (* 8 (/ (- (* (1+ row) ch) y) (float ch))))))
-                                     ((and horizontal (= col (1- c1)))
-                                      (eas-glyph-left (round (* 8 (/ (- (+ x w) (* col cw)) (float cw))))))
+                                     (vertical (eas-text--vglyph (if snap-lo 0.0 (max 0.0 (/ (- y (* row ch)) (float ch))))
+                                                                 (if snap-hi 1.0 (min 1.0 (/ (- (+ y h) (* row ch)) (float ch))))))
+                                     (horizontal (eas-text--hglyph (if snap-lo 0.0 (max 0.0 (/ (- x (* col cw)) (float cw))))
+                                                                   (if snap-hi 1.0 (min 1.0 (/ (- (+ x w) (* col cw)) (float cw))))))
                                      (t ?█))
-                         do (if char
-                                (unless (eq char ?\s) (eas-text--put g col row char props 1))
+                         for glyph = (if (and char falling) (eas-text--falling char) char)
+                         do (cond
+                             (glyph (eas-text--put g col row glyph props prio (eas-text--coverage glyph)))
+                             (brush
                               (let ((idx (+ col (* row (eas-text--grid-cols g)))))
                                 (when (< -1 idx (length (eas-text--grid-props g)))
                                   (aset (eas-text--grid-props g) idx
-                                        (append props (aref (eas-text--grid-props g) idx))))))))))
+                                        (append props (aref (eas-text--grid-props g) idx))))))))))))
 
 (defun eas-text--segment (g seg props clip prio)
   "Draw segment SEG [x1 y1 x2 y2] with box glyphs (braille when diagonal)."
@@ -216,30 +337,61 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
         (cl-loop for col from (eas-text--col g (min x1 x2)) to (eas-text--col g (- (max x1 x2) 0.01))
                  when (and (<= (aref clip 0) col) (< col (aref clip 2)) (<= (aref clip 1) row) (< row (aref clip 3)))
                  do (eas-text--put g col row ?─ props prio))))
-     (t (eas-text--dot-line g x1 y1 x2 y2 (lambda (_) props) clip)))))
+     (t (let ((eas-text--dot-prio prio)) (eas-text--dot-line g x1 y1 x2 y2 (lambda (_) props) clip))))))
 
 (defun eas-text--inside (bounds x)
   "X, nudged inside the plot when it lies on BOUNDS' right edge."
   (if (< (abs (- x (+ (aref bounds 0) (aref bounds 2)))) 0.005) (- x 0.01) x))
 
+(defconst eas-text--fills '("bar" "rect" "arc" "area" "brush")
+  "Marks that fill a region; strokes drawn before one sit under it.")
+
+(defun eas-text--translucent-p (mark)
+  "Non-nil when MARK's first item is mostly see-through."
+  (let ((item (and (> (length (plist-get mark :items)) 0) (aref (plist-get mark :items) 0))))
+    (and item (< (* (or (plist-get item :opacity) 1) (or (plist-get item :fillOpacity) 1)) 0.5))))
+
+(defun eas-text--mark-prios (view)
+  "Cell priority of each of VIEW's marks, a list in mark order.
+A cell holds one glyph, so marks follow Vega's painter's order within
+three tiers: fills (1), strokes (2: rules, ticks, lines) and symbols
+(3: points, text, images).  A stroke drawn before an opaque fill sits
+under it (a candle's wick under its body); a mostly see-through symbol
+sits under strokes.  Later marks win ties."
+  (let* ((marks (append (plist-get view :marks) nil)) (k -1))
+    (cl-loop for (mark . later) on marks
+             for type = (plist-get mark :mark)
+             do (cl-incf k)
+             collect (+ (min k 99) 0.0
+                        (* 100 (cond ((member type eas-text--fills) 1)
+                                     ((member type '("rule" "tick" "line" "trail"))
+                                      (if (seq-some (lambda (m) (and (member (plist-get m :mark) eas-text--fills)
+                                                                     (not (eas-text--translucent-p m))))
+                                                    later)
+                                          1 2))
+                                     ((eas-text--translucent-p mark) 1.5)
+                                     (t 3)))))))
+
 (defun eas-text--marks (g view)
   "Draw VIEW's marks into grid G, clipped to its plot."
   (let* ((b (plist-get view :bounds))
+         (prios (mapcar (lambda (p) (/ p 100.0)) (eas-text--mark-prios view)))
          (clip (vector (eas-text--col g (aref b 0)) (eas-text--row g (aref b 1))
                        (eas-text--col g (+ (aref b 0) (aref b 2) -0.01)) (eas-text--row g (+ (aref b 1) (aref b 3) -0.01))))
          (clip (vector (aref clip 0) (aref clip 1) (1+ (aref clip 2)) (1+ (aref clip 3)))))
     (seq-doseq (mark (plist-get view :marks))
+     (let ((prio (pop prios)))
       (seq-do-indexed
        (lambda (item i)
          (unless (equal (plist-get item :opacity) 0)
+          (let ((eas-text-trace-item (and eas-text-trace (list (plist-get view :id) (plist-get mark :id) i))))
            (pcase (plist-get mark :mark)
-             ((or "line" "area" "trail") (eas-text--series g view mark item clip))
-             ((or "bar" "rect" "brush") (eas-text--rect g view mark item clip i))
+             ((or "line" "area" "trail") (eas-text--series g view mark item clip prio))
+             ((or "bar" "rect" "brush") (eas-text--rect g view mark item clip prio))
              ("arc" (let ((props (eas-text--item-props view mark item (plist-get item :datum)))
-                          ;; Shade cycles so neighbouring wedges stay apart without color.
-                          (glyph (aref "█▓▒░" (mod i 4))))
-                      (eas-arc-cells item (eas-text--grid-cw g) (eas-text--grid-ch g) clip
-                                     (lambda (col row) (eas-text--put g col row glyph props 1)))))
+                          (eas-text--dot-prio prio))
+                      (eas-text-arc-dots item (eas-text--grid-cw g) (eas-text--grid-ch g)
+                                         (lambda (dx dy) (eas-text--dot g dx dy props clip)))))
              ((or "rule" "tick")
               ;; A rule on the plot's right edge (the last datum's crosshair)
               ;; belongs to the last column, not the clipped one past it.
@@ -247,14 +399,15 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
                                          (vector (eas-text--inside b (plist-get item :x1)) (plist-get item :y1)
                                                  (eas-text--inside b (plist-get item :x2)) (plist-get item :y2))
                                        (vector (plist-get item :x1) (plist-get item :y1) (plist-get item :x2) (plist-get item :y2)))
-                                   (eas-text--item-props view mark item (plist-get item :datum)) clip 3))
+                                   (eas-text--item-props view mark item (plist-get item :datum)) clip prio))
              ("image" (eas-text--put g (eas-text--col g (+ (plist-get item :x) (/ (plist-get item :w) 2.0)))
                                      (eas-text--row g (+ (plist-get item :y) (/ (plist-get item :h) 2.0)))
                                      eas-marks-image-glyph
-                                     (eas-text--item-props view mark item (plist-get item :datum)) 3))
-             ("text" (eas-text--string g (plist-get item :x) (plist-get item :y) (plist-get item :text)
+                                     (eas-text--item-props view mark item (plist-get item :datum)) prio))
+             ("text" (let ((eas-text--clamp-rows t))
+                      (eas-text--string g (plist-get item :x) (plist-get item :y) (plist-get item :text)
                                          (plist-get item :align)
-                                         (eas-text--item-props view mark item (plist-get item :datum)) 3))
+                                         (eas-text--item-props view mark item (plist-get item :datum)) prio)))
              (_ (let ((filled (not (equal (plist-get item :fill) "none")))
                       ;; A point on the plot's far edge belongs to the last cell.
                       (col (min (eas-text--col g (plist-get item :x)) (1- (aref clip 2))))
@@ -262,8 +415,30 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
                   (when (and (<= (aref clip 0) col) (<= (aref clip 1) row))
                     (eas-text--put g col row
                                      (eas-symbols-glyph (plist-get item :shape) filled (plist-get item :angle))
-                                     (eas-text--item-props view mark item (plist-get item :datum)) 3)))))))
-       (plist-get mark :items)))))
+                                     (eas-text--item-props view mark item (plist-get item :datum)) prio))))))))
+       (plist-get mark :items))))))
+
+(defvar eas-text--label-cells nil
+  "Hash of (COL . ROW) cells holding a tick label, while a scene renders.")
+
+(defun eas-text--label-room-p (g tk)
+  "Non-nil when tick TK's label fits beside the labels already placed in G.
+It then claims its cells.  A label that would overwrite another one is
+left out, as Vega's labelOverlap drops it, so no label is garbled."
+  (let ((label (plist-get tk :label)))
+    (or (not (stringp label)) (string-empty-p label) (null eas-text--label-cells)
+        (let* ((lines (split-string label "\n"))
+               (spans (seq-map-indexed
+                       (lambda (line i)
+                         (eas-text-string-span (eas-text--grid-cols g) (eas-text--grid-cw g) (eas-text--grid-ch g)
+                                               (plist-get tk :lx) (+ (plist-get tk :ly) (* i (eas-text--grid-ch g)))
+                                               line (plist-get tk :align) (eas-text--grid-rows g)))
+                       lines))
+               (cells (cl-loop for (row c0 . c1) in spans
+                               append (cl-loop for c from c0 below c1 collect (cons c row)))))
+          (unless (seq-some (lambda (c) (gethash c eas-text--label-cells)) cells)
+            (dolist (c cells) (puthash c t eas-text--label-cells))
+            t)))))
 
 (defun eas-text--axes (g view)
   "Draw VIEW's axes and grid into G."
@@ -289,8 +464,10 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
             (when (and ts (eas-axis-extra-tick-color axis tk t))
               (eas-text--put g (eas-text--col g (aref ts (if is-bottom 0 2))) (eas-text--row g (aref ts (if is-bottom 1 3)))
                              (pcase orient ("bottom" ?┬) ("top" ?┴) ("right" ?├) (_ ?┤)) axis-props 4)))
-          (eas-text--string g (plist-get tk :lx) (plist-get tk :ly) (plist-get tk :label) (plist-get tk :align)
-                              (list 'face 'eas-label) 5))
+          (when (eas-text--label-room-p g tk)
+            (let ((eas-text--clamp-rows t))
+             (eas-text--string g (plist-get tk :lx) (plist-get tk :ly) (plist-get tk :label) (plist-get tk :align)
+                              (list 'face 'eas-label) 5))))
         (when-let* ((tm (plist-get axis :title-mark)))
           (eas-text--string g (plist-get tm :x) (plist-get tm :y) (plist-get tm :text) (plist-get tm :align)
                               (list 'face 'eas-title) 5))))
@@ -327,13 +504,13 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
         (dotimes (col cols)
           (let* ((i (+ col (* row cols)))
                  (dots (aref (eas-text--grid-dots g) i))
-                 (use-dots (and (> dots 0) (<= (aref (eas-text--grid-prio g) i) 2)))
+                 (use-dots (and (> dots 0) (<= (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
                  (char (if use-dots (+ #x2800 dots) (aref (eas-text--grid-chars g) i)))
                  (p (if use-dots (aref (eas-text--grid-dot-props g) i) (aref (eas-text--grid-props g) i))))
             (unless (equal p props)
               (when chars (push (apply #'propertize (apply #'string (nreverse chars)) (unless (eq props :unset) props)) runs))
               (setq chars nil props p))
-            (push char chars)))
+            (unless (eq char 0) (push char chars))))
         (when chars (push (apply #'propertize (apply #'string (nreverse chars)) (unless (eq props :unset) props)) runs))
         (let ((line (apply #'concat (nreverse runs))))
           (push (if (string-match "[ ]+\\'" line) (substring line 0 (match-beginning 0)) line) lines))))
@@ -341,7 +518,7 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
 
 (defun eas-text-render (scene)
   "Return SCENE drawn as a propertized string (rows joined by newlines)."
-  (let ((g (eas-text--new scene)))
+  (let ((g (eas-text--new scene)) (eas-text--label-cells (make-hash-table :test 'equal)))
     (seq-doseq (view (plist-get scene :views))
       (eas-text--axes g view)
       (when-let* ((h (plist-get view :header)))

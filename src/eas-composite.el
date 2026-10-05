@@ -22,6 +22,8 @@
 
 (require 'eas-core)
 
+(declare-function eas-composite-boxplot-expand "eas-composite-boxplot")
+
 (defconst eas-composite-marks '("errorbar" "errorband")
   "Composite mark types `eas-composite-expand' rewrites.")
 
@@ -106,6 +108,12 @@ Return (AGGREGATE-OPS . CALCULATES)."
 INHERITED is the encoding a layer passes down."
   (let ((mark (plist-get spec :mark)))
     (cond
+     ((and mark (equal (if (stringp mark) mark (plist-get mark :type)) "boxplot"))
+      ;; eas-composite-boxplot.el (fc-qx1.49)
+      (eas-composite-expand (eas-composite-boxplot-expand
+                             (plist-put (copy-sequence spec) :mark (if (stringp mark) (list :type mark) mark))
+                             inherited)
+                            inherited))
      ((and mark (member (if (stringp mark) mark (plist-get mark :type)) eas-composite-marks))
       (eas-composite--expand-unit (plist-put (copy-sequence spec) :mark (if (stringp mark) (list :type mark) mark))
                                   inherited))
@@ -120,4 +128,5 @@ INHERITED is the encoding a layer passes down."
      (t spec))))
 
 (provide 'eas-composite)
+(require 'eas-composite-boxplot)
 ;;; eas-composite.el ends here

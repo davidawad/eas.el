@@ -4,11 +4,11 @@ Sum of count
       │                   ▁▁  ■ Business services
       │                   ▅▅  ■ Construction
 10,000┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈▁▄▇  ■ Education and Health
-      │      ▁ ▁         ▇▃▄  ■ Finance
-      │    ▆▁█▆▆▁▁▁▁ ▁ ▁▁▅▂▅  ■ Government
-      │  ▁▁▃▂▄▄▄▂▂▃▅▄█▄▆▃▂██  ■ Information
- 5,000┤▁▁▂▄▃▂▃▂▂▂▂▄▃▄▃▄▃▁███  ■ Leisure and hospitality
-      │▁▂▃▅▅▅▅██▅█▅▅▅▅▅▇█▂▁▃  ■ Manufacturing
+      │    ▁ ▁▁▁         ▇▃▄  ■ Finance
+      │    ▆▁█▆▆▁▁▁▁▁▁ ▁▁▅▂▅  ■ Government
+      │  ▁▁▃▂▄▄▄▂▂▃▅▄█▁▆▃▂██  ■ Information
+ 5,000┤▁▁▂▄▃▂▃▂▂▂▁▄▃▄▃▄▃▁███  ■ Leisure and hospitality
+      │▁▁▃▅▅▅▅██▅█▅▅▅▅▅▇█▂▁▃  ■ Manufacturing
       │▁▄▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▄  ■ Mining and Extraction
       │▁▁▁▁█▇▇▇█▁█▇▇▁▇▂▂▇███  ■ Other
      0└┬─────────┬─────────┬  ■ Self-employed

@@ -12,10 +12,10 @@ Rotten Tomatoes Rating (binned)
                              ■ 150
 
 Count of Records
-500┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈▆▆▆▆┈┈┈┈┈┈┈┈┈████┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-   │▆▆▆▆ ███ ▅▅▅▅▁▁▁▁████     ▁▁▁▁████ ▄▄▄▄▁▁▁▁▃▃▃▃ ▅▅▅ ▁▁▁▁
+500┤┈┈┈┈┈▁▁▁┈┈┈┈┈┈┈┈┈▆▆▆▆┈┈┈┈┈┈┈┈┈████┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+   │▆▆▆▆ ███ ▅▅▅▅▁▁▁▁████ ████▁▁▁▁████ ▄▄▄▄▁▁▁▁▃▃▃▃ ▅▅▅ ▁▁▁▁
   0└──┬───┬───┬────┬───┬───┬───┬────┬───┬───┬────┬───┬───┬──
-  nuAcABlConcert/PerfDocumentarDraRomThriller/SuspeWestern
+  nullAdventure  Comedy        Drama  Musical      Western
 
 
 

@@ -1,0 +1,132 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "A boxplot per group: whiskers at 1.5 IQR, the median as a white tick, an outlier as a point.",
+  "data": {
+    "values": [
+      {
+        "group": "a",
+        "value": 3
+      },
+      {
+        "group": "a",
+        "value": 4
+      },
+      {
+        "group": "a",
+        "value": 4
+      },
+      {
+        "group": "a",
+        "value": 5
+      },
+      {
+        "group": "a",
+        "value": 5
+      },
+      {
+        "group": "a",
+        "value": 6
+      },
+      {
+        "group": "a",
+        "value": 6
+      },
+      {
+        "group": "a",
+        "value": 7
+      },
+      {
+        "group": "a",
+        "value": 15
+      },
+      {
+        "group": "b",
+        "value": 1
+      },
+      {
+        "group": "b",
+        "value": 2
+      },
+      {
+        "group": "b",
+        "value": 2
+      },
+      {
+        "group": "b",
+        "value": 3
+      },
+      {
+        "group": "b",
+        "value": 3
+      },
+      {
+        "group": "b",
+        "value": 3
+      },
+      {
+        "group": "b",
+        "value": 4
+      },
+      {
+        "group": "b",
+        "value": 5
+      },
+      {
+        "group": "b",
+        "value": 6
+      },
+      {
+        "group": "c",
+        "value": 5
+      },
+      {
+        "group": "c",
+        "value": 6
+      },
+      {
+        "group": "c",
+        "value": 7
+      },
+      {
+        "group": "c",
+        "value": 7
+      },
+      {
+        "group": "c",
+        "value": 8
+      },
+      {
+        "group": "c",
+        "value": 8
+      },
+      {
+        "group": "c",
+        "value": 9
+      },
+      {
+        "group": "c",
+        "value": 10
+      },
+      {
+        "group": "c",
+        "value": 11
+      }
+    ]
+  },
+  "mark": "boxplot",
+  "encoding": {
+    "x": {
+      "field": "group",
+      "type": "nominal"
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative"
+    }
+  },
+  "usermeta": {
+    "eas": {
+      "threshold": 0.05
+    }
+  }
+}

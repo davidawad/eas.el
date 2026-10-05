@@ -5,7 +5,7 @@ Major Genre
                    │██████▏
              Comedy┤██▌
                    │█▏
-        Documentary┤█
+        Documentary┤█▊
              Horror┤██
                    │▎
     Romantic Comedy┤▉

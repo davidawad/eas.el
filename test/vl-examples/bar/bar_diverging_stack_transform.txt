@@ -1,14 +1,14 @@
 Question
-Question 1   ██████████████▍    Response
+Question 1   ┃█▏█▋███████▉█▍    Response
                                 ■ Strongly disagree
-Question 2 ██████████████       ■ Disagree
-Question 3  █████████████▉      ■ Neither agree nor disagree
+Question 2 ▐█████████████▏      ■ Disagree
+Question 3  ▐██▏█▊█████▎█▉      ■ Neither agree nor disagree
                                 ■ Agree
-Question 4    █████████████▉    ■ Strongly agree
-Question 5     █████████████▋
+Question 4    ▐█▉█████▊████▉    ■ Strongly agree
+Question 5     ▋█▎████████▍█▋
 
-Question 6   ██████████████▌
-Question 7     █████████████▋
+Question 6   ▕▊▋█▎██████▉██▌
+Question 7     ▐█▊██████████▋
 
 Question 8      ██████████████
            ─────┬──────┬──────┬

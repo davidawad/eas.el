@@ -1,16 +1,16 @@
                     Questionnaire Ratings
-  Identify Errors: ┈┈┈●┈┈┈│┈┈┈●┈┈●┈┈┈┈┈┈┈  Number of Ratings
+  Identify Errors: ┈┈┈●┈┈┈●┈┈┈●┈┈●┈┈┈┈┈┈┈  Number of Ratings
                           │                ● 0
-       Fix Errors: ┈┈┈●┈┈┈│┈┈┈●┈┈┈┈┈┈●┈┈┈  ● 2         Hard
+       Fix Errors: ┈┈┈●┈┈┈●┈┈┈●┈┈┈┈┈┈●┈┈┈  ● 2         Hard
                           │                ● 4
-    Easier to Fix: ┈┈┈●┈┈┈│┈┈┈●┈┈●┈┈┈┈┈┈┈  ● 6         Gestu
+    Easier to Fix: ┈┈┈●┈┈┈●┈┈┈●┈┈●┈┈┈┈┈┈┈  ● 6       Gesture
                           │ │              ● 8
-    Faster to Fix: ┈┈┈●┈┈┈●┈│┈●┈┈●┈┈┈●┈┈┈  ● 10        Gestu
+    Faster to Fix: ┈┈┈●┈┈┈●┈│┈●┈┈●┈┈┈●┈┈┈  ● 10      Gesture
                         │   │
-  Easier on Phone: ┈┈┈●┈│┈●┈┈┈●┈┈●┈┈┈●┈┈┈              Gestu
+  Easier on Phone: ┈┈┈●┈│┈●┈┈┈●┈┈●┈┈┈●┈┈┈            Gesture
                         │    │
- Easier on Tablet: ┈┈┈●┈┈┈●┈┈│●┈┈●┈┈┈●┈┈┈              Gestu
+ Easier on Tablet: ┈┈┈●┈┈┈●┈┈│●┈┈●┈┈┈●┈┈┈            Gesture
                              │     │
-Device Preference: ┈┈┈●┈┈┈●┈┈┈●┈┈●┈│┈●┈┈┈              Table
+Device Preference: ┈┈┈●┈┈┈●┈┈┈●┈┈●┈│┈●┈┈┈             Tablet
                    ───┬───┬───┬──┬───┬───
                       1   2   3  4   5

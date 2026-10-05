@@ -13,4 +13,4 @@ Concert/Performance┤                         ●
             Western┤                           ●
         Documentary┤                           ●
                    └┬───────────────────┬───────────────────
-                  Poor              Neutral               Gr
+                  Poor              Neutral            Great

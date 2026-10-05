@@ -369,7 +369,8 @@ ranged (x2/y2) bar."
                       ;; Ranged bars on a band or point scale span from band centre to centre.
                       ((and band q) (let ((h (/ (plist-get scale :bandwidth) 2.0))) (cons (+ (min p q) h) (+ (max p q) h))))
                       ;; A bar's size is its thickness, centred in the band.
-                      ((and band (numberp (plist-get mark :size)) (not text))
+                      ;; In text, a size of at least a cell (a boxplot's box) is honored too.
+                      ((and band (numberp (plist-get mark :size)) (or (not text) (>= (plist-get mark :size) thin)))
                        (let ((c (+ p (/ (plist-get scale :bandwidth) 2.0))) (half (/ (plist-get mark :size) 2.0)))
                          (cons (- c half) (+ c half))))
                       (band (cons p (+ p (plist-get scale :bandwidth))))
@@ -392,6 +393,10 @@ ranged (x2/y2) bar."
                            :orient (cond ((equal (plist-get mark :type) "rect") "none")
                                          (horizontal "horizontal") (t "vertical")))
                      (when-let* ((c (and corners (funcall corners row)))) (list :corners c))
+                     ;; A ranged bar in text: does y2 lie above y (a rising candle)?
+                     (when (and text (not horizontal) (plist-get enc :y2) (equal (plist-get mark :type) "bar"))
+                       (let ((p (eas-marks--pos unit scales :y row bounds t)) (q (eas-marks--secondary unit scales :y row)))
+                         (when (and (numberp p) (numberp q)) (list :rise (if (<= q p) t :false)))))
                      (eas-marks--style unit scales row)
                      (eas-marks-props-bar unit) (eas-bar-extra-stroke mark)
                      (eas-marks--extras unit row))))))))

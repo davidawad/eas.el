@@ -13,4 +13,4 @@ Life Expectancy
   │
 20└┬─────┬─────┬─────┬─────┬──
    0    2     4     6     8
-            Fertility
+            Fertility                                   1955

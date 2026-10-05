@@ -43,7 +43,9 @@
     "arc"
     ;; composite marks, expanded by eas-composite.el (fc-qx1.26)
     "errorbar" "errorband"
-    "trail" "image")
+    "trail" "image"
+    ;; composite, expanded by eas-composite-boxplot.el (fc-qx1.49)
+    "boxplot")
   "Mark types chart/v1 recognises.")
 
 (defconst eas-spec--mark-keys

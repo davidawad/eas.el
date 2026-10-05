@@ -168,6 +168,21 @@ LTTB decimation when a series has more points than pixel columns.
   per mark type, which financial-chart-text.el already has) where every
   cell carries text properties `eas-datum`, `eas-view` and
   `help-echo`. Moving point over the chart is the terminal's hover.
+  Glyphs per mark (fc-qx1.49): lines, trails and arcs are braille (an
+  arc is a sector fill that leaves its starting edge unfilled, so
+  wedges stay apart without color); bars and areas are eighth blocks,
+  the value end partial and the baseline end full; a ranged bar whose
+  y2 lies below its y (a falling candle) is shaded `▒`, a rising one
+  solid; ticks and rules are box lines; points are shape glyphs. One
+  glyph fits a cell, so marks keep Vega's painter's order within three
+  tiers (fills, strokes, symbols); a stroke drawn before an opaque fill
+  sits under it (a wick under its body). Tick labels that would
+  overwrite one another are dropped, text runs back onto the canvas,
+  and wide characters take two cells. `eas-text-check` judges a text
+  rendering against its scene (every visible item lands in a cell,
+  baselines reach zero, labels and legend entries show, labels never
+  share a cell); `eas-text-gallery` holds every non-map example and
+  template to it at three sizes (test/vl-examples/text-status.json).
 - Static: resolved spec to `bin/chart build`. Not part of Emacs and
   never a runtime dependency: it is the conformance oracle (section 6)
   and the explicit export door (`export --vl`, babel .png/.pdf).

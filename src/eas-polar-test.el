@@ -114,13 +114,15 @@
     ;; Inside the plot, the canvas does not grow for it.
     (should (= (plist-get (plist-get scene :size) :w) (+ 200 (* 2 (aref b 0)))))))
 
-(ert-deftest eas-polar-text-backend-shades-wedges ()
-  (let ((text (substring-no-properties
-               (eas-text-render (eas-compile eas-polar-test--pie :target 'text :size '(:cols 40 :rows 12))))))
-    (should (string-match-p "█" text))
-    (should (string-match-p "▓" text))
-    (should (string-match-p "▒" text))
-    (should (string-match-p "● 3" text))))
+(ert-deftest eas-polar-text-backend-fills-wedges-in-braille ()
+  "Wedges are braille sector fills (fc-qx1.49), each its own datum's cells."
+  (let* ((scene (eas-compile eas-polar-test--pie :target 'text :size '(:cols 40 :rows 12)))
+         (text (eas-text-render scene))
+         (data (delete-dups (cl-loop for i below (length text) for d = (get-text-property i 'eas-datum text)
+                                     when (and d (get-text-property i 'eas-mark text)) collect d))))
+    (should (string-match-p "⣿" text))
+    (should (= (length data) (length (eas-polar-test--items scene))))
+    (should (string-match-p "● 3" (substring-no-properties text)))))
 
 ;;; Interaction
 

@@ -1,11 +1,11 @@
                               series
                          ▁▁▁  ■ Agriculture
                          ███  ■ Business services
-     ▁▁▁▁▁▁▁▁▁        ▁▁▁▇██  ■ Construction
-▁▁▁▁▁▄██▅▁████▁▁▁▁▄▆▅▄█▅█▄█▇  ■ Education and Health
-▂▃▄▂▃▄▄▄▄█▄▄▅▄▄▄▃▄▄▃▄▃▄▅█▄▄▄  ■ Finance
+     ▁▁▁▁▁▁▁▁▁     ▁  ▁▁▁▇██  ■ Construction
+▁▁▁▁▁▄██▅▁████▁▁▁▁▁▆▁▁█▅▁▄█▇  ■ Education and Health
+▂▃▁▂▃▄▄▄▄█▄▄▅▄▄▄▃▄▄▃▄▃▄▅█▄▄▄  ■ Finance
 ▄▂▂▃▃▂▄▃▃▄▃▃▃▂▃▃▃▃▃▂▂▃▂▃▃▄▃▄  ■ Government
-▂▁▁▁▆▄▅▅█▅▅▅▄▅▅▅▅▁▁▅▄▅██████  ■ Information
+▂▁▁▁▆▄▅▅█▅▅▅▄▅▅▅▅▁▁▅▄▁██████  ■ Information
 ▁▁▁▁▁▁▂▂▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁███  ■ Leisure and hospitality
     █▂██▂▆███████  █  █▇▂▃▃▁  ■ Manufacturing
                         █▅▄▃  ■ Mining and Extraction

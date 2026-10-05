@@ -1,0 +1,125 @@
+{
+  "config": {
+    "arc": {
+      "stroke": "#fcfcfb",
+      "strokeWidth": 2
+    },
+    "area": {
+      "opacity": 0.85
+    },
+    "axis": {
+      "domainColor": "#c3c2b7",
+      "domainWidth": 1,
+      "gridColor": "#e1e0d9",
+      "gridWidth": 1,
+      "labelColor": "#52514e",
+      "labelFontSize": 11,
+      "labelPadding": 4,
+      "tickColor": "#c3c2b7",
+      "tickSize": 4,
+      "titleColor": "#52514e",
+      "titleFontSize": 12,
+      "titleFontWeight": "normal"
+    },
+    "axisX": {
+      "grid": false
+    },
+    "background": "#fcfcfb",
+    "bar": {
+      "cornerRadiusEnd": 4
+    },
+    "circle": {
+      "size": 64
+    },
+    "font": "sans-serif",
+    "legend": {
+      "labelColor": "#52514e",
+      "labelFontSize": 11,
+      "symbolSize": 80,
+      "symbolType": "circle",
+      "titleColor": "#52514e",
+      "titleFontSize": 11,
+      "titleFontWeight": "normal"
+    },
+    "line": {
+      "strokeCap": "round",
+      "strokeJoin": "round",
+      "strokeWidth": 2
+    },
+    "mark": {
+      "color": "#2a78d6"
+    },
+    "point": {
+      "filled": true,
+      "size": 64
+    },
+    "range": {
+      "category": [
+        "#2a78d6",
+        "#eb6834",
+        "#1baf7a",
+        "#eda100",
+        "#e87ba4",
+        "#008300",
+        "#4a3aa7",
+        "#e34948"
+      ],
+      "diverging": [
+        "#256abf",
+        "#6da7ec",
+        "#cde2fb",
+        "#f0efec",
+        "#f6c3bd",
+        "#ee7d78",
+        "#c0392b"
+      ],
+      "heatmap": [
+        "#cde2fb",
+        "#9ec5f4",
+        "#6da7ec",
+        "#3987e5",
+        "#256abf",
+        "#184f95",
+        "#0d366b"
+      ],
+      "ordinal": [
+        "#cde2fb",
+        "#9ec5f4",
+        "#6da7ec",
+        "#3987e5",
+        "#256abf",
+        "#184f95",
+        "#0d366b"
+      ],
+      "ramp": [
+        "#cde2fb",
+        "#9ec5f4",
+        "#6da7ec",
+        "#3987e5",
+        "#256abf",
+        "#184f95",
+        "#0d366b"
+      ]
+    },
+    "rect": {
+      "stroke": "#fcfcfb",
+      "strokeWidth": 1
+    },
+    "title": {
+      "anchor": "start",
+      "color": "#0b0b0b",
+      "fontSize": 16,
+      "fontWeight": 600,
+      "offset": 12,
+      "subtitleColor": "#52514e",
+      "subtitleFontSize": 12
+    },
+    "view": {
+      "continuousHeight": 300,
+      "continuousWidth": 480,
+      "stroke": null
+    }
+  },
+  "hash": "sha256:75a89450feaa47994e039b88b712f6683eac5b607f6df46d1a1d70574ef4640a",
+  "source": "bin/chart theme --json"
+}

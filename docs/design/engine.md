@@ -286,6 +286,14 @@ one `next` command. In Lisp they map to `define-error` children of
 `eas-error` with data `(MESSAGE :code CODE ...)`, the convention
 AGENTS.md already sets.
 
+`UNSUPPORTED_FEATURE` comes in two strengths. A feature outside the
+native subset (a mark, channel, transform or scale type) decides the
+backend: the view is static. A documented property the native
+renderers do not draw (an axis `zindex`, a legend `orient: "top"`, a
+title `subtitle`) comes back with `ignored: true` and its path: `check`
+lists it under `warnings` but keeps `native: true`, and the chart
+renders natively without it (`eas-spec-props.el`, fc-qx1.40).
+
 ## 6. Conformance: bin/chart is the oracle
 
 - A gallery of `test/conformance/*.vl.json` specs, one or more per

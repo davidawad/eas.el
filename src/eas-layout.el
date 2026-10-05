@@ -61,7 +61,7 @@ CONFIG is the Vega config in force (default `eas-theme-default')."
               :legend-margin 8 :symbol-size (get 100 :legend :symbolSize)
               :symbol-type (get "circle" :legend :symbolType) :symbol-stroke-width (get 1.5 :legend :symbolStrokeWidth)
               :gradient-thickness (get 16 :legend :gradientThickness)
-              :spacing 20 :char-w nil :step (get 20 :view :step)
+              :spacing (get 20 :concat :spacing) :char-w nil :step (get 20 :view :step)
               :width (get 300 :view :continuousWidth) :height (get 300 :view :continuousHeight)
               :x-tick-spacing 40 :y-tick-spacing 40)))))
 
@@ -417,7 +417,9 @@ labels, title) without the half-pixel translate of the drawn lines."
   (if (eas-layout-text-p metrics)
       (eas-layout-axis-place-text axis scale bounds metrics)
     (let* ((x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3))
-           (tick (eas-layout--tick axis metrics))
+           ;; Vega offsets labels and the title by no tick when ticks are off.
+           (off (plist-get axis :ticks-off))
+           (tick (if off 0 (eas-layout--tick axis metrics)))
            (pad (or (plist-get axis :label-padding) (plist-get metrics :label-pad)))
            (size (or (plist-get (plist-get axis :style) :labelFontSize) (plist-get metrics :label-size)))
            (offset (or (plist-get axis :label-offset) 0))
@@ -454,10 +456,11 @@ labels, title) without the half-pixel translate of the drawn lines."
            (ab (apply #'eas-layout-union
                       (if bottom (vector x0 (+ y0 h) (+ x0 w) (+ y0 h tick))
                         (vector (- x0 tick) y0 x0 (+ y0 h)))
-                      (mapcar (lambda (tk) (let ((p (funcall tick-pos tk)))
-                                             (if bottom (vector (- p 1) (+ y0 h -1) (+ p 1) (+ y0 h tick 1))
-                                               (vector (- x0 tick 1) (- p 1) (+ x0 1) (+ p 1)))))
-                              ticks)))
+                      (unless off
+                        (mapcar (lambda (tk) (let ((p (funcall tick-pos tk)))
+                                               (if bottom (vector (- p 1) (+ y0 h -1) (+ p 1) (+ y0 h tick 1))
+                                                 (vector (- x0 tick 1) (- p 1) (+ x0 1) (+ p 1)))))
+                                ticks))))
            (placed (vconcat
                     (seq-map (lambda (tk)
                                (let ((p (+ 0.5 (funcall tick-pos tk))) (l (funcall label tk)) (show (memq tk shown)))

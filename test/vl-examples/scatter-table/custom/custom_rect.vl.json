@@ -1,0 +1,19 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customization: a heatmap with non-default mark, axis, legend, scale, title and config properties.",
+ "data": {"url": "../../data/cars.json"},
+ "title": {"text": "Mean horsepower", "anchor": "end", "fontSize": 14, "fontWeight": "normal", "color": "#1d3557", "dy": -2},
+ "mark": {"type": "rect", "stroke": "#ffffff", "strokeWidth": 2},
+ "encoding": {
+  "x": {"field": "Cylinders", "type": "ordinal",
+        "axis": {"labelAngle": 0, "ticks": false, "domain": false, "labelFontSize": 12, "labelPadding": 6,
+                 "titleColor": "#1d3557", "titleFontSize": 12}},
+  "y": {"field": "Origin", "type": "nominal",
+        "axis": {"ticks": false, "domain": false, "labelColor": "#1d3557", "title": null}},
+  "color": {"aggregate": "mean", "field": "Horsepower", "type": "quantitative",
+            "scale": {"scheme": "greens"},
+            "legend": {"title": "hp", "gradientLength": 110, "gradientThickness": 10, "titleFontWeight": "normal",
+                       "labelFontSize": 9, "labelColor": "#555555"}}
+ },
+ "config": {"view": {"step": 34, "stroke": null}, "axis": {"labelColor": "#333333"}, "title": {"offset": 16}}
+}

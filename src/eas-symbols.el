@@ -46,17 +46,22 @@
       ("stroke" (list (cons (- r) 0) (cons r 0))))))
 
 (defun eas-symbols--fmt (v)
-  "V for SVG path data."
-  (let ((s (format "%.2f" v)))
-    (replace-regexp-in-string "\\.?0+\\'" "" (if (string-match-p "\\`-0\\.00\\'" s) "0" s))))
+  "V for SVG path data: two decimals without trailing zeros (\"-0\" is 0)."
+  (let* ((s (format "%.2f" v)) (e (length s)))
+    (if (equal s "-0.00") "0"
+      ;; Trim zeros back to the point, then the point (no regexp: one per vertex).
+      (while (eq (aref s (1- e)) ?0) (setq e (1- e)))
+      (when (eq (aref s (1- e)) ?.) (setq e (1- e)))
+      (substring s 0 e))))
 
 (defun eas-symbols-path (shape x y size &optional angle)
   "SVG path data of SHAPE (area SIZE) at X Y turned ANGLE degrees.\nReturn nil for circles."
   (when-let* ((pts (eas-symbols-points shape size)))
     (let* ((a (degrees-to-radians (or angle 0))) (c (cos a)) (s (sin a)))
       (concat (mapconcat (lambda (p)
-                           (format "%s%s,%s" (if (eq p (car pts)) "M" "L")
+                           (concat (if (eq p (car pts)) "M" "L")
                                    (eas-symbols--fmt (+ x (- (* c (car p)) (* s (cdr p)))))
+                                   ","
                                    (eas-symbols--fmt (+ y (* s (car p)) (* c (cdr p))))))
                          pts "")
               (if (equal shape "stroke") "" "Z")))))

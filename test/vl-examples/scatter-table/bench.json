@@ -1,0 +1,399 @@
+{
+  "emacs": "30.1",
+  "compiled": true,
+  "zone": "America/Chicago",
+  "reps": 20,
+  "calibration_ms": 89.3,
+  "baseline_calibration_ms": 109.6,
+  "examples": {
+    "circle": {
+      "rows": 406,
+      "items": 392,
+      "ms": {
+        "compile-svg": 14.2,
+        "compile-text": 9.9,
+        "hover": 0.9,
+        "render-svg": 16.1,
+        "render-text": 4.3
+      },
+      "baseline_ms": {
+        "compile-svg": 15.6,
+        "compile-text": 11.1,
+        "hover": 2.1,
+        "render-svg": 27.8,
+        "render-text": 4.7
+      }
+    },
+    "circle_binned": {
+      "rows": 3201,
+      "items": 64,
+      "ms": {
+        "compile-svg": 47.0,
+        "compile-text": 42.4,
+        "hover": 0.4,
+        "render-svg": 5.2,
+        "render-text": 1.7
+      },
+      "baseline_ms": {
+        "compile-svg": 48.4,
+        "compile-text": 49.0,
+        "hover": 0.4,
+        "render-svg": 6.3,
+        "render-text": 2.3
+      }
+    },
+    "circle_bubble_health_income": {
+      "rows": 187,
+      "items": 187,
+      "ms": {
+        "compile-svg": 7.9,
+        "compile-text": 6.3,
+        "hover": 0.5,
+        "render-svg": 11.5,
+        "render-text": 9.8
+      },
+      "baseline_ms": {
+        "compile-svg": 10.4,
+        "compile-text": 5.2,
+        "hover": 0.5,
+        "render-svg": 15.7,
+        "render-text": 10.0
+      }
+    },
+    "circle_custom_tick_labels": {
+      "rows": 3201,
+      "items": 13,
+      "ms": {
+        "compile-svg": 21.7,
+        "compile-text": 20.2,
+        "hover": 0.1,
+        "render-svg": 2.5,
+        "render-text": 2.3
+      },
+      "baseline_ms": {
+        "compile-svg": 19.0,
+        "compile-text": 19.3,
+        "hover": 0.1,
+        "render-svg": 1.8,
+        "render-text": 2.7
+      }
+    },
+    "circle_github_punchcard": {
+      "rows": 955,
+      "items": 168,
+      "ms": {
+        "compile-svg": 31.6,
+        "compile-text": 27.0,
+        "hover": 0.5,
+        "render-svg": 9.5,
+        "render-text": 2.7
+      },
+      "baseline_ms": {
+        "compile-svg": 271.2,
+        "compile-text": 257.1,
+        "hover": 0.6,
+        "render-svg": 9.9,
+        "render-text": 4.7
+      }
+    },
+    "circle_natural_disasters": {
+      "rows": 803,
+      "items": 686,
+      "ms": {
+        "compile-svg": 34.5,
+        "compile-text": 27.0,
+        "hover": 15.8,
+        "render-svg": 26.2,
+        "render-text": 12.7
+      },
+      "baseline_ms": {
+        "compile-svg": 65.6,
+        "compile-text": 40.2,
+        "hover": 15.4,
+        "render-svg": 41.3,
+        "render-text": 12.4
+      }
+    },
+    "layer_text_heatmap": {
+      "rows": 406,
+      "items": 18,
+      "ms": {
+        "compile-svg": 7.6,
+        "compile-text": 5.7,
+        "hover": 0.2,
+        "render-svg": 2.0,
+        "render-text": 1.2
+      },
+      "baseline_ms": {
+        "compile-svg": 7.5,
+        "compile-text": 5.7,
+        "hover": 0.2,
+        "render-svg": 4.3,
+        "render-text": 0.9
+      }
+    },
+    "point_2d": {
+      "rows": 406,
+      "items": 392,
+      "ms": {
+        "compile-svg": 13.5,
+        "compile-text": 9.0,
+        "hover": 1.0,
+        "render-svg": 14.8,
+        "render-text": 5.3
+      },
+      "baseline_ms": {
+        "compile-svg": 12.6,
+        "compile-text": 8.8,
+        "hover": 0.8,
+        "render-svg": 22.0,
+        "render-text": 6.1
+      }
+    },
+    "point_angle_windvector": {
+      "rows": 4800,
+      "items": 4800,
+      "ms": {
+        "compile-svg": 248.8,
+        "compile-text": 225.0,
+        "hover": 6.5,
+        "render-svg": 192.5,
+        "render-text": 53.4
+      }
+    },
+    "point_bubble": {
+      "rows": 406,
+      "items": 392,
+      "ms": {
+        "compile-svg": 12.1,
+        "compile-text": 10.6,
+        "hover": 0.7,
+        "render-svg": 18.1,
+        "render-text": 3.7
+      },
+      "baseline_ms": {
+        "compile-svg": 14.1,
+        "compile-text": 11.5,
+        "hover": 1.0,
+        "render-svg": 22.1,
+        "render-text": 4.9
+      }
+    },
+    "point_color_with_shape": {
+      "rows": 344,
+      "items": 342,
+      "ms": {
+        "compile-svg": 15.7,
+        "compile-text": 12.4,
+        "hover": 0.6,
+        "render-svg": 21.1,
+        "render-text": 4.5
+      },
+      "baseline_ms": {
+        "compile-svg": 14.4,
+        "compile-text": 11.9,
+        "hover": 0.8,
+        "render-svg": 51.0,
+        "render-text": 6.4
+      }
+    },
+    "point_invalid_color": {
+      "rows": 3201,
+      "items": 2260,
+      "ms": {
+        "compile-svg": 104.0,
+        "compile-text": 97.5,
+        "hover": 4.8,
+        "render-svg": 77.1,
+        "render-text": 14.5
+      },
+      "baseline_ms": {
+        "compile-svg": 101.2,
+        "compile-text": 88.9,
+        "hover": 5.0,
+        "render-svg": 115.5,
+        "render-text": 18.1
+      }
+    },
+    "point_offset_random": {
+      "rows": 406,
+      "items": 400,
+      "ms": {
+        "compile-svg": 13.0,
+        "compile-text": 13.0,
+        "hover": 0.9,
+        "render-svg": 13.9,
+        "render-text": 5.9
+      },
+      "baseline_ms": {
+        "compile-svg": 16.4,
+        "compile-text": 15.1,
+        "hover": 0.8,
+        "render-svg": 21.9,
+        "render-text": 3.9
+      }
+    },
+    "rect_binned_heatmap": {
+      "rows": 3201,
+      "items": 378,
+      "ms": {
+        "compile-svg": 82.4,
+        "compile-text": 77.4,
+        "hover": 1.8,
+        "render-svg": 15.4,
+        "render-text": 4.4
+      },
+      "baseline_ms": {
+        "compile-svg": 81.4,
+        "compile-text": 76.3,
+        "hover": 1.4,
+        "render-svg": 24.5,
+        "render-text": 5.1
+      }
+    },
+    "rect_heatmap": {
+      "rows": 406,
+      "items": 9,
+      "ms": {
+        "compile-svg": 6.4,
+        "compile-text": 2.4,
+        "hover": 0.1,
+        "render-svg": 1.6,
+        "render-text": 0.9
+      },
+      "baseline_ms": {
+        "compile-svg": 6.0,
+        "compile-text": 3.6,
+        "hover": 0.1,
+        "render-svg": 1.5,
+        "render-text": 0.6
+      }
+    },
+    "rect_heatmap_weather": {
+      "rows": 1461,
+      "items": 366,
+      "ms": {
+        "compile-svg": 55.9,
+        "compile-text": 47.1,
+        "hover": 1.7,
+        "render-svg": 15.8,
+        "render-text": 9.8
+      },
+      "baseline_ms": {
+        "compile-svg": 436.2,
+        "compile-text": 364.4,
+        "hover": 3.4,
+        "render-svg": 22.4,
+        "render-text": 12.6
+      }
+    },
+    "rect_lasagna": {
+      "rows": 560,
+      "items": 492,
+      "ms": {
+        "compile-svg": 55.5,
+        "compile-text": 37.7,
+        "hover": 4.1,
+        "render-svg": 20.6,
+        "render-text": 4.8
+      },
+      "baseline_ms": {
+        "compile-svg": 235.1,
+        "compile-text": 160.8,
+        "hover": 2.0,
+        "render-svg": 24.3,
+        "render-text": 5.1
+      }
+    },
+    "rect_mosaic_labelled_with_offset": {
+      "rows": 406,
+      "items": 21,
+      "ms": {
+        "compile-svg": 10.8,
+        "compile-text": 10.6,
+        "hover": 0.2,
+        "render-svg": 0.9,
+        "render-text": 1.5
+      },
+      "baseline_ms": {
+        "compile-svg": 12.0,
+        "compile-text": 11.1,
+        "hover": 0.2,
+        "render-svg": 1.2,
+        "render-text": 1.5
+      }
+    },
+    "scatter_image": {
+      "rows": 3,
+      "items": 3,
+      "ms": {
+        "compile-svg": 5.0,
+        "compile-text": 0.9,
+        "hover": 0.1,
+        "render-svg": 2.1,
+        "render-text": 1.4
+      },
+      "baseline_ms": {
+        "compile-svg": 3.0,
+        "compile-text": 0.9,
+        "hover": 0.1,
+        "render-svg": 2.5,
+        "render-text": 3.7
+      }
+    },
+    "text_scatterplot_colored": {
+      "rows": 406,
+      "items": 392,
+      "ms": {
+        "compile-svg": 19.0,
+        "compile-text": 12.7,
+        "hover": 0.2,
+        "render-svg": 14.9,
+        "render-text": 5.9
+      },
+      "baseline_ms": {
+        "compile-svg": 23.8,
+        "compile-text": 14.4,
+        "hover": 0.2,
+        "render-svg": 27.5,
+        "render-text": 7.6
+      }
+    },
+    "tick_dot": {
+      "rows": 1461,
+      "items": 1461,
+      "ms": {
+        "compile-svg": 31.6,
+        "compile-text": 23.1,
+        "hover": 4.5,
+        "render-svg": 51.3,
+        "render-text": 12.5
+      },
+      "baseline_ms": {
+        "compile-svg": 34.3,
+        "compile-text": 25.4,
+        "hover": 5.2,
+        "render-svg": 88.4,
+        "render-text": 11.6
+      }
+    },
+    "tick_strip": {
+      "rows": 406,
+      "items": 400,
+      "ms": {
+        "compile-svg": 13.2,
+        "compile-text": 7.3,
+        "hover": 2.2,
+        "render-svg": 13.4,
+        "render-text": 4.7
+      },
+      "baseline_ms": {
+        "compile-svg": 13.2,
+        "compile-text": 9.7,
+        "hover": 2.2,
+        "render-svg": 24.6,
+        "render-text": 6.2
+      }
+    }
+  }
+}

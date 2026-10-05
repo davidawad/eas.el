@@ -1117,3 +1117,67 @@ gray domain line is under pixelmatch's color threshold), so "native
 ignores it" is decided from the SVGs (Vega's changed, native's did not),
 and the ratios only judge correctness. Verdicts and their use:
 gallery-coverage.md.
+
+## 12. Vega-Lite gallery: scatter-table polish (fc-qx1.40)
+
+All 22 scatter-table examples now pass (they were 18 pass, 3 partial
+and 1 unsupported). Each fix is in shared code:
+
+| example | was | fix |
+|---|---|---|
+| rect_mosaic_labelled_with_offset | 0.6344 | `eas-compile--values` read the y2 partner for every channel, so `ny2` leaked into the color and opacity domains (`eas-compile-scales.el`); `resolve.scale.x: "shared"` now unions concatenated views' positional domains (`eas-compile-shared-pos.el`); a layer's `axis.title` titles the merged axis (`eas-bins.el`); `config.concat.spacing` is read; ticks that are off take no room before the title (`eas-layout.el`). Ratio 0.0137, canvas within 1 px. |
+| point_angle_windvector | unsupported | equalEarth, mercator and equirectangular projections of longitude/latitude points (`eas-projection.el`): d3-geo's raw formulas, lowered at compile to projected x/y, fitted after layout as d3's `fitSize` does (one scale factor, centred). Ratio 0.0003; the same chart with every wedge turned 90 degrees scores 0.307. |
+| rect_lasagna | overlap at 320x200 | `labelOverlap: false` asks for every label. The yearly labels' advance boxes overlap by about 1 px at 320x200, as Vega's do. The gallery overlap check now leaves axes with an explicit `labelOverlap: false` alone. |
+| point_offset_random | 0.0646 > 0.03 | Vega's `random()` is `Math.random`, so its jitter cannot be reproduced. Two native renders that differ only in their pseudo-random jitter differ by 0.066 to 0.068, which is as much as native and reference differ. The threshold is 0.08, with that reason in `status.json`. |
+
+This box had no rsvg-convert. librsvg 2.60 and its libraries were
+unpacked from Debian trixie, with DejaVu and Liberation fonts. Text
+here antialiases slightly lighter than the references, so text-heavy
+examples score 0.005 to 0.01 higher than where they were recorded. At
+the parent commit, five recorded passes exceed their threshold here
+for that reason alone (scatter-table layer_text_heatmap 0.0385 and
+rect_heatmap 0.0312; layered/layer_text_heatmap;
+distributions/boxplot_preaggregated and histogram_nonlinear). The full
+gallery was re-scored before and after this change on the same box:
+no verdict changed outside the group. Seven examples outside it scored
+better through the ticks-off and spacing fixes (bar_negative 0.0112 to
+0.0065, its canvas now exact; bar_heatlane 0.1927 to 0.1737;
+concat_layer_voyager_result 0.0723 to 0.0662). One partial,
+multiview/trellis_anscombe, moved from 0.0214 to 0.0221, and its canvas
+went from 2 px too wide to 4 px too narrow.
+
+Efficiency (`test/vl-examples/scatter-table/bench.json`, the bench verb
+byte-compiled, means of 20 runs). The five stages summed over the 21
+examples that rendered before took 3362 ms at the parent commit and
+1613 ms after this change (-52%; -54% with the run order reversed):
+
+| example | before ms | after ms | what |
+|---|---:|---:|---|
+| rect_heatmap_weather | 842 | 143 | time units: a zone's UTC offset cached per 15-minute bucket (exact; checked against `decode-time` at 126k instants in 7 zones), `encode-time` memoized by fields, unit strings parsed once |
+| circle_github_punchcard | 545 | 75 | same |
+| rect_lasagna | 483 | 125 | same |
+| point_invalid_color | 332 | 230 | SVG: symbol paths built once, not twice; numbers and escapes without regexps; attribute names interned once |
+| circle | 73 | 43 | same; circles no longer copy their unit per row |
+
+`svg-print` stays: a hand-rolled printer produced identical bytes but
+was slower (84 ms against 51 ms on windvector's 2016 wedges). The new
+windvector chart costs 715 ms over all five stages. Most of that is
+`format "%.2f"` per vertex and GC.
+
+Customizability. Each documented axis, legend, title, config.view and
+mark property was set to a non-default value on a small chart, and the
+native SVG was compared with the default one. The properties that
+changed nothing, and were not cheap to honor, are now reported by
+`check` as UNSUPPORTED_FEATURE with their path and `ignored: true`;
+the chart still renders natively (`eas-spec-props.el`). Newly honored:
+legend objects override config.legend for their own legend (labels,
+symbols, title and padding), axis label and title font, font style and
+opacity, tick and domain opacity, `domainDash` and caps, axis
+`titlePadding` on left and bottom axes, title `anchor`, `dx`, `dy`,
+`font` and `fontStyle`, the `config.view` frame's `strokeWidth`,
+`strokeDash` and `strokeOpacity`, text-mark `font`, `fontStyle` and
+`angle`, and rect `strokeWidth`. Four customization specs
+(`custom/custom_{point,rect,tick,text}.vl.json`) use only honored
+properties. bin/chart is not in this box, so their references are
+built by `eas-vl-custom-build-refs` (and the ERT oracle test) wherever
+it is installed. Until then that test reports itself skipped.

@@ -155,7 +155,9 @@ non-nil), so they come back as warnings with native false."
   (let* ((src (eas-agent-resolve-source "check" pos opts))
          (spec (plist-get src :spec))
          (findings (eas-agent--check-findings spec))
-         (errors (car findings)) (unsupported (cdr findings))
+         (errors (car findings))
+         ;; Ignored properties warn; the chart still renders natively without them.
+         (unsupported (seq-remove (lambda (f) (plist-get f :ignored)) (cdr findings)))
          (data (list :template (or (plist-get src :template) :null)
                      :hash (eas-resolve-hash spec)
                      ;; An undrawn style property still draws natively.

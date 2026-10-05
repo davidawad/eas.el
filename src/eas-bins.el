@@ -74,10 +74,14 @@ distinct default title of the channel and its x2/y2 partner joined by
                                         collect (cons ch d))))
          (first (cdr (assq channel defs))))
     (when first
-      (let ((explicit (seq-find (lambda (d) (plist-member (cdr d) :title)) defs)))
+      (let* ((axis-title (lambda (d) (let ((a (plist-get d :axis))) (and (eas-object-p a) (plist-member a :title)))))
+             ;; A layer's axis.title is as explicit as its title.
+             (explicit (seq-find (lambda (d) (or (plist-member (cdr d) :title) (funcall axis-title (cdr d)))) defs)))
         (cond
-         ((plist-member first :title) first)
-         (explicit (append (list :title (plist-get (cdr explicit) :title)) first))
+         ((or (plist-member first :title) (funcall axis-title first)) first)
+         (explicit (append (list :title (if (plist-member (cdr explicit) :title) (plist-get (cdr explicit) :title)
+                                          (plist-get (plist-get (cdr explicit) :axis) :title)))
+                           first))
          (t (let ((titles (delete-dups (delq nil (mapcar (lambda (d) (eas-encode-title (cdr d))) defs)))))
               (if (cdr titles) (append (list :title (string-join titles ", ")) first) first))))))))
 

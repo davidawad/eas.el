@@ -139,13 +139,15 @@ legend's column from its title to its last entry."
                 (- bottom (plist-get legend :y)))))))
 
 (defun eas-vl-gallery--label-collisions (scene)
-  "Axes of SCENE whose shown tick labels collide, as problem strings."
+  "Axes of SCENE whose shown tick labels collide, as problem strings.
+An axis whose spec sets labelOverlap false asked for every label, as
+Vega draws them, colliding or not: its labels are not a layout problem."
   (let* ((metrics (and (plist-get scene :target)
                        (eas-layout-metrics (intern (plist-get scene :target)) (plist-get (plist-get scene :size) :cell)
                                            (plist-get scene :config))))
          (size (plist-get metrics :label-size)) out)
     (seq-doseq (view (plist-get scene :views))
-      (seq-doseq (axis (plist-get view :axes))
+      (seq-doseq (axis (seq-remove (lambda (a) (plist-get a :label-overlap-off)) (plist-get view :axes)))
         (let ((boxes (cl-loop for tk across (plist-get axis :ticks)
                               unless (string-empty-p (plist-get tk :label))
                               collect (eas-layout-text-bounds

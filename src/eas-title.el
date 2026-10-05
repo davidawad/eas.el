@@ -80,6 +80,21 @@ on a bottom baseline, round(0.8 size) - round(-0.21 size) above it."
        (let ((color (plist-get (eas-title--object spec) :color))) (when (stringp color) (list :color color)))))))
 
 
+(defun eas-title-anchor (spec metrics)
+  "SPEC's title anchor: its own, else config.title's (METRICS)."
+  (let ((a (plist-get (eas-title--object spec) :anchor)))
+    (if (member a '("start" "middle" "end")) a (plist-get metrics :chart-title-anchor))))
+
+(defun eas-title-style (spec metrics)
+  "Scene title properties beyond size and weight: :dx :dy :font :fontStyle,
+from SPEC's title object over config.title (METRICS)."
+  (unless (eas-layout-text-p metrics)
+    (let ((obj (eas-title--object spec)) (config (eas-theme-get (plist-get metrics :config) :title)) out)
+      (dolist (k '(:dx :dy :font :fontStyle))
+        (let ((v (if (plist-member obj k) (plist-get obj k) (plist-get config k))))
+          (when (or (numberp v) (stringp v)) (setq out (append out (list k v))))))
+      out)))
+
 ;;; Titles of concat cells
 
 (defun eas-title-view-mark (group metrics)

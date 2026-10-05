@@ -68,6 +68,10 @@ restyles it (eas-legend-style.el)."
           (setq base (append base (list :columns (plist-get legend :columns)))))
         (when (numberp (plist-get legend :offset))
           (setq base (append base (list :offset (plist-get legend :offset)))))
+        ;; The legend's own look (labelColor, symbolSize, titlePadding, ...)
+        ;; overrides config.legend for this legend only.
+        (when-let* ((props (eas-legend--props legend)))
+          (setq base (append base (list :props props))))
         (pcase (plist-get scale :type)
           ("ordinal"
            (append base (list :type "symbol"
@@ -109,6 +113,23 @@ restyles it (eas-legend-style.el)."
                                                                     (list (if (eq channel :size) :size :opacity)
                                                                           (eas-scale-apply scale v))))
                                                           values)))))))))))
+
+(defconst eas-legend--placed-keys
+  '(:title :orient :legendX :legendY :direction :clipHeight :gradientLength :offset :values :type)
+  "Legend properties the model reads itself rather than through config.legend.")
+
+(defun eas-legend--props (legend)
+  "LEGEND object's properties that override config.legend, or nil."
+  (when (eas-object-p legend)
+    (cl-loop for (k v) on legend by #'cddr
+             unless (memq k eas-legend--placed-keys) append (list k v))))
+
+(defun eas-legend-metrics (legend metrics)
+  "METRICS with LEGEND's own properties merged over config.legend."
+  (if-let* ((props (plist-get legend :props)))
+      (eas-layout-metrics (intern (plist-get metrics :target)) (plist-get metrics :cell)
+                          (eas-theme-merge (plist-get metrics :config) (list :legend props)))
+    metrics))
 
 ;;; Text target
 

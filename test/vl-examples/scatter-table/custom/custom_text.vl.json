@@ -1,0 +1,21 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customization: a text scatter plot with non-default mark, axis, legend, scale, title and config properties.",
+ "data": {"url": "../../data/cars.json"},
+ "transform": [{"filter": "datum.Acceleration > 20"}],
+ "title": {"text": "Slow-accelerating cars", "fontSize": 15, "fontWeight": "normal", "fontStyle": "italic"},
+ "width": 320,
+ "height": 220,
+ "mark": {"type": "text", "fontSize": 12, "fontWeight": "bold", "fontStyle": "italic", "angle": -20,
+          "align": "left", "baseline": "bottom", "dx": 3, "dy": -2},
+ "encoding": {
+  "x": {"field": "Horsepower", "type": "quantitative", "scale": {"zero": false},
+        "axis": {"labelOverlap": "greedy", "labelFontSize": 9, "titleFontSize": 12}},
+  "y": {"field": "Weight_in_lbs", "type": "quantitative", "scale": {"zero": false},
+        "axis": {"format": "~s", "labelColor": "#7f5539", "gridOpacity": 0.4}},
+  "color": {"field": "Origin", "type": "nominal", "scale": {"scheme": "set1"},
+            "legend": {"labelFontStyle": "italic", "symbolType": "circle", "symbolSize": 60, "titleFontSize": 12}},
+  "text": {"field": "Cylinders", "type": "quantitative"}
+ },
+ "config": {"axis": {"titleColor": "#7f5539", "domainColor": "#7f5539"}, "padding": 8}
+}

@@ -48,9 +48,10 @@
     "threshold": 0.03
   },
   "point_angle_windvector": {
-    "note": "needs the equalEarth projection, which is not implemented natively",
-    "reason": "needs the equalEarth projection, which is not implemented natively; projection/equalEarth is not in the native subset; the chart falls back to a static image",
-    "status": "unsupported"
+    "ratio": 0.0003,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0003 (threshold 0.03), size delta [4 2] px",
+    "status": "pass",
+    "threshold": 0.03
   },
   "point_bubble": {
     "ratio": 0.0023,
@@ -71,11 +72,11 @@
     "threshold": 0.03
   },
   "point_offset_random": {
-    "note": "Vega's random() is Math.random, so the reference's jitter cannot be reproduced; native uses a deterministic hash of the row (positions differ, the layout matches)",
-    "ratio": 0.0646,
-    "reason": "Vega's random() is Math.random, so the reference's jitter cannot be reproduced; native uses a deterministic hash of the row (positions differ, the layout matches); svg and text render natively at 3 sizes; oracle ratio 0.0646 (threshold 0.03)",
-    "status": "partial",
-    "threshold": 0.03
+    "note": "Vega's random() is Math.random, so the reference's jitter cannot be reproduced; native uses a deterministic hash of the row. Threshold 0.08: two native renders differing only in their pseudo-random jitter differ by 0.066-0.068, as much as native and reference do",
+    "ratio": 0.0676,
+    "reason": "Vega's random() is Math.random, so the reference's jitter cannot be reproduced; native uses a deterministic hash of the row. Threshold 0.08: two native renders differing only in their pseudo-random jitter differ by 0.066-0.068, as much as native and reference do; svg and text render natively at 3 sizes; oracle ratio 0.0676 (threshold 0.08)",
+    "status": "pass",
+    "threshold": 0.08
   },
   "rect_binned_heatmap": {
     "ratio": 0.0032,
@@ -96,17 +97,16 @@
     "threshold": 0.03
   },
   "rect_lasagna": {
-    "note": "labelOverlap false keeps every label, so at 320x200 the yearly labels collide as they would in Vega",
-    "ratio": 0.0069,
-    "reason": "labelOverlap false keeps every label, so at 320x200 the yearly labels collide as they would in Vega; svg and text render natively at 3 sizes; oracle ratio 0.0069 (threshold 0.03); overlaps: 320x200: x axis labels of view main collide",
-    "status": "partial",
+    "note": "labelOverlap false keeps every label: at 320x200 the yearly labels touch, as they do in Vega, and the overlap check leaves such axes alone",
+    "ratio": 0.0196,
+    "reason": "labelOverlap false keeps every label: at 320x200 the yearly labels touch, as they do in Vega, and the overlap check leaves such axes alone; svg and text render natively at 3 sizes; oracle ratio 0.0196 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "rect_mosaic_labelled_with_offset": {
-    "note": "the stack and window transforms now run and the mosaic's geometry matches; the colors differ (the top text layer and the rect layer take different Origin domains, so the shared color scale is assigned in another order) and the y axis is titled with its calculated fields rather than Cylinders",
-    "ratio": 0.6344,
-    "reason": "the stack and window transforms now run and the mosaic's geometry matches; the colors differ (the top text layer and the rect layer take different Origin domains, so the shared color scale is assigned in another order) and the y axis is titled with its calculated fields rather than Cylinders; svg and text render natively at 3 sizes; oracle ratio 0.6344 (threshold 0.03), size delta [5 11] px",
-    "status": "partial",
+    "ratio": 0.0137,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0137 (threshold 0.03), size delta [0 -1] px",
+    "status": "pass",
     "threshold": 0.03
   },
   "scatter_image": {

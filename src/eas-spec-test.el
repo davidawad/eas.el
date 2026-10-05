@@ -28,7 +28,6 @@
                              \"y\":{\"field\":\"b\",\"scale\":{\"type\":\"symlog\"}}}}"))
            '(("UNSUPPORTED_FEATURE" . "/facet")
              ("UNSUPPORTED_FEATURE" . "/mark")
-             ("UNSUPPORTED_FEATURE" . "/encoding/latitude")
              ("INVALID_INPUT" . "/encoding/x/type")
              ("UNSUPPORTED_FEATURE" . "/encoding/y/scale/type")
              ("UNSUPPORTED_FEATURE" . "/transform/0")))))

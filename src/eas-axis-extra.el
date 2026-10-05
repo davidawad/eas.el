@@ -86,6 +86,8 @@ CONFIG is the Vega config in force; ENV holds param values."
                                   (append (plist-get model :ticks) nil)))))
     (when labels-off (setq ticks (mapcar (lambda (tk) (plist-put tk :label "")) ticks)))
     (setq model (plist-put (copy-sequence model) :ticks (vconcat ticks)))
+    ;; An explicit labelOverlap false keeps every label, colliding or not.
+    (when (eq overlap :false) (setq model (plist-put model :label-overlap-off t)))
     (unless (eq overlap :none)
       (setq model (plist-put model :overlap-set t))
       (setq model (plist-put model :overlap (pcase overlap

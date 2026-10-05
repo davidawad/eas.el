@@ -1,0 +1,33 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customization: a scatter plot with non-default mark, axis, legend, scale, title and config properties.",
+ "data": {"url": "../../data/cars.json"},
+ "title": {"text": "Horsepower and fuel economy", "anchor": "start", "color": "#5b2a86", "fontSize": 16, "fontStyle": "italic", "offset": 14},
+ "width": 360,
+ "height": 240,
+ "mark": {"type": "point", "filled": true, "shape": "diamond", "size": 70, "opacity": 0.55},
+ "encoding": {
+  "x": {
+   "field": "Horsepower", "type": "quantitative",
+   "scale": {"domain": [40, 240], "nice": false},
+   "axis": {"title": "Horsepower (hp)", "titleColor": "#5b2a86", "titleFontSize": 13, "titlePadding": 8,
+            "labelColor": "#444444", "labelFontSize": 11, "labelFontStyle": "italic", "tickCount": 5, "format": ".0f",
+            "tickSize": 8, "tickColor": "#888888", "tickWidth": 2, "domainColor": "#333333", "domainWidth": 2,
+            "grid": true, "gridColor": "#e4e4e4", "gridDash": [4, 2]}
+  },
+  "y": {
+   "field": "Miles_per_Gallon", "type": "quantitative",
+   "scale": {"domain": [5, 50]},
+   "axis": {"title": "Miles per gallon", "orient": "right", "values": [10, 20, 30, 40], "labelPadding": 6,
+            "labelFontWeight": "bold", "titleFontWeight": "normal", "domainDash": [3, 3], "tickOpacity": 0.5}
+  },
+  "color": {
+   "field": "Origin", "type": "nominal",
+   "scale": {"range": ["#e45756", "#4c78a8", "#54a24b"]},
+   "legend": {"title": "Region", "titleColor": "#5b2a86", "titleFontSize": 12, "titlePadding": 8,
+              "labelColor": "#333333", "labelFontSize": 12, "symbolType": "square", "symbolSize": 120,
+              "rowPadding": 6, "offset": 24}
+  }
+ },
+ "config": {"background": "#fbfaf4", "padding": 10, "view": {"stroke": "#bbbbbb", "strokeWidth": 2}}
+}

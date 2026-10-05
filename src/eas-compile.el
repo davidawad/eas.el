@@ -41,6 +41,9 @@
 (require 'eas-nested)
 (require 'eas-layer)
 (require 'eas-independent)
+(require 'eas-compile-shared-pos)
+(require 'eas-projection)
+(require 'eas-spec-props)
 (require 'eas-title)
 (require 'eas-axis)
 (require 'eas-compile-aux)
@@ -258,7 +261,8 @@ a child field or datum def inherits the parent def's other properties."
                                                (vector y0 (+ y0 h)) (vector (+ y0 h) y0))))))
     (plist-put group :scales (eas-offset-set-ranges scales))
     (eas-polar-ranges group)
-    (eas-independent-ranges group)))
+    (eas-independent-ranges group)
+    (eas-projection-ranges group)))
 
 (defun eas-compile--brush-span (scale range lo len)
   "Pixel span (START . SIZE) of RANGE on SCALE; the whole LO..LO+LEN without RANGE."
@@ -314,7 +318,12 @@ a child field or datum def inherits the parent def's other properties."
           ;; Vega-Lite frames each plot with config.view.stroke; terminals don't.
           :frame (let ((stroke (plist-get (eas-theme-get (plist-get metrics :config) :view) :stroke)))
                    (unless (or (eas-layout-text-p metrics) (eq stroke :null))
-                     (list :stroke (if (stringp stroke) stroke "#ddd"))))
+                     (append (list :stroke (if (stringp stroke) stroke "#ddd"))
+                             ;; config.view's other stroke properties (fc-qx1.40).
+                             (cl-loop with view = (eas-theme-get (plist-get metrics :config) :view)
+                                      for k in '(:strokeWidth :strokeDash :strokeOpacity)
+                                      for v = (plist-get view k)
+                                      when (or (numberp v) (vectorp v)) append (list k v)))))
           :scales scales
           :axes (vconcat (mapcar (lambda (axis)
                                    (eas-layout-axis-place
@@ -354,7 +363,7 @@ a child field or datum def inherits the parent def's other properties."
 (defun eas-compile--title-width (total groups metrics spec title)
   "TOTAL (W . H) widened so a start-anchored TITLE fits, as Vega's autosize pads."
   (if (or (null title) (eas-layout-text-p metrics)
-          (not (equal (plist-get metrics :chart-title-anchor) "start")))
+          (not (equal (eas-title-anchor spec metrics) "start")))
       total
     (let ((need (+ (eas-compile--title-start groups metrics spec)
                    (apply #'max (mapcar (lambda (line)
@@ -388,7 +397,7 @@ Arguments as in `eas-compile'.  The runtime keeps the plan so that a
 selection change can patch it (`eas-compile-patch') instead of
 compiling again."
   (let* ((gc-cons-threshold (max gc-cons-threshold eas-compile-gc-threshold))
-         (spec (eas-composite-expand (eas-facet-expand (eas-overlay-expand (eas-spec-validate spec)))))
+         (spec (eas-projection-expand (eas-composite-expand (eas-facet-expand (eas-overlay-expand (eas-spec-validate spec))))))
          (unsupported (car (eas-spec-unsupported spec))))
     (when unsupported
       (eas-signal "UNSUPPORTED_FEATURE" (plist-get unsupported :message)
@@ -413,6 +422,7 @@ compiling again."
            (title-h (eas-title-height spec metrics)))
       (dolist (g groups) (eas-compile--scales g state metrics))
       (eas-shared-prepare tree groups spec)
+      (eas-shared-pos-prepare tree groups spec state)
       (let ((total (eas-place-layout tree metrics title-h size)))
         (dolist (g groups) (eas-compile--ranges g))
         ;; Vega's canvas also holds whatever the marks overhang: measure

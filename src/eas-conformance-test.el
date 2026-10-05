@@ -6,7 +6,7 @@
 (require 'eas)
 (require 'eas-agent)
 
-(defconst eas-conformance-test-unproven '("encoding/strokeOpacity" "encoding/longitude" "encoding/latitude")
+(defconst eas-conformance-test-unproven '("encoding/strokeOpacity")
   "Recognised features no gallery spec proves yet (so they fall back).")
 
 (defun eas-conformance-test--rasterizer-p ()
@@ -240,8 +240,9 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
     (let* ((view (eas-view-open eas-conformance-test--geo :id "map"))
            (inspect (eas-inspect view)))
       (should (eq (plist-get inspect :interactive) :false))
+      ;; latitude is native since fc-qx1.40 (projected points); the geoshape is not.
       (should (equal (mapcar (lambda (w) (plist-get w :path)) (plist-get inspect :warnings))
-                     '("/mark" "/encoding/latitude")))
+                     '("/mark")))
       (should (equal (plist-get (plist-get (plist-get inspect :static) :error) :code) "NOT_FOUND"))
       (eas-dispatch view '(:type "key" :key "+"))
       (should (equal (plist-get (eas-inspect view) :last-event) "key +"))

@@ -33,7 +33,8 @@
     :gridDash :labelColor :labelFontSize :labelFontWeight :titleColor :titleFontSize :titleFontWeight
     ;; fc-qx1.43
     :labelFont :labelFontStyle :labelOpacity :titleFont :titleFontStyle :titleOpacity
-    :tickOpacity :domainOpacity :domainDash :tickDash)
+    :tickOpacity :domainOpacity :domainDash :tickDash
+    :domainCap :tickCap :gridCap)
   "Axis properties the renderers read, overridable per axis.")
 
 (defconst eas-axis--layout-keys

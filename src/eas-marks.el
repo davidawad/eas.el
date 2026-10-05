@@ -118,7 +118,9 @@ per unit and shared by every item."
     (eas-paint-style (append (list :fill (if (eq fill :null) "none" fill) :stroke (if (eq stroke :null) "none" stroke) :opacity opacity)
                              (cl-loop for ch in '(:fillOpacity :strokeOpacity :strokeWidth)
                                       for v = (or (eas-marks--channel unit scales ch row)
-                                                  (and (not (eq ch :strokeWidth)) (plist-get mark ch)))
+                                                  ;; Point marks take their strokeWidth elsewhere.
+                                                  (and (or (not (eq ch :strokeWidth)) (member type '("bar" "rect")))
+                                                       (plist-get mark ch)))
                                       when (numberp v) append (list ch v))))))
 
 (defun eas-marks--extras (unit row)
@@ -215,7 +217,11 @@ Returns the plot centre when the channel is absent."
 
 (defun eas-marks--point-row (unit scales bounds metrics)
   "Row builder (ROW I -> item) for point, circle, square and text marks."
-  (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type)))
+  (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type))
+         ;; Circles and squares are always filled: one styled unit, not one per row.
+         (styled (if (member type '("circle" "square"))
+                     (plist-put (copy-sequence unit) :mark (plist-put (copy-sequence mark) :filled t))
+                   unit)))
     (lambda (row i)
        (let ((x (eas-marks--pos unit scales :x row bounds))
              (y (eas-marks--pos unit scales :y row bounds)))
@@ -246,7 +252,12 @@ Returns the plot centre when the channel is absent."
                                :baseline (or (eas-marks--mark-value unit :baseline row) "middle")
                                :fill (eas-marks-props-text-fill unit scales row)
                                :opacity (or (plist-get mark :opacity) 1))
-                          (when (plist-get mark :fontWeight) (list :fontWeight (plist-get mark :fontWeight)))))
+                          (when (plist-get mark :fontWeight) (list :fontWeight (plist-get mark :fontWeight)))
+                          ;; font, fontStyle and the angle (channel or mark) the svg text takes.
+                          (cl-loop for k in '(:font :fontStyle) for v = (plist-get mark k)
+                                   when (stringp v) append (list k v))
+                          (when-let* ((a (or (eas-marks--channel unit scales :angle row) (plist-get mark :angle))))
+                            (when (and (numberp a) (/= a 0)) (list :angle a)))))
                      (append (list :size (or (eas-marks--channel unit scales :size row)
                                              (plist-get mark :size) 30)
                                    :shape (or (eas-marks--channel unit scales :shape row) (plist-get mark :shape)
@@ -255,11 +266,7 @@ Returns the plot centre when the channel is absent."
                                                     (plist-get mark :strokeWidth) 2))
                              (when-let* ((a (or (eas-marks--channel unit scales :angle row) (plist-get mark :angle))))
                                (list :angle a))
-                             (eas-marks--style
-                              (if (member type '("circle" "square"))
-                                  (plist-put (copy-sequence unit) :mark (plist-put (copy-sequence mark) :filled t))
-                                unit)
-                              scales row)))
+                             (eas-marks--style styled scales row)))
                    (eas-marks--extras unit row)))))))
 
 (defun eas-marks--text (def v)

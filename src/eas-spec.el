@@ -116,8 +116,9 @@
     :lookup :regression :loess :quantile)
   "Transform keys chart/v1 recognises; the first key present names it.")
 
-(defconst eas-spec--projections nil
-  "Map projections drawn natively: none (a projection is unsupported).")
+(defconst eas-spec--projections '("equalEarth" "mercator" "equirectangular")
+  "Map projections drawn natively, for points placed by longitude/latitude
+\(eas-projection.el).")
 
 (defconst eas-spec--select-keys
   '(:type :on :nearest :fields :encodings :clear :toggle :resolve :mark :translate :zoom)
@@ -352,6 +353,11 @@ honor and draws without; it does not stop native rendering
 (defun eas-spec-supported-features ()
   "Return the list of supported feature IDs, or t when unrestricted."
   (if eas-spec-supported-function (funcall eas-spec-supported-function) t))
+
+(defvar eas-spec-check-functions nil
+  "Functions (PARSED-SPEC) -> more findings for `eas-spec-check'.
+A finding with :ignored t names a property the chart renders without
+\(eas-spec-props.el): it warns but never blocks native compile.")
 
 (defun eas-spec-check (spec)
   "Return findings for chart/v1 SPEC; nil when it is fully supported.

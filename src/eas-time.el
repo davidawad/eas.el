@@ -141,6 +141,35 @@ Months may be numbers (1-12) or names; utc true reads it in UTC."
                       (* 3600 hour) (* 60 (- minute offset)) sec))
            ms))))))
 
+;; Converting in a named zone sets TZ for each call, which dominates
+;; time units over thousands of rows.  A zone's UTC offset is cached per
+;; 15-minute bucket when it is the same at both ends of the bucket (every
+;; transition then lies outside it); local fields then follow from UTC
+;; arithmetic.  Buckets holding a transition convert exactly.
+
+(defvar eas-time--offsets (make-hash-table :test 'equal)
+  "(ZONE . BUCKET) -> the zone's UTC offset in seconds throughout the
+15-minute BUCKET, or `mixed' when it changes inside it.")
+
+(defvar eas-time--encoded (make-hash-table :test 'equal)
+  "(ZONE YEAR MONTH DAY HOURS MINUTES SECONDS) -> epoch seconds.")
+
+(defun eas-time--cache-put (table key value)
+  "Store VALUE under KEY in TABLE, emptied first when large; return VALUE."
+  (when (> (hash-table-count table) 100000) (clrhash table))
+  (puthash key value table))
+
+(defun eas-time--offset (s)
+  "`eas-time-zone''s UTC offset in seconds at epoch S, or nil when its
+15-minute bucket holds a transition."
+  (let* ((bucket (floor s 900)) (key (cons eas-time-zone bucket))
+         (hit (gethash key eas-time--offsets)))
+    (unless hit
+      (let ((a (decoded-time-zone (decode-time (* bucket 900) eas-time-zone)))
+            (b (decoded-time-zone (decode-time (+ (* bucket 900) 899) eas-time-zone))))
+        (setq hit (eas-time--cache-put eas-time--offsets key (if (and (integerp a) (eql a b)) a 'mixed)))))
+    (and (integerp hit) hit)))
+
 (defun eas-time-fields (ms)
   "Return the calendar fields of epoch MS in `eas-time-zone' as a plist.
 Keys are :year :month (1-12) :day :hours :minutes :seconds

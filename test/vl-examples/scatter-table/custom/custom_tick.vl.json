@@ -1,0 +1,17 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customization: a strip plot of ticks with non-default mark, axis, scale, title and config properties.",
+ "data": {"url": "../../data/cars.json"},
+ "title": "Horsepower by cylinders",
+ "mark": {"type": "tick", "thickness": 3, "color": "#d1495b", "opacity": 0.6},
+ "encoding": {
+  "x": {"field": "Horsepower", "type": "quantitative",
+        "scale": {"zero": true},
+        "axis": {"grid": true, "gridColor": "#f0d7da", "gridWidth": 2, "tickCount": 4, "labelFontSize": 11,
+                 "title": "Horsepower", "titleFontStyle": "italic"}},
+  "y": {"field": "Cylinders", "type": "ordinal",
+        "scale": {"paddingInner": 0.4},
+        "axis": {"labelFontSize": 12, "labelFontWeight": "bold", "tickSize": 0, "domainColor": "#d1495b", "titleOpacity": 0.7}}
+ },
+ "config": {"view": {"step": 24}, "title": {"anchor": "start", "fontSize": 15, "color": "#30343f"}, "tick": {"bandSize": 16}}
+}

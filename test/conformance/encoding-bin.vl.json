@@ -1,0 +1,66 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "v": 1
+      },
+      {
+        "v": 2
+      },
+      {
+        "v": 2
+      },
+      {
+        "v": 3
+      },
+      {
+        "v": 3
+      },
+      {
+        "v": 3
+      },
+      {
+        "v": 4
+      },
+      {
+        "v": 4
+      },
+      {
+        "v": 7
+      },
+      {
+        "v": 9
+      },
+      {
+        "v": 12
+      },
+      {
+        "v": 15
+      },
+      {
+        "v": 15
+      },
+      {
+        "v": 18
+      }
+    ]
+  },
+  "description": "Histogram: binned x, count y.",
+  "encoding": {
+    "x": {
+      "bin": true,
+      "field": "v"
+    },
+    "y": {
+      "aggregate": "count"
+    }
+  },
+  "mark": "bar",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0222,
+      "threshold": 0.05
+    }
+  }
+}

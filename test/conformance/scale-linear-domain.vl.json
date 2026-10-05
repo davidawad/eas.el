@@ -1,0 +1,64 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "date": "2026-03-02",
+        "value": 102.5
+      },
+      {
+        "date": "2026-03-03",
+        "value": 104.1
+      },
+      {
+        "date": "2026-03-04",
+        "value": 101.8
+      },
+      {
+        "date": "2026-03-05",
+        "value": 106.3
+      },
+      {
+        "date": "2026-03-06",
+        "value": 108.9
+      },
+      {
+        "date": "2026-03-09",
+        "value": 107.2
+      },
+      {
+        "date": "2026-03-10",
+        "value": 110.4
+      },
+      {
+        "date": "2026-03-11",
+        "value": 109.0
+      }
+    ]
+  },
+  "description": "Explicit linear scale domain, zero off.",
+  "encoding": {
+    "x": {
+      "field": "date",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "value",
+      "scale": {
+        "domain": [
+          95,
+          115
+        ],
+        "type": "linear"
+      },
+      "type": "quantitative"
+    }
+  },
+  "mark": "line",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0307,
+      "threshold": 0.06
+    }
+  }
+}

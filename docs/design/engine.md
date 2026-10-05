@@ -1,7 +1,7 @@
 # easel: an Emacs-native, interactive, agent-drivable chart engine
 
-Status: design, epic `fc-qx1`. Engine name `easel` (prefix `easel-`) is
-provisional until `fc-qx1.14` confirms it. Never `chart-`: the built-in
+Status: design, epic `fc-qx1`. Engine name `easel` (prefix `easel-`) was
+confirmed free by `fc-qx1.14` (`engine-spikes.md`). Never `chart-`: the built-in
 `chart.el` owns that prefix.
 
 ## 1. What this is, in one paragraph

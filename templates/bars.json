@@ -1,0 +1,30 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-easel": {
+    "template": "bars",
+    "version": "1.0.0",
+    "doc": "One bar per category: a nominal x and a quantitative y.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a category and a value column"},
+      "category": {"type": "field", "of": "data", "default": "category"},
+      "value": {"type": "field", "of": "data", "default": "value"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "One bar per category: a nominal x and a quantitative y.", "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"}
+    },
+    "example": "examples/bars.data.json"
+  },
+  "title": {"x-easel:slot": "title"},
+  "description": {"x-easel:slot": "description"},
+  "width": 300,
+  "height": 200,
+  "data": {"name": "data"},
+  "mark": {"type": "bar"},
+  "encoding": {
+    "x": {"field": {"x-easel:slot": "category"}, "type": "nominal", "sort": null},
+    "y": {"field": {"x-easel:slot": "value"}, "type": "quantitative"},
+    "tooltip": [
+      {"field": {"x-easel:slot": "category"}, "type": "nominal"},
+      {"field": {"x-easel:slot": "value"}, "type": "quantitative"}
+    ]
+  }
+}

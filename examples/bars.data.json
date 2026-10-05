@@ -1,0 +1,10 @@
+{
+  "title": "Steps per day",
+  "data": [
+    {"category": "Mon", "value": 8200},
+    {"category": "Tue", "value": 10400},
+    {"category": "Wed", "value": 6100},
+    {"category": "Thu", "value": 9300},
+    {"category": "Fri", "value": 12050}
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "hi": 7,
+        "k": "a",
+        "lo": 2
+      },
+      {
+        "hi": 9,
+        "k": "b",
+        "lo": 4
+      }
+    ]
+  },
+  "description": "Ranged rules from y to y2.",
+  "encoding": {
+    "x": {
+      "field": "k",
+      "type": "nominal"
+    },
+    "y": {
+      "field": "lo",
+      "type": "quantitative"
+    },
+    "y2": {
+      "field": "hi"
+    }
+  },
+  "mark": "rule",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0484,
+      "threshold": 0.07
+    }
+  }
+}

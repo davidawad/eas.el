@@ -1,0 +1,74 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "amount": 3,
+        "kind": "rent",
+        "month": "Jan"
+      },
+      {
+        "amount": 5,
+        "kind": "food",
+        "month": "Jan"
+      },
+      {
+        "amount": 2,
+        "kind": "fun",
+        "month": "Jan"
+      },
+      {
+        "amount": 4,
+        "kind": "rent",
+        "month": "Feb"
+      },
+      {
+        "amount": 2,
+        "kind": "food",
+        "month": "Feb"
+      },
+      {
+        "amount": 6,
+        "kind": "fun",
+        "month": "Feb"
+      },
+      {
+        "amount": 6,
+        "kind": "rent",
+        "month": "Mar"
+      },
+      {
+        "amount": 3,
+        "kind": "food",
+        "month": "Mar"
+      },
+      {
+        "amount": 1,
+        "kind": "fun",
+        "month": "Mar"
+      }
+    ]
+  },
+  "description": "Areas stacked by a nominal field.",
+  "encoding": {
+    "color": {
+      "field": "kind",
+      "type": "nominal"
+    },
+    "x": {
+      "field": "month",
+      "type": "ordinal"
+    },
+    "y": {
+      "field": "amount",
+      "type": "quantitative"
+    }
+  },
+  "mark": "area",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0252,
+      "threshold": 0.05
+    }
+  }
+}

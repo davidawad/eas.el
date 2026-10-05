@@ -1,0 +1,45 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-easel": {
+    "template": "line",
+    "version": "1.0.0",
+    "doc": "One quantitative series over time (or any ordered x), optionally split by a series field.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with an x and a y column"},
+      "x": {"type": "field", "of": "data", "default": "date", "doc": "temporal x column"},
+      "y": {"type": "field", "of": "data", "default": "value", "doc": "quantitative y column"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "One quantitative series over time (or any ordered x), optionally split by a series field.", "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"},
+      "points": {"type": "boolean", "default": false, "doc": "draw a point at every datum"}
+    },
+    "example": "examples/line.data.json"
+  },
+  "title": {"x-easel:slot": "title"},
+  "description": {"x-easel:slot": "description"},
+  "width": 400,
+  "height": 200,
+  "data": {"name": "data"},
+  "layer": [
+    {
+      "mark": {"type": "line"},
+      "encoding": {
+        "x": {"field": {"x-easel:slot": "x"}, "type": "temporal"},
+        "y": {"field": {"x-easel:slot": "y"}, "type": "quantitative", "scale": {"zero": false}},
+        "tooltip": [
+          {"field": {"x-easel:slot": "x"}, "type": "temporal"},
+          {"field": {"x-easel:slot": "y"}, "type": "quantitative"}
+        ]
+      }
+    },
+    {
+      "x-easel:when": "points",
+      "spec": {
+        "mark": {"type": "point", "filled": true},
+        "encoding": {
+          "x": {"field": {"x-easel:slot": "x"}, "type": "temporal"},
+          "y": {"field": {"x-easel:slot": "y"}, "type": "quantitative"}
+        }
+      }
+    }
+  ]
+}

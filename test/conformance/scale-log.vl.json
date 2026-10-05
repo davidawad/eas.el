@@ -1,0 +1,56 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "x": 1,
+        "y": 3.1622776601683795
+      },
+      {
+        "x": 2,
+        "y": 10.0
+      },
+      {
+        "x": 3,
+        "y": 31.622776601683793
+      },
+      {
+        "x": 4,
+        "y": 100.0
+      },
+      {
+        "x": 5,
+        "y": 316.22776601683796
+      },
+      {
+        "x": 6,
+        "y": 1000.0
+      },
+      {
+        "x": 7,
+        "y": 3162.2776601683795
+      }
+    ]
+  },
+  "description": "Log y scale.",
+  "encoding": {
+    "x": {
+      "field": "x",
+      "type": "quantitative"
+    },
+    "y": {
+      "field": "y",
+      "scale": {
+        "type": "log"
+      },
+      "type": "quantitative"
+    }
+  },
+  "mark": "line",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0759,
+      "threshold": 0.1
+    }
+  }
+}

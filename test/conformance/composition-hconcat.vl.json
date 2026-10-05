@@ -1,0 +1,62 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "category": "A",
+        "value": 28
+      },
+      {
+        "category": "B",
+        "value": 55
+      },
+      {
+        "category": "C",
+        "value": 43
+      },
+      {
+        "category": "D",
+        "value": 91
+      },
+      {
+        "category": "E",
+        "value": 81
+      }
+    ]
+  },
+  "description": "Two charts side by side.",
+  "hconcat": [
+    {
+      "encoding": {
+        "x": {
+          "field": "category",
+          "type": "nominal"
+        },
+        "y": {
+          "field": "value",
+          "type": "quantitative"
+        }
+      },
+      "mark": "bar"
+    },
+    {
+      "encoding": {
+        "x": {
+          "field": "value",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "category",
+          "type": "nominal"
+        }
+      },
+      "mark": "point"
+    }
+  ],
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0454,
+      "threshold": 0.07
+    }
+  }
+}

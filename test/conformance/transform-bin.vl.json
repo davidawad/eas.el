@@ -1,0 +1,74 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "v": 1
+      },
+      {
+        "v": 2
+      },
+      {
+        "v": 2
+      },
+      {
+        "v": 3
+      },
+      {
+        "v": 3
+      },
+      {
+        "v": 3
+      },
+      {
+        "v": 4
+      },
+      {
+        "v": 4
+      },
+      {
+        "v": 7
+      },
+      {
+        "v": 9
+      },
+      {
+        "v": 12
+      },
+      {
+        "v": 15
+      },
+      {
+        "v": 15
+      },
+      {
+        "v": 18
+      }
+    ]
+  },
+  "description": "Bin with an explicit bin transform.",
+  "encoding": {
+    "x": {
+      "field": "b",
+      "type": "quantitative"
+    },
+    "y": {
+      "field": "v",
+      "type": "quantitative"
+    }
+  },
+  "mark": "tick",
+  "transform": [
+    {
+      "as": "b",
+      "bin": true,
+      "field": "v"
+    }
+  ],
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0391,
+      "threshold": 0.06
+    }
+  }
+}

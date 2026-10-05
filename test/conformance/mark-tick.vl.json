@@ -1,0 +1,61 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "group": "u",
+        "size": 10,
+        "x": 1,
+        "y": 3
+      },
+      {
+        "group": "v",
+        "size": 40,
+        "x": 2,
+        "y": 5
+      },
+      {
+        "group": "u",
+        "size": 20,
+        "x": 3,
+        "y": 4
+      },
+      {
+        "group": "v",
+        "size": 80,
+        "x": 4,
+        "y": 8
+      },
+      {
+        "group": "u",
+        "size": 30,
+        "x": 5,
+        "y": 6
+      },
+      {
+        "group": "v",
+        "size": 60,
+        "x": 6,
+        "y": 9
+      }
+    ]
+  },
+  "description": "A strip plot of ticks.",
+  "encoding": {
+    "x": {
+      "field": "y",
+      "type": "quantitative"
+    },
+    "y": {
+      "field": "group",
+      "type": "nominal"
+    }
+  },
+  "mark": "tick",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0649,
+      "threshold": 0.09
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "group": "u",
+        "size": 10,
+        "x": 1,
+        "y": 3
+      },
+      {
+        "group": "v",
+        "size": 40,
+        "x": 2,
+        "y": 5
+      },
+      {
+        "group": "u",
+        "size": 20,
+        "x": 3,
+        "y": 4
+      },
+      {
+        "group": "v",
+        "size": 80,
+        "x": 4,
+        "y": 8
+      },
+      {
+        "group": "u",
+        "size": 30,
+        "x": 5,
+        "y": 6
+      },
+      {
+        "group": "v",
+        "size": 60,
+        "x": 6,
+        "y": 9
+      }
+    ]
+  },
+  "description": "Legend toggle: a point selection bound to the legend.",
+  "encoding": {
+    "color": {
+      "field": "group",
+      "type": "nominal"
+    },
+    "opacity": {
+      "condition": {
+        "param": "g",
+        "value": 1
+      },
+      "value": 0.2
+    },
+    "x": {
+      "field": "x",
+      "type": "quantitative"
+    },
+    "y": {
+      "field": "y",
+      "type": "quantitative"
+    }
+  },
+  "mark": "circle",
+  "params": [
+    {
+      "bind": "legend",
+      "name": "g",
+      "select": {
+        "fields": [
+          "group"
+        ],
+        "type": "point"
+      }
+    }
+  ],
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0175,
+      "threshold": 0.04
+    }
+  }
+}

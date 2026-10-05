@@ -1,0 +1,47 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "a": 3,
+        "b": 5,
+        "m": "Jan"
+      },
+      {
+        "a": 4,
+        "b": 2,
+        "m": "Feb"
+      }
+    ]
+  },
+  "description": "Wide columns folded to key/value.",
+  "encoding": {
+    "color": {
+      "field": "key",
+      "type": "nominal"
+    },
+    "x": {
+      "field": "m",
+      "type": "ordinal"
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative"
+    }
+  },
+  "mark": "bar",
+  "transform": [
+    {
+      "fold": [
+        "a",
+        "b"
+      ]
+    }
+  ],
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0236,
+      "threshold": 0.05
+    }
+  }
+}

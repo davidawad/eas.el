@@ -1,0 +1,109 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "date": "2026-03-02",
+        "price": 102.5,
+        "symbol": "AAA"
+      },
+      {
+        "date": "2026-03-02",
+        "price": 94.5,
+        "symbol": "BBB"
+      },
+      {
+        "date": "2026-03-03",
+        "price": 104.1,
+        "symbol": "AAA"
+      },
+      {
+        "date": "2026-03-03",
+        "price": 97.1,
+        "symbol": "BBB"
+      },
+      {
+        "date": "2026-03-04",
+        "price": 101.8,
+        "symbol": "AAA"
+      },
+      {
+        "date": "2026-03-04",
+        "price": 95.8,
+        "symbol": "BBB"
+      },
+      {
+        "date": "2026-03-05",
+        "price": 106.3,
+        "symbol": "AAA"
+      },
+      {
+        "date": "2026-03-05",
+        "price": 101.3,
+        "symbol": "BBB"
+      },
+      {
+        "date": "2026-03-06",
+        "price": 108.9,
+        "symbol": "AAA"
+      },
+      {
+        "date": "2026-03-06",
+        "price": 104.9,
+        "symbol": "BBB"
+      },
+      {
+        "date": "2026-03-09",
+        "price": 107.2,
+        "symbol": "AAA"
+      },
+      {
+        "date": "2026-03-09",
+        "price": 104.2,
+        "symbol": "BBB"
+      },
+      {
+        "date": "2026-03-10",
+        "price": 110.4,
+        "symbol": "AAA"
+      },
+      {
+        "date": "2026-03-10",
+        "price": 108.4,
+        "symbol": "BBB"
+      },
+      {
+        "date": "2026-03-11",
+        "price": 109.0,
+        "symbol": "AAA"
+      },
+      {
+        "date": "2026-03-11",
+        "price": 108.0,
+        "symbol": "BBB"
+      }
+    ]
+  },
+  "description": "One line per series via color.",
+  "encoding": {
+    "color": {
+      "field": "symbol",
+      "type": "nominal"
+    },
+    "x": {
+      "field": "date",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "price",
+      "type": "quantitative"
+    }
+  },
+  "mark": "line",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0278,
+      "threshold": 0.05
+    }
+  }
+}

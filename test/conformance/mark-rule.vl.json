@@ -1,0 +1,61 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "category": "A",
+        "value": 28
+      },
+      {
+        "category": "B",
+        "value": 55
+      },
+      {
+        "category": "C",
+        "value": 43
+      },
+      {
+        "category": "D",
+        "value": 91
+      },
+      {
+        "category": "E",
+        "value": 81
+      }
+    ]
+  },
+  "description": "A layered threshold rule over bars, from a datum.",
+  "layer": [
+    {
+      "encoding": {
+        "x": {
+          "field": "category",
+          "type": "nominal"
+        },
+        "y": {
+          "field": "value",
+          "type": "quantitative"
+        }
+      },
+      "mark": "bar"
+    },
+    {
+      "encoding": {
+        "y": {
+          "datum": 60,
+          "type": "quantitative"
+        }
+      },
+      "mark": {
+        "color": "firebrick",
+        "type": "rule"
+      }
+    }
+  ],
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0209,
+      "threshold": 0.05
+    }
+  }
+}

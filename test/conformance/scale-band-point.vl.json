@@ -1,0 +1,62 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "category": "A",
+        "value": 28
+      },
+      {
+        "category": "B",
+        "value": 55
+      },
+      {
+        "category": "C",
+        "value": 43
+      },
+      {
+        "category": "D",
+        "value": 91
+      },
+      {
+        "category": "E",
+        "value": 81
+      }
+    ]
+  },
+  "description": "A line on a point scale and bars on a band scale, layered.",
+  "layer": [
+    {
+      "encoding": {
+        "x": {
+          "field": "category",
+          "type": "ordinal"
+        },
+        "y": {
+          "field": "value",
+          "type": "quantitative"
+        }
+      },
+      "mark": "bar"
+    },
+    {
+      "encoding": {
+        "x": {
+          "field": "category",
+          "type": "ordinal"
+        },
+        "y": {
+          "field": "value",
+          "type": "quantitative"
+        }
+      },
+      "mark": "line"
+    }
+  ],
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0211,
+      "threshold": 0.05
+    }
+  }
+}

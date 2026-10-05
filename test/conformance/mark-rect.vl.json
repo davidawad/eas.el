@@ -1,0 +1,89 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "col": "w",
+        "row": "a",
+        "v": 0
+      },
+      {
+        "col": "x",
+        "row": "a",
+        "v": 5
+      },
+      {
+        "col": "y",
+        "row": "a",
+        "v": 10
+      },
+      {
+        "col": "z",
+        "row": "a",
+        "v": 4
+      },
+      {
+        "col": "w",
+        "row": "b",
+        "v": 3
+      },
+      {
+        "col": "x",
+        "row": "b",
+        "v": 8
+      },
+      {
+        "col": "y",
+        "row": "b",
+        "v": 2
+      },
+      {
+        "col": "z",
+        "row": "b",
+        "v": 7
+      },
+      {
+        "col": "w",
+        "row": "c",
+        "v": 6
+      },
+      {
+        "col": "x",
+        "row": "c",
+        "v": 0
+      },
+      {
+        "col": "y",
+        "row": "c",
+        "v": 5
+      },
+      {
+        "col": "z",
+        "row": "c",
+        "v": 10
+      }
+    ]
+  },
+  "description": "A heatmap: rect on two band scales with a sequential color legend.",
+  "encoding": {
+    "color": {
+      "field": "v",
+      "type": "quantitative"
+    },
+    "x": {
+      "field": "col",
+      "type": "ordinal"
+    },
+    "y": {
+      "field": "row",
+      "type": "ordinal"
+    }
+  },
+  "mark": "rect",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0235,
+      "threshold": 0.05
+    }
+  }
+}

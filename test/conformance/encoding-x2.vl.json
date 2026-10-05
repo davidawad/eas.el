@@ -1,0 +1,43 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {
+        "end": "2026-03-05",
+        "start": "2026-03-02",
+        "task": "design"
+      },
+      {
+        "end": "2026-03-10",
+        "start": "2026-03-04",
+        "task": "build"
+      },
+      {
+        "end": "2026-03-11",
+        "start": "2026-03-09",
+        "task": "ship"
+      }
+    ]
+  },
+  "description": "Ranged bars from start to end dates (x2).",
+  "encoding": {
+    "x": {
+      "field": "start",
+      "type": "temporal"
+    },
+    "x2": {
+      "field": "end"
+    },
+    "y": {
+      "field": "task",
+      "type": "nominal"
+    }
+  },
+  "mark": "bar",
+  "usermeta": {
+    "easel": {
+      "standin_ratio": 0.0433,
+      "threshold": 0.07
+    }
+  }
+}

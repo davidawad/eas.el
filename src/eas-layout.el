@@ -128,7 +128,7 @@ PLOT-SIZE is the plot extent along the axis."
              (count (or (plist-get axis :tickCount)
                         (if (eas-layout-text-p metrics) (max 2 (ceiling (/ plot-size (float spacing))))
                           ;; Vega-Lite: ceil(size/40), ceil(width/10) for binned x.
-                          (max 1 (ceiling (/ plot-size (if (and (eq channel :x) (plist-get def :bin-end)) 10.0
+                          (max 1 (ceiling (/ plot-size (if (equal (plist-get def :derived) "bin") 10.0
                                                          (float spacing))))))))
              (fmt (if (and discrete (equal (plist-get def :derived) "timeUnit") (null (plist-get axis :format)))
                       (let ((f (eas-layout-time-unit-format (plist-get def :field))))
@@ -139,17 +139,26 @@ PLOT-SIZE is the plot extent along the axis."
                                           (eas-time-format v f))
                                       (format "%s" v))))
                     (eas-scale-tick-format scale count (or (plist-get axis :format) (plist-get def :format)))))
-             (values (if (plist-get axis :values) (append (plist-get axis :values) nil)
-                       (eas-scale-ticks scale count)))
-             (title (if (plist-member axis :title)
-                        (let ((tt (plist-get axis :title))) (and (stringp tt) tt))
-                      (eas-encode-title def)))
+             (values (cond ((plist-get axis :values) (append (plist-get axis :values) nil))
+                           ;; Vega: a binned scale ticks at its bin boundaries.
+                           ((plist-get scale :bins) (append (plist-get scale :bins) nil))
+                           (t (eas-scale-ticks scale count))))
+             (fmt (if (stringp (plist-get axis :labelExpr))
+                      (let ((expr (plist-get axis :labelExpr)) (base fmt))
+                        (lambda (v) (eas-expr--string
+                                     (eas-expr-evaluate expr (list :value v :label (funcall base v))))))
+                    fmt))
+             (title (let ((tt (if (plist-member axis :title)
+                                  (let ((tt (plist-get axis :title))) (and (stringp tt) tt))
+                                (eas-encode-title def))))
+                      (and (stringp tt) (not (string-empty-p tt)) tt)))
              (angle (cond ((plist-get axis :labelAngle))
                           ((eas-layout-text-p metrics) 0)
                           ((and (eq channel :x) discrete (not (equal (plist-get def :derived) "timeUnit"))) 270)
                           (t 0)))
              (grid (cond ((plist-member axis :grid) (eq (plist-get axis :grid) t))
                          (discrete nil)
+                         ((equal (plist-get def :derived) "bin") nil)
                          (t (not (eq (eas-theme-axis (plist-get metrics :config) channel :grid) :false))))))
         (append
          (list :channel (eas-key-name channel)

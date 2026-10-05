@@ -65,7 +65,7 @@
     "w": 459
   },
   "target": "svg",
-  "title": {"align": "left", "baseline": "top", "fontSize": 16, "fontWeight": 600, "text": "Daily value", "x": 49, "y": 5},
+  "title": {"align": "left", "baseline": "top", "fontSize": 16, "fontWeight": 600, "text": "Daily value", "x": 5, "y": 5},
   "views": [
     {
       "axes": [
@@ -256,6 +256,7 @@
       "bounds": [49, 33, 400, 200],
       "clip": false,
       "frame": {},
+      "header": {},
       "id": "main",
       "legends": [],
       "marks": [

@@ -8,10 +8,12 @@
 ;; filter and calculate take Vega expression strings.  eas parses a
 ;; small subset into an AST and interprets it; it never calls `eval'.
 ;;
-;;   literals    numbers, 'strings', "strings", true false null, [a, b]
+;;   literals    numbers, 'strings', "strings", true false null, [a, b],
+;;               {key: value}
 ;;   names       datum, datum.f, datum['f'], param names, PI, E
 ;;   operators   ?: || && == != === !== < <= > >= + - * / % ! unary -
-;;   functions   `eas-expr-functions' (math, type tests, UTC date parts)
+;;   functions   `eas-expr-functions' (math, type tests, UTC date parts,
+;;               d3 number format)
 ;;
 ;; Semantics follow JavaScript where it matters to charts: + joins
 ;; strings, a missing field is null, truthiness is JS truthiness, and
@@ -22,6 +24,7 @@
 
 (require 'eas-core)
 (require 'eas-time)
+(require 'eas-format)
 
 (defconst eas-expr--token-regexp
   (concat "[ \t\n]*\\(?:"
@@ -29,7 +32,7 @@
           "\\|'\\(\\(?:[^'\\\\]\\|\\\\.\\)*\\)'"                    ; 2 'string'
           "\\|\"\\(\\(?:[^\"\\\\]\\|\\\\.\\)*\\)\""                 ; 3 "string"
           "\\|\\([A-Za-z_$][A-Za-z0-9_$]*\\)"                       ; 4 name
-          "\\|\\(===\\|!==\\|==\\|!=\\|<=\\|>=\\|&&\\|||\\|[]+*/%<>!?:()[.,-]\\)" ; 5 op
+          "\\|\\(===\\|!==\\|==\\|!=\\|<=\\|>=\\|&&\\|||\\|[]+*/%<>!?:(){}[.,-]\\)" ; 5 op
           "\\)")
   "One token of the expression subset.")
 
@@ -132,7 +135,21 @@
       (`(name ,name ,_) (list :var name))
       (`(op "(" ,_) (prog1 (eas-expr--ternary) (eas-expr--expect ")")))
       (`(op "[" ,_) (list :array (eas-expr--args "]")))
+      (`(op "{" ,_) (eas-expr--object))
       (_ (push tok eas-expr--tokens) (eas-expr--fail "Unexpected token")))))
+
+(defun eas-expr--object ()
+  "Parse an object literal's {key: value, ...} after its brace."
+  (let (pairs)
+    (unless (eas-expr--peek-op "}")
+      (while (progn
+               (let ((key (pop eas-expr--tokens)))
+                 (unless (memq (car key) '(str name num)) (eas-expr--fail "Expected an object key"))
+                 (eas-expr--expect ":")
+                 (push (cons (eas-expr--string (nth 1 key)) (eas-expr--ternary)) pairs))
+               (when (eas-expr--peek-op ",") (pop eas-expr--tokens) t))))
+    (eas-expr--expect "}")
+    (list :object (nreverse pairs))))
 
 (defun eas-expr--postfix (node)
   "Parse member access and calls following NODE."
@@ -232,6 +249,7 @@
   (pcase ast
     (`(:lit ,v) v)
     (`(:array ,items) (vconcat (mapcar (lambda (i) (eas-expr-eval i datum env)) items)))
+    (`(:object ,pairs) (cl-loop for (k . v) in pairs append (list (eas-key k) (eas-expr-eval v datum env))))
     (`(:var ,name)
      (cond ((equal name "datum") datum)
            ((plist-member env (eas-key name)) (plist-get env (eas-key name)))
@@ -314,7 +332,8 @@
                     (let ((lo (min (aref range 0) (aref range 1)))
                           (hi (max (aref range 0) (aref range 1))))
                       (if (<= lo (eas-expr--number v) hi) t :false))))
-    ("if" . ,(lambda (test a b) (if (eas-expr-truthy test) a b))))
+    ("if" . ,(lambda (test a b) (if (eas-expr-truthy test) a b)))
+    ("format" . ,(lambda (v spec) (eas-format-number (eas-expr--string spec) v))))
   "Functions callable from expressions: (NAME . FUNCTION).")
 
 (provide 'eas-expr)

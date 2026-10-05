@@ -91,92 +91,12 @@
             {
               "align": "center",
               "baseline": "top",
-              "label": "",
-              "lx": 58.5,
-              "ly": 319.5,
-              "pos": 58.0,
-              "tick": [58.5, 311.5, 58.5, 315.5],
-              "value": 1.2
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "1.4",
-              "lx": 70.5,
-              "ly": 319.5,
-              "pos": 70.0,
-              "tick": [70.5, 311.5, 70.5, 315.5],
-              "value": 1.4
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 82.5,
-              "ly": 319.5,
-              "pos": 82.0,
-              "tick": [82.5, 311.5, 82.5, 315.5],
-              "value": 1.6
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "1.8",
-              "lx": 94.5,
-              "ly": 319.5,
-              "pos": 94.0,
-              "tick": [94.5, 311.5, 94.5, 315.5],
-              "value": 1.8
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
+              "label": "2.0",
               "lx": 106.5,
               "ly": 319.5,
               "pos": 106.0,
               "tick": [106.5, 311.5, 106.5, 315.5],
               "value": 2.0
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "2.2",
-              "lx": 118.5,
-              "ly": 319.5,
-              "pos": 118.0,
-              "tick": [118.5, 311.5, 118.5, 315.5],
-              "value": 2.2
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 130.5,
-              "ly": 319.5,
-              "pos": 130.0,
-              "tick": [130.5, 311.5, 130.5, 315.5],
-              "value": 2.4
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "2.6",
-              "lx": 142.5,
-              "ly": 319.5,
-              "pos": 142.0,
-              "tick": [142.5, 311.5, 142.5, 315.5],
-              "value": 2.6
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 154.5,
-              "ly": 319.5,
-              "pos": 154.0,
-              "tick": [154.5, 311.5, 154.5, 315.5],
-              "value": 2.8
             },
             {
               "align": "center",
@@ -191,92 +111,12 @@
             {
               "align": "center",
               "baseline": "top",
-              "label": "",
-              "lx": 178.5,
-              "ly": 319.5,
-              "pos": 178.0,
-              "tick": [178.5, 311.5, 178.5, 315.5],
-              "value": 3.2
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "3.4",
-              "lx": 190.5,
-              "ly": 319.5,
-              "pos": 190.0,
-              "tick": [190.5, 311.5, 190.5, 315.5],
-              "value": 3.4
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 202.5,
-              "ly": 319.5,
-              "pos": 202.0,
-              "tick": [202.5, 311.5, 202.5, 315.5],
-              "value": 3.6
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "3.8",
-              "lx": 214.5,
-              "ly": 319.5,
-              "pos": 214.0,
-              "tick": [214.5, 311.5, 214.5, 315.5],
-              "value": 3.8
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
+              "label": "4.0",
               "lx": 226.5,
               "ly": 319.5,
               "pos": 226.0,
               "tick": [226.5, 311.5, 226.5, 315.5],
               "value": 4.0
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "4.2",
-              "lx": 238.5,
-              "ly": 319.5,
-              "pos": 238.0,
-              "tick": [238.5, 311.5, 238.5, 315.5],
-              "value": 4.2
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 250.5,
-              "ly": 319.5,
-              "pos": 250.0,
-              "tick": [250.5, 311.5, 250.5, 315.5],
-              "value": 4.4
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "4.6",
-              "lx": 262.5,
-              "ly": 319.5,
-              "pos": 262.0,
-              "tick": [262.5, 311.5, 262.5, 315.5],
-              "value": 4.6
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 274.5,
-              "ly": 319.5,
-              "pos": 274.0,
-              "tick": [274.5, 311.5, 274.5, 315.5],
-              "value": 4.8
             },
             {
               "align": "center",
@@ -291,92 +131,12 @@
             {
               "align": "center",
               "baseline": "top",
-              "label": "",
-              "lx": 298.5,
-              "ly": 319.5,
-              "pos": 298.0,
-              "tick": [298.5, 311.5, 298.5, 315.5],
-              "value": 5.2
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "5.4",
-              "lx": 310.5,
-              "ly": 319.5,
-              "pos": 310.0,
-              "tick": [310.5, 311.5, 310.5, 315.5],
-              "value": 5.4
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 322.5,
-              "ly": 319.5,
-              "pos": 322.0,
-              "tick": [322.5, 311.5, 322.5, 315.5],
-              "value": 5.6
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "5.8",
-              "lx": 334.5,
-              "ly": 319.5,
-              "pos": 334.0,
-              "tick": [334.5, 311.5, 334.5, 315.5],
-              "value": 5.8
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
+              "label": "6.0",
               "lx": 346.5,
               "ly": 319.5,
               "pos": 346.0,
               "tick": [346.5, 311.5, 346.5, 315.5],
               "value": 6.0
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "6.2",
-              "lx": 358.5,
-              "ly": 319.5,
-              "pos": 358.0,
-              "tick": [358.5, 311.5, 358.5, 315.5],
-              "value": 6.2
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 370.5,
-              "ly": 319.5,
-              "pos": 370.0,
-              "tick": [370.5, 311.5, 370.5, 315.5],
-              "value": 6.4
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "6.6",
-              "lx": 382.5,
-              "ly": 319.5,
-              "pos": 382.0,
-              "tick": [382.5, 311.5, 382.5, 315.5],
-              "value": 6.6
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 394.5,
-              "ly": 319.5,
-              "pos": 394.0,
-              "tick": [394.5, 311.5, 394.5, 315.5],
-              "value": 6.8
             },
             {
               "align": "center",
@@ -391,92 +151,12 @@
             {
               "align": "center",
               "baseline": "top",
-              "label": "",
-              "lx": 418.5,
-              "ly": 319.5,
-              "pos": 418.0,
-              "tick": [418.5, 311.5, 418.5, 315.5],
-              "value": 7.2
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "7.4",
-              "lx": 430.5,
-              "ly": 319.5,
-              "pos": 430.0,
-              "tick": [430.5, 311.5, 430.5, 315.5],
-              "value": 7.4
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 442.5,
-              "ly": 319.5,
-              "pos": 442.0,
-              "tick": [442.5, 311.5, 442.5, 315.5],
-              "value": 7.6
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "7.8",
-              "lx": 454.5,
-              "ly": 319.5,
-              "pos": 454.0,
-              "tick": [454.5, 311.5, 454.5, 315.5],
-              "value": 7.8
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
+              "label": "8.0",
               "lx": 466.5,
               "ly": 319.5,
               "pos": 466.0,
               "tick": [466.5, 311.5, 466.5, 315.5],
               "value": 8.0
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "8.2",
-              "lx": 478.5,
-              "ly": 319.5,
-              "pos": 478.0,
-              "tick": [478.5, 311.5, 478.5, 315.5],
-              "value": 8.2
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 490.5,
-              "ly": 319.5,
-              "pos": 490.0,
-              "tick": [490.5, 311.5, 490.5, 315.5],
-              "value": 8.4
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "8.6",
-              "lx": 502.5,
-              "ly": 319.5,
-              "pos": 502.0,
-              "tick": [502.5, 311.5, 502.5, 315.5],
-              "value": 8.6
-            },
-            {
-              "align": "center",
-              "baseline": "top",
-              "label": "",
-              "lx": 514.5,
-              "ly": 319.5,
-              "pos": 514.0,
-              "tick": [514.5, 311.5, 514.5, 315.5],
-              "value": 8.8
             },
             {
               "align": "right",
@@ -631,6 +311,7 @@
       "bounds": [46, 11, 480, 300],
       "clip": false,
       "frame": {},
+      "header": {},
       "id": "main",
       "legends": [],
       "marks": [
@@ -647,7 +328,7 @@
               "orient": "vertical",
               "stroke": "none",
               "w": 59.0,
-              "x": 46.5,
+              "x": 47.0,
               "y": 161.0
             },
             {
@@ -659,7 +340,7 @@
               "orient": "vertical",
               "stroke": "none",
               "w": 59.0,
-              "x": 106.5,
+              "x": 107.0,
               "y": 11.0
             },
             {
@@ -671,7 +352,7 @@
               "orient": "vertical",
               "stroke": "none",
               "w": 59.0,
-              "x": 406.5,
+              "x": 407.0,
               "y": 161.0
             },
             {
@@ -683,7 +364,7 @@
               "orient": "vertical",
               "stroke": "none",
               "w": 59.0,
-              "x": 466.5,
+              "x": 467.0,
               "y": 161.0
             }
           ],
@@ -701,6 +382,7 @@
       "path": "",
       "scales": {
         "x": {
+          "bins": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
           "domain": [1.0, 9.0],
           "field": "bin_maxbins_10_a",
           "range": [46, 526],

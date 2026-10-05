@@ -18,6 +18,7 @@
 (require 'eas-scale)
 (require 'eas-encode)
 (require 'eas-scheme)
+(require 'eas-bins)
 
 (defun eas-compile--defs (units channel)
   "Return (UNIT . DEF) pairs for CHANNEL across UNITS with a data def."
@@ -39,9 +40,10 @@
         (if (plist-member d :datum)
             (push (plist-get d :datum) out)
           (seq-doseq (row (plist-get u :rows))
-            (dolist (k keys)
-              (let ((v (plist-get row k)))
-                (unless (memq v '(nil :null)) (push v out))))))))
+            (when (or (memq channel '(:x :y)) (eas-bins-valid-p u row))
+              (dolist (k keys)
+                (let ((v (plist-get row k)))
+                  (unless (memq v '(nil :null)) (push v out)))))))))
     (nreverse out)))
 
 (defun eas-compile--scale-type (pairs channel)
@@ -69,6 +71,8 @@
          (unique (delete-dups (copy-sequence values))))
     (vconcat
      (cond
+      ;; An explicit scale domain is the domain.
+      ((vectorp (plist-get (plist-get def :scale) :domain)) (plist-get (plist-get def :scale) :domain))
       ((eq sort :null) unique)
       ((vectorp sort) (append (seq-filter (lambda (v) (member v unique)) sort)
                               (seq-remove (lambda (v) (seq-contains-p sort v)) unique)))
@@ -111,6 +115,9 @@
                                     ;; utc scales tick and label in UTC whatever `eas-time-zone' is.
                                     :utc (if (equal (plist-get sp :type) "utc") t :false)
                                     :reverse (if (eq (plist-get sp :reverse) t) t :false))
+            (when-let* ((bins (and binned (not custom) (equal type "linear")
+                                   (eas-bins-boundaries def (plist-get (caar pairs) :rows) lo hi))))
+              (list :bins bins))
             ;; Vega-Lite pads a bar's continuous dimension by continuousBandSize.
             (let ((pad (or (plist-get sp :padding)
                            (and (not custom) (not binned) (not (plist-get def :derived))
@@ -118,7 +125,9 @@
                                  (seq-filter (lambda (p) (equal (plist-get (plist-get (car p) :mark) :type) "bar")) pairs)
                                  channel)
                                 5))))
-              (when pad (list :padding pad))))))
+              (when pad (append (list :padding pad)
+                                ;; Vega nices a padded log domain again.
+                                (when (and nice (equal type "log")) (list :renice t))))))))
 
 (defun eas-compile--dimension-p (pairs channel)
   "Non-nil when CHANNEL is the dimension (not the measure) of a bar, area
@@ -215,6 +224,10 @@ the data spans the range less P on each side, like Vega's padDomain."
                  (frac (/ span (- span (* 2.0 pad)))))
             (setq out (plist-put out :domain (vector (+ c (* frac (- (aref d 0) c))) (+ c (* frac (- (aref d 1) c))))))
             (setq out (plist-put out :padding nil))))
+        (when (and pad (> span (* 2 pad)) (equal (plist-get scale :type) "log"))
+          (setq out (plist-put out :domain (eas-bins-pad-log (plist-get scale :domain) (/ span (- span (* 2.0 pad)))
+                                                             (plist-get scale :renice))))
+          (setq out (plist-put out :padding nil)))
         out))))
 
 (provide 'eas-compile-scales)

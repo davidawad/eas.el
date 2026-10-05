@@ -61,7 +61,7 @@
   "params": [],
   "size": {
     "cell": [7, 14],
-    "h": 440,
+    "h": 440.0,
     "w": 535
   },
   "target": "svg",
@@ -69,7 +69,7 @@
     {
       "axes": [
         {
-          "bounds": [46, 310, 86, 340.118],
+          "bounds": [46, 310, 86.0, 340.118],
           "channel": "x",
           "discrete": true,
           "domain-line": [46.5, 311.5, 86.5, 311.5],
@@ -216,9 +216,10 @@
           "title-mark": {"align": "center", "angle": -90, "baseline": "bottom", "text": "v", "x": 19.208, "y": 161.5}
         }
       ],
-      "bounds": [46, 11, 40, 300],
+      "bounds": [46, 11, 40.0, 300],
       "clip": false,
       "frame": {},
+      "header": {},
       "id": "vconcat_0",
       "legends": [
         {
@@ -344,7 +345,7 @@
           "bandwidth": 18.0,
           "domain": ["a", "b"],
           "field": "k",
-          "range": [46, 86],
+          "range": [46, 86.0],
           "reverse": false,
           "start": 47.0,
           "step": 20.0,
@@ -363,7 +364,7 @@
     {
       "axes": [
         {
-          "bounds": [45.0, 400, 527.0, 435.0],
+          "bounds": [45.0, 400.0, 527.0, 435.0],
           "channel": "x",
           "discrete": false,
           "domain-line": [46.5, 401.5, 526.5, 401.5],
@@ -537,7 +538,7 @@
           "title-mark": {"align": "center", "angle": 0, "baseline": "top", "text": "v", "x": 286.5, "y": 424.5}
         },
         {
-          "bounds": [14.882, 361, 47, 401],
+          "bounds": [14.882, 361, 47, 401.0],
           "channel": "y",
           "discrete": true,
           "domain-line": [46.5, 361.5, 46.5, 401.5],
@@ -571,9 +572,10 @@
           "title-mark": {"align": "center", "angle": -90, "baseline": "bottom", "text": "k", "x": 28.382, "y": 381.5}
         }
       ],
-      "bounds": [46, 361, 480, 40],
+      "bounds": [46, 361, 480, 40.0],
       "clip": false,
       "frame": {},
+      "header": {},
       "id": "vconcat_1",
       "legends": [],
       "marks": [
@@ -672,7 +674,7 @@
           "bandwidth": 0.0,
           "domain": ["a", "b"],
           "field": "k",
-          "range": [361, 401],
+          "range": [361, 401.0],
           "reverse": false,
           "start": 371.0,
           "step": 20.0,

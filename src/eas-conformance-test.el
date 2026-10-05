@@ -119,7 +119,9 @@ is on PATH; only rsvg-convert is needed."
                  nil))
   (should (equal (sort (mapcar #'eas-key-name (eas-plist-keys (plist-get (eas-conformance-manifest) :refs)))
                        #'string<)
-                 (sort (mapcar (lambda (e) (plist-get e :name)) (eas-conformance-gallery)) #'string<)))
+                 (sort (mapcar (lambda (e) (plist-get e :name))
+                               (seq-remove (lambda (e) (plist-member e :ref)) (eas-conformance-gallery)))
+                       #'string<)))
   (should (stringp (eas-conformance-ref-zone))))
 
 (ert-deftest eas-conformance-usermeta-does-not-stale-a-reference ()

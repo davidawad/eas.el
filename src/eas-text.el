@@ -296,6 +296,8 @@
   (let ((g (eas-text--new scene)))
     (seq-doseq (view (plist-get scene :views))
       (eas-text--axes g view)
+      (when-let* ((h (plist-get view :header)))
+        (eas-text--string g (plist-get h :x) (plist-get h :y) (plist-get h :text) "left" (list 'face 'eas-title) 5))
       (eas-text--marks g view)
       (eas-text--legends g view))
     (when-let* ((title (plist-get scene :title)))

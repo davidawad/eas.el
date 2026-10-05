@@ -36,7 +36,9 @@
 
 (defconst eas-spec--marks
   '("point" "circle" "square" "line" "area" "bar" "rect" "rule" "tick" "text"
-    "arc")
+    "arc"
+    ;; composite marks, expanded by eas-composite.el (fc-qx1.26)
+    "errorbar" "errorband")
   "Mark types chart/v1 recognises.")
 
 (defconst eas-spec--mark-keys
@@ -45,18 +47,24 @@
     :clip :orient :width :height :cornerRadius :align :baseline :dx :dy
     :fontSize :fontWeight :text :thickness :binSpacing :invalid
     :innerRadius :outerRadius :padAngle :radius :radius2 :theta :theta2
-    :radiusOffset :thetaOffset)
+    :radiusOffset :thetaOffset
+    ;; distributions (fc-qx1.26)
+    :style :cornerRadiusEnd :extent :ticks :rule :median :outliers :box)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels
   '(:x :y :x2 :y2 :color :fill :stroke :opacity :size :tooltip :href :text
     :detail :order
-    :theta :radius)
+    :theta :radius
+    ;; distributions (fc-qx1.26)
+    :shape :row)
   "Encoding channels chart/v1 recognises.")
 
 (defconst eas-spec--channel-def-keys
   '(:field :type :aggregate :bin :timeUnit :title :scale :axis :legend :sort
-    :stack :format :value :datum :condition :param :empty)
+    :stack :format :value :datum :condition :param :empty
+    ;; distributions (fc-qx1.26)
+    :header)
   "Field/value definition keys chart/v1 recognises.")
 
 (defconst eas-spec--types '("quantitative" "temporal" "ordinal" "nominal")
@@ -75,7 +83,9 @@
 
 (defconst eas-spec--transforms
   '(:filter :calculate :aggregate :window :fold :timeUnit :bin :joinaggregate
-    :x-eas:transform)
+    :x-eas:transform
+    ;; distributions (fc-qx1.26)
+    :flatten :density)
   "Transform keys chart/v1 recognises; the first key present names it.")
 
 (defconst eas-spec--select-keys

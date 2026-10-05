@@ -49,18 +49,29 @@
     :mark/slot "Template slot placeholders are substituted by resolve (ERT: eas-template-enum-and-array-items).")
   "Features outside Vega-Lite proper, proven by ERT rather than the gallery.")
 
+(defvar eas-conformance-gallery-functions nil
+  "Functions of no arguments returning more gallery entries.
+An entry is a plist like `eas-conformance-gallery' returns, plus :ref
+\(its reference PNG), :ref-problem (why that reference cannot be
+trusted, or nil) and :text-file (its text golden).  The official
+Vega-Lite examples that pass natively join this way (eas-vl-gallery.el).")
+
 (defun eas-conformance-gallery ()
-  "The gallery as plists (:name :file :spec :threshold), sorted by name."
-  (mapcar (lambda (file)
-            (let ((spec (eas-json-read-file file)))
-              (list :name (string-remove-suffix ".vl.json" (file-name-nondirectory file))
-                    :file file :spec spec
-                    :threshold (or (plist-get (plist-get (plist-get spec :usermeta) :eas) :threshold) 0.05))))
-          (directory-files eas-conformance-directory t "\\.vl\\.json\\'")))
+  "The gallery as plists (:name :file :spec :threshold), sorted by name.
+Entries from `eas-conformance-gallery-functions' follow."
+  (append
+   (mapcar (lambda (file)
+             (let ((spec (eas-json-read-file file)))
+               (list :name (string-remove-suffix ".vl.json" (file-name-nondirectory file))
+                     :file file :spec spec
+                     :threshold (or (plist-get (plist-get (plist-get spec :usermeta) :eas) :threshold) 0.05))))
+           (directory-files eas-conformance-directory t "\\.vl\\.json\\'"))
+   (apply #'append (mapcar #'funcall eas-conformance-gallery-functions))))
 
 (defun eas-conformance-text-file (entry)
   "The text golden of gallery ENTRY."
-  (expand-file-name (concat (plist-get entry :name) ".txt") eas-conformance-directory))
+  (or (plist-get entry :text-file)
+      (expand-file-name (concat (plist-get entry :name) ".txt") eas-conformance-directory)))
 
 (defun eas-conformance-native (entry)
   "Compile and render gallery ENTRY natively, unrestricted by supported.json.
@@ -164,6 +175,8 @@ Return (:name :ok :features :svg :text :error)."
 
 (with-eval-after-load 'eas-describe
   (add-hook 'eas-describe-functions #'eas-conformance-describe))
+
+(require 'eas-vl-gallery)
 
 (provide 'eas-conformance)
 ;;; eas-conformance.el ends here

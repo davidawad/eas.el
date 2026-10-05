@@ -78,8 +78,10 @@ in the gallery), which native layout reproduces only approximately.")
     (secure-hash 'sha256 (current-buffer))))
 
 (defun eas-conformance-ref-problem (entry)
-  "Why ENTRY's committed reference cannot be trusted, or nil."
-  (let* ((name (plist-get entry :name))
+  "Why ENTRY's committed reference cannot be trusted, or nil.
+Gallery-group entries (with :ref) carry their own verdict in :ref-problem."
+  (if (plist-member entry :ref) (plist-get entry :ref-problem)
+   (let* ((name (plist-get entry :name))
          (file (expand-file-name (concat name ".png") (eas-conformance-ref-directory)))
          (ref (plist-get (plist-get (eas-conformance-manifest) :refs) (eas-key name)))
          (fix "rebuild with bin/chart: M-x eas-conformance-update-refs"))
@@ -88,11 +90,12 @@ in the gallery), which native layout reproduces only approximately.")
           ((not (equal (plist-get ref :spec_sha256) (eas-conformance-spec-hash (plist-get entry :spec))))
            (format "STALE_REF: ref/%s.png was built from an older %s.vl.json; %s" name name fix))
           ((not (equal (plist-get ref :png_sha256) (eas-conformance--file-hash file)))
-           (format "STALE_REF: ref/%s.png does not match its manifest hash; %s" name fix)))))
+           (format "STALE_REF: ref/%s.png does not match its manifest hash; %s" name fix))))))
 
 (defun eas-conformance--write-png (spec file)
   "Build SPEC with bin/chart into PNG FILE, in the references' time zone."
-  (let ((process-environment (cons (concat "TZ=" (eas-conformance-ref-zone)) process-environment)))
+  (let ((process-environment (cons (concat "TZ=" (eas-conformance-ref-zone)) process-environment))
+        (coding-system-for-write 'no-conversion))
     (with-temp-file file
       (set-buffer-multibyte nil)
       (insert (eas-chart-build spec "png")))))
@@ -128,7 +131,8 @@ Return (:status :detail ...): STATUS is \"pass\", \"fail\" or
           :detail (format "%s is not on PATH; needed to rasterize native SVG" eas-chart-rsvg-program)))
    ((not (plist-get native :svg)) (list :status "fail" :detail "native rendering failed"))
    (t
-    (let ((stale (eas-conformance-ref-problem entry))
+    (let ((stale (if (plist-member entry :ref) (plist-get entry :ref-problem)
+                   (eas-conformance-ref-problem entry)))
           (mine (make-temp-file "eas-native" nil ".png"))
           (fresh (and (eas-chart-available-p) (make-temp-file "eas-ref" nil ".png"))))
       (unwind-protect
@@ -142,8 +146,9 @@ Return (:status :detail ...): STATUS is \"pass\", \"fail\" or
                             r)))
                  ((and stale (string-match-p "missing\\|no entry" stale)) (list :status "fail" :detail stale))
                  (t (let ((r (eas-conformance--judge
-                              entry mine (expand-file-name (concat (plist-get entry :name) ".png")
-                                                           (eas-conformance-ref-directory))
+                              entry mine (or (plist-get entry :ref)
+                                             (expand-file-name (concat (plist-get entry :name) ".png")
+                                                               (eas-conformance-ref-directory)))
                               "ref")))
                       (if stale (append (list :status "fail" :detail (concat stale "; " (plist-get r :detail))) r)
                         r)))))
@@ -155,7 +160,7 @@ Return (:status :detail ...): STATUS is \"pass\", \"fail\" or
   "Rebuild ref/NAME.png with bin/chart for ENTRIES (default: the gallery).
 Rewrite ref/manifest.json.  Signals NOT_FOUND without bin/chart."
   (interactive)
-  (let ((entries (or entries (eas-conformance-gallery)))
+  (let ((entries (or entries (seq-remove (lambda (e) (plist-member e :ref)) (eas-conformance-gallery))))
         (zone (eas-conformance-ref-zone))
         (refs (plist-get (eas-conformance-manifest) :refs)))
     (dolist (entry entries)

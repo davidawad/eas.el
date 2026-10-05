@@ -1,6 +1,6 @@
 ▆▆▄▅▆▅▇▇▆▇▆▆▆▆▇▆▆▇▆▆▇▇▆▇▇▆▇▆  series
 ████████████████████████████  ■ Agriculture
-█▃██▁████▁██▃██▁███████▁████  ■ Business services
+█▃██▁████▁██▃██▂███████▁████  ■ Business services
 ▆█▄▇█▂██▃██▅█▅▇█▇██▂██▂█▅▃▇▄  ■ Construction
 ▄▆▄▄▄█▄▄█▄▄▅▄▅▄▄▄▅▄█▅▅█▅██▄█  ■ Education and Health
 ▃▂▁▂▃▂▁▁▂▁▁▁▂▁▁▁▁▂▂▆█▁▅▂▁▁█▁  ■ Finance
@@ -8,7 +8,7 @@
 ▄██▅██▄██▄██████████████████  ■ Information
 ████████████████████▇█▇█████  ■ Leisure and hospitality
 ▂▁▂▃▂▂▃▄▂▅▅▅▄▄▁▁▁▁▁▂▄▁▃▁▄▃▂▄  ■ Manufacturing
-▄▄▅▄▃▃▃▄▄▄█▄▄█▄▃█▄▄▄▅█▅▄▅█▄█  ■ Mining and Extraction
+▄▄▅▄▃▃▃▄▄▄█▄▄█▄▃█▄▄▄▅▃▅▄▅█▄█  ■ Mining and Extraction
 ██▇▇▆▇██▇███████████▇█▆██▇▆▆  ■ Other
 ████████████████████████████  ■ Self-employed
 ┬────────────┬─────────────┬  ■ Transportation and Utilities

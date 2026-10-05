@@ -130,9 +130,14 @@ Returns the plot centre when the channel is absent."
                    (+ (aref bounds 1) (/ (aref bounds 3) 2.0))))
      (t (let ((p (eas-marks--channel unit scales channel row)))
           (and (numberp p)
-               (if (and scale (not band-start) (member (plist-get scale :type) '("band")))
-                   (+ p (/ (plist-get scale :bandwidth) 2.0))
-                 p)))))))
+               (cond
+                ((and scale (not band-start) (member (plist-get scale :type) '("band")))
+                 (+ p (/ (plist-get scale :bandwidth) 2.0)))
+                ;; Vega-Lite centres non-bar marks on a bin.
+                ((and (not band-start) (plist-get def :bin-end))
+                 (let ((q (eas-marks--secondary unit scales channel row)))
+                   (if (numberp q) (/ (+ p q) 2.0) p)))
+                (t p))))))))
 
 (defun eas-marks--zero (scale bounds channel)
   "Baseline position for SCALE: zero when in domain, else the plot edge."
@@ -176,7 +181,9 @@ Returns the plot centre when the channel is absent."
                        (let ((text (eas-marks--channel unit scales :text row)))
                          (list :text (eas-expr--string (or text (plist-get mark :text) ""))
                                :fontSize (if (eas-layout-text-p metrics) (aref (plist-get metrics :cell) 1)
-                                           (or (plist-get mark :fontSize) 11))
+                                           ;; Vega-Lite: size sets a text mark's font size.
+                                           (or (eas-marks--channel unit scales :size row)
+                                               (plist-get mark :fontSize) 11))
                                :align (or (plist-get mark :align) "center")
                                :baseline (or (plist-get mark :baseline) "middle")
                                :fill (or (eas-marks--channel unit scales :color row)
@@ -184,7 +191,9 @@ Returns the plot centre when the channel is absent."
                                :opacity (or (plist-get mark :opacity) 1)))
                      (append (list :size (or (eas-marks--channel unit scales :size row)
                                              (plist-get mark :size) 30)
-                                   :shape (if (equal type "point") "circle" type)
+                                   :shape (or (eas-marks--channel unit scales :shape row)
+                                              (and (equal type "point") (stringp (plist-get mark :shape)) (plist-get mark :shape))
+                                              (if (equal type "point") "circle" type))
                                    :strokeWidth (or (plist-get mark :strokeWidth) 2))
                              (eas-marks--style
                               (if (member type '("circle" "square"))
@@ -212,7 +221,7 @@ ranged (x2/y2) bar."
          (r (or (plist-get mark :cornerRadiusEnd) 0)) (all (or (plist-get mark :cornerRadius) 0)))
     (cond
      ((and (zerop r) (zerop all)) nil)
-     ((or (plist-get enc :x2) (plist-get enc :y2))
+     ((plist-get enc (if horizontal :x2 :y2))
       (let ((c (max r all))) (lambda (_) (vector c c c c))))
      (t (let* ((measure (if horizontal :x :y)) (dim (if horizontal :y :x))
                (key (eas-encode-field (plist-get enc measure)))
@@ -241,11 +250,20 @@ ranged (x2/y2) bar."
                           (q (eas-marks--secondary unit scales channel row)))
                      (cond
                       ((null p) nil)
+                      ;; Ranged bars on a point scale span from point to point.
+                      ((and band q (equal (plist-get scale :type) "point")) (cons (min p q) (max p q)))
+                      ;; A bar's size is its thickness, centred in the band.
+                      ((and band (numberp (plist-get mark :size)) (not text))
+                       (let ((c (+ p (/ (plist-get scale :bandwidth) 2.0))) (half (/ (plist-get mark :size) 2.0)))
+                         (cons (- c half) (+ c half))))
                       (band (cons p (+ p (plist-get scale :bandwidth))))
                       (q (if (and (plist-get (plist-get (plist-get unit :encoding) channel) :bin-end)
                                   (not other-band))
-                             ;; Vega-Lite's binSpacing: one pixel between adjacent bins.
-                             (cons (+ (min p q) (if text 1 0.5)) (- (max p q) (if text 0 0.5)))
+                             ;; Vega-Lite's binSpacing (1 for bars, 0 for rects) between
+                             ;; adjacent bins, both edges moved by the half-pixel translate.
+                             (let ((s (or (plist-get mark :binSpacing) (if (equal (plist-get mark :type) "bar") 1 0))))
+                               (if text (cons (+ (min p q) 1) (max p q))
+                                 (cons (+ (min p q) 0.5 (/ s 2.0)) (- (+ (max p q) 0.5) (/ s 2.0)))))
                            (cons (min p q) (max p q))))
                       ((and (eq channel (if horizontal :x :y)) (not (equal (plist-get mark :type) "rect")))
                        (let ((z (eas-marks--zero scale bounds channel))) (cons (min p z) (max p z))))
@@ -395,7 +413,10 @@ Bars and areas with a discrete color/fill/detail field stack by default
 \(offset zero, descending stack-by order); stack null or false opts out."
   (let* ((enc (plist-get unit :encoding)) (type (plist-get (plist-get unit :mark) :type))
          (y (plist-get enc :y)) (x (plist-get enc :x))
-         (measure (cond ((and y (equal (plist-get y :type) "quantitative") (not (plist-get y :bin-end))
+         (stacks (lambda (d) (and d (equal (plist-get d :type) "quantitative") (stringp (plist-get d :stack)))))
+         (measure (cond ((funcall stacks y) :y)
+                        ((funcall stacks x) :x)
+                        ((and y (equal (plist-get y :type) "quantitative") (not (plist-get y :bin-end))
                               (not (and x (equal (plist-get x :type) "quantitative") (not (plist-get x :bin-end)))))
                          :y)
                         ((and x (equal (plist-get x :type) "quantitative") (not (plist-get x :bin-end))) :x)))

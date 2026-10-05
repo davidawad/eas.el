@@ -225,6 +225,7 @@
       "bounds": [43, 6, 300, 150],
       "clip": false,
       "frame": {},
+      "header": {},
       "id": "main",
       "legends": [],
       "marks": [

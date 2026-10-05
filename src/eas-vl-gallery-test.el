@@ -14,25 +14,21 @@
 (require 'eas)
 (require 'eas-vl-gallery)
 
-(defconst eas-vl-gallery-test--group "area-circular")
-
-(ert-deftest eas-vl-gallery-area-circular-holds-its-status ()
-  "Every example has a verdict and holds it: renders, threshold, no overlap."
-  (let* ((names (eas-vl-gallery-names eas-vl-gallery-test--group))
-         (status (eas-vl-gallery-status eas-vl-gallery-test--group)))
-    (should (= (length names) 13))
-    (should (equal (sort (mapcar #'eas-key-name (eas-plist-keys status)) #'string<) names))
-    (dolist (name names)
-      (should (equal (cons name (eas-vl-gallery-check eas-vl-gallery-test--group name)) (list name))))))
-
-(ert-deftest eas-vl-gallery-area-circular-text-goldens ()
-  "The text backend's rendering of each example is an exact golden."
-  (dolist (name (eas-vl-gallery-names eas-vl-gallery-test--group))
-    (eas-test-golden (format "vl-%s/%s.txt" eas-vl-gallery-test--group name)
-                     (concat (eas-vl-gallery-text (eas-vl-gallery-spec eas-vl-gallery-test--group name)) "\n"))))
+(ert-deftest eas-vl-gallery-groups-hold-their-status ()
+  "Every example of every group has a verdict and holds it: renders,
+threshold, no overlap."
+  (should (eas-vl-gallery-groups))
+  (dolist (group (eas-vl-gallery-groups))
+    (let ((names (eas-vl-gallery-names group))
+          (status (eas-vl-gallery-status group)))
+      (should (equal (cons group (sort (mapcar #'eas-key-name (eas-plist-keys status)) #'string<))
+                     (cons group names)))
+      (dolist (name names)
+        (should (equal (cons (concat group "/" name) (eas-vl-gallery-check group name))
+                       (list (concat group "/" name))))))))
 
 (ert-deftest eas-vl-gallery-inlines-url-data ()
-  (let* ((spec (eas-vl-gallery-spec eas-vl-gallery-test--group "area_overlay"))
+  (let* ((spec (eas-vl-gallery-spec "area-circular" "area_overlay"))
          (rows (plist-get (plist-get spec :data) :values)))
     (should (vectorp rows))
     (should (equal (aref rows 0) '(:symbol "MSFT" :date "Jan 1 2000" :price 39.81)))))

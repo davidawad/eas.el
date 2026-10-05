@@ -27,6 +27,8 @@
 (require 'eas-legend)
 (require 'eas-legend-fit)
 (require 'eas-compile-scales)
+(require 'eas-bins)
+(require 'eas-facet)
 
 (defun eas-place-natural-size (group metrics)
   "Set GROUP's natural :w and :h from its spec and scales under METRICS."
@@ -41,7 +43,8 @@
                          (t (plist-get metrics :step)))))
         (plist-put group (car dim)
                    (cond ((numberp spec) spec)
-                         (n (* step (max 1 n)))
+                         ;; Vega-Lite: step times the scale's band space.
+                         (n (* step (max 1 (eas-bins-band-space scale n))))
                          (text (* (nth 4 dim) (if (eq (car dim) :w) cw ch)))
                          (t (plist-get metrics (nth 3 dim)))))))))
 
@@ -84,6 +87,9 @@
 
 (defun eas-place-chrome (group metrics)
   "Compute GROUP's axis and legend models and its chrome under METRICS."
+  (when-let* ((range (eas-bins-size-range group (lambda (ch) (eas-place--local-scale group ch)))))
+    (plist-put (plist-get group :scales) :size
+               (eas-compile-set-range (plist-get (plist-get group :scales) :size) range)))
   (let* ((scales (plist-get group :scales))
          (defs (plist-get group :axis-defs))
          (axes (delq nil (list (eas-layout-axis :x (plist-get defs :x) (plist-get scales :x)
@@ -110,6 +116,11 @@
         (let ((sizes (mapcar (lambda (l) (eas-legend-size l metrics)) legends)))
           (plist-put chrome :right (apply #'max (mapcar #'car sizes)))
           (plist-put chrome :legend-h (apply #'+ (mapcar #'cdr sizes))))))
+    ;; A facet cell's header sits outside its axes.
+    (when-let* ((header (plist-get group :header)))
+      (let ((e (eas-facet-header-extent header metrics)))
+        (plist-put group :header-inset (plist-get chrome (car e)))
+        (plist-put chrome (car e) (+ (plist-get chrome (car e)) (cdr e)))))
     (plist-put group :axes-model axes)
     (plist-put group :legends-model legends)
     (plist-put group :chrome chrome)))

@@ -19,6 +19,7 @@
 (require 'eas-data)
 (require 'eas-expr)
 (require 'eas-transform)
+(require 'eas-bins)
 
 (defvar eas-encode-param-test-function
   (lambda (_param _row empty) empty)
@@ -83,6 +84,9 @@ ENV holds param values for expressions."
                                                              :derived "timeUnit")
                                                        (eas--plist-without
                                                         (eas--plist-without def :field) :timeUnit))))))
+                 ((eas-bins-binned-p def)
+                  (setq enc (eas-plist-put enc channel
+                                           (eas-bins-binned-def def (plist-get encoding (if (eq channel :y) :y2 :x2))))))
                  ((eas-true-p (plist-get def :bin))
                   (let ((as (eas-encode--bin-name def)))
                     (push (list :bin (plist-get def :bin) :field (plist-get def :field) :as as) transforms)

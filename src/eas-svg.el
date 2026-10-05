@@ -133,12 +133,28 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
             (if (> tl 0) (format "A%s,%s 0 0 1 %s,%s" (funcall n tl) (funcall n tl) (funcall n (+ x tl)) (funcall n y)) "")
             "Z")))
 
+(defconst eas-svg--shape-paths
+  '(("diamond" . "M-1,0L0,-1L1,0L0,1Z")
+    ("cross" . "M-1,-0.333H-0.333V-1H0.333V-0.333H1V0.333H0.333V1H-0.333V0.333H-1Z")
+    ("triangle-up" . "M0,-0.866L1,0.866L-1,0.866Z") ("triangle" . "M0,-0.866L1,0.866L-1,0.866Z")
+    ("triangle-down" . "M0,0.866L1,-0.866L-1,-0.866Z")
+    ("triangle-right" . "M0.866,0L-0.866,1L-0.866,-1Z") ("triangle-left" . "M-0.866,0L0.866,1L0.866,-1Z"))
+  "Vega's named symbols as unit paths (within -1..1, scaled by sqrt(size)/2).")
+
 (defun eas-svg--symbol (shape x y size &rest attrs)
-  "A Vega symbol of SHAPE and area SIZE centred on X Y, with ATTRS."
+  "A Vega symbol of SHAPE and area SIZE centred on X Y, with ATTRS.
+SHAPE is circle, square, another Vega symbol name or SVG path data."
   (let ((r (/ (sqrt (max 0 size)) 2.0)))
-    (if (equal shape "square")
-        (apply #'eas-svg--node 'rect :x (- x r) :y (- y r) :width (* 2 r) :height (* 2 r) attrs)
-      (apply #'eas-svg--node 'circle :cx x :cy y :r r attrs))))
+    (cond
+     ((equal shape "square")
+      (apply #'eas-svg--node 'rect :x (- x r) :y (- y r) :width (* 2 r) :height (* 2 r) attrs))
+     ((and (stringp shape) (or (assoc shape eas-svg--shape-paths) (string-match-p "\\`[ \t]*[Mm]" shape)))
+      ;; Vega draws a path symbol at sqrt(size)/2 per unit.
+      (let ((sw (plist-get attrs :stroke-width)))
+        (apply #'eas-svg--node 'path :d (or (cdr (assoc shape eas-svg--shape-paths)) shape)
+               :transform (format "translate(%s,%s) scale(%s)" (eas-svg--n x) (eas-svg--n y) (eas-svg--n r))
+               (if (and sw (> r 0)) (plist-put (copy-sequence attrs) :stroke-width (/ sw r)) attrs))))
+     (t (apply #'eas-svg--node 'circle :cx x :cy y :r r attrs)))))
 
 (defun eas-svg--item (mark item)
   "SVG node for ITEM of MARK."
@@ -267,6 +283,11 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
                 children))
         (seq-doseq (axis (plist-get view :axes))
           (setq children (append (reverse (eas-svg--axis axis theme)) children)))
+        (when-let* ((h (plist-get view :header)))
+          (push (eas-svg--text (plist-get h :text) (plist-get h :x) (plist-get h :y) (plist-get h :fontSize)
+                               :align (plist-get h :align) :baseline (plist-get h :baseline)
+                               :angle (plist-get h :angle) :fill "black")
+                children))
         (push (apply #'dom-node 'g (when (eq (plist-get view :clip) t)
                                      (list (cons 'clip-path (format "url(#%s)" clip))))
                      (apply #'append

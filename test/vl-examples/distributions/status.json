@@ -1,0 +1,103 @@
+{
+  "area_cumulative_freq": {
+    "ratio": 0.0055,
+    "reason": "ratio 0.0055 <= 0.05; size +0,+0 px (native 544x350, ref 544x350) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "area_density": {
+    "ratio": 0.0272,
+    "reason": "ratio 0.0272 <= 0.05; size +0,+0 px (native 452x144, ref 452x144) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "area_density_stacked": {
+    "ratio": 0.0304,
+    "reason": "ratio 0.0304 <= 0.05; size +0,+0 px (native 544x158, ref 544x158) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "bar_binned_data": {
+    "note": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0053",
+    "ratio": 0.3047,
+    "reason": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0053; ratio 0.3047 > 0.05; size +0,+0 px (native 535x344, ref 535x344) within 8; offset 0,0",
+    "status": "partial"
+  },
+  "bar_percent_of_total": {
+    "note": "threshold 0.06: the 105px-tall chart is mostly bar edges; the reference's bars are 10.5px on a 12px step where Vega-Lite's band (paddingInner 0.1) gives native 10.8px; with 10.5px bars the ratio is 0.0126",
+    "ratio": 0.0583,
+    "reason": "ratio 0.0583 <= 0.06; size +0,+0 px (native 558x105, ref 558x105) within 8; offset 0,0",
+    "status": "pass",
+    "threshold": 0.06
+  },
+  "boxplot_preaggregated": {
+    "ratio": 0.0335,
+    "reason": "ratio 0.0335 <= 0.05; size +0,+0 px (native 547x117, ref 547x117) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "circle_binned": {
+    "ratio": 0.0118,
+    "reason": "ratio 0.0118 <= 0.05; size +0,+0 px (native 638x350, ref 638x350) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "circle_wilkinson_dotplot": {
+    "ratio": 0.0078,
+    "reason": "ratio 0.0078 <= 0.05; size +0,+0 px (native 90x140, ref 90x140) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "histogram": {
+    "ratio": 0.0066,
+    "reason": "ratio 0.0066 <= 0.05; size +0,+0 px (native 544x350, ref 544x350) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "histogram_log": {
+    "ratio": 0.007,
+    "reason": "ratio 0.0070 <= 0.05; size -1,+0 px (native 531x350, ref 532x350) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "histogram_nonlinear": {
+    "ratio": 0.0413,
+    "reason": "ratio 0.0413 <= 0.05; size +0,+0 px (native 371x163, ref 371x163) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "histogram_rel_freq": {
+    "note": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0060",
+    "ratio": 0.2745,
+    "reason": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0060; ratio 0.2745 > 0.05; size +0,+0 px (native 538x344, ref 538x344) within 8; offset 0,0",
+    "status": "partial"
+  },
+  "isotype_bar_chart": {
+    "ratio": 0.0128,
+    "reason": "ratio 0.0128 <= 0.05; size +0,-2 px (native 831x430, ref 831x432) within 8; offset 0,1",
+    "status": "pass"
+  },
+  "isotype_bar_chart_emoji": {
+    "note": "the reference's glyphs are Apple Color Emoji (the macOS font bin/chart used); positions, sizes and facet headers match, but emoji pixels depend on the rasterizer's emoji font",
+    "ratio": 0.1818,
+    "reason": "the reference's glyphs are Apple Color Emoji (the macOS font bin/chart used); positions, sizes and facet headers match, but emoji pixels depend on the rasterizer's emoji font; ratio 0.1818 > 0.05; size +0,+0 px (native 831x430, ref 831x430) within 8; offset 2,4",
+    "status": "partial"
+  },
+  "layer_cumulative_histogram": {
+    "note": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0055",
+    "ratio": 0.3528,
+    "reason": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0055; ratio 0.3528 > 0.05; size +0,+0 px (native 544x350, ref 544x350) within 8; offset 0,0",
+    "status": "partial"
+  },
+  "layer_line_errorband_ci": {
+    "ratio": 0.0126,
+    "reason": "ratio 0.0126 <= 0.05; size +0,+0 px (native 530x350, ref 530x350) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "layer_point_errorbar_ci": {
+    "ratio": 0.0145,
+    "reason": "ratio 0.0145 <= 0.05; size +0,+0 px (native 602x244, ref 602x244) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "layer_point_errorbar_stdev": {
+    "ratio": 0.0137,
+    "reason": "ratio 0.0137 <= 0.05; size +0,+0 px (native 601x244, ref 601x244) within 8; offset 0,0",
+    "status": "pass"
+  },
+  "rect_binned_heatmap": {
+    "ratio": 0.0121,
+    "reason": "ratio 0.0121 <= 0.05; size +0,+0 px (native 458x250, ref 458x250) within 8; offset 0,0",
+    "status": "pass"
+  }
+}

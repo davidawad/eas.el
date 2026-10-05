@@ -34,6 +34,9 @@
 (require 'eas-link-scale)
 (require 'eas-overlay)
 (require 'eas-polar)
+(require 'eas-bins)
+(require 'eas-composite)
+(require 'eas-facet)
 
 (defvar eas-compile-gc-threshold (* 64 1024 1024)
   "GC threshold compile runs under; compile allocates many small plists.")
@@ -62,7 +65,10 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
     (cond
      ((and override (string-empty-p (plist-get ctx :path))) (eas-compile--tag override))
      ((null data) (plist-get ctx :rows))
-     ((vectorp (plist-get data :values)) (eas-compile--tag (plist-get data :values)))
+     ((vectorp (plist-get data :values))
+      ;; Vega wraps primitive values as {"data": value}.
+      (eas-compile--tag (seq-map (lambda (v) (if (and (consp v) (keywordp (car v))) v (list :data v)))
+                                 (plist-get data :values))))
      ((plist-get data :name)
       (eas-signal "INVALID_INPUT"
                     (format "Data %s is a template slot; resolve the template first" (plist-get data :name))
@@ -126,6 +132,7 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
                                 :path (plist-get ctx :path) :units nil
                                 :spec-w (or (plist-get node :width) (plist-get ctx :width))
                                 :spec-h (or (plist-get node :height) (plist-get ctx :height))
+                                :header (plist-get (plist-get node :x-eas) :header)
                                 :params nil))))
         (when-let* ((inherited (and (not group) (eas-link-scoped-params node))))
           (plist-put g :params (mapcar (lambda (p) (append p (list :view (plist-get g :id)))) inherited)))
@@ -154,6 +161,7 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
          (color (eas-compile-color-scale units config))
          (size (eas-compile-aux-scale units :size [4 361]))
          (opacity (eas-compile-aux-scale units :opacity [0.3 0.8]))
+         (shape-scale (eas-bins-shape-scale units))
          (first-def (lambda (ch) (cdar (eas-compile--defs units ch))))
          (unit (car units))
          (shape (let ((type (plist-get (plist-get unit :mark) :type)))
@@ -170,8 +178,9 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
                        (eas-polar-scales units)
                        (when color (list (nth 0 color) (nth 2 color)))
                        (when size (list :size size))
-                       (when opacity (list :opacity opacity))))
-    (plist-put group :axis-defs (list :x (funcall first-def :x) :y (funcall first-def :y)))
+                       (when opacity (list :opacity opacity))
+                       (when shape-scale (list :shape shape-scale))))
+    (plist-put group :axis-defs (list :x (eas-bins-axis-def units :x) :y (eas-bins-axis-def units :y)))
     (plist-put group :legend-specs
                (delq nil (list (when color (funcall spec (nth 0 color) (nth 1 color) (nth 2 color)))
                                (when size (funcall spec :size (funcall first-def :size) size))
@@ -231,6 +240,8 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
                  (plist-get group :units)))
          (legend-y (plist-get group :y0)))
     (list :id (plist-get group :id) :path (plist-get group :path) :bounds bounds
+          :header (when-let* ((h (plist-get group :header)))
+                    (eas-facet-header-place h bounds (or (plist-get group :header-inset) 0) metrics))
           :clip (if (eas-compile--clipped-p group state) t :false)
           ;; Vega-Lite frames each plot with config.view.stroke; terminals don't.
           :frame (let ((stroke (plist-get (eas-theme-get (plist-get metrics :config) :view) :stroke)))
@@ -282,7 +293,7 @@ Arguments as in `eas-compile'.  The runtime keeps the plan so that a
 selection change can patch it (`eas-compile-patch') instead of
 compiling again."
   (let* ((gc-cons-threshold (max gc-cons-threshold eas-compile-gc-threshold))
-         (spec (eas-overlay-expand (eas-spec-validate spec)))
+         (spec (eas-composite-expand (eas-facet-expand (eas-overlay-expand (eas-spec-validate spec)))))
          (unsupported (car (eas-spec-unsupported spec))))
     (when unsupported
       (eas-signal "UNSUPPORTED_FEATURE" (plist-get unsupported :message)
@@ -373,7 +384,9 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
               (x2 (apply #'max (mapcar (lambda (g) (+ (plist-get g :x0) (plist-get g :w))) groups)))
               (anchor (if (eas-layout-text-p metrics) "middle" (plist-get metrics :chart-title-anchor))))
          (list :title (list :text title
-                            :x (pcase anchor ("start" x1) ("end" x2)
+                            ;; Vega-Lite's title frame "bounds": start and end are the chart's edges.
+                            :x (pcase anchor ("start" (if (eas-layout-text-p metrics) x1 (plist-get metrics :pad)))
+                                 ("end" (if (eas-layout-text-p metrics) x2 (- (car total) (plist-get metrics :pad))))
                                  (_ (if (eas-layout-text-p metrics) (/ (car total) 2.0) (/ (+ x1 x2) 2.0))))
                             :y (plist-get metrics :pad)
                             :align (pcase anchor ("start" "left") ("end" "right") (_ "center")) :baseline "top"

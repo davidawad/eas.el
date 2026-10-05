@@ -65,15 +65,7 @@
     "w": 369
   },
   "target": "svg",
-  "title": {
-    "align": "left",
-    "baseline": "top",
-    "fontSize": 16,
-    "fontWeight": 600,
-    "text": "Steps per day",
-    "x": 64,
-    "y": 5
-  },
+  "title": {"align": "left", "baseline": "top", "fontSize": 16, "fontWeight": 600, "text": "Steps per day", "x": 5, "y": 5},
   "views": [
     {
       "axes": [
@@ -236,6 +228,7 @@
       "bounds": [64, 33, 300, 200],
       "clip": false,
       "frame": {},
+      "header": {},
       "id": "main",
       "legends": [],
       "marks": [

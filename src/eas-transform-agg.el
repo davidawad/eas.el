@@ -13,6 +13,7 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-transform-dist)
 
 (defun eas-agg--valid (values)
   "VALUES without nulls, as numbers where possible."
@@ -54,7 +55,10 @@
     ("variance" . ,(lambda (vs) (eas-agg--variance vs t)))
     ("variancep" . ,(lambda (vs) (eas-agg--variance vs nil)))
     ("stdev" . ,(lambda (vs) (let ((v (eas-agg--variance vs t))) (if (numberp v) (sqrt v) v))))
-    ("stdevp" . ,(lambda (vs) (let ((v (eas-agg--variance vs nil))) (if (numberp v) (sqrt v) v)))))
+    ("stdevp" . ,(lambda (vs) (let ((v (eas-agg--variance vs nil))) (if (numberp v) (sqrt v) v))))
+    ("stderr" . eas-agg-stderr)
+    ("ci0" . ,(lambda (vs) (or (car (eas-agg-bootstrap-ci vs)) :null)))
+    ("ci1" . ,(lambda (vs) (or (cdr (eas-agg-bootstrap-ci vs)) :null))))
   "Aggregate operations: (NAME . FUNCTION of a list of values).")
 
 (defun eas-agg-op (name path)
@@ -131,8 +135,11 @@
              for desc = (equal (plist-get spec :order) "descending")
              for x = (plist-get a key) for y = (plist-get b key)
              unless (equal x y)
-             return (let ((lt (if (and (numberp x) (numberp y)) (< x y)
-                                (string< (format "%s" x) (format "%s" y)))))
+             return (let ((lt (cond ((and (numberp x) (numberp y)) (< x y))
+                                    ;; Vega's ascending: nulls first.
+                                    ((memq x '(nil :null)) t)
+                                    ((memq y '(nil :null)) nil)
+                                    (t (string< (format "%s" x) (format "%s" y))))))
                       (if desc (not lt) lt))
              finally return nil)))
 
@@ -168,7 +175,12 @@
              (sorted (vconcat (if (> (length sort) 0)
                                   (sort (copy-sequence members) (eas-agg--sort-pred sort))
                                 members)))
-             (n (length sorted)))
+             (n (length sorted))
+             ;; Without a sort Vega compares rows as all different: no peers.
+             (key-fn (if (> (length sort) 0) key-fn
+                       (let ((pos (make-hash-table :test 'eq)))
+                         (dotimes (i n) (puthash (aref sorted i) i pos))
+                         (lambda (row) (gethash row pos))))))
         (dotimes (i n)
           (let* ((row (aref sorted i))
                  (start (if (numberp lo) (max 0 (+ i lo)) 0))

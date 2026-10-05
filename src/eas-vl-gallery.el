@@ -47,6 +47,12 @@
   "Directory of example GROUP."
   (expand-file-name group eas-vl-gallery-directory))
 
+(defun eas-vl-gallery-groups ()
+  "Groups of the gallery that record a status.json, sorted."
+  (seq-filter (lambda (g) (file-exists-p (eas-vl-gallery-status-file g)))
+              (and (file-directory-p eas-vl-gallery-directory)
+                   (directory-files eas-vl-gallery-directory nil "\\`[^.]"))))
+
 (defun eas-vl-gallery-names (group)
   "Example names in GROUP, sorted."
   (mapcar (lambda (f) (string-remove-suffix ".vl.json" f))
@@ -250,6 +256,38 @@ image comparison runs only where a rasterizer is available."
       (when (and (equal status "pass") (plist-get r :overlaps))
         (push (format "%s: %s" name (string-join (plist-get r :overlaps) "; ")) problems))))
     problems))
+
+;;; The conformance gallery
+
+(defun eas-vl-gallery-passing (group)
+  "GROUP's examples recorded as passing, as (NAME . THRESHOLD)."
+  (cl-loop for (k v) on (eas-vl-gallery-status group) by #'cddr
+           when (equal (plist-get v :status) "pass")
+           collect (cons (eas-key-name k) (or (plist-get v :threshold) 0.05))))
+
+(defun eas-vl-gallery-ref-problem (group name)
+  "Why NAME's reference in GROUP cannot be trusted, or nil."
+  (unless (file-exists-p (eas-vl-gallery-ref-file group name))
+    (format "STALE_REF: %s/ref/%s.png is missing; rebuild with bin/chart" group name)))
+
+(defun eas-vl-gallery-conformance-entries ()
+  "Conformance gallery entries for every passing example of every group.
+They are judged like test/conformance specs (native text golden at
+GROUP/NAME.txt, image oracle against GROUP/ref/NAME.png), and what they
+prove goes into supported.json."
+  (cl-loop for group in (eas-vl-gallery-groups)
+           append (cl-loop for (name . threshold) in (eas-vl-gallery-passing group)
+                           for dir = (eas-vl-gallery-group-directory group)
+                           collect (list :name (concat group "/" name)
+                                         :file (expand-file-name (concat name ".vl.json") dir)
+                                         :spec (eas-vl-gallery-spec group name)
+                                         :threshold threshold
+                                         :ref (eas-vl-gallery-ref-file group name)
+                                         :ref-problem (eas-vl-gallery-ref-problem group name)
+                                         :text-file (expand-file-name (concat name ".txt") dir)))))
+
+(defvar eas-conformance-gallery-functions)
+(add-hook 'eas-conformance-gallery-functions #'eas-vl-gallery-conformance-entries)
 
 (provide 'eas-vl-gallery)
 ;;; eas-vl-gallery.el ends here

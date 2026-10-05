@@ -20,6 +20,7 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-format)
 (require 'eas-time)
 (require 'eas-scale-time)
 
@@ -348,6 +349,7 @@ and strftime-style time formats are honored."
         ((and format (string-match "\\.\\([0-9]+\\)f" format))
          (let ((d (string-to-number (match-string 1 format))))
            (lambda (v) (eas-scale-format-number v d))))
+        (format (lambda (v) (eas-format-number format v)))
         ((equal (plist-get scale :type) "log")
          (let ((ticks (eas-scale-ticks scale count)))
            (lambda (v) (if (eas-scale-log-label-p v ticks count)

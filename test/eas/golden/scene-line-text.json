@@ -212,6 +212,7 @@
       "bounds": [28, 28, 392, 154],
       "clip": false,
       "frame": {},
+      "header": {},
       "id": "main",
       "legends": [],
       "marks": [

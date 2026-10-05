@@ -1,68 +1,80 @@
 {
   "arc_donut": {
-    "reason": "arc innerRadius (donut); native vs bin/chart ref: 0.0010 differing pixels, canvas identical",
+    "ratio": 0.0005,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0005 (threshold 0.02)",
     "status": "pass",
     "threshold": 0.02
   },
   "arc_pie": {
-    "reason": "arc mark, theta stacked by color, default view size, arc stroke from theme; native vs bin/chart ref: 0.0010 differing pixels, canvas identical",
+    "ratio": 0.0005,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0005 (threshold 0.02)",
     "status": "pass",
     "threshold": 0.02
   },
   "arc_pie_normalize_tooltip": {
-    "reason": "theta stack normalize, mark tooltip showing the unstacked value; native vs bin/chart ref: 0.0010 differing pixels, canvas identical",
+    "ratio": 0.0005,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0005 (threshold 0.02)",
     "status": "pass",
     "threshold": 0.02
   },
   "arc_pie_pyramid": {
-    "reason": "order channel, explicit theta scale range, explicit color domain and range, legend orient none at legendX/legendY; native vs bin/chart ref: 0.0009 differing pixels, canvas identical",
+    "ratio": 0.0008,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0008 (threshold 0.02)",
     "status": "pass",
     "threshold": 0.02
   },
   "arc_radial": {
-    "reason": "radius encoding on a sqrt scale with zero and rangeMin, primitive data values wrapped as {data}, text radiusOffset; native vs bin/chart ref: 0.0006 differing pixels, canvas identical",
+    "ratio": 0.0001,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0001 (threshold 0.02)",
     "status": "pass",
     "threshold": 0.02
   },
   "area": {
-    "reason": "area mark, encoding yearmonth timeUnit with sum aggregate, axis.format; native vs bin/chart ref: 0.0085 differing pixels, canvas identical",
+    "ratio": 0.0036,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0036 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "area_gradient": {
-    "reason": "linear gradient fill (mark.color gradient), line overlay with its own color, filter transform, temporal x from \"Mon D YYYY\" dates; native vs bin/chart ref: 0.0075 differing pixels, canvas identical",
+    "ratio": 0.0041,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0041 (threshold 0.02)",
     "status": "pass",
     "threshold": 0.02
   },
   "area_horizon": {
-    "reason": "layered areas, interpolate monotone (d3 curveMonotoneX), clip, calculate, explicit y domain, opacity encoding; native vs bin/chart ref: 0.0177 differing pixels, canvas identical",
+    "ratio": 0.0093,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0093 (threshold 0.05)",
     "status": "pass",
     "threshold": 0.05
   },
   "area_overlay": {
-    "reason": "mark.line and mark.point overlays expanded as Vega-Lite's pathoverlay (area opacity 0.7, filled points); native vs bin/chart ref: 0.0056 differing pixels, canvas identical",
+    "ratio": 0.0028,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0028 (threshold 0.02)",
     "status": "pass",
     "threshold": 0.02
   },
   "layer_arc_label": {
-    "reason": "arc + text layer: text at the middle of each stacked angle at mark.radius; native vs bin/chart ref: 0.0002 differing pixels, canvas identical",
+    "ratio": 0.0001,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0001 (threshold 0.02)",
     "status": "pass",
     "threshold": 0.02
   },
   "stacked_area": {
-    "reason": "stacked area by color with scale.scheme category20b; native vs bin/chart ref: 0.0141 differing pixels, canvas identical",
+    "ratio": 0.0036,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0036 (threshold 0.04)",
     "status": "pass",
     "threshold": 0.04
   },
   "stacked_area_normalize": {
-    "reason": "stack normalize, axis.domain false, axis null; native vs bin/chart ref: 0.0115 differing pixels, canvas identical",
+    "ratio": 0.0014,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0014 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "stacked_area_stream": {
-    "reason": "stack center (streamgraph), axis.tickSize 0, axis.domain false; native vs bin/chart ref: 0.0115 differing pixels, canvas identical",
+    "ratio": 0.0012,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0012 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   }
 }
-

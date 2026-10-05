@@ -1,57 +1,110 @@
 {
   "area_density_facet": {
-    "ratio": 0.1984,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.1984 (threshold 0.03), size delta [-30 68] px",
+    "note": "the facet's field title (Species, bold, rotated at the far left) is not drawn, so the canvas is 30px narrower, and the shared y axis spacing differs by 10px",
+    "ratio": 0.1286,
+    "reason": "the facet's field title (Species, bold, rotated at the far left) is not drawn, so the canvas is 30px narrower, and the shared y axis spacing differs by 10px; svg and text render natively at 3 sizes; oracle ratio 0.1286 (threshold 0.03), size delta [-30 10] px",
     "status": "partial",
     "threshold": 0.03
   },
   "concat_bar_scales_discretize": {
-    "reason": "scale/quantize is not in the native subset; the chart falls back to a static image",
+    "note": "needs the quantize scale type",
+    "reason": "needs the quantize scale type; scale/quantize is not in the native subset; the chart falls back to a static image",
     "status": "unsupported"
   },
   "concat_marginal_histograms": {
-    "reason": "key/bounds is not in the native subset; the chart falls back to a static image",
+    "note": "needs bounds: flush (plots aligned on their plot area, not their axes), which the native grid does not do",
+    "reason": "needs bounds: flush (plots aligned on their plot area, not their axes), which the native grid does not do; key/bounds is not in the native subset; the chart falls back to a static image",
     "status": "unsupported"
   },
   "concat_population_pyramid": {
-    "ratio": 0.1799,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.1799 (threshold 0.03)",
+    "note": "legend orient top (a horizontal legend above the plots) and the concat plots' shared axis spacing are not implemented",
+    "ratio": 0.1726,
+    "reason": "legend orient top (a horizontal legend above the plots) and the concat plots' shared axis spacing are not implemented; svg and text render natively at 3 sizes; oracle ratio 0.1726 (threshold 0.03)",
     "status": "partial",
     "threshold": 0.03
   },
   "facet_grid_bar": {
-    "reason": "encoding/column is not in the native subset; the chart falls back to a static image",
+    "note": "needs a row and a column facet together (a grid with both header sets); only one facet channel is lowered natively",
+    "reason": "needs a row and a column facet together (a grid with both header sets); only one facet channel is lowered natively; encoding/column is not in the native subset; the chart falls back to a static image",
     "status": "unsupported"
   },
-  "geo_choropleth": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_choropleth": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
   "geo_circle": {
-    "reason": "projection/albersUsa is not in the native subset; the chart falls back to a static image",
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); projection/albersUsa is not in the native subset; the chart falls back to a static image",
     "status": "unsupported"
   },
-  "geo_layer": {"reason": "data format topojson", "status": "unsupported"},
-  "geo_layer_line_london": {"reason": "data format topojson", "status": "unsupported"},
-  "geo_line": {"reason": "data format topojson", "status": "unsupported"},
-  "geo_params_projections": {"reason": "data format topojson", "status": "unsupported"},
-  "geo_repeat": {"reason": "data format topojson", "status": "unsupported"},
-  "geo_rule": {"reason": "data format topojson", "status": "unsupported"},
-  "geo_text": {"reason": "data format topojson", "status": "unsupported"},
-  "geo_trellis": {"reason": "data format topojson", "status": "unsupported"},
-  "interactive_geo_earthquakes": {"reason": "data format topojson", "status": "unsupported"},
-  "interactive_geo_facet_species": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_layer": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "geo_layer_line_london": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "geo_line": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "geo_params_projections": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "geo_repeat": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "geo_rule": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "geo_text": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "geo_trellis": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "interactive_geo_earthquakes": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
+  "interactive_geo_facet_species": {
+    "note": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference)",
+    "reason": "a map: needs topojson data and a projection (maps are out of scope; bin/chart built no reference); data format topojson",
+    "status": "unsupported"
+  },
   "interactive_splom": {
+    "note": "3x3 grid of 400-point scatters: positions and legend match, native is 6px shorter than bin/chart's",
     "ratio": 0.0465,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0465 (threshold 0.03), size delta [0 -6] px",
+    "reason": "3x3 grid of 400-point scatters: positions and legend match, native is 6px shorter than bin/chart's; svg and text render natively at 3 sizes; oracle ratio 0.0465 (threshold 0.03), size delta [0 -6] px",
     "status": "partial",
     "threshold": 0.03
   },
   "nested_concat_align": {
+    "note": "nested concat plots align on their axes, not Vega-Lite's grid: the canvas is 13px wider and 12px shorter and x labels collide at 320x200",
     "ratio": 0.1135,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.1135 (threshold 0.03), size delta [13 -12] px; overlaps: 320x200: x axis labels of view vconcat_1_hconcat_1 collide",
+    "reason": "nested concat plots align on their axes, not Vega-Lite's grid: the canvas is 13px wider and 12px shorter and x labels collide at 320x200; svg and text render natively at 3 sizes; oracle ratio 0.1135 (threshold 0.03), size delta [13 -12] px; overlaps: 320x200: x axis labels of view vconcat_1_hconcat_1 collide",
     "status": "partial",
     "threshold": 0.03
   },
   "repeat_histogram": {
-    "reason": "key/columns is not in the native subset; the chart falls back to a static image",
+    "note": "needs repeat with a columns count (a wrapped grid of repeated views)",
+    "reason": "needs repeat with a columns count (a wrapped grid of repeated views); key/columns is not in the native subset; the chart falls back to a static image",
     "status": "unsupported"
   },
   "repeat_layer": {
@@ -61,41 +114,52 @@
     "threshold": 0.03
   },
   "trellis_anscombe": {
-    "ratio": 0.0263,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0263 (threshold 0.03), size delta [101 -25] px",
+    "note": "image oracle passes (0.0215); the column facet's field title row is not drawn, so the canvas is 25px shorter than bin/chart's",
+    "ratio": 0.0215,
+    "reason": "image oracle passes (0.0215); the column facet's field title row is not drawn, so the canvas is 25px shorter than bin/chart's; svg and text render natively at 3 sizes; oracle ratio 0.0215 (threshold 0.03), size delta [2 -25] px",
     "status": "partial",
     "threshold": 0.03
   },
   "trellis_area": {
+    "note": "the facet field title (a bold rotated label at the far left) is not drawn, so the canvas is 30px narrower; the rows' y-axis spacing is 102px off",
     "ratio": 0.1704,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.1704 (threshold 0.03), size delta [-30 102] px",
+    "reason": "the facet field title (a bold rotated label at the far left) is not drawn, so the canvas is 30px narrower; the rows' y-axis spacing is 102px off; svg and text render natively at 3 sizes; oracle ratio 0.1704 (threshold 0.03), size delta [-30 102] px",
     "status": "partial",
     "threshold": 0.03
   },
-  "trellis_area_seattle": {"reason": "A view needs a mark, or a layer, vconcat or hconcat", "status": "unsupported"},
+  "trellis_area_seattle": {
+    "note": "needs a top-level facet with columns (a wrapped grid of cells)",
+    "reason": "needs a top-level facet with columns (a wrapped grid of cells); A view needs a mark, or a layer, vconcat or hconcat",
+    "status": "unsupported"
+  },
   "trellis_bar": {
-    "ratio": 0.3273,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.3273 (threshold 0.03), size delta [-319 42] px",
+    "note": "the facet field title is not drawn (30px narrower) and the step-17 bands are not sized by the shared domain width",
+    "ratio": 0.1749,
+    "reason": "the facet field title is not drawn (30px narrower) and the step-17 bands are not sized by the shared domain width; svg and text render natively at 3 sizes; oracle ratio 0.1749 (threshold 0.03), size delta [-30 11] px; overlaps: 320x200: x axis labels of view vconcat_1 collide",
     "status": "partial",
     "threshold": 0.03
   },
   "trellis_bar_histogram": {
-    "ratio": 0.2391,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.2391 (threshold 0.03), size delta [-30 74] px",
+    "note": "the facet field title is not drawn (30px narrower) and the cell axis spacing is 16px off",
+    "ratio": 0.2033,
+    "reason": "the facet field title is not drawn (30px narrower) and the cell axis spacing is 16px off; svg and text render natively at 3 sizes; oracle ratio 0.2033 (threshold 0.03), size delta [-30 16] px",
     "status": "partial",
     "threshold": 0.03
   },
   "trellis_barley": {
-    "reason": "encoding/facet is not in the native subset; the chart falls back to a static image",
+    "note": "needs encoding.facet with columns (a wrapped grid of cells)",
+    "reason": "needs encoding.facet with columns (a wrapped grid of cells); encoding/facet is not in the native subset; the chart falls back to a static image",
     "status": "unsupported"
   },
   "trellis_scatter": {
-    "reason": "encoding/facet is not in the native subset; the chart falls back to a static image",
+    "note": "needs encoding.facet with columns (a wrapped grid of cells)",
+    "reason": "needs encoding.facet with columns (a wrapped grid of cells); encoding/facet is not in the native subset; the chart falls back to a static image",
     "status": "unsupported"
   },
   "trellis_stacked_bar": {
-    "ratio": 0.502,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.5020 (threshold 0.03), size delta [112 -30] px",
+    "note": "the column facet's field title row is not drawn (30px shorter) and the stacked legend sits 6px wider than bin/chart's",
+    "ratio": 0.3393,
+    "reason": "the column facet's field title row is not drawn (30px shorter) and the stacked legend sits 6px wider than bin/chart's; svg and text render natively at 3 sizes; oracle ratio 0.3393 (threshold 0.03), size delta [6 -30] px",
     "status": "partial",
     "threshold": 0.03
   },

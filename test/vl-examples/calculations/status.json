@@ -57,8 +57,10 @@
   },
   "layer_line_window": {
     "note": "needs key/datasets (named datasets lookup)",
-    "reason": "needs key/datasets (named datasets lookup); key/datasets is not in the native subset; the chart falls back to a static image",
-    "status": "unsupported"
+    "ratio": 0.0726,
+    "reason": "needs key/datasets (named datasets lookup); svg and text render natively at 3 sizes; oracle ratio 0.0726 (threshold 0.03), size delta [1 0] px; overlaps: 320x200: a legend overlaps view main; 480x300: a legend overlaps view main; 900x560: a legend overlaps view main",
+    "status": "partial",
+    "threshold": 0.03
   },
   "layer_point_line_loess": {
     "ratio": 0.0026,

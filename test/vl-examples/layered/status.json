@@ -14,15 +14,15 @@
   "concat_layer_voyager_result": {
     "note": "native canvas is 3px wider and 9px shorter than bin/chart's: the second cell's arrow-label text blocks and its triangle symbols are placed a few pixels off Vega's (everything else matches)",
     "ratio": 0.0689,
-    "reason": "native canvas is 3px wider and 9px shorter than bin/chart's: the second cell's arrow-label text blocks and its triangle symbols are placed a few pixels off Vega's (everything else matches); svg and text render natively at 3 sizes; oracle ratio 0.0689 (threshold 0.03), size delta [3 -9] px; overlaps: 320x200: view vconcat_1 leaves the 320x200 canvas; 480x300: view vconcat_1 leaves the 480x300 canvas; 900x560: view vconcat_1 leaves the 900x560 canvas; 50x14 cells: view vconcat_1 leaves the 350x196 canvas; 80x24 cells: view vconcat_1 leaves the 560x336 canvas; 120x36 cells: view vconcat_1 leaves the 840x504 canvas",
+    "reason": "native canvas is 3px wider and 9px shorter than bin/chart's: the second cell's arrow-label text blocks and its triangle symbols are placed a few pixels off Vega's (everything else matches); svg and text render natively at 3 sizes; oracle ratio 0.0689 (threshold 0.03), size delta [3 -9] px",
     "status": "partial",
     "threshold": 0.03
   },
   "facet_bullet": {
     "note": "image oracle passes (0.0084); the five stacked cells cannot shrink below their minimum plot height plus axis within the 320x200 and 50x14 gallery canvases, so views leave them",
     "ratio": 0.0084,
-    "reason": "image oracle passes (0.0084); the five stacked cells cannot shrink below their minimum plot height plus axis within the 320x200 and 50x14 gallery canvases, so views leave them; svg and text render natively at 3 sizes; oracle ratio 0.0084 (threshold 0.03); overlaps: 320x200: view vconcat_3 leaves the 320x200 canvas; 320x200: view vconcat_4 leaves the 320x200 canvas; 50x14 cells: view vconcat_2 leaves the 350x196 canvas; 50x14 cells: view vconcat_3 leaves the 350x196 canvas; 50x14 cells: view vconcat_4 leaves the 350x196 canvas; 80x24 cells: view vconcat_4 leaves the 560x336 canvas",
-    "status": "partial",
+    "reason": "image oracle passes (0.0084); the five stacked cells cannot shrink below their minimum plot height plus axis within the 320x200 and 50x14 gallery canvases, so views leave them; svg and text render natively at 3 sizes; oracle ratio 0.0084 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "layer_bar_annotations": {
@@ -32,8 +32,8 @@
     "threshold": 0.03
   },
   "layer_bar_fruit": {
-    "ratio": 0.0141,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0141 (threshold 0.03)",
+    "ratio": 0.0099,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0099 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
@@ -70,8 +70,8 @@
   "layer_likert": {
     "note": "image oracle passes (0.0273); at 320x200 the legend, pushed 75px off the plot by legend.offset, leaves the canvas",
     "ratio": 0.0273,
-    "reason": "image oracle passes (0.0273); at 320x200 the legend, pushed 75px off the plot by legend.offset, leaves the canvas; svg and text render natively at 3 sizes; oracle ratio 0.0273 (threshold 0.03); overlaps: 320x200: a legend of view main leaves the 320x200 canvas",
-    "status": "partial",
+    "reason": "image oracle passes (0.0273); at 320x200 the legend, pushed 75px off the plot by legend.offset, leaves the canvas; svg and text render natively at 3 sizes; oracle ratio 0.0273 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "layer_line_co2_concentration": {
@@ -112,8 +112,8 @@
   },
   "wheat_wages": {
     "note": "bin/chart's reference lacks the wheat bars: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set (as for distributions/layer_cumulative_histogram), so the reference is blank where native draws them; native also does not map a missing commonwealth value to the first color of its fill scale (Vega treats undefined as a category), so the monarchs' rects are not black",
-    "ratio": 0.3354,
-    "reason": "bin/chart's reference lacks the wheat bars: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set (as for distributions/layer_cumulative_histogram), so the reference is blank where native draws them; native also does not map a missing commonwealth value to the first color of its fill scale (Vega treats undefined as a category), so the monarchs' rects are not black; svg and text render natively at 3 sizes; oracle ratio 0.3354 (threshold 0.03), size delta [21 15] px",
+    "ratio": 0.3358,
+    "reason": "bin/chart's reference lacks the wheat bars: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set (as for distributions/layer_cumulative_histogram), so the reference is blank where native draws them; native also does not map a missing commonwealth value to the first color of its fill scale (Vega treats undefined as a category), so the monarchs' rects are not black; svg and text render natively at 3 sizes; oracle ratio 0.3358 (threshold 0.03), size delta [21 15] px",
     "status": "partial",
     "threshold": 0.03
   }

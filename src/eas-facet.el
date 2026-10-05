@@ -92,11 +92,19 @@ left alone and reported unsupported."
                (not (and (eas-object-p scale) (plist-get scale :domain))))
       (let* ((key (eas-key field))
              (values (delq nil (seq-map (lambda (r) (let ((v (plist-get r key))) (unless (eq v :null) v))) rows))))
-        (if (member (plist-get def :type) '("nominal" "ordinal"))
+        (if (member (or (plist-get def :type) "nominal") '("nominal" "ordinal"))
             (eas-compile--discrete-domain (list (cons (list :rows rows :encoding nil) def)) values)
           (let ((nums (seq-filter #'numberp values)))
             (when (and nums (memq (plist-get def :channel) '(:x :y)))
               (vector (apply #'min nums) (apply #'max nums)))))))))
+
+(defvar eas-facet--count 0 "Number of cells of the facet being expanded.")
+
+(defun eas-facet--bare-axis (def)
+  "Channel DEF whose axis keeps its grid but loses line, ticks, labels and title."
+  (if (and (eas-object-p def) (not (plist-member def :axis)))
+      (plist-put (copy-sequence def) :axis (list :domain :false :ticks :false :labels :false :title :null))
+    def))
 
 (defun eas-facet--cell (spec key value i domains)
   "Cell I of facet SPEC (facet channel KEY) showing VALUE, with shared DOMAINS."
@@ -115,6 +123,12 @@ left alone and reported unsupported."
                                 d))
                            (d (if (and (> i 0) (not (memq ch '(:x :y)))) (plist-put (copy-sequence d) :legend :null) d)))
                       (setq enc (eas-plist-put enc ch d))))))
+    ;; Vega draws the shared axis once: x at the bottom of a row facet's last
+    ;; cell, y at the left of a column facet's first.
+    (when (and (eq key :row) (< i (1- eas-facet--count)) (plist-get enc :x))
+      (setq enc (eas-plist-put enc :x (eas-facet--bare-axis (plist-get enc :x)))))
+    (when (and (eq key :column) (> i 0) (plist-get enc :y))
+      (setq enc (eas-plist-put enc :y (eas-facet--bare-axis (plist-get enc :y)))))
     (append (list :mark (plist-get spec :mark) :encoding enc
                   :transform (vector (list :filter (list :field (plist-get fdef :field) :equal value)))
                   :x-eas (list :header (list :text (eas-expr--string value)
@@ -152,7 +166,8 @@ left alone and reported unsupported."
                                     :padding :usermeta :autosize)
                          when (plist-member spec k) append (list k (plist-get spec k)))
                 (list (if (eq key :row) :vconcat :hconcat)
-                      (vconcat (seq-map-indexed (lambda (v i) (eas-facet--cell spec key v i domains)) values))))))))
+                      (let ((eas-facet--count (length values)))
+                        (vconcat (seq-map-indexed (lambda (v i) (eas-facet--cell spec key v i domains)) values)))))))))
 
 ;;; Headers
 

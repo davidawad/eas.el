@@ -1,100 +1,123 @@
 {
   "connected_scatterplot": {
-    "ratio": 0.0062,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0062 (threshold 0.015), size +0,+0 px (native 532x350, ref 532x350)",
-    "status": "pass"
+    "ratio": 0.0026,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0026 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "layer_line_co2_concentration": {
-    "ratio": 0.0079,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0079 (threshold 0.015), size -3,+0 px (native 872x550, ref 875x550)",
-    "status": "pass"
+    "ratio": 0.0017,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0017 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line": {
-    "ratio": 0.0057,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0057 (threshold 0.015), size +0,+0 px (native 536x350, ref 536x350)",
-    "status": "pass"
+    "ratio": 0.0028,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0028 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_bump": {
-    "ratio": 0.0114,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0114 (threshold 0.015), size +0,+0 px (native 567x104, ref 567x104)",
-    "status": "pass"
+    "ratio": 0.0,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_color": {
-    "ratio": 0.0067,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0067 (threshold 0.015), size +0,+0 px (native 604x350, ref 604x350)",
-    "status": "pass"
+    "ratio": 0.0025,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_color_halo": {
-    "ratio": 0.0066,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0066 (threshold 0.015), size +0,+0 px (native 602x350, ref 602x350)",
-    "status": "pass"
+    "ratio": 0.0025,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_conditional_axis": {
-    "ratio": 0.0027,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0027 (threshold 0.015), size +0,+0 px (native 456x362, ref 456x362)",
-    "status": "pass"
+    "ratio": 0.0,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_dashed_part": {
-    "ratio": 0.0058,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0058 (threshold 0.015), size +0,+0 px (native 238x348, ref 238x348)",
-    "status": "pass"
+    "ratio": 0.0017,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0017 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_monotone": {
-    "ratio": 0.0066,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0066 (threshold 0.015), size +0,+0 px (native 536x350, ref 536x350)",
-    "status": "pass"
+    "ratio": 0.0036,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0036 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_overlay": {
-    "ratio": 0.0082,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0082 (threshold 0.015), size +0,+0 px (native 604x350, ref 604x350)",
-    "status": "pass"
+    "ratio": 0.0034,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0034 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_overlay_stroked": {
-    "ratio": 0.0073,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0073 (threshold 0.015), size +0,+0 px (native 604x350, ref 604x350)",
-    "status": "pass"
+    "ratio": 0.0024,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0024 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_skip_invalid_mid_overlay": {
-    "ratio": 0.0055,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0055 (threshold 0.015), size +0,+0 px (native 532x350, ref 532x350)",
-    "status": "pass"
+    "ratio": 0.0027,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0027 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_slope": {
-    "ratio": 0.0102,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0102 (threshold 0.015), size +0,+0 px (native 259x364, ref 259x364)",
-    "status": "pass"
+    "ratio": 0.0015,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0015 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_step": {
-    "ratio": 0.0057,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0057 (threshold 0.015), size +0,+0 px (native 536x350, ref 536x350)",
-    "status": "pass"
+    "ratio": 0.0029,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0029 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "line_strokedash": {
-    "ratio": 0.0067,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0067 (threshold 0.015), size +0,+0 px (native 604x350, ref 604x350)",
-    "status": "pass"
+    "ratio": 0.0029,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0029 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "repeat_layer": {
-    "ratio": 0.0061,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0061 (threshold 0.015), size +0,+0 px (native 694x344, ref 694x344)",
-    "status": "pass"
+    "ratio": 0.0021,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0021 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "sequence_line_fold": {
-    "ratio": 0.0078,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0078 (threshold 0.015), size +0,+0 px (native 420x200, ref 420x200)",
-    "status": "pass"
+    "ratio": 0.0036,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0036 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   },
   "trail_color": {
-    "ratio": 0.0077,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0077 (threshold 0.015), size +0,+0 px (native 604x350, ref 604x350)",
-    "status": "pass"
-  },
-  "trail_comet": {"reason": "UNSUPPORTED_FEATURE: key/domainMid, encoding/column", "status": "unsupported"},
-  "window_rank": {
-    "ratio": 0.0258,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0258 (threshold 0.03), size +1,+0 px (native 281x148, ref 280x148)",
+    "ratio": 0.0025,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03)",
     "status": "pass",
-    "threshold": 0.03,
-    "threshold_reason": "280x148 chart dominated by its 16px bold title: the title sits where Vega puts it (x 5.88, the content's left edge), but kerning (unmodelled) and sub-pixel glyph anti-aliasing differ; lines, axes and legend match"
+    "threshold": 0.03
+  },
+  "trail_comet": {
+    "note": "a column facet of trail marks: native draws trails as full-height ribbons because the facet's shared point y scale and the trail size scale are not applied per cell, and the facet field title, legends row and cell spacing differ (175px wider, 93px shorter)",
+    "ratio": 0.158,
+    "reason": "a column facet of trail marks: native draws trails as full-height ribbons because the facet's shared point y scale and the trail size scale are not applied per cell, and the facet field title, legends row and cell spacing differ (175px wider, 93px shorter); svg and text render natively at 3 sizes; oracle ratio 0.1580 (threshold 0.03), size delta [175 -93] px; overlaps: 320x200: a legend of view hconcat_0 leaves the 564x201 canvas; 480x300: a legend of view hconcat_0 leaves the 564x300 canvas; 50x14 cells: a legend of view hconcat_0 leaves the 595x210 canvas; 50x14 cells: x axis labels of view hconcat_0 collide; 50x14 cells: x axis labels of view hconcat_1 collide; 50x14 cells: x axis labels of view hconcat_2 collide; 50x14 cells: x axis labels of view hconcat_3 collide; 50x14 cells: x axis labels of view hconcat_4 collide; 50x14 cells: x axis labels of view hconcat_5 collide; 80x24 cells: x axis labels of view hconcat_0 collide; 80x24 cells: x axis labels of view hconcat_1 collide; 80x24 cells: x axis labels of view hconcat_2 collide; 80x24 cells: x axis labels of view hconcat_3 collide; 80x24 cells: x axis labels of view hconcat_4 collide; 80x24 cells: x axis labels of view hconcat_5 collide",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "window_rank": {
+    "ratio": 0.0025,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03), size delta [1 0] px",
+    "status": "pass",
+    "threshold": 0.03
   }
 }

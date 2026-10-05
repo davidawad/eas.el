@@ -4,6 +4,7 @@
 
 (require 'eas-test-support)
 (require 'eas)
+(require 'eas-agent)
 
 (defconst eas-conformance-test-unproven '("encoding/order")
   "Recognised features no gallery spec proves yet (so they fall back).")
@@ -218,6 +219,7 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
 
 (ert-deftest eas-conformance-unsupported-specs-fall-back-to-static ()
   (let ((eas-views (make-hash-table :test 'equal))
+        (eas-static-fallback t)
         (eas-chart-program "no-such-chart-program"))
     (let* ((view (eas-view-open eas-conformance-test--arc :id "pie"))
            (inspect (eas-inspect view)))
@@ -236,9 +238,38 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
 
 (ert-deftest eas-conformance-fallback-takes-bin-chart-image ()
   (eas-conformance-test--with-stubs (eas-conformance-test--ref (car (eas-conformance-gallery))) t
-   (let ((eas-views (make-hash-table :test 'equal)))
+   (let ((eas-views (make-hash-table :test 'equal))
+         (eas-static-fallback t))
      (let ((inspect (eas-inspect (eas-view-open eas-conformance-test--arc :id "pie"))))
        (should (equal (plist-get inspect :static) '(:source "bin/chart" :type "svg")))))))
+
+(ert-deftest eas-conformance-static-fallback-is-opt-in ()
+  "By default bin/chart never runs to display a chart, even when installed:
+the view shows UNSUPPORTED_FEATURE text and svg render fails."
+  (should-not (default-value 'eas-static-fallback))
+  (let* ((marker (make-temp-file "eas-chart-ran"))
+         (eas-chart-program (eas-conformance-test--script (format "echo ran > '%s'; exit 1" marker))))
+    (delete-file marker)
+    (unwind-protect
+        (let ((eas-views (make-hash-table :test 'equal)))
+          (let* ((view (eas-view-open eas-conformance-test--arc :id "pie"))
+                 (static (plist-get (eas-inspect view) :static)))
+            (should (eq (plist-get (eas-inspect view) :interactive) :false))
+            (should (eq (plist-get static :source) :null))
+            (should (equal (plist-get (plist-get static :error) :code) "UNSUPPORTED_FEATURE"))
+            (should (string-match-p "eas-static-fallback" (plist-get (plist-get static :error) :message)))
+            (let ((buffer (eas-show view 'text)))
+              (unwind-protect
+                  (with-current-buffer buffer
+                    (should (string-match-p "No static image (UNSUPPORTED_FEATURE)" (buffer-string)))
+                    (should (string-match-p "mark/arc at /mark" (buffer-string))))
+                (kill-buffer buffer))))
+          (let ((env (eas-agent "render" (eas-json-encode eas-conformance-test--arc) :backend "svg")))
+            (should (eq (plist-get env :ok) :false))
+            (should (equal (plist-get env :reason) "UNSUPPORTED_FEATURE")))
+          (should-not (file-exists-p marker)))
+      (delete-file eas-chart-program)
+      (when (file-exists-p marker) (delete-file marker)))))
 
 (provide 'eas-conformance-test)
 ;;; eas-conformance-test.el ends here

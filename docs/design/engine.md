@@ -161,8 +161,9 @@ LTTB decimation when a series has more points than pixel columns.
   per mark type, which financial-chart-text.el already has) where every
   cell carries text properties `eas-datum`, `eas-view` and
   `help-echo`. Moving point over the chart is the terminal's hover.
-- Static: resolved spec to `bin/chart build`. Not part of Emacs, but
-  in the conformance loop (section 6).
+- Static: resolved spec to `bin/chart build`. Not part of Emacs and
+  never a runtime dependency: it is the conformance oracle (section 6)
+  and the explicit export door (`export --vl`, babel .png/.pdf).
 
 The renderers are dumb. Anything a renderer would need to decide
 belongs in compile, which keeps both backends equivalent by
@@ -295,11 +296,17 @@ AGENTS.md already sets.
   machine-readable answer to "can the native engine draw this?", and
   `check` and `describe` read it. A feature is supported only if a
   conformance spec proves it.
-- Specs that use unsupported features still display: Emacs shows the
-  static `bin/chart` image with `:interactive false` in `inspect` and a
-  `UNSUPPORTED_FEATURE` warning naming the path. Any Vega-Lite spec
-  renders in Emacs, and the native subset grows one gallery entry at a
-  time.
+- Specs that use unsupported features still open (fc-qx1.37): a
+  static view with `:interactive false` in `inspect` and an
+  `UNSUPPORTED_FEATURE` warning naming each path. By default the view
+  shows those findings as text and `render --backend svg` fails with
+  `UNSUPPORTED_FEATURE`. eas never runs bin/chart to display a chart
+  unless `eas-static-fallback` is t; then the view (and svg render)
+  uses bin/chart's image. The native subset grows one gallery entry at
+  a time.
+- bin/chart's role is decided (fc-qx1.37): test oracle (dev/CI, refs
+  committed so CI needs only rsvg-convert) and static export. It is
+  never a runtime dependency.
 - Text-backend goldens are exact strings. Scene goldens are JSON. Both
   are reviewed as diffs (`EAS_UPDATE_GOLDEN=1 make test`).
 - Measured results: engine-spikes.md section 8.
@@ -320,8 +327,9 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
 
 ## 8. Where it sits in the wider system
 
-- `bin/chart` (chart-runtime): the static door and
-  conformance oracle. Same IR, same envelope, same reason codes.
+- `bin/chart` (chart-runtime): the static export door and
+  conformance oracle, never a runtime dependency (section 6). Same IR,
+  same envelope, same reason codes.
 - financial-chart.el: its public API (`financial-chart-plot`, kinds,
   presets, `bin/financial-chart`) stays unchanged. Internally each kind
   is routed to a template once that kind passes parity. The old

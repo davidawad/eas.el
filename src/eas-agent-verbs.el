@@ -139,8 +139,9 @@ W being how next[] commands name the source and its bindings."
 (defun eas-agent-check (pos opts)
   "Answer check SOURCE (POS, bound with OPTS :data) without drawing.
 Resolve, validate and compile.
-Unsupported features are not failures: the chart still shows, as a
-static bin/chart image, so they come back as warnings with native false."
+Unsupported features are not failures: the chart still opens, as a
+static view (a bin/chart image only when `eas-static-fallback' is
+non-nil), so they come back as warnings with native false."
   (let* ((src (eas-agent-resolve-source "check" pos opts))
          (spec (plist-get src :spec))
          (findings (eas-agent--check-findings spec))
@@ -200,8 +201,9 @@ The stage is resolve, compile or scene."
 
 (defun eas-agent-render (pos opts)
   "Answer render SOURCE (POS) with OPTS :backend text or svg.
-A spec outside the native subset renders as SVG through bin/chart
-when it is installed; otherwise UNSUPPORTED_FEATURE."
+A spec outside the native subset fails with UNSUPPORTED_FEATURE; with
+`eas-static-fallback' non-nil and bin/chart installed, an svg render
+comes from bin/chart instead."
   (let* ((backend (eas-agent-arg-choice opts :backend eas-agent-backends "text"))
          (src (eas-agent-resolve-source "render" pos opts))
          (spec (plist-get src :spec))
@@ -210,7 +212,7 @@ when it is installed; otherwise UNSUPPORTED_FEATURE."
                     (list :output (eas-agent-draw scene backend) :size (plist-get scene :size)
                           :static :false))
                 (eas-unsupported-feature
-                 (if (and (equal backend "svg") (eas-chart-available-p))
+                 (if (and eas-static-fallback (equal backend "svg") (eas-chart-available-p))
                      (list :output (eas-chart-build spec "svg") :size :null :static "bin/chart")
                    (signal (car err) (cdr err)))))))
     (eas-agent-ok (append (list :backend backend :template (or (plist-get src :template) :null)

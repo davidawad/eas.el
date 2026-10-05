@@ -126,7 +126,7 @@
     (should (member "bin/eas example line" (append (plist-get env :next) nil))))
   (let ((env (eas-agent "check" "line" :data '(:data [(:date "2026-01-01" :value "x")]))))
     (eas-agent-test--shape env))
-  ;; Unsupported features still display (static fallback): a warning, not a failure.
+  ;; Unsupported features still open (a static view): a warning, not a failure.
   (let* ((env (eas-agent "check" eas-agent-test--unsupported-spec))
          (data (eas-agent-test--ok env)))
     (should (eq (plist-get data :native) :false))

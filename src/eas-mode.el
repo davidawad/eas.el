@@ -137,7 +137,8 @@ Collection waits until Emacs is idle (`eas-gc-defer')."
       (eas-mode--readout))))
 
 (defun eas-mode--insert-static (view)
-  "Insert VIEW's static fallback: bin/chart's image, and why it is static."
+  "Insert why VIEW is static, after bin/chart's image if one was drawn.
+There is an image only when `eas-static-fallback' is non-nil."
   (let ((fallback (eas-view-fallback view)))
     (when (and (plist-get fallback :data) (display-graphic-p) (image-type-available-p 'svg))
       (insert-image (create-image (plist-get fallback :data) 'svg t) "[chart]")
@@ -146,7 +147,7 @@ Collection waits until Emacs is idle (`eas-gc-defer')."
     (seq-doseq (w (eas-view-warnings view))
       (insert (format "  %s at %s\n" (or (plist-get w :feature) (plist-get w :code)) (plist-get w :path))))
     (when-let* ((err (plist-get fallback :error)))
-      (insert (format "No static image: %s\n" (plist-get err :message))))))
+      (insert (format "No static image (%s): %s\n" (plist-get err :code) (plist-get err :message))))))
 
 (defun eas-mode--hot-spot-keys (image)
   "Bind IMAGE's :map area ids so clicks on hot spots reach the reducer."

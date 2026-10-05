@@ -6,9 +6,13 @@
 ;;; Commentary:
 
 ;; bin/chart (chart-runtime) renders any resolved Vega-Lite
-;; spec statically.  eas uses it twice: as the conformance oracle
-;; (its builds are the reference images), and to display specs whose
-;; features the native engine does not support.  The command lines are
+;; spec statically.  It is never a runtime dependency: eas draws every
+;; chart in Lisp.  bin/chart is (a) the conformance oracle, dev/CI
+;; only (its builds are the committed reference images), and (b) the
+;; static export door (`export --vl', babel .png/.pdf).  Showing a
+;; spec outside the native subset as a bin/chart image is opt-in
+;; (`eas-static-fallback'); by default such a view shows its
+;; UNSUPPORTED_FEATURE findings as text instead.  The command lines are
 ;; variables because they are an assumption here: adjust
 ;; `eas-chart-build-args' and `eas-chart-theme-args' if bin/chart's
 ;; flags differ.  Images are compared by `eas-png-compare', not
@@ -17,6 +21,20 @@
 ;;; Code:
 
 (require 'eas-core)
+
+(defgroup eas-chart nil
+  "The optional bin/chart static door of the eas chart engine."
+  :group 'tools)
+
+(defcustom eas-static-fallback nil
+  "Non-nil to draw specs outside the native subset with bin/chart.
+When nil (the default), eas never runs bin/chart to display a chart:
+a view whose spec uses unsupported Vega-Lite features is static and
+shows its UNSUPPORTED_FEATURE findings as text, and `render --backend
+svg' fails with UNSUPPORTED_FEATURE.  Explicit static exports (babel
+.png/.pdf) and the conformance oracle use bin/chart regardless."
+  :type 'boolean
+  :group 'eas-chart)
 
 (defvar eas-chart-program "chart"
   "The bin/chart executable (name on PATH or absolute file).")
@@ -42,6 +60,15 @@ already exists (`make-temp-file' creates it), hence --force.")
   (cond ((not (executable-find eas-chart-program))
          (format "bin/chart (%s) is not on PATH; install bin/chart" eas-chart-program))
         (t nil)))
+
+(defun eas-static-fallback-error (err)
+  "The UNSUPPORTED_FEATURE plist a view shows instead of a static image.
+ERR is the `eas-unsupported-feature' condition; the message adds how
+to opt in to the bin/chart picture."
+  (let ((plist (eas-error-plist err)))
+    (plist-put plist :message
+               (format "%s; set `eas-static-fallback' to t (with bin/chart on PATH) to draw a static image"
+                       (plist-get plist :message)))))
 
 (defun eas-chart--run (args &optional stdout-only)
   "Run bin/chart with ARGS; return (EXIT . OUTPUT).

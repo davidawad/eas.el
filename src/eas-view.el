@@ -115,8 +115,9 @@ TARGET and CELL are as in `eas-compile'."
 
 (defun eas-view--fallback (view err)
   "Make VIEW a static, non-interactive view after unsupported-feature ERR.
-Every unsupported path becomes a warning; the picture comes from
-bin/chart when it is installed."
+Every unsupported path becomes a warning.  The picture comes from
+bin/chart only when `eas-static-fallback' is non-nil; otherwise the
+fallback is the UNSUPPORTED_FEATURE error itself."
   (let ((spec (eas-view-spec view)))
     (setf (eas-view-interactive view) nil
           (eas-view-warnings view)
@@ -126,8 +127,9 @@ bin/chart when it is installed."
                                  (eas-spec-unsupported spec)))
                        (list (eas-error-plist err))))
           (eas-view-fallback view)
-          (condition-case e (list :type "svg" :data (eas-chart-build spec "svg"))
-            (eas-error (list :error (eas-error-plist e)))))))
+          (if (not eas-static-fallback) (list :error (eas-static-fallback-error err))
+            (condition-case e (list :type "svg" :data (eas-chart-build spec "svg"))
+              (eas-error (list :error (eas-error-plist e))))))))
 
 (defun eas-view-close (view)
   "Forget VIEW."

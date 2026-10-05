@@ -1,0 +1,28 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customized bar chart: click a bar to highlight it; non-default mark, axis, legend, scale, title and config properties.",
+ "title": {"text": "Seattle precipitation by weather", "anchor": "start", "fontSize": 18, "fontWeight": "normal", "color": "#1f3b57", "offset": 16, "font": "serif"},
+ "data": {"url": "../../data/seattle-weather.csv"},
+ "width": 320,
+ "height": 200,
+ "params": [{"name": "pick", "select": {"type": "point", "encodings": ["x"]}}],
+ "mark": {"type": "bar", "cornerRadiusTopLeft": 6, "cornerRadiusTopRight": 6, "stroke": "#1f3b57", "strokeWidth": 1},
+ "encoding": {
+  "x": {"field": "weather", "type": "nominal", "sort": "-y",
+        "scale": {"paddingInner": 0.3, "paddingOuter": 0.2},
+        "axis": {"title": "Weather", "labelAngle": 0, "labelColor": "#1f3b57", "labelFontSize": 12, "labelFontWeight": "bold",
+                 "tickSize": 8, "tickColor": "#1f3b57", "tickWidth": 2, "domainColor": "#1f3b57", "domainWidth": 2,
+                 "titleColor": "#7a4b00", "titleFontSize": 13, "titleFontStyle": "italic", "titlePadding": 12, "labelPadding": 6}},
+  "y": {"field": "precipitation", "type": "quantitative", "aggregate": "sum",
+        "scale": {"nice": false, "zero": true},
+        "axis": {"title": "Total precipitation (in)", "format": ",.0f", "tickCount": 5, "grid": true, "gridColor": "#d8e2ec",
+                 "gridDash": [4, 2], "gridWidth": 1, "domain": false, "ticks": false, "labelFont": "serif",
+                 "titleFontWeight": "bold", "labelExpr": "datum.label + ' in'"}},
+  "color": {"field": "weather", "type": "nominal",
+            "scale": {"domain": ["sun", "fog", "drizzle", "rain", "snow"],
+                      "range": ["#e7ba52", "#a7a7a7", "#aec7e8", "#1f77b4", "#9467bd"]},
+            "legend": {"title": "Sky", "titleColor": "#7a4b00", "labelColor": "#1f3b57", "labelFontStyle": "italic", "offset": 24}},
+  "fillOpacity": {"condition": {"param": "pick", "value": 1}, "value": 0.35}
+ },
+ "config": {"background": "#fbfaf6", "view": {"stroke": "#c9d3dd"}, "legend": {"symbolType": "square", "symbolSize": 120, "rowPadding": 4}}
+}

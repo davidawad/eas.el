@@ -1,0 +1,23 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customized multi-series line with a hover rule; non-default line, rule, axis, legend, scale, title and config properties.",
+ "title": {"text": "Stock prices", "anchor": "end", "fontSize": 14, "fontStyle": "italic", "dy": -2},
+ "data": {"url": "../../data/stocks.csv"},
+ "width": 420,
+ "height": 220,
+ "encoding": {"x": {"field": "date", "type": "temporal",
+                    "axis": {"title": null, "format": "%Y", "tickCount": 5, "labelAngle": -30, "labelAlign": "right",
+                             "grid": true, "gridColor": "#eee", "tickSize": 0, "labelPadding": 8}}},
+ "layer": [
+  {"mark": {"type": "line", "strokeWidth": 1.5, "interpolate": "monotone", "strokeDash": [6, 2]},
+   "encoding": {
+    "y": {"field": "price", "type": "quantitative", "scale": {"type": "log", "domain": [5, 1000]},
+          "axis": {"title": "Price (USD, log)", "format": "$,.0f", "domainColor": "#888", "labelFontSize": 9}},
+    "color": {"field": "symbol", "type": "nominal", "scale": {"scheme": "dark2"},
+              "legend": {"orient": "top-left", "title": null, "labelFontWeight": "bold", "labelOpacity": 0.9}}}},
+  {"params": [{"name": "hover", "select": {"type": "point", "encodings": ["x"], "on": "pointerover", "nearest": true}}],
+   "mark": {"type": "rule", "color": "#444", "strokeWidth": 1, "strokeDash": [2, 2]},
+   "encoding": {"opacity": {"condition": {"param": "hover", "value": 0.6, "empty": false}, "value": 0}}}
+ ],
+ "config": {"background": "white", "font": "sans-serif", "axis": {"titleFontWeight": "normal"}}
+}

@@ -1,0 +1,20 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customized heatmap: click cells to select them; non-default rect, axis, gradient legend, scale, title and config properties.",
+ "title": {"text": "Seattle max temperature", "fontSize": 13, "anchor": "middle", "offset": 6},
+ "data": {"url": "../../data/seattle-weather.csv"},
+ "params": [{"name": "cells", "select": {"type": "point", "toggle": true}}],
+ "mark": {"type": "rect", "cornerRadius": 2, "stroke": "white", "strokeWidth": 1.5},
+ "encoding": {
+  "x": {"timeUnit": "date", "field": "date", "type": "ordinal",
+        "axis": {"title": "Day", "labelAngle": 0, "format": "%e", "labelOverlap": "parity", "tickBand": "extent", "domain": false}},
+  "y": {"timeUnit": "month", "field": "date", "type": "ordinal",
+        "axis": {"title": null, "format": "%b", "labelFontWeight": "bold", "ticks": false, "labelPadding": 6}},
+  "color": {"aggregate": "max", "field": "temp_max", "type": "quantitative",
+            "scale": {"scheme": "orangered"},
+            "legend": {"title": "°C", "direction": "horizontal", "gradientLength": 120}},
+  "opacity": {"condition": {"param": "cells", "value": 1}, "value": 0.4}
+ },
+ "config": {"view": {"step": 13, "stroke": null}, "scale": {"rectBandPaddingInner": 0.05},
+            "axis": {"labelFontSize": 9}, "legend": {"gradientThickness": 10}}
+}

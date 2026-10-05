@@ -1244,3 +1244,43 @@ table per call for `random()`.
 The rest compile in under 25 ms. What remains in co2 is the expression
 interpreter (four calculate transforms over 741 rows) and in rolling mean
 the window frames (31 rows each) and 1462 point items.
+
+## 12. Interactive gallery latency (fc-qx1.46)
+
+`scripts/eas-gallery-bench.sh interactive` runs the bench verb over every
+example of the group, byte-compiled, and writes
+`test/vl-examples/interactive/bench.json` (mean and max ms per stage, 5
+runs).  Summed over the 30 examples that rendered before and after
+(Emacs 30.1, batch, one box; selection_type_point_zorder is new):
+
+| stage | before | after | |
+|-------|-------:|------:|--|
+| compile-svg | 2954 ms | 1126 ms | -62% |
+| render-svg | 458 ms | 296 ms | -35% |
+| compile-text | 2893 ms | 1033 ms | -64% |
+| render-text | 225 ms | 207 ms | -8% |
+
+What it took, measured with ELP before each change:
+
+- Local calendar fields cost a `decode-time` (and the way back an
+  `encode-time`) per value, and a named zone makes each call switch the
+  process zone.  eas-time-offset.el remembers a zone's UTC offset per
+  15-minute bucket and does the calendar arithmetic in UTC, falling back to
+  the system calls within three hours of a transition; `eas-time-format`
+  formats with the remembered fixed offset unless the format prints the
+  zone.  Checked against `decode-time`/`encode-time` on 320,000 random
+  instants in eight zones (Lord Howe's half-hour DST, Apia's skipped day)
+  and against `format-time-string` on 80,000 in four: no difference
+  (eas-time-offset-test.el keeps a smaller sample).  interactive_bin_extent compile went
+  634 -> 117 ms, interactive_layered_crossfilter 399 -> 89 ms.
+- `eas-expr-evaluate` made a hash table per row for `random()`'s call
+  counter; it is now made by the first `random()` call only.
+- Repeat substitution walked the inlined data rows (110k calls per
+  interactive_splom compile, and a row with a "repeat" field would have
+  been rewritten); data is now left alone.
+- `eas-svg--n` trims "%.2f" without a regexp (identical strings).
+
+The heaviest examples now: interactive_multi_line_tooltip (167 ms svg
+compile+render: 4400 tooltips formatting dates), interactive_splom
+(136 ms: 10,752 points), interactive_bin_extent (123 ms: a `calculate`
+expression over 10,000 rows, interpreted per row).

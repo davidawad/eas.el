@@ -1,0 +1,16 @@
+               Unemployment across industries
+Unemployed
+15k┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈⢠  Industry, 13 of 14
+   │                      ⣤⣸  ■ Agriculture
+   │                     ⡴⣧⣹  ■ Business services
+   │                     ⡧⣇⣽  ■ Construction
+10k┤┈┈┈┈┈┈┈⡀┈┈┈┈┈┈┈┈┈┈┈┈⢠⣇⣏⣽  ■ Education and Health
+   │    ⢸⣦⣼⣻⣳⣿⣤⢠⡄     ⢀⣤⣿⣗⣟⣿  ■ Finance
+   │⡀ ⣄⣰⣿⣷⣽⣽⣿⣿⣿⣻⣟⣷⣿⣶⣸⣴⣾⣿⣷⡟⠛⣃  ■ Government
+ 5k┤⣷⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣾⣻⣺⣿⣿⣿⣿⡟⠙⠃  ■ Information
+   │⣿⣿⣿⡿⣯⣭⣫⠮⢮⣭⣙⢿⡛⠿⡻⢿⣾⣿⠿⢿⡥⣧⣤⡾  ■ Leisure and hospitality
+   │⣺⠭⣟⣋⣵⣦⣴⣶⣶⣴⣮⣭⣯⣭⣭⣽⣾⣺⣿⣭⣶⡷⢿⡯  ■ Manufacturing
+   │⠛⠻⠟⠛⠋⠉⠉⠉⠉⠉⠙⠛⠉⠛⠙⠛⠛⠛⠛⠛⠉⠁██  ■ Mining and Extraction
+ 0k└┬──────────┬───────────┬  ■ Other
+  2000        2005        2010■ Self-employed
+              Month           ■ Transportation and Utilities

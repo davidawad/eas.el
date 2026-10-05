@@ -1,0 +1,21 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customized stacked area with an x brush; non-default area, axis, legend, scale, title and config properties.",
+ "title": {"text": "Unemployment across industries", "anchor": "start", "fontSize": 14, "color": "#3b3b3b", "frame": "group"},
+ "data": {"url": "../../data/unemployment-across-industries.json"},
+ "width": 420,
+ "height": 220,
+ "params": [{"name": "span", "select": {"type": "interval", "encodings": ["x"]}}],
+ "mark": {"type": "area", "interpolate": "monotone", "opacity": 0.9, "line": {"strokeWidth": 0.5, "color": "white"}},
+ "encoding": {
+  "x": {"timeUnit": "yearmonth", "field": "date", "type": "temporal",
+        "axis": {"title": "Month", "format": "%Y", "domainWidth": 2, "domainColor": "#666", "tickColor": "#666",
+                 "labelFlush": false, "titleFontSize": 11}},
+  "y": {"aggregate": "sum", "field": "count", "type": "quantitative", "stack": "zero",
+        "axis": {"title": "Unemployed", "format": "~s", "grid": true, "gridWidth": 0.5, "gridColor": "#bbb",
+                 "labels": true, "labelFontStyle": "italic", "minExtent": 40}},
+  "color": {"field": "series", "type": "nominal", "scale": {"scheme": "tableau20"},
+            "legend": {"title": "Industry", "clipHeight": 12, "titleFont": "serif", "labelFont": "sans-serif"}}
+ },
+ "config": {"legend": {"labelFontSize": 9, "symbolSize": 60, "rowPadding": 1}, "view": {"stroke": null}}
+}

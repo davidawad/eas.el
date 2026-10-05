@@ -1,0 +1,28 @@
+Rotten Tomatoes Rating (binned)
+100┤   ●██●█●██●██●█●██● ●█  All Movies Count
+ 20┤   ●██●█●██●██●█●██●
+   └┬────┬────┬────┬────┬──
+    1    3    5    7    9       100
+      IMDB Rating (binned)
+
+                             Selected Category Count
+                             ■ 0
+                             ■ 50
+                             ■ 100
+                             ■ 150
+
+Count of Records
+500┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈▆▆▆▆┈┈┈┈┈┈┈┈┈████┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+   │▆▆▆▆ ███ ▅▅▅▅▁▁▁▁████     ▁▁▁▁████ ▄▄▄▄▁▁▁▁▃▃▃▃ ▅▅▅ ▁▁▁▁
+  0└──┬───┬───┬────┬───┬───┬───┬────┬───┬───┬────┬───┬───┬──
+  nuAcABlConcert/PerfDocumentarDraRomThriller/SuspeWestern
+
+
+
+
+
+
+
+
+                          Major Genre
+

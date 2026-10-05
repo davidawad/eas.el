@@ -5,24 +5,21 @@
     "status": "unsupported"
   },
   "bar_count_minimap": {
-    "note": "nominal axes keep every label (Vega-Lite labelOverlap false), so the 26 bar labels collide at the small gallery canvases",
-    "ratio": 0.0288,
-    "reason": "nominal axes keep every label (Vega-Lite labelOverlap false), so the 26 bar labels collide at the small gallery canvases; svg and text render natively at 3 sizes; oracle ratio 0.0288 (threshold 0.03); overlaps: 320x200: y axis labels of view hconcat_0 collide; 480x300: y axis labels of view hconcat_0 collide; 900x560: y axis labels of view hconcat_0 collide",
-    "status": "partial",
+    "ratio": 0.0032,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0032 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "brush_table": {
-    "note": "native canvas is 43px narrower than bin/chart's: the table's far-right column labels are placed closer in; the plots match",
-    "ratio": 0.0216,
-    "reason": "native canvas is 43px narrower than bin/chart's: the table's far-right column labels are placed closer in; the plots match; svg and text render natively at 3 sizes; oracle ratio 0.0216 (threshold 0.03), size delta [-43 0] px",
-    "status": "partial",
+    "ratio": 0.0112,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0112 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "dynamic_color_legend": {
-    "note": "the legend and the nominal axes' labels do not fit the 320x200 gallery canvas, which grows to 339x305",
-    "ratio": 0.0031,
-    "reason": "the legend and the nominal axes' labels do not fit the 320x200 gallery canvas, which grows to 339x305; svg and text render natively at 3 sizes; oracle ratio 0.0031 (threshold 0.03); overlaps: 320x200: a legend of view vconcat_0 leaves the 339x305 canvas; 320x200: y axis labels of view vconcat_1 collide; 480x300: y axis labels of view vconcat_1 collide; 50x14 cells: a legend of view vconcat_0 leaves the 385x206.63291139240505 canvas",
-    "status": "partial",
+    "ratio": 0.0067,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0067 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "interactive_area_brush": {
@@ -50,10 +47,9 @@
     "threshold": 0.03
   },
   "interactive_concat_layer": {
-    "note": "nominal axis labels are all kept (Vega-Lite default) and collide at the small gallery canvases",
-    "ratio": 0.0222,
-    "reason": "nominal axis labels are all kept (Vega-Lite default) and collide at the small gallery canvases; svg and text render natively at 3 sizes; oracle ratio 0.0222 (threshold 0.03), size delta [0 -4] px; overlaps: 320x200: x axis labels of view vconcat_1 collide; 480x300: x axis labels of view vconcat_1 collide; 900x560: x axis labels of view vconcat_1 collide; 50x14 cells: x axis labels of view vconcat_1 collide; 80x24 cells: x axis labels of view vconcat_1 collide; 120x36 cells: x axis labels of view vconcat_1 collide",
-    "status": "partial",
+    "ratio": 0.0218,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0218 (threshold 0.03), size delta [0 -4] px",
+    "status": "pass",
     "threshold": 0.03
   },
   "interactive_crossfilter": {
@@ -81,10 +77,9 @@
     "threshold": 0.03
   },
   "interactive_layered_crossfilter": {
-    "note": "nominal axis labels are all kept (Vega-Lite default) and collide at the small gallery canvases",
-    "ratio": 0.0274,
-    "reason": "nominal axis labels are all kept (Vega-Lite default) and collide at the small gallery canvases; svg and text render natively at 3 sizes; oracle ratio 0.0274 (threshold 0.03), size delta [-9 0] px; overlaps: 320x200: x axis labels of view hconcat_0 collide; 320x200: x axis labels of view hconcat_1 collide",
-    "status": "partial",
+    "ratio": 0.0057,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0057 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "interactive_legend": {
@@ -94,10 +89,9 @@
     "threshold": 0.03
   },
   "interactive_line_hover": {
-    "note": "the end-of-line points and series labels (a selection-driven text and point layer) are not drawn natively, and the canvas is 31px narrower than bin/chart's, which reserves room for them",
-    "ratio": 0.0034,
-    "reason": "the end-of-line points and series labels (a selection-driven text and point layer) are not drawn natively, and the canvas is 31px narrower than bin/chart's, which reserves room for them; svg and text render natively at 3 sizes; oracle ratio 0.0034 (threshold 0.03), size delta [-31 0] px",
-    "status": "partial",
+    "ratio": 0.007,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0070 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "interactive_line_point_hover": {
@@ -144,10 +138,9 @@
     "threshold": 0.03
   },
   "interactive_seattle_weather": {
-    "note": "the legend and the nominal axes' labels do not fit the 320x200 gallery canvas, which grows to 339x305",
-    "ratio": 0.0031,
-    "reason": "the legend and the nominal axes' labels do not fit the 320x200 gallery canvas, which grows to 339x305; svg and text render natively at 3 sizes; oracle ratio 0.0031 (threshold 0.03); overlaps: 320x200: a legend of view vconcat_0 leaves the 339x305 canvas; 320x200: y axis labels of view vconcat_1 collide; 480x300: y axis labels of view vconcat_1 collide; 50x14 cells: a legend of view vconcat_0 leaves the 385x206.63291139240505 canvas",
-    "status": "partial",
+    "ratio": 0.0067,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0067 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "interactive_splom": {
@@ -194,8 +187,9 @@
     "threshold": 0.03
   },
   "selection_type_point_zorder": {
-    "note": "data.url is a remote https URL; only local data files are read",
-    "reason": "data.url is a remote https URL; only local data files are read; No data file /tmp/eas-data",
-    "status": "unsupported"
+    "ratio": 0.0063,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0063 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
   }
 }

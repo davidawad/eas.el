@@ -20,6 +20,7 @@
 (require 'eas-core)
 (require 'eas-scale)
 (require 'eas-legend)
+(require 'eas-legend-fit)
 (require 'eas-layout)
 (require 'eas-encode)
 
@@ -74,10 +75,12 @@ them independently; lift their legends onto TREE as :shared-legends."
   tree)
 
 (defun eas-shared-models (tree metrics plot-h)
-  "TREE's shared legend models under METRICS (gradients PLOT-H long)."
+  "TREE's shared legend models under METRICS (gradients PLOT-H long).
+Fitted to a size (TREE's :legend-limit), each is cut to that height."
   (delq nil (mapcar (lambda (ls)
                       (let ((l (eas-legend-model ls metrics)))
-                        (and l (eas-legend-sized (append l (list :plot-h plot-h)) metrics))))
+                        (and l (eas-legend-fit (eas-legend-sized (append l (list :plot-h plot-h)) metrics)
+                                               (plist-get tree :legend-limit) metrics))))
                     (plist-get tree :shared-legends))))
 
 (defun eas-shared--size (legend metrics)
@@ -87,22 +90,34 @@ them independently; lift their legends onto TREE as :shared-legends."
     (let ((b (plist-get (eas-legend-place legend 0 0 metrics) :box)))
       (cons (ceiling (aref b 2)) (ceiling (aref b 3))))))
 
+(defun eas-shared--flow (models metrics limit)
+  "MODELS stacked top-down, a new column whenever one would end below
+LIMIT (a height, or nil).  Return (PLACED . WIDTH): (LEGEND DX DY) each,
+offsets from the first legend's top-left, and the columns' total width."
+  (let ((x 0) (y 0) (col-w 0) (gap (if (eas-layout-text-p metrics) 0 (plist-get metrics :legend-margin)))
+        placed)
+    (dolist (l models)
+      (let ((s (eas-shared--size l metrics)))
+        (when (and limit (> y 0) (> (+ y (cdr s)) limit))
+          (setq x (+ x col-w (plist-get metrics :legend-offset)) y 0 col-w 0))
+        (push (list l x y) placed)
+        (setq y (+ y (cdr s) gap) col-w (max col-w (car s)))))
+    (cons (nreverse placed) (+ x col-w))))
+
 (defun eas-shared-extent (tree metrics plot-h)
   "Width TREE's shared legends add to the right of the layout (0 if none)."
   (let ((models (eas-shared-models tree metrics plot-h)))
     (if (null models) 0
       (+ (plist-get metrics :legend-offset)
-         (apply #'max (mapcar (lambda (l) (car (eas-shared--size l metrics))) models))))))
+         (cdr (eas-shared--flow models metrics (plist-get tree :legend-limit)))))))
 
 (defun eas-shared-place (tree groups metrics x y)
   "Give the first of GROUPS TREE's shared legends, stacked from X Y."
   (when-let* ((models (eas-shared-models tree metrics (plist-get (car groups) :h))))
-    (let ((x (+ x (plist-get metrics :legend-offset))) placed)
-      (dolist (l models)
-        (push (list l x y) placed)
-        (setq y (+ y (cdr (eas-shared--size l metrics))
-                   (if (eas-layout-text-p metrics) 0 (plist-get metrics :legend-margin)))))
-      (plist-put (car groups) :shared-legends (nreverse placed)))))
+    (let ((x (+ x (plist-get metrics :legend-offset))))
+      (plist-put (car groups) :shared-legends
+                 (mapcar (lambda (p) (list (nth 0 p) (+ x (nth 1 p)) (+ y (nth 2 p))))
+                         (car (eas-shared--flow models metrics (plist-get tree :legend-limit))))))))
 
 (defun eas-shared-axis-def (pairs)
   "The axis def for a layer's (UNIT . DEF) PAIRS on one channel.

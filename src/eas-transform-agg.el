@@ -98,10 +98,11 @@
 
 (defun eas-agg--arg (op field rows)
   "The first of ROWS whose FIELD is least (OP argmin) or greatest (argmax).
-The result is `:null' when no row has a value."
+Date strings compare as their instants, as Vega's parsed dates do.  The
+result is `:null' when no row has a value."
   (let (best best-v)
     (dolist (r rows)
-      (let ((v (plist-get r field)))
+      (let* ((v (plist-get r field)) (v (if (stringp v) (eas-time-parse v) v)))
         (when (and (numberp v) (or (null best-v) (if (equal op "argmin") (< v best-v) (> v best-v))))
           (setq best r best-v v))))
     (or best :null)))

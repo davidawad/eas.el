@@ -107,8 +107,8 @@ With KEEP-NULL, null values count too (discrete domains show them)."
          (seq-doseq (row (plist-get u :rows))
            (let ((k (eas-encode-raw def row)) (v (eas-encode-raw odef row)))
              (when (numberp v) (puthash k (+ v (gethash k sums 0)) sums))))
-         (let ((sorted (sort unique (lambda (a b) (< (gethash a sums 0) (gethash b sums 0))))))
-           (if desc (nreverse sorted) sorted))))
+         ;; A stable sort either way: ties keep their first-seen order, as Vega's do.
+         (sort unique (lambda (a b) (funcall (if desc #'> #'<) (gethash a sums 0) (gethash b sums 0))))))
       (t (sort unique #'eas-compile--less))))))
 
 (defun eas-compile--continuous (type pairs channel values zoom)

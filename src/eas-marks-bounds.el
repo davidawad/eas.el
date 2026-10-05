@@ -35,7 +35,8 @@
 
 (defun eas-marks-legend-style (unit _metrics)
   "UNIT's constant look that legend symbols copy.
-A plist (:fill :stroke :stroke-width :opacity :stroked :field-color)."
+A plist (:fill :stroke :stroke-width :opacity :stroked :field-color
+:trail :mark-shape)."
   (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type))
          (stroked (or (member type '("line" "rule" "trail"))
                       (and (equal type "point") (not (eq (plist-get mark :filled) t)))))
@@ -58,7 +59,10 @@ A plist (:fill :stroke :stroke-width :opacity :stroked :field-color)."
                                       '(:color :fill))
                             t))
      ;; Vega-Lite strokes a trail's legends: color as rings, size as ring widths.
-     (when (equal type "trail") (list :trail t)))))
+     (when (equal type "trail") (list :trail t))
+     ;; and a point mark's constant shape is its symbols' shape.
+     (when (and (member type '("point" "square" "circle")) (stringp (plist-get mark :shape)))
+       (list :mark-shape (plist-get mark :shape))))))
 
 (defun eas-marks-scope-p (unit)
   "Non-nil when UNIT is a line or area split into series by a field."

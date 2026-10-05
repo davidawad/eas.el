@@ -9,27 +9,37 @@
 ;; as a grid (align "all"): every column is as wide as its widest cell
 ;; and every plot in a column starts at the same x, every row as tall
 ;; as its tallest cell.  `eas-repeat-expand' marks the vconcat of
-;; hconcats it produces with x-eas.grid; `eas-place-arrange-grid'
-;; places such a node.
+;; hconcats it produces with x-eas.grid, `eas-vl-lower' a column
+;; repeat's hconcat (one row); `eas-place-arrange-grid' places such a
+;; node.
 
 ;;; Code:
 
 (require 'eas-core)
 
+(defun eas-place--grid-rows (node)
+  "NODE's rows, each a list of cell nodes: one row for an hconcat of
+single views (a column repeat), else its children's cells."
+  (if (and (equal (plist-get node :concat) "h")
+           (seq-every-p (lambda (c) (plist-get c :group)) (plist-get node :children)))
+      (list (plist-get node :children))
+    (mapcar (lambda (row) (plist-get row :children)) (plist-get node :children))))
+
 (defun eas-place-grid-p (node)
   "Non-nil when layout NODE is a grid: rows of single-view cells."
   (and (plist-get node :grid)
-       (seq-every-p (lambda (row) (and (plist-get row :concat)
-                                       (seq-every-p (lambda (c) (plist-get c :group)) (plist-get row :children))))
-                    (plist-get node :children))))
+       (or (and (equal (plist-get node :concat) "h")
+                (seq-every-p (lambda (c) (plist-get c :group)) (plist-get node :children)))
+           (seq-every-p (lambda (row) (and (plist-get row :concat)
+                                           (seq-every-p (lambda (c) (plist-get c :group)) (plist-get row :children))))
+                        (plist-get node :children)))))
 
 (defun eas-place-arrange-grid (node ox oy metrics)
   "Place grid NODE's cells with its top-left at OX OY; return (W . H).
 Vega-Lite's align \"all\": every cell is as wide and as tall as the
 largest, and every plot sits at the same offset inside its cell."
   (let* ((spacing (plist-get metrics :spacing))
-         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) (plist-get row :children)))
-                       (plist-get node :children)))
+         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) row)) (eas-place--grid-rows node)))
          (cells (apply #'append rows))
          (most (lambda (fn) (apply #'max 0 (mapcar fn cells))))
          (chrome (lambda (g k) (plist-get (plist-get g :chrome) k)))
@@ -48,8 +58,7 @@ largest, and every plot sits at the same offset inside its cell."
 (defun eas-place-fit-grid (node width height metrics)
   "Resize grid NODE's plots so the grid is WIDTH by HEIGHT."
   (let* ((spacing (plist-get metrics :spacing))
-         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) (plist-get row :children)))
-                       (plist-get node :children)))
+         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) row)) (eas-place--grid-rows node)))
          (cells (apply #'append rows))
          (most (lambda (k) (apply #'max 0 (mapcar (lambda (g) (plist-get (plist-get g :chrome) k)) cells))))
          (ncol (apply #'max (mapcar #'length rows)))

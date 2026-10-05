@@ -1,0 +1,16 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customized text table filtered by a search input; non-default text mark, axis, scale, title and config properties.",
+ "title": {"text": "Cars by origin", "anchor": "start", "fontSize": 12, "fontWeight": "bold", "color": "#5a3e85"},
+ "data": {"url": "../../data/cars.json"},
+ "params": [{"name": "origin", "value": "USA", "bind": {"input": "select", "options": ["USA", "Europe", "Japan"]}}],
+ "transform": [{"filter": "datum.Origin == origin"}, {"window": [{"op": "row_number", "as": "row"}]}, {"filter": "datum.row <= 12"}],
+ "width": 260,
+ "mark": {"type": "text", "align": "left", "dx": 4, "fontSize": 11, "fontWeight": "bold", "font": "monospace", "color": "#5a3e85"},
+ "encoding": {
+  "y": {"field": "row", "type": "ordinal", "axis": {"title": "#", "labelColor": "#999", "ticks": false, "domain": false}},
+  "x": {"datum": 0, "type": "quantitative", "scale": {"domain": [0, 1]}, "axis": null},
+  "text": {"field": "Name", "type": "nominal"}
+ },
+ "config": {"view": {"stroke": "#ddd", "step": 16}, "text": {"fontSize": 11}}
+}

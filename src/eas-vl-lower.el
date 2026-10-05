@@ -41,8 +41,9 @@
             (if cell (cdr cell)
               (eas-signal "INVALID_INPUT" (format "{\"repeat\": %S} is outside a repeat over %s" key key)
                           :path "/spec")))
+        ;; Data rows are never substituted (a row may well have a "repeat" field).
         (cl-loop for (k v) on value by #'cddr
-                 append (list k (eas-vl-lower--substitute v bindings))))))
+                 append (list k (if (eq k :data) v (eas-vl-lower--substitute v bindings)))))))
    (t value)))
 
 (defun eas-vl-lower--repeat (spec)
@@ -66,7 +67,10 @@
                                                                 (list (cons "row" r)))))
                                       (plist-get repeat :row)))))
      ((plist-get repeat :row) (eas-plist-put outer :vconcat (funcall cells "row" (plist-get repeat :row) nil)))
-     ((plist-get repeat :column) (eas-plist-put outer :hconcat (funcall cells "column" (plist-get repeat :column) nil)))
+     ;; Vega-Lite aligns repeated cells ("align": "all"), one row of them too.
+     ((plist-get repeat :column)
+      (eas-plist-put (eas-plist-put outer :hconcat (funcall cells "column" (plist-get repeat :column) nil))
+                     :x-eas (append (list :grid t) (plist-get outer :x-eas))))
      (t (eas-signal "INVALID_INPUT" "repeat needs layer, row, column or an array of fields" :path "/repeat")))))
 
 ;;; Path overlays

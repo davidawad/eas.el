@@ -127,7 +127,7 @@ CONFIG is the Vega config in force; ENV holds param values."
   "Placed svg AXIS with its title pushed out to its :min-extent under METRICS."
   (let* ((min (plist-get axis :min-extent)) (ab (plist-get axis :bounds))
          (line (plist-get axis :domain-line)) (tm (plist-get axis :title-mark))
-         (tpad (plist-get metrics :title-pad))
+         (tpad (or (plist-get axis :title-padding) (plist-get metrics :title-pad)))
          (bottom (equal (plist-get axis :orient) "bottom"))
          (edge (and min ab line (if bottom (- (aref line 1) 0.5) (- (aref line 0) 0.5))))
          ;; How far ticks and labels reach: the title sits titlePadding beyond.

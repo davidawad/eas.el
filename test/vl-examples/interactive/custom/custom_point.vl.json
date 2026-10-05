@@ -1,0 +1,25 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Customized scatter: drag a brush to keep points colored; non-default point shape, axis, legend, scale and config properties.",
+ "title": {"text": "Horsepower against mileage", "anchor": "middle", "fontSize": 15, "color": "#333"},
+ "data": {"url": "../../data/cars.json"},
+ "width": 360,
+ "height": 240,
+ "params": [{"name": "brush", "select": {"type": "interval"}}],
+ "mark": {"type": "point", "shape": "diamond", "filled": true, "size": 50, "strokeWidth": 0.5, "stroke": "white"},
+ "encoding": {
+  "x": {"field": "Horsepower", "type": "quantitative", "scale": {"zero": false, "domain": [40, 240]},
+        "axis": {"orient": "top", "title": "Horsepower (hp)", "values": [50, 100, 150, 200], "grid": true, "gridOpacity": 0.5,
+                 "labelFontSize": 10, "titleFontSize": 12, "domainDash": [3, 3]}},
+  "y": {"field": "Miles_per_Gallon", "type": "quantitative", "scale": {"type": "sqrt", "domain": [5, 50]},
+        "axis": {"orient": "right", "title": "Miles per gallon", "tickCount": 6, "labelOpacity": 0.8, "titleOpacity": 0.8,
+                 "tickDash": [2, 2], "offset": 6}},
+  "color": {"condition": {"param": "brush", "field": "Origin", "type": "nominal",
+                          "scale": {"scheme": "set2"},
+                          "legend": {"orient": "bottom-right", "title": "Built in"}},
+            "value": "#cfcfcf"},
+  "opacity": {"value": 0.85}
+ },
+ "config": {"axis": {"labelColor": "#444", "titleColor": "#444", "tickColor": "#999"},
+            "legend": {"labelFontSize": 10, "symbolStrokeWidth": 1}}
+}

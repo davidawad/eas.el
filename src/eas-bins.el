@@ -114,7 +114,8 @@ LOCAL-SCALE maps a channel to GROUP's scale over its unplaced plot."
                                     (eas-bins--step-px (funcall local-scale :y)
                                                        (plist-get (plist-get (caar pairs) :encoding) :y)
                                                        (plist-get group :h)))))
-             (step (if steps (apply #'min steps) 20)))
+             ;; Vega-Lite's minXYStep: an axis without a step counts as the view's (20).
+             (step (if (= (length steps) 2) (apply #'min steps) (apply #'min 20 steps))))
         (let ((sp (plist-get (cdar pairs) :scale)))
           (vector (or (plist-get sp :rangeMin) (aref (plist-get size :range) 0))
                   (or (plist-get sp :rangeMax) (expt (* 0.95 step) 2))))))))

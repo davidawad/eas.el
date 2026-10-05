@@ -1,0 +1,116 @@
+{
+ "examples": {
+  "circle": {
+   "ref": "ref/circle.png",
+   "ref_error": null,
+   "spec_sha256": "339399e7ab7dd05696e3ba65ba0680c1a87abb91ae764a2aa5944360c8c44959"
+  },
+  "circle_binned": {
+   "ref": "ref/circle_binned.png",
+   "ref_error": null,
+   "spec_sha256": "6cd0630d3d8c27fe6560d7098fa02c084a66620741914110fca1d8f5054b6d54"
+  },
+  "circle_bubble_health_income": {
+   "ref": "ref/circle_bubble_health_income.png",
+   "ref_error": null,
+   "spec_sha256": "c34f0e57f6769c476e287ce959513685ad8d5c32e4474566a9742da5c7be6289"
+  },
+  "circle_custom_tick_labels": {
+   "ref": "ref/circle_custom_tick_labels.png",
+   "ref_error": null,
+   "spec_sha256": "553a6856c0a720dbfccdb305d31214c4e542df8f4e428c449287247a2636d3b8"
+  },
+  "circle_github_punchcard": {
+   "ref": "ref/circle_github_punchcard.png",
+   "ref_error": null,
+   "spec_sha256": "067ebe6a018abcdb9aa6d633f4b00f7c94f056d0f7a34608b65ed827ad9a9de0"
+  },
+  "circle_natural_disasters": {
+   "ref": "ref/circle_natural_disasters.png",
+   "ref_error": null,
+   "spec_sha256": "eab60aecf296751f3d1b921ee381a0252a55ddbcb9f957bb29a749778aa4281a"
+  },
+  "layer_text_heatmap": {
+   "ref": "ref/layer_text_heatmap.png",
+   "ref_error": null,
+   "spec_sha256": "2b32b3cac894789ad944b08f05486cc260a1ce68a106cae3ff52562812213613"
+  },
+  "point_2d": {
+   "ref": "ref/point_2d.png",
+   "ref_error": null,
+   "spec_sha256": "a86cc54e23c523765401d6c1c6eddbdf39b24e39af7ccc29af7f9d48652e264d"
+  },
+  "point_angle_windvector": {
+   "ref": "ref/point_angle_windvector.png",
+   "ref_error": null,
+   "spec_sha256": "f718a8a60df33a8f0e327562d10d6a76d5539fe87c4498d61f7515b154ec1386"
+  },
+  "point_bubble": {
+   "ref": "ref/point_bubble.png",
+   "ref_error": null,
+   "spec_sha256": "085be15157fd661fb0b1100c4d90b074c75421da17c6e5c5c37d3ef18bb5e43c"
+  },
+  "point_color_with_shape": {
+   "ref": "ref/point_color_with_shape.png",
+   "ref_error": null,
+   "spec_sha256": "f5321694bbd873e0a81027ef4049aed2531fa1cc5b6d9f6b71333a57fa9d5610"
+  },
+  "point_invalid_color": {
+   "ref": "ref/point_invalid_color.png",
+   "ref_error": null,
+   "spec_sha256": "de3e722c4515e3384bd3ead5aad2c1e9afeaf826c63e0d13caa87fcaa7b4dbf1"
+  },
+  "point_offset_random": {
+   "ref": "ref/point_offset_random.png",
+   "ref_error": null,
+   "spec_sha256": "1bc472fe762678594e9a16b485b6eb5772b8e1f94f437aff6a12031268759d3f"
+  },
+  "rect_binned_heatmap": {
+   "ref": "ref/rect_binned_heatmap.png",
+   "ref_error": null,
+   "spec_sha256": "c7fbc382c82f15e02cf88088766dae3a814a300e951a88439bf0ab26768d5a47"
+  },
+  "rect_heatmap": {
+   "ref": "ref/rect_heatmap.png",
+   "ref_error": null,
+   "spec_sha256": "501bb6ef82f4f0275c4f9c56193aa8e72f1d6905e2ecb22d20dc601ae9f6f8af"
+  },
+  "rect_heatmap_weather": {
+   "ref": "ref/rect_heatmap_weather.png",
+   "ref_error": null,
+   "spec_sha256": "c80f8b9d00335beb6a97b8a2ca595fd64e44653ceadba7239704688877fb3d3e"
+  },
+  "rect_lasagna": {
+   "ref": "ref/rect_lasagna.png",
+   "ref_error": null,
+   "spec_sha256": "95d4334d9c1c2ea4d55de10bcc0b8ad83da875638e527d565b5e2891b060ff99"
+  },
+  "rect_mosaic_labelled_with_offset": {
+   "ref": "ref/rect_mosaic_labelled_with_offset.png",
+   "ref_error": null,
+   "spec_sha256": "dcabb5f5fdafd8cecc27f8f93da56db5217eaf37c667126f6e7198be1191f427"
+  },
+  "scatter_image": {
+   "ref": "ref/scatter_image.png",
+   "ref_error": null,
+   "spec_sha256": "7f9d3bd9d38a3bad84d3215860ff9c95e8037501d95f157f588c10f2b45381c0"
+  },
+  "text_scatterplot_colored": {
+   "ref": "ref/text_scatterplot_colored.png",
+   "ref_error": null,
+   "spec_sha256": "a51ea102ad4fe22af68ba805da288df622b74a14240616943339d1c582300a1f"
+  },
+  "tick_dot": {
+   "ref": "ref/tick_dot.png",
+   "ref_error": null,
+   "spec_sha256": "f7225779ce9b0de486f5cc1889ca515c834a050c67a6967005a61f930e36e5d1"
+  },
+  "tick_strip": {
+   "ref": "ref/tick_strip.png",
+   "ref_error": null,
+   "spec_sha256": "2b620742bf170fe4eddbd2d042d4d8fd5d0b19024c384f403607d31afeae65e3"
+  }
+ },
+ "generator": "bin/chart build (chart 0.1.0, Vega-Lite 6.4.1, default theme)",
+ "source": "https://vega.github.io/vega-lite/examples/"
+}

@@ -1,0 +1,126 @@
+{
+ "examples": {
+  "bar": {
+   "ref": "ref/bar.png",
+   "ref_error": null,
+   "spec_sha256": "ce6c73d4337035d855e688526e60c3c2d97a8fbd6c354446cd78882453721662"
+  },
+  "bar_aggregate": {
+   "ref": "ref/bar_aggregate.png",
+   "ref_error": null,
+   "spec_sha256": "b2dcd06ef6e7c59aa40259282f8f78eabca63d60ffe10b9183bb2529d433393c"
+  },
+  "bar_aggregate_sort_by_encoding": {
+   "ref": "ref/bar_aggregate_sort_by_encoding.png",
+   "ref_error": null,
+   "spec_sha256": "12ff94fe4aac5166c7a7b39e2ccf3e0a3902f1570ad9af6103ca12e795926c7e"
+  },
+  "bar_axis_space_saving": {
+   "ref": "ref/bar_axis_space_saving.png",
+   "ref_error": null,
+   "spec_sha256": "075d100c8a5f05f0826ba363fd343a3d58536ce7a963c7dcc7760212b75097b8"
+  },
+  "bar_color_disabled_scale": {
+   "ref": "ref/bar_color_disabled_scale.png",
+   "ref_error": null,
+   "spec_sha256": "3472cb1a0fc0d8e368d733d64fc10a2beb002de7001380b7c63878cd806c2d1a"
+  },
+  "bar_diverging_stack_population_pyramid": {
+   "ref": "ref/bar_diverging_stack_population_pyramid.png",
+   "ref_error": null,
+   "spec_sha256": "7d13dc583eb885e859b75eec1e0be12294529136037bf1f852fc3c1c198fd665"
+  },
+  "bar_diverging_stack_transform": {
+   "ref": "ref/bar_diverging_stack_transform.png",
+   "ref_error": null,
+   "spec_sha256": "8ce6549e252dfa3b9049106b3ecc5accd4b44aac0ab1b6d2c55d63bc14f41432"
+  },
+  "bar_gantt": {
+   "ref": "ref/bar_gantt.png",
+   "ref_error": null,
+   "spec_sha256": "9ce34f76f23d97e5e034e56e135f433ea89ceee9e3b576fd3468cf6681cc1129"
+  },
+  "bar_grouped": {
+   "ref": "ref/bar_grouped.png",
+   "ref_error": null,
+   "spec_sha256": "510f6a804c1c3b0d43d76fdbbeb3e9d1e2dff408b431261d68fea9d22102f779"
+  },
+  "bar_grouped_repeated": {
+   "ref": "ref/bar_grouped_repeated.png",
+   "ref_error": null,
+   "spec_sha256": "fa39b62686737b1e0e7f65ba0652ad0c0b533a9d69c2b8dfaaa7af6323eee1c2"
+  },
+  "bar_heatlane": {
+   "ref": "ref/bar_heatlane.png",
+   "ref_error": null,
+   "spec_sha256": "a7e016bd117cb2f27ee83ebf3b9011d3552c91e1e46cb6b1b6f3ed070c9172b9"
+  },
+  "bar_layered_transparent": {
+   "ref": "ref/bar_layered_transparent.png",
+   "ref_error": null,
+   "spec_sha256": "6db9a995de9415a0adb427fae2a23c19a3bf1bbef6534a75b345827c26e8d6ab"
+  },
+  "bar_month_temporal_band_center": {
+   "ref": "ref/bar_month_temporal_band_center.png",
+   "ref_error": null,
+   "spec_sha256": "d682d4e75e18f2a3316c7576de4a1db8c1dea6935c65265c7352b5a8c73447e1"
+  },
+  "bar_month_temporal_initial": {
+   "ref": "ref/bar_month_temporal_initial.png",
+   "ref_error": null,
+   "spec_sha256": "985827b166acd6353cae2f5503b6baa9921c53f68e15565de7705a094ddd2fd8"
+  },
+  "bar_negative": {
+   "ref": "ref/bar_negative.png",
+   "ref_error": null,
+   "spec_sha256": "05592bba5ddf3ff9bfc6f0ca04cd373abbaed9e72ed9e6ca8d590cb16bf83a1c"
+  },
+  "bar_negative_horizontal_label": {
+   "ref": "ref/bar_negative_horizontal_label.png",
+   "ref_error": null,
+   "spec_sha256": "ff9ad9ba620a0f5864cd997cd6734f1eddd21ec78167b55c9dcd2f4896aa4c3f"
+  },
+  "bar_size_responsive": {
+   "ref": "ref/bar_size_responsive.png",
+   "ref_error": null,
+   "spec_sha256": "372e1ebf461c3319b5895869a6d2fe60717b670f015227c11ce155691bd19c23"
+  },
+  "layer_bar_labels": {
+   "ref": "ref/layer_bar_labels.png",
+   "ref_error": null,
+   "spec_sha256": "7ac832b07af01795ae00c799653976a86e136c373db8e9d5ce1829894b1408e4"
+  },
+  "layer_bar_labels_grey": {
+   "ref": "ref/layer_bar_labels_grey.png",
+   "ref_error": null,
+   "spec_sha256": "b95e2c8773dda72be14a97761581e71b4e232772163f7eeee588b1515d7101f6"
+  },
+  "stacked_bar_count_corner_radius_mark": {
+   "ref": "ref/stacked_bar_count_corner_radius_mark.png",
+   "ref_error": null,
+   "spec_sha256": "964d8d7d91c2181798120c6563f6505985f4da6ea74ea0f81f995d4d58e17b0b"
+  },
+  "stacked_bar_h": {
+   "ref": "ref/stacked_bar_h.png",
+   "ref_error": null,
+   "spec_sha256": "f94bd61df2fc0bedbd3cbe57c7b2e47206fec84dab28493a816a820bec707bae"
+  },
+  "stacked_bar_h_normalized_labeled": {
+   "ref": "ref/stacked_bar_h_normalized_labeled.png",
+   "ref_error": null,
+   "spec_sha256": "ad64de6a4c0ba900c2358eab39db67922f8535375104e5c957efd4e2888c51b4"
+  },
+  "stacked_bar_normalize": {
+   "ref": "ref/stacked_bar_normalize.png",
+   "ref_error": null,
+   "spec_sha256": "ee2cb465085afa2a198a3227ce35328e12c139da834aa5617b64d28f7c61906c"
+  },
+  "stacked_bar_weather": {
+   "ref": "ref/stacked_bar_weather.png",
+   "ref_error": null,
+   "spec_sha256": "e196c3f51f61005914d8da7f830f6fd81b4899393b01eed018d094f11de607e0"
+  }
+ },
+ "generator": "bin/chart build (chart 0.1.0, Vega-Lite 6.4.1, default theme)",
+ "source": "https://vega.github.io/vega-lite/examples/"
+}

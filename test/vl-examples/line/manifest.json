@@ -1,0 +1,106 @@
+{
+ "examples": {
+  "connected_scatterplot": {
+   "ref": "ref/connected_scatterplot.png",
+   "ref_error": null,
+   "spec_sha256": "934c1c82773510c43dec089cf3472237b316bc10167384b85a8702c928f929b3"
+  },
+  "layer_line_co2_concentration": {
+   "ref": "ref/layer_line_co2_concentration.png",
+   "ref_error": null,
+   "spec_sha256": "b4f650f6ecdaa90367b25bbaefa235eb1de78d536dd7b8da844d02b82131b199"
+  },
+  "line": {
+   "ref": "ref/line.png",
+   "ref_error": null,
+   "spec_sha256": "8944eb28f15ddac6ac4c266505b8f2d8edbffea3c49efa51e75938e81f2cd0ff"
+  },
+  "line_bump": {
+   "ref": "ref/line_bump.png",
+   "ref_error": null,
+   "spec_sha256": "4f05bd28b7f3c8708f76a2169a5cab222f9943a07034b869b422a371819c2057"
+  },
+  "line_color": {
+   "ref": "ref/line_color.png",
+   "ref_error": null,
+   "spec_sha256": "7ce86d41b0d08bc63d282767dd62b37d72b87063b575b472608c1e81dbc49e39"
+  },
+  "line_color_halo": {
+   "ref": "ref/line_color_halo.png",
+   "ref_error": null,
+   "spec_sha256": "1580a8bba29c779d38f08d711295890766df548905399202ac83ea4532eebb66"
+  },
+  "line_conditional_axis": {
+   "ref": "ref/line_conditional_axis.png",
+   "ref_error": null,
+   "spec_sha256": "6f659baeb282f3cf0efa04eb349f43d001b9f4426645b2a08b760c7a115b142f"
+  },
+  "line_dashed_part": {
+   "ref": "ref/line_dashed_part.png",
+   "ref_error": null,
+   "spec_sha256": "db1885b29167c15d97c25178f7f252fcafd833e6a89bbdaa560b72a05a97167c"
+  },
+  "line_monotone": {
+   "ref": "ref/line_monotone.png",
+   "ref_error": null,
+   "spec_sha256": "dfc567700063a856b6e1e8f4f7beb6bdcb0521a5f7a67e325c59955bc424ad3c"
+  },
+  "line_overlay": {
+   "ref": "ref/line_overlay.png",
+   "ref_error": null,
+   "spec_sha256": "b5472f6e128a5c79e3f8cd76ecca03893bee77169499cd5c405242794635c6a2"
+  },
+  "line_overlay_stroked": {
+   "ref": "ref/line_overlay_stroked.png",
+   "ref_error": null,
+   "spec_sha256": "6598fed0f3582084be257b39b9a77c2996d637654c2dce24a1b0c5e6e5ad5bc0"
+  },
+  "line_skip_invalid_mid_overlay": {
+   "ref": "ref/line_skip_invalid_mid_overlay.png",
+   "ref_error": null,
+   "spec_sha256": "e5a982c6e8302b87632a12d2d1807a13b1c8eae1547fb73e7ade49c768e411ee"
+  },
+  "line_slope": {
+   "ref": "ref/line_slope.png",
+   "ref_error": null,
+   "spec_sha256": "459ae580e1337d4e66a998594edb0fe42d9eea35f5caef7c72895c66e94cee00"
+  },
+  "line_step": {
+   "ref": "ref/line_step.png",
+   "ref_error": null,
+   "spec_sha256": "c3b8f9873cdc7a971badf3d8475e2f7e30f14f18a8c548caee664c35131f0e02"
+  },
+  "line_strokedash": {
+   "ref": "ref/line_strokedash.png",
+   "ref_error": null,
+   "spec_sha256": "386ef355728e6e9826539a374d13c57d3f83205e948c08c8b42340c15a4a03cc"
+  },
+  "repeat_layer": {
+   "ref": "ref/repeat_layer.png",
+   "ref_error": null,
+   "spec_sha256": "748c1131f7b17748837e16a628c622008f8bb8e16dabdcc28c3357e699ef4483"
+  },
+  "sequence_line_fold": {
+   "ref": "ref/sequence_line_fold.png",
+   "ref_error": null,
+   "spec_sha256": "00288588a62dc3a511dbe2037bd002bf28f8be0fb7dbba4350da10d6d24bf5c9"
+  },
+  "trail_color": {
+   "ref": "ref/trail_color.png",
+   "ref_error": null,
+   "spec_sha256": "721f6d2e77ce997c03d7f0afec10e0458aa592f14863e6c524dc70e6de939130"
+  },
+  "trail_comet": {
+   "ref": "ref/trail_comet.png",
+   "ref_error": null,
+   "spec_sha256": "0572785f4b4fbc63663d433efccc5d9be55f670683ababd011f6c500190b9c38"
+  },
+  "window_rank": {
+   "ref": "ref/window_rank.png",
+   "ref_error": null,
+   "spec_sha256": "90bc282d4733e8fecd3160784587374a809cadbdbe3e3444a809ae2ecbe64261"
+  }
+ },
+ "generator": "bin/chart build (chart 0.1.0, Vega-Lite 6.4.1, default theme)",
+ "source": "https://vega.github.io/vega-lite/examples/"
+}

@@ -1,0 +1,101 @@
+{
+ "examples": {
+  "area_horizon": {
+   "ref": "ref/area_horizon.png",
+   "ref_error": null,
+   "spec_sha256": "c867bd0d5210ff22c5bb1d95191c108d138fd5c427d5c9c8a034b796310ab930"
+  },
+  "bar_layered_weather": {
+   "ref": "ref/bar_layered_weather.png",
+   "ref_error": null,
+   "spec_sha256": "4c723168d949ff492da6b36aae304b6790648d7489802ce7837c42c984ad317c"
+  },
+  "concat_layer_voyager_result": {
+   "ref": "ref/concat_layer_voyager_result.png",
+   "ref_error": null,
+   "spec_sha256": "d9e285d656f2dad2f6ffc8f16103e2d19eed93f434b0ee175999eeb58a621a5e"
+  },
+  "facet_bullet": {
+   "ref": "ref/facet_bullet.png",
+   "ref_error": null,
+   "spec_sha256": "45f025077ab1ddc34d3a8bda3fba3063737b3bb8a73d4cc0fef51f0f2aef3c78"
+  },
+  "layer_bar_annotations": {
+   "ref": "ref/layer_bar_annotations.png",
+   "ref_error": null,
+   "spec_sha256": "c813c54fc8d14b4433a044b1596756644849e90cb26a799aabfb52c0fc35808e"
+  },
+  "layer_bar_fruit": {
+   "ref": "ref/layer_bar_fruit.png",
+   "ref_error": null,
+   "spec_sha256": "4ad3b6fda5dcd8a1e07ab9a23a4a130fdad6a5735d5b64b16eeea0c67796b029"
+  },
+  "layer_bar_labels": {
+   "ref": "ref/layer_bar_labels.png",
+   "ref_error": null,
+   "spec_sha256": "7ac832b07af01795ae00c799653976a86e136c373db8e9d5ce1829894b1408e4"
+  },
+  "layer_candlestick": {
+   "ref": "ref/layer_candlestick.png",
+   "ref_error": null,
+   "spec_sha256": "b5e13b29d433b88ef49cae7ee7ce06f03f4b4a9f43d587318a9f23c04a5fed40"
+  },
+  "layer_dual_axis": {
+   "ref": "ref/layer_dual_axis.png",
+   "ref_error": null,
+   "spec_sha256": "8cb30a82f23b75a7143141aa965c3c4470390ca9c7a3d6da9098670fdcae6e20"
+  },
+  "layer_falkensee": {
+   "ref": "ref/layer_falkensee.png",
+   "ref_error": null,
+   "spec_sha256": "328870e05db1ec06d1a8cccef3f45c3c9fee5173d1a50127efa7ace0a01ddb05"
+  },
+  "layer_histogram_global_mean": {
+   "ref": "ref/layer_histogram_global_mean.png",
+   "ref_error": null,
+   "spec_sha256": "dacc47eeef70f2b9495effaebe3e00a54ce88f39e8f44bb6923d2de703385641"
+  },
+  "layer_likert": {
+   "ref": "ref/layer_likert.png",
+   "ref_error": null,
+   "spec_sha256": "7a8bb648e84ead82149781562037d0e925b5d3241f394c10950f4ffc05e85277"
+  },
+  "layer_line_co2_concentration": {
+   "ref": "ref/layer_line_co2_concentration.png",
+   "ref_error": null,
+   "spec_sha256": "b4f650f6ecdaa90367b25bbaefa235eb1de78d536dd7b8da844d02b82131b199"
+  },
+  "layer_line_mean_point_raw": {
+   "ref": "ref/layer_line_mean_point_raw.png",
+   "ref_error": null,
+   "spec_sha256": "f3787b7edc2f26455b467ede7395f7cb7e017530fed9400aa76edcb4eae60966"
+  },
+  "layer_line_rolling_mean_point_raw": {
+   "ref": "ref/layer_line_rolling_mean_point_raw.png",
+   "ref_error": null,
+   "spec_sha256": "2e68709fcf37e03ebb1d86d843787bb54b08af2c072d569e69f48e359b0360fb"
+  },
+  "layer_precipitation_mean": {
+   "ref": "ref/layer_precipitation_mean.png",
+   "ref_error": null,
+   "spec_sha256": "2869342bce123c57e2e569ff41e8c4bf392dd97335f26bfe5b75956163fd63f8"
+  },
+  "layer_ranged_dot": {
+   "ref": "ref/layer_ranged_dot.png",
+   "ref_error": null,
+   "spec_sha256": "ef9cb8756d0d97094ffc0b3527979aa8fa2584524ba1a32a7de3851b79aea65d"
+  },
+  "layer_text_heatmap": {
+   "ref": "ref/layer_text_heatmap.png",
+   "ref_error": null,
+   "spec_sha256": "2b32b3cac894789ad944b08f05486cc260a1ce68a106cae3ff52562812213613"
+  },
+  "wheat_wages": {
+   "ref": "ref/wheat_wages.png",
+   "ref_error": null,
+   "spec_sha256": "e8737b5dbc6c58fd126160626a58c1fe0ca77eac54496160c86f59999f48d841"
+  }
+ },
+ "generator": "bin/chart build (chart 0.1.0, Vega-Lite 6.4.1, default theme)",
+ "source": "https://vega.github.io/vega-lite/examples/"
+}

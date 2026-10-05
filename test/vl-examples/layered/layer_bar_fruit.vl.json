@@ -1,0 +1,90 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "Vega-Lite version of bar chart from https://observablehq.com/@d3/learn-d3-scales.",
+ "width": 400,
+ "data": {
+  "values": [
+   {
+    "name": "\ud83c\udf4a",
+    "count": 21
+   },
+   {
+    "name": "\ud83c\udf47",
+    "count": 13
+   },
+   {
+    "name": "\ud83c\udf4f",
+    "count": 8
+   },
+   {
+    "name": "\ud83c\udf4c",
+    "count": 5
+   },
+   {
+    "name": "\ud83c\udf50",
+    "count": 3
+   },
+   {
+    "name": "\ud83c\udf4b",
+    "count": 2
+   },
+   {
+    "name": "\ud83c\udf4e",
+    "count": 1
+   },
+   {
+    "name": "\ud83c\udf49",
+    "count": 1
+   }
+  ]
+ },
+ "encoding": {
+  "y": {
+   "field": "name",
+   "type": "nominal",
+   "sort": "-x",
+   "title": null
+  },
+  "x": {
+   "field": "count",
+   "type": "quantitative",
+   "title": null
+  }
+ },
+ "layer": [
+  {
+   "mark": "bar",
+   "encoding": {
+    "color": {
+     "field": "count",
+     "type": "quantitative",
+     "title": "Number of fruit"
+    }
+   }
+  },
+  {
+   "mark": {
+    "type": "text",
+    "align": "right",
+    "xOffset": -4,
+    "aria": false
+   },
+   "encoding": {
+    "text": {
+     "field": "count",
+     "type": "quantitative"
+    },
+    "color": {
+     "condition": {
+      "test": {
+       "field": "count",
+       "gt": 10
+      },
+      "value": "white"
+     },
+     "value": "black"
+    }
+   }
+  }
+ ]
+}

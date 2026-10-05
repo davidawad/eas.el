@@ -40,7 +40,7 @@
   "Return the hit-test index for MARK's items."
   (let ((items (plist-get mark :items)))
     (pcase (plist-get mark :mark)
-      ((or "bar" "rect" "brush") (list :kind "rects"))
+      ((or "bar" "rect" "brush" "image") (list :kind "rects"))
       ((or "line" "area" "trail" "rule" "tick")
        (let (entries)
          (seq-do-indexed

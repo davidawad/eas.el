@@ -1,0 +1,19 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {"x": 1, "y": 1, "dir": 0},
+      {"x": 2, "y": 2, "dir": 90},
+      {"x": 3, "y": 1, "dir": 180},
+      {"x": 4, "y": 2, "dir": 270},
+      {"x": 5, "y": 1, "dir": 45}
+    ]
+  },
+  "description": "Wedges turned by an angle channel (degrees clockwise).",
+  "mark": {"type": "point", "shape": "wedge", "filled": true, "size": 200},
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative"},
+    "y": {"field": "y", "type": "quantitative"},
+    "angle": {"field": "dir", "type": "quantitative", "scale": {"domain": [0, 360], "range": [0, 360]}}
+  }
+}

@@ -24,6 +24,7 @@
 (require 'eas-theme)
 (require 'eas-font)
 (require 'eas-layout-axis-style)
+(require 'eas-axis-extra)
 
 (defun eas-layout-metrics (target &optional cell config)
   "Return layout metrics for TARGET (svg or text); CELL is [W H] in px.
@@ -54,7 +55,7 @@ CONFIG is the Vega config in force (default `eas-theme-default')."
               :legend-margin 8 :symbol-size (get 100 :legend :symbolSize)
               :symbol-type (get "circle" :legend :symbolType) :symbol-stroke-width (get 1.5 :legend :symbolStrokeWidth)
               :gradient-thickness (get 16 :legend :gradientThickness)
-              :spacing 20 :char-w nil :step 20
+              :spacing 20 :char-w nil :step (get 20 :view :step)
               :width (get 300 :view :continuousWidth) :height (get 300 :view :continuousHeight)
               :x-tick-spacing 40 :y-tick-spacing 40)))))
 
@@ -148,12 +149,16 @@ PLOT-SIZE is the plot extent along the axis."
       (let* ((discrete (member (plist-get scale :type) '("band" "point")))
              (spacing (plist-get metrics (if (eq channel :x) :x-tick-spacing :y-tick-spacing)))
              (count (or (plist-get axis :tickCount)
+                        ;; Vega-Lite leaves log axes at Vega's default count.
+                        (and (equal (plist-get scale :type) "log") (not (eas-layout-text-p metrics)) 10)
                         (if (eas-layout-text-p metrics) (max 2 (ceiling (/ plot-size (float spacing))))
                           ;; Vega-Lite: ceil(size/40), ceil(width/10) for binned x.
-                          (max 1 (ceiling (/ plot-size (if (equal (plist-get def :derived) "bin") 10.0
+                          (max 1 (ceiling (/ plot-size (if (or (equal (plist-get def :derived) "bin") (plist-get def :bin-end)) 10.0
                                                          (float spacing))))))))
-             (fmt (if (and discrete (equal (plist-get def :derived) "timeUnit") (null (plist-get axis :format)))
-                      (let ((f (eas-layout-time-unit-format (plist-get def :field))))
+             (fmt (if (and discrete (equal (plist-get def :derived) "timeUnit")
+                           (or (null (plist-get axis :format)) (stringp (plist-get axis :format))))
+                      (let ((f (if (plist-get axis :format) (eas-scale--d3-time-format (plist-get axis :format))
+                                 (eas-layout-time-unit-format (plist-get def :field)))))
                         (lambda (v) (if (numberp v)
                                         (let ((system-time-locale "C")
                                               (eas-time-zone (unless (string-prefix-p "utc" (plist-get def :field))
@@ -176,23 +181,25 @@ PLOT-SIZE is the plot extent along the axis."
                          (discrete nil)
                          ((equal (plist-get def :derived) "bin") nil)
                          (t (not (eq (eas-theme-axis (plist-get metrics :config) channel :grid) :false))))))
-        (append
-         (eas-layout-axis-style-props axis)
-         (list :channel (eas-key-name channel)
-               :orient (if (eq channel :x) "bottom" "left")
-               :title title :discrete (if discrete t :false) :labelAngle angle
-               :overlap (cond ((and discrete (equal (plist-get def :type) "nominal")) nil)
-                              ((equal (plist-get scale :type) "log") "greedy")
-                              (t "parity"))
-               :grid (if grid t :false)
-               :ticks (vconcat (mapcar (lambda (v)
-                                         (let ((label (eas-layout-axis-style-label axis v (funcall fmt v))))
-                                           (append (list :value v :label label)
-                                                   (eas-layout-axis-style-tick axis v label))))
-                                       values)))
-         ;; Only what the spec turns off or resizes, so other scenes keep their shape.
-         (when (eq (plist-get axis :domain) :false) (list :domain :false))
-         (when (numberp (plist-get axis :tickSize)) (list :tickSize (plist-get axis :tickSize))))))))
+        (eas-axis-extra-apply
+         (append
+          (eas-layout-axis-style-props axis)
+          (list :channel (eas-key-name channel)
+                :orient (if (eq channel :x) "bottom" "left")
+                :title title :discrete (if discrete t :false) :labelAngle angle
+                :overlap (cond ((and discrete (equal (plist-get def :type) "nominal")) nil)
+                               ((equal (plist-get scale :type) "log") "greedy")
+                               (t "parity"))
+                :grid (if grid t :false)
+                :ticks (vconcat (mapcar (lambda (v)
+                                          (let ((label (eas-layout-axis-style-label axis v (funcall fmt v))))
+                                            (append (list :value v :label label)
+                                                    (eas-layout-axis-style-tick axis v label))))
+                                        values)))
+          ;; Only what the spec turns off or resizes, so other scenes keep their shape.
+          (when (eq (plist-get axis :domain) :false) (list :domain :false))
+          (when (numberp (plist-get axis :tickSize)) (list :tickSize (plist-get axis :tickSize))))
+         def channel (plist-get metrics :config))))))
 
 (defun eas-layout-axis-label-extent (axis metrics)
   "Thickness of AXIS's labels across the axis (text target)."
@@ -267,7 +274,7 @@ Overlapping labels drop their ticks too; lines sit at cell centres."
          (tick (eas-layout--tick axis metrics)) (inset (/ tick 2.0))
          (size (plist-get metrics :label-size)) (cw (plist-get metrics :char-w))
          (bottom (equal (plist-get axis :orient) "bottom"))
-         (flush (and bottom (eq (plist-get axis :discrete) :false)))
+         (flush (and bottom (eq (plist-get axis :discrete) :false) (not (eq (plist-get axis :label-flush) :false))))
          (angle (plist-get axis :labelAngle))
          (along (and bottom (zerop angle)))
          (extent (lambda (tk)
@@ -315,6 +322,10 @@ Overlapping labels drop their ticks too; lines sit at cell centres."
   "Return AXIS with geometry for SCALE inside plot BOUNDS [x0 y0 w h].
 The svg result carries :bounds, Vega's axis bounds (ticks, visible
 labels, title) without the half-pixel translate of the drawn lines."
+  (eas-axis-extra-place (eas-layout--axis-place axis scale bounds metrics) scale metrics))
+
+(defun eas-layout--axis-place (axis scale bounds metrics)
+  "`eas-layout-axis-place' before the axis extras."
   (if (eas-layout-text-p metrics)
       (eas-layout-axis-place-text axis scale bounds metrics)
     (let* ((x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3))
@@ -323,7 +334,7 @@ labels, title) without the half-pixel translate of the drawn lines."
            (size (plist-get metrics :label-size))
            (offset (or (plist-get axis :label-offset) 0))
            (bottom (equal (plist-get axis :orient) "bottom"))
-           (flush (and bottom (eq (plist-get axis :discrete) :false)))
+           (flush (and bottom (eq (plist-get axis :discrete) :false) (not (eq (plist-get axis :label-flush) :false))))
            (angle (plist-get axis :labelAngle))
            ;; Vega's axisBand tickOffset: band axes sit half a pixel back;
            ;; ticks are rounded (tickRound), labels are not.

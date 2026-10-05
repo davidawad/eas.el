@@ -11,6 +11,6 @@
                         █▅▄▃  ■ Mining and Extraction
                          ███  ■ Other
                               ■ Self-employed
-┬────────────┬─────────────┬  ■ Transportation and Utilities
+┬            ┬             ┬  ■ Transportation and Utilities
 2000        2005          2010■ Wholesale and Retail Trade
       date (year-month)

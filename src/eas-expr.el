@@ -10,7 +10,8 @@
 ;;
 ;;   literals    numbers, 'strings', "strings", true false null, [a, b],
 ;;               {key: value}
-;;   names       datum, datum.f, datum['f'], param names, PI, E
+;;   random()    deterministic per source row (see `eas-expr--random')
+;;   names       datum, datum.f, datum['f'], s[i], s.length, param names, PI, E
 ;;   operators   ?: || && == != === !== < <= > >= + - * / % ! unary -
 ;;   functions   `eas-expr-functions' (math, type tests, UTC date parts,
 ;;               d3 number format)
@@ -239,6 +240,9 @@
   "Return field KEY of OBJECT (a row plist or param value)."
   (cond ((and (vectorp object) (numberp key))
          (if (< -1 key (length object)) (aref object (truncate key)) :null))
+        ((and (stringp object) (numberp key))
+         (if (< -1 key (length object)) (string (aref object (truncate key))) :null))
+        ((and (or (stringp object) (vectorp object)) (equal key "length")) (length object))
         ((and (eas-object-p object) (stringp key))
          (let ((cell (plist-member object (eas-key key))))
            (if cell (cadr cell) :null)))
@@ -278,13 +282,32 @@
               ((or "!=" "!==") (if (eas-expr--equal x y) :false t))
               ((or "<" "<=" ">" ">=") (eas-expr--compare op x y))
               (_ (eas-expr--arith op x y)))))))
+    (`(:call "random" ,_) (eas-expr--random datum))
     (`(:call ,name ,args)
      (apply (cdr (assoc name eas-expr-functions))
             (mapcar (lambda (arg) (eas-expr-eval arg datum env)) args)))))
 
+(defvar eas-expr--random-calls nil
+  "Hash of DATUM -> random() calls so far, bound per evaluation.")
+
+(defun eas-expr--random (datum)
+  "A uniform number in [0, 1), deterministic for DATUM's source row.
+Vega's random() is Math.random; eas makes it a hash of the row index
+\(:_eas_row) and how many times this evaluation called it, so renders,
+goldens and replays reproduce exactly."
+  (let* ((row (let ((r (and (eas-object-p datum) (plist-get datum :_eas_row)))) (if (integerp r) r 0)))
+         (n (if eas-expr--random-calls (cl-incf (gethash row eas-expr--random-calls 0)) 1))
+         (x (logand (+ (* row 2654435761) (* n 40503) 12345) #xFFFFFFFF)))
+    (dotimes (_ 3)
+      (setq x (logand (logxor x (ash x 13)) #xFFFFFFFF)
+            x (logxor x (ash x -17))
+            x (logand (logxor x (ash x 5)) #xFFFFFFFF)))
+    (/ (float x) 4294967296.0)))
+
 (defun eas-expr-evaluate (string datum &optional env)
   "Parse (cached) and evaluate expression STRING for DATUM with ENV."
-  (eas-expr-eval (eas-expr-parse string) datum env))
+  (let ((eas-expr--random-calls (make-hash-table)))
+    (eas-expr-eval (eas-expr-parse string) datum env)))
 
 (defun eas-expr--date-part (key &optional offset)
   "Return a function extracting date field KEY (plus OFFSET) from a date."
@@ -350,7 +373,9 @@
                           (hi (max (aref range 0) (aref range 1))))
                       (if (<= lo (eas-expr--number v) hi) t :false))))
     ("if" . ,(lambda (test a b) (if (eas-expr-truthy test) a b)))
-    ("format" . ,(lambda (v spec) (eas-format-number (eas-expr--string spec) v))))
+    ("format" . ,(lambda (v spec) (eas-format-number (eas-expr--string spec) v)))
+    ;; Evaluated per datum by `eas-expr-eval' (`eas-expr--random').
+    ("random" . ignore))
   "Functions callable from expressions: (NAME . FUNCTION).")
 
 (provide 'eas-expr)

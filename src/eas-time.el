@@ -83,6 +83,7 @@ date against the selection on each move (fc-qx1.2), so parse once.")
 Numbers are already epoch milliseconds."
   (cond
    ((numberp value) value)
+   ((and (consp value) (keywordp (car value))) (eas-time-datetime value))
    ((stringp value)
     (let* ((key (if eas-time-zone (cons eas-time-zone value) value))
            (hit (gethash key eas-time--parse-cache)))
@@ -92,6 +93,23 @@ Numbers are already epoch milliseconds."
         (let ((ms (eas-time--parse-string value)))
           (puthash key (or ms :none) eas-time--parse-cache)
           ms))))))
+
+(defun eas-time-datetime (dt)
+  "Epoch ms of Vega-Lite DateTime object DT, a plist (:year :month :date ...).
+Absent parts take Vega-Lite's defaults: year 2012, January, date 1.
+Months may be numbers (1-12) or names; utc true reads it in UTC."
+  (let* ((month (plist-get dt :month))
+         (month (cond ((numberp month) month)
+                      ((stringp month)
+                       (1+ (or (seq-position '("jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sep" "oct" "nov" "dec")
+                                             (downcase (substring month 0 (min 3 (length month)))))
+                               0)))
+                      ((plist-get dt :quarter) (1+ (* 3 (1- (plist-get dt :quarter)))))
+                      (t 1)))
+         (eas-time-zone (unless (eq (plist-get dt :utc) t) eas-time-zone)))
+    (eas-time-ms (or (plist-get dt :year) 2012) month (or (plist-get dt :date) 1)
+                 (or (plist-get dt :hours) 0) (or (plist-get dt :minutes) 0)
+                 (or (plist-get dt :seconds) 0) (or (plist-get dt :milliseconds) 0))))
 
 (defun eas-time--parse-string (value)
   "Parse string VALUE as `eas-time-parse' does, uncached."

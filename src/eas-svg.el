@@ -31,6 +31,9 @@
 (require 'eas-theme)
 (require 'eas-paint)
 (require 'eas-arc)
+(require 'eas-axis-extra)
+(require 'eas-symbols)
+(require 'eas-marks-image)
 
 (defun eas-svg--face-color (face attribute)
   "FACE's ATTRIBUTE color as a string, or nil when unspecified."
@@ -165,25 +168,21 @@ Each segment is the hull of its end discs, so joints and ends are round."
             (if (> tl 0) (format "A%s,%s 0 0 1 %s,%s" (funcall n tl) (funcall n tl) (funcall n (+ x tl)) (funcall n y)) "")
             "Z")))
 
-(defconst eas-svg--shape-paths
-  '(("diamond" . "M-1,0L0,-1L1,0L0,1Z")
-    ("cross" . "M-1,-0.333H-0.333V-1H0.333V-0.333H1V0.333H0.333V1H-0.333V0.333H-1Z")
-    ("triangle-up" . "M0,-0.866L1,0.866L-1,0.866Z") ("triangle" . "M0,-0.866L1,0.866L-1,0.866Z")
-    ("triangle-down" . "M0,0.866L1,-0.866L-1,-0.866Z")
-    ("triangle-right" . "M0.866,0L-0.866,1L-0.866,-1Z") ("triangle-left" . "M-0.866,0L0.866,1L0.866,-1Z"))
-  "Vega's named symbols as unit paths (within -1..1, scaled by sqrt(size)/2).")
-
 (defun eas-svg--symbol (shape x y size &rest attrs)
   "A Vega symbol of SHAPE and area SIZE centred on X Y, with ATTRS.
-SHAPE is circle, square, another Vega symbol name or SVG path data."
-  (let ((r (/ (sqrt (max 0 size)) 2.0)))
+SHAPE is circle, square, another Vega symbol (`eas-symbols-path') or
+SVG path data.  ATTRS may hold :angle, degrees clockwise."
+  (let ((r (/ (sqrt (max 0 size)) 2.0)) (angle (plist-get attrs :angle))
+        (attrs (eas--plist-without attrs :angle)))
     (cond
-     ((equal shape "square")
+     ((and (equal shape "square") (not angle))
       (apply #'eas-svg--node 'rect :x (- x r) :y (- y r) :width (* 2 r) :height (* 2 r) attrs))
-     ((and (stringp shape) (or (assoc shape eas-svg--shape-paths) (string-match-p "\\`[ \t]*[Mm]" shape)))
+     ((eas-symbols-path shape x y size angle)
+      (apply #'eas-svg--node 'path :d (eas-symbols-path shape x y size angle) attrs))
+     ((and (stringp shape) (string-match-p "\\`[ \t]*[Mm]" shape))
       ;; Vega draws a path symbol at sqrt(size)/2 per unit.
       (let ((sw (plist-get attrs :stroke-width)))
-        (apply #'eas-svg--node 'path :d (or (cdr (assoc shape eas-svg--shape-paths)) shape)
+        (apply #'eas-svg--node 'path :d shape
                :transform (format "translate(%s,%s) scale(%s)" (eas-svg--n x) (eas-svg--n y) (eas-svg--n r))
                (if (and sw (> r 0)) (plist-put (copy-sequence attrs) :stroke-width (/ sw r)) attrs))))
      (t (apply #'eas-svg--node 'circle :cx x :cy y :r r attrs)))))
@@ -201,6 +200,11 @@ SHAPE is circle, square, another Vega symbol name or SVG path data."
          (eas-svg--node 'rect :x (plist-get item :x) :y (plist-get item :y)
                           :width (max 0 (plist-get item :w)) :height (max 0 (plist-get item :h))
                           :fill fill :stroke (unless (equal stroke "none") stroke) :opacity opacity)))
+      ("image"
+       (eas-svg--node 'image :x (plist-get item :x) :y (plist-get item :y)
+                      :width (plist-get item :w) :height (plist-get item :h)
+                      :preserveAspectRatio (if (eq (plist-get item :aspect) :false) "none" "xMidYMid")
+                      :href (eas-marks-image-href (plist-get item :url)) :opacity opacity))
       ((or "rule" "tick")
        (eas-svg--line (vector (plist-get item :x1) (plist-get item :y1) (plist-get item :x2) (plist-get item :y2))
                         stroke (plist-get item :strokeWidth) opacity (plist-get item :strokeDash)))
@@ -225,7 +229,7 @@ SHAPE is circle, square, another Vega symbol name or SVG path data."
                                                  (mapconcat #'eas-svg--n (plist-get item :strokeDash) ","))
                           :opacity opacity)))
       (_ (eas-svg--symbol (plist-get item :shape) (plist-get item :x) (plist-get item :y) (plist-get item :size)
-                            :fill fill :stroke (unless (equal stroke "none") stroke)
+                            :angle (plist-get item :angle) :fill fill :stroke (unless (equal stroke "none") stroke)
                             :stroke-width (unless (equal stroke "none") (plist-get item :strokeWidth))
                             :opacity opacity)))))
 
@@ -240,19 +244,21 @@ SHAPE is circle, square, another Vega symbol name or SVG path data."
                                (funcall get :gridOpacity) (plist-get tk :grid-dash))
               out)))
     (when-let* ((domain (plist-get axis :domain-line)))
-      (push (eas-svg--line domain (funcall get :domainColor) (or (funcall get :domainWidth) 1)) out))
+      (unless (plist-get axis :domain-off)
+        (push (eas-svg--line domain (funcall get :domainColor) (or (funcall get :domainWidth) 1)) out)))
     (seq-doseq (tk (plist-get axis :ticks))
       (unless (equal (plist-get axis :tickSize) 0)
-        (push (eas-svg--line (plist-get tk :tick) (funcall get :tickColor) (or (funcall get :tickWidth) 1)
-                             nil (plist-get tk :tick-dash))
-              out))
+        (when-let* ((color (eas-axis-extra-tick-color axis tk (funcall get :tickColor))))
+          (push (eas-svg--line (plist-get tk :tick) color (or (funcall get :tickWidth) 1)
+                               nil (plist-get tk :tick-dash))
+                out)))
       (unless (string-empty-p (plist-get tk :label))
         (push (eas-svg--text (plist-get tk :label) (plist-get tk :lx) (plist-get tk :ly)
                                (or (funcall get :labelFontSize) 10)
                                :align (plist-get tk :align) :baseline (plist-get tk :baseline)
                                :angle (if (equal (plist-get axis :orient) "bottom")
                                           (plist-get axis :labelAngle) 0)
-                               :fill (funcall get :labelColor))
+                               :fill (or (plist-get tk :label-color) (funcall get :labelColor)))
               out)))
     (when-let* ((tm (plist-get axis :title-mark)))
       (push (eas-svg--text (plist-get tm :text) (plist-get tm :x) (plist-get tm :y) (or (funcall get :titleFontSize) 11)
@@ -264,14 +270,21 @@ SHAPE is circle, square, another Vega symbol name or SVG path data."
 
 (defun eas-svg--gradient-id (legend)
   "Stable id of LEGEND's gradient definition."
-  (format "grad-%s-%s" (plist-get legend :channel) (abs (sxhash-equal (plist-get legend :stops)))))
+  (format "grad-%s-%s%s" (plist-get legend :channel) (abs (sxhash-equal (plist-get legend :stops)))
+          (if (equal (plist-get legend :direction) "horizontal") "-h" "")))
 
 (defun eas-svg--gradient-def (legend)
   "A vertical <linearGradient> for LEGEND's color stops (high values on top)."
   (let* ((stops (plist-get legend :stops)) (n (length stops)))
-    (append (eas-svg--node 'linearGradient :id (eas-svg--gradient-id legend) :x1 0 :y1 1 :x2 0 :y2 0)
+    (append (if (equal (plist-get legend :direction) "horizontal")
+                (eas-svg--node 'linearGradient :id (eas-svg--gradient-id legend) :x1 0 :y1 0 :x2 1 :y2 0)
+              (eas-svg--node 'linearGradient :id (eas-svg--gradient-id legend) :x1 0 :y1 1 :x2 0 :y2 0))
             (seq-map-indexed (lambda (c i) (eas-svg--node 'stop :offset (/ i (float (max 1 (1- n)))) :stop-color c))
                              stops))))
+
+(defun eas-svg--clip-id (box)
+  "Id of the clip path for legend symbol BOX [X Y W H]."
+  (format "lclip-%x" (abs (sxhash-equal box))))
 
 (defun eas-svg--legend (legend theme)
   "SVG nodes for placed LEGEND under THEME."
@@ -287,14 +300,20 @@ SHAPE is circle, square, another Vega symbol name or SVG path data."
                              :fill (format "url(#%s)" (eas-svg--gradient-id legend)))
             out))
     (seq-doseq (e (plist-get legend :entries))
+      (when-let* ((c (plist-get e :clip)))
+        (push (dom-node 'clipPath `((id . ,(eas-svg--clip-id c)))
+                        (eas-svg--node 'rect :x (aref c 0) :y (aref c 1) :width (aref c 2) :height (aref c 3)))
+              out))
       (when (plist-get e :size)
-        (push (eas-svg--symbol (plist-get legend :symbol-type) (plist-get e :sx) (plist-get e :sy) (plist-get e :size)
-                                 :fill (plist-get e :fill) :stroke (plist-get e :stroke)
+        (push (eas-svg--symbol (or (plist-get e :shape) (plist-get legend :symbol-type)) (plist-get e :sx) (plist-get e :sy) (plist-get e :size)
+                                 :clip-path (and (plist-get e :clip) (format "url(#%s)" (eas-svg--clip-id (plist-get e :clip))))
+                                 :fill (plist-get e :fill) :fill-opacity (plist-get e :fill-opacity)
+                                 :stroke (plist-get e :stroke)
                                  :stroke-width (and (plist-get e :stroke) (plist-get e :stroke-width))
                                  :stroke-dasharray (and (plist-get e :dash) (mapconcat #'eas-svg--n (plist-get e :dash) ","))
                                  :opacity (let ((o (plist-get e :opacity))) (and o (/= o 1) o)))
               out))
-      (push (eas-svg--text (plist-get e :label) (plist-get e :lx) (plist-get e :ly) fs :align "left"
+      (push (eas-svg--text (plist-get e :label) (plist-get e :lx) (plist-get e :ly) fs :align (or (plist-get e :align) "left")
                              :baseline (or (plist-get e :baseline) "middle") :fill (funcall get :labelColor))
             out))
     (nreverse out)))

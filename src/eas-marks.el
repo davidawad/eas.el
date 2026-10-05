@@ -23,6 +23,7 @@
 (require 'eas-paint)
 (require 'eas-curve)
 (require 'eas-marks-path)
+(require 'eas-marks-image)
 
 (defconst eas-marks-default-color "#4c78a8" "Vega-Lite's default mark color.")
 
@@ -135,9 +136,14 @@ Returns the plot centre when the channel is absent."
       (let ((p (eas-marks--channel unit scales channel row))
             (q (eas-marks--secondary unit scales channel row)))
         (and (numberp p) (if (numberp q) (/ (+ p q) 2.0) p))))
-     (t (let ((p (eas-marks--channel unit scales channel row)))
+     (t (let ((p (eas-marks--channel unit scales channel row))
+              (off (and (plist-get (plist-get unit :encoding) (if (eq channel :x) :xOffset :yOffset))
+                        (eas-marks--channel unit scales (if (eq channel :x) :xOffset :yOffset) row))))
           (and (numberp p)
                (cond
+                ((and (numberp off) scale (equal (plist-get scale :type) "band"))
+                 ;; A nested offset places the mark within its band.
+                 (+ p (* off (plist-get scale :bandwidth))))
                 ((and scale (not band-start) (member (plist-get scale :type) '("band")))
                  (+ p (/ (plist-get scale :bandwidth) 2.0)))
                 ;; Vega-Lite centres non-bar marks on a bin.
@@ -198,10 +204,11 @@ Returns the plot centre when the channel is absent."
                                :opacity (or (plist-get mark :opacity) 1)))
                      (append (list :size (or (eas-marks--channel unit scales :size row)
                                              (plist-get mark :size) 30)
-                                   :shape (or (eas-marks--channel unit scales :shape row)
-                                              (and (equal type "point") (stringp (plist-get mark :shape)) (plist-get mark :shape))
+                                   :shape (or (eas-marks--channel unit scales :shape row) (plist-get mark :shape)
                                               (if (equal type "point") "circle" type))
                                    :strokeWidth (or (plist-get mark :strokeWidth) 2))
+                             (when-let* ((a (or (eas-marks--channel unit scales :angle row) (plist-get mark :angle))))
+                               (list :angle a))
                              (eas-marks--style
                               (if (member type '("circle" "square"))
                                   (plist-put (copy-sequence unit) :mark (plist-put (copy-sequence mark) :filled t))
@@ -307,6 +314,10 @@ ranged (x2/y2) bar."
                     ((and tick x y) (vector (- x half) y (+ x half) y))
                     ((and x y y2) (vector x y x y2))
                     ((and x y x2) (vector x y x2 y))
+                    ((and tick x (not (plist-get enc :y)))
+                     ;; Vega-Lite: 3/4 of the 20px default step, centred.
+                     (let ((c (+ y0 (/ h 2.0))) (q (min (/ h 2.0) (/ (or (plist-get mark :size) 15) 2.0))))
+                       (vector x (- c q) x (+ c q))))
                     ((and x (not (plist-get enc :y))) (vector x y0 x (+ y0 h)))
                     ((and y (not (plist-get enc :x))) (vector x0 y (+ x0 w) y))
                     ((and x y) (vector x y x (eas-marks--zero ys bounds :y))))))
@@ -413,7 +424,8 @@ Call it inside `eas-marks-with-cache'."
   (pcase (plist-get (plist-get unit :mark) :type)
     ((or "point" "circle" "square" "text") (eas-marks--point-row unit scales bounds metrics))
     ((or "bar" "rect") (eas-marks--bar-row unit scales bounds metrics))
-    ((or "rule" "tick") (eas-marks--rule-row unit scales bounds))))
+    ((or "rule" "tick") (eas-marks--rule-row unit scales bounds))
+    ("image" (eas-marks-image-row unit scales bounds))))
 
 (defmacro eas-marks-with-cache (&rest body)
   "Run BODY with a fresh per-unit accessor cache."
@@ -427,7 +439,7 @@ Call it inside `eas-marks-with-cache'."
   (pcase (plist-get (plist-get unit :mark) :type)
     ((guard (and (fboundp 'eas-polar-unit-p) (eas-polar-unit-p unit)))
      (eas-polar-items unit scales bounds metrics))
-    ((or "point" "circle" "square" "text" "bar" "rect" "rule" "tick")
+    ((or "point" "circle" "square" "text" "bar" "rect" "rule" "tick" "image")
      (eas-marks--each unit (eas-marks-row-fn unit scales bounds metrics)))
     ((or "line" "area" "trail")
      (eas-marks--series-items unit scales bounds

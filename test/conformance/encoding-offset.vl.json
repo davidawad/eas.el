@@ -1,0 +1,20 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {"cat": "a", "j": -0.4, "v": 3},
+      {"cat": "a", "j": 0.1, "v": 5},
+      {"cat": "a", "j": 0.45, "v": 4},
+      {"cat": "b", "j": -0.2, "v": 4},
+      {"cat": "b", "j": 0.3, "v": 2},
+      {"cat": "b", "j": -0.45, "v": 1}
+    ]
+  },
+  "description": "Points offset within each band of a nominal axis by a quantitative yOffset.",
+  "mark": "point",
+  "encoding": {
+    "y": {"field": "cat", "type": "nominal"},
+    "yOffset": {"field": "j", "type": "quantitative"},
+    "x": {"field": "v", "type": "quantitative"}
+  }
+}

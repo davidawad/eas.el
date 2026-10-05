@@ -356,7 +356,7 @@ and strftime-style time formats are honored."
                            (eas-scale-format-number v (max 0 (- (floor (+ 1e-9 (log v 10))))))
                          ""))))
         (t (lambda (v) (eas-scale-format-number v decimals))))))
-    (_ (lambda (v) (if (stringp v) v (format "%s" v))))))
+    (_ (lambda (v) (cond ((stringp v) v) ((eq v :null) "null") (t (format "%s" v)))))))
 
 (defun eas-scale--d3-time-format (format)
   "Translate d3 time FORMAT to `format-time-string' (they mostly agree)."

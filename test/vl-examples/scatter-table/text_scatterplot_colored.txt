@@ -1,0 +1,16 @@
+Miles_per_Gallon
+50┤┈┈┈┈┈┈┈┈┈┈┈┈J┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈  Origin
+  │         EE  J                                   ● Europe
+40┤┈┈┈┈┈┈┈┈┈┈┈JUJE┈U┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈  ● Japan
+  │           JUJJEUJJ                              ● USA
+30┤┈┈┈┈┈┈┈┈┈┈JJUJEEUJJJ┈┈┈┈┈J┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+  │         EUE EJUUUU U J
+  │          EU EEUUUUJUUUJU
+20┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈UUUUUEU┈UUUUUUUU┈U┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+  │              U    UUU E UEUUUUUUUUU UU   UUUU
+10┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈U┈UU┈┈U┈UUUUUU┈U┈┈
+  │
+  │
+ 0└┬────────┬─────────┬─────────┬─────────┬───────
+   0        50       100       150       200
+                      Horsepower

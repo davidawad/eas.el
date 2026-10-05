@@ -29,6 +29,7 @@
 (require 'eas-compile-scales)
 (require 'eas-bins)
 (require 'eas-facet)
+(require 'eas-polar)
 
 (defun eas-place-natural-size (group metrics)
   "Set GROUP's natural :w and :h from its spec and scales under METRICS."
@@ -45,8 +46,19 @@
                    (cond ((numberp spec) spec)
                          ;; Vega-Lite: step times the scale's band space.
                          (n (* step (max 1 (eas-bins-band-space scale n))))
+                         ;; Vega-Lite: an unencoded position gets one discrete step.
+                         ((and (null scale) (not text) (eas-place--unencoded-p group (nth 2 dim))) step)
                          (text (* (nth 4 dim) (if (eq (car dim) :w) cw ch)))
                          (t (plist-get metrics (nth 3 dim)))))))))
+
+(defun eas-place--unencoded-p (group channel)
+  "Non-nil when no unit of GROUP encodes position CHANNEL (nor its partner).
+Polar units have no position channels and keep the view size."
+  (let ((partner (if (eq channel :x) :x2 :y2)))
+    (seq-every-p (lambda (u) (let ((enc (plist-get u :encoding)))
+                               (not (or (plist-get enc channel) (plist-get enc partner)
+                                        (eas-polar-unit-p u)))))
+                 (plist-get group :units))))
 
 (defun eas-place--local-scale (group channel)
   "GROUP's CHANNEL scale mapped onto its plot with the origin at 0,0."

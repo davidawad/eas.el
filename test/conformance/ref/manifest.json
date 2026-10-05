@@ -1,7 +1,5 @@
 {
-  "generator": "bin/chart build SPEC --out ref/NAME.png (chart 0.1.0, vl-convert-rs, Vega-Lite 6.4.1, default theme)",
-  "spec_hash": "eas-conformance-spec-hash: sha256 of the spec's canonical JSON without usermeta",
-  "tz": "America/Chicago",
+  "generator": "bin/chart build SPEC --out ref/NAME.png (vl-convert, default theme), via eas-conformance-update-refs",
   "refs": {
     "composition-hconcat": {
       "png_sha256": "a9186eb457d430482d4c0560174ce3453187dbbcd956027eca7143a3b155dd33",
@@ -14,6 +12,10 @@
     "encoding-aggregate": {
       "png_sha256": "9186f51f6945a793812e12e324d3580b502dbc55194c072a567910f1565081c8",
       "spec_sha256": "1359d0e1b0e1bb6109af1d5166520fe76556eb56968493ecf031d02e5a6e1930"
+    },
+    "encoding-angle": {
+      "png_sha256": "aebba0ac6549124080577dba85a37858eb84869f66a7153c00b5e6c44020bf48",
+      "spec_sha256": "4d7f052773d0cfbd6285319e4ebe0b69aade23a754bbfb6a88abd226f9e91086"
     },
     "encoding-bin": {
       "png_sha256": "d12ba0455f7efbd8e7d7ecf7ac50b0b1c22bf8eed5f942c3fe0b088ece2498aa",
@@ -34,6 +36,10 @@
     "encoding-href": {
       "png_sha256": "3e1a7734446efeacc699a3187c882b2fd3dbb7019a669c4bf12236e7611a03e1",
       "spec_sha256": "0011ca36a1ff312c94c615fa0327429459d3efa368f0964adcf8e9958a67cf56"
+    },
+    "encoding-offset": {
+      "png_sha256": "d92c37882ab9f371ee2b3fff50b6e5bcd474a041cb843445ab777796cdcb18fd",
+      "spec_sha256": "0278fa42f9e66b8edd368066c3dc9b239d94765cc226cf94bb6a7339ff38f3c6"
     },
     "encoding-opacity": {
       "png_sha256": "01178d17da7d100aee7785c3517c20ac2be29f30d6b3033b750955e0f37e4330",
@@ -203,5 +209,8 @@
       "png_sha256": "8eac0b5eed474ac6df007889913581952d8ad1cb9e49d902ff1028e8f4032cf7",
       "spec_sha256": "d8da8c547c89cfaf188886cfba84e26664636093060be6a96797fde30797e5b9"
     }
-  }
+  },
+  "spec_hash": "eas-conformance-spec-hash: sha256 of the spec's canonical JSON without usermeta",
+  "tz": "America/Chicago"
 }
+

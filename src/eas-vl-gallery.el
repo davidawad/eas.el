@@ -241,7 +241,7 @@ Return a list of failure strings (nil when it holds its status).  The
 image comparison runs only where a rasterizer is available."
   (let* ((entry (plist-get (eas-vl-gallery-status group) (eas-key name)))
          (status (plist-get entry :status))
-         (threshold (plist-get entry :threshold))
+         (threshold (or (plist-get entry :threshold) 0.05))
          (r (and entry (not (equal status "unsupported"))
                  (eas-vl-gallery-run group name (eas-vl-gallery-rasterizer-p))))
          problems)
@@ -251,11 +251,55 @@ image comparison runs only where a rasterizer is available."
      ((not (plist-get r :ok))
       (push (format "%s: %s" name (plist-get (plist-get r :error) :message)) problems))
      (t
-      (when (and threshold (plist-get r :ratio) (> (plist-get r :ratio) threshold))
+      (when (and (equal status "pass") threshold (plist-get r :ratio) (> (plist-get r :ratio) threshold))
         (push (format "%s: ratio %.4f > %s" name (plist-get r :ratio) threshold) problems))
       (when (and (equal status "pass") (plist-get r :overlaps))
         (push (format "%s: %s" name (string-join (plist-get r :overlaps) "; ")) problems))))
     problems))
+
+(defconst eas-vl-gallery-default-threshold 0.03
+  "Differing-pixel ratio a new example passes within, unless its status.json
+entry records another threshold with a reason.")
+
+(defun eas-vl-gallery--verdict (r threshold)
+  "status.json fields for run result R judged at THRESHOLD."
+  (cond
+   ((not (plist-get r :ok))
+    (list :status "unsupported" :reason (plist-get (plist-get r :error) :message)))
+   ((not (plist-get r :ratio))
+    (list :status "partial" :reason "renders natively; no rasterizer here to compare with the reference"))
+   (t
+    (let* ((ratio (plist-get r :ratio)) (overlaps (plist-get r :overlaps))
+           (ok (and (<= ratio threshold) (null overlaps)))
+           (size (plist-get r :size-delta)))
+      (append (list :status (if ok "pass" "partial")
+                    :reason (format "svg and text render natively at 3 sizes; oracle ratio %.4f (threshold %s)%s%s"
+                                    ratio threshold
+                                    (if (and (vectorp size) (not (equal size [0 0]))) (format ", size delta %S px" size) "")
+                                    (if overlaps (concat "; overlaps: " (string-join overlaps "; ")) ""))
+                    :ratio (/ (round (* ratio 10000)) 10000.0))
+              (list :threshold threshold))))))
+
+(defun eas-vl-gallery-write-status (group &optional names)
+  "Judge examples NAMES (default all) of GROUP against the references and
+record them in GROUP/status.json.  An existing entry keeps its threshold and
+reason fields; the verdict, ratio and a generated reason are rewritten unless
+the entry has a \"note\" (a written reason, kept)."
+  (let ((old (eas-vl-gallery-status group)) (new nil))
+    (dolist (name (eas-vl-gallery-names group))
+      (let* ((prev (plist-get old (eas-key name))))
+        (if (and names (not (member name names)))
+            (when prev (setq new (append new (list (eas-key name) prev))))
+          (let* ((threshold (or (plist-get prev :threshold) eas-vl-gallery-default-threshold))
+                 (v (eas-vl-gallery--verdict (eas-vl-gallery-run group name t) threshold))
+                 (note (plist-get prev :note)))
+            (setq new (append new (list (eas-key name)
+                                        (append (if note (plist-put v :reason (concat note "; " (plist-get v :reason))) v)
+                                                (when note (list :note note))))))))))
+    (with-temp-file (eas-vl-gallery-status-file group)
+      (set-buffer-file-coding-system 'utf-8-unix)
+      (insert (eas-json-pretty new)))
+    new))
 
 ;;; The conformance gallery
 

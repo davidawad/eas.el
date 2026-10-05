@@ -31,7 +31,7 @@
 (defconst eas-spec--view-keys
   '(:$schema :data :mark :encoding :transform :layer :vconcat :hconcat
     :width :height :title :description :name :params :config :autosize
-    :padding :background :resolve :usermeta :x-eas :spacing)
+    :padding :background :resolve :usermeta :x-eas :spacing :projection)
   "Keys a chart/v1 view or composition may carry.")
 
 (defconst eas-spec--marks
@@ -39,7 +39,7 @@
     "arc"
     ;; composite marks, expanded by eas-composite.el (fc-qx1.26)
     "errorbar" "errorband"
-    "trail")
+    "trail" "image")
   "Mark types chart/v1 recognises.")
 
 (defconst eas-spec--mark-keys
@@ -51,7 +51,9 @@
     :radiusOffset :thetaOffset
     ;; distributions (fc-qx1.26)
     :style :cornerRadiusEnd :extent :ticks :rule :median :outliers :box
-    :aria :description :strokeCap :strokeJoin)
+    :aria :description :strokeCap :strokeJoin
+    ;; scatter and table plots (fc-qx1.27)
+    :shape :angle :url)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels
@@ -60,7 +62,9 @@
     :theta :radius
     ;; distributions (fc-qx1.26)
     :shape :row
-    :strokeDash)
+    :strokeDash
+    ;; scatter and table plots (fc-qx1.27)
+    :angle :yOffset :url :longitude :latitude)
   "Encoding channels chart/v1 recognises.")
 
 (defconst eas-spec--channel-def-keys
@@ -89,8 +93,12 @@
     :x-eas:transform
     ;; distributions (fc-qx1.26)
     :flatten :density
-    :pivot)
+    :pivot
+    :stack)
   "Transform keys chart/v1 recognises; the first key present names it.")
+
+(defconst eas-spec--projections nil
+  "Map projections drawn natively: none (a projection is unsupported).")
 
 (defconst eas-spec--select-keys
   '(:type :on :nearest :fields :encodings :clear :toggle :resolve :mark)
@@ -196,6 +204,10 @@ come back as (:invalid MESSAGE :path P)."
                               do (walk-view child (format "%s/%s/%d" path
                                                           (eas-key-name key) i))))))
                (when (plist-get view :mark) (walk-mark (plist-get view :mark) path))
+               (when-let* ((proj (plist-get view :projection)))
+                 (let ((type (or (and (eas-object-p proj) (plist-get proj :type)) "equalEarth")))
+                   (add (concat "projection/" type) (concat path "/projection")
+                        :unknown (not (member type eas-spec--projections)))))
                (unless (or composite (plist-get view :mark))
                  (bad "A view needs a mark, or a layer, vconcat or hconcat" path)))
              (walk-encoding (plist-get view :encoding) (concat path "/encoding"))

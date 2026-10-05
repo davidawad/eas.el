@@ -19,6 +19,7 @@
 (require 'eas-encode)
 (require 'eas-scheme)
 (require 'eas-bins)
+(require 'eas-compile-aux)
 
 (defun eas-compile--defs (units channel)
   "Return (UNIT . DEF) pairs for CHANNEL across UNITS with a data def."
@@ -27,8 +28,9 @@
            when (and d (eas-object-p d) (or (plist-get d :field) (plist-member d :datum)))
            collect (cons u d)))
 
-(defun eas-compile--values (pairs channel)
-  "Raw values feeding CHANNEL's domain from PAIRS of (UNIT . DEF)."
+(defun eas-compile--values (pairs channel &optional keep-null)
+  "Raw values feeding CHANNEL's domain from PAIRS of (UNIT . DEF).
+With KEEP-NULL, null values count too (discrete domains show them)."
   (let (out)
     (dolist (pair pairs)
       (let* ((u (car pair)) (d (cdr pair)) (enc (plist-get u :encoding))
@@ -43,7 +45,7 @@
             (when (or (memq channel '(:x :y)) (eas-bins-valid-p u row))
               (dolist (k keys)
                 (let ((v (plist-get row k)))
-                  (unless (memq v '(nil :null)) (push v out)))))))))
+                  (unless (or (null v) (and (eq v :null) (not keep-null))) (push v out)))))))))
     (nreverse out)))
 
 (defun eas-compile--scale-type (pairs channel)
@@ -55,11 +57,16 @@
      ((equal (plist-get def :type) "quantitative") "linear")
      ((equal (plist-get def :type) "temporal") "time")
      ((and (memq channel '(:x :y))
-           (seq-some (lambda (p) (member (plist-get (plist-get (car p) :mark) :type) '("bar" "rect" "tick")))
+           (seq-some (lambda (p) (or (member (plist-get (plist-get (car p) :mark) :type) '("bar" "rect" "tick"))
+                                     (eas-compile--offset-p p channel)))
                      pairs))
       "band")
      ((memq channel '(:x :y)) "point")
      (t "ordinal"))))
+
+(defun eas-compile--offset-p (pair channel)
+  "Non-nil when PAIR's unit nests an offset (xOffset/yOffset) in CHANNEL."
+  (plist-get (plist-get (car pair) :encoding) (if (eq channel :x) :xOffset :yOffset)))
 
 (defun eas-compile--less (a b)
   "Ascending order for mixed domain values A and B."
@@ -74,6 +81,7 @@
       ;; An explicit scale domain is the domain.
       ((vectorp (plist-get (plist-get def :scale) :domain)) (plist-get (plist-get def :scale) :domain))
       ((eq sort :null) unique)
+      ((and (vectorp sort) (eas-compile-aux-timeunit-sort def sort (sort unique #'eas-compile--less))))
       ((vectorp sort) (append (seq-filter (lambda (v) (member v unique)) sort)
                               (seq-remove (lambda (v) (seq-contains-p sort v)) unique)))
       ((equal sort "descending") (reverse (sort unique #'eas-compile--less)))
@@ -150,16 +158,25 @@ or line in PAIRS; Vega-Lite does not extend dimension scales to zero."
 ZOOM is a [LO HI] domain from view state, or nil."
   (when-let* ((pairs (eas-compile--defs units channel)))
     (let* ((type (eas-compile--scale-type pairs channel))
-           (values (eas-compile--values pairs channel))
+           ;; Vega-Lite keeps null as a category of a discrete domain.
+           (values (eas-compile--values pairs channel (member type '("band" "point"))))
            (sp (plist-get (cdar pairs) :scale)))
       (if (member type '("band" "point"))
           (let* ((only (lambda (type) (seq-every-p (lambda (p) (equal (plist-get (plist-get (car p) :mark) :type) type))
                                                    pairs)))
-                 (rect (funcall only "rect"))
+                 ;; A layer takes its band paddings from its first band mark.
+                 (rect (equal (seq-some (lambda (p) (car (member (plist-get (plist-get (car p) :mark) :type)
+                                                                 '("bar" "rect" "tick"))))
+                                        pairs)
+                              "rect"))
                  ;; Vega-Lite: rect bands touch; tick bands pad 0.25 inside, 0.125 outside.
                  (tick (and (equal type "band") (funcall only "tick")))
-                 (inner (or (plist-get sp :paddingInner) (plist-get sp :padding) (cond (rect 0) (tick 0.25))))
-                 (outer (or (plist-get sp :paddingOuter) (plist-get sp :padding) (cond (rect 0) (tick 0.125)))))
+                 ;; and bands holding a nested offset pad 0.2 both ways.
+                 (nested (and (equal type "band") (seq-some (lambda (p) (eas-compile--offset-p p channel)) pairs)))
+                 (inner (or (plist-get sp :paddingInner) (plist-get sp :padding)
+                            (cond (rect 0) (tick 0.25) (nested 0.2))))
+                 (outer (or (plist-get sp :paddingOuter) (plist-get sp :padding)
+                            (cond (rect 0) (tick 0.125) (nested 0.2)))))
             (append (eas-scale-band type (eas-compile--discrete-domain pairs values) [0 1] inner outer)
                     (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)))
         (eas-compile--continuous type pairs channel values zoom)))))
@@ -230,7 +247,9 @@ Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
            (sp (plist-get (cdar pairs) :scale))
            (range (cond ((and (vectorp (plist-get sp :range)) (= (length (plist-get sp :range)) 2)) (plist-get sp :range))
                         ((and (eq channel :size) (equal (plist-get (plist-get (caar pairs) :mark) :type) "trail")) [1 4])
-                        (t range))))
+                        (t range)))
+           (range (vector (or (plist-get sp :rangeMin) (aref range 0))
+                          (or (plist-get sp :rangeMax) (aref range 1)))))
       (eas-scale-continuous "linear" (if (eq channel :size) 0 (if nums (apply #'min nums) 0))
                               (if nums (apply #'max nums) 1) range :field (plist-get (cdar pairs) :field)))))
 

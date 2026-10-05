@@ -21,6 +21,7 @@
 (require 'eas-scale)
 (require 'eas-encode)
 (require 'eas-layout)
+(require 'eas-legend-extra)
 
 (declare-function eas-expr--string "eas-expr")
 
@@ -43,17 +44,26 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
         (when (equal (plist-get legend :orient) "none")
           (setq base (append base (list :orient "none" :legendX (or (plist-get legend :legendX) 0)
                                         :legendY (or (plist-get legend :legendY) 0)))))
+        (when (stringp (plist-get legend :direction))
+          (setq base (append base (list :direction (plist-get legend :direction)))))
+        (when (numberp (plist-get legend :clipHeight))
+          (setq base (append base (list :clip-height (plist-get legend :clipHeight)))))
+        (when (numberp (plist-get legend :gradientLength))
+          (setq base (append base (list :gradient-length (plist-get legend :gradientLength)))))
         (pcase (plist-get scale :type)
           ("ordinal"
            (append base (list :type "symbol"
                               :entries (vconcat (seq-map (lambda (v)
-                                                           (if (eq channel :strokeDash)
-                                                               (list :value v :label (eas-expr--string v)
-                                                                     :dash (eas-scale-apply scale v)
-                                                                     :color (or (plist-get style :stroke) (plist-get style :fill)
-                                                                                eas-legend-default-color))
-                                                             (list :value v :label (eas-expr--string v)
-                                                                   :color (eas-scale-apply scale v))))
+                                                           (append
+                                                            (if (eq channel :strokeDash)
+                                                                (list :value v :label (eas-expr--string v)
+                                                                      :dash (eas-scale-apply scale v)
+                                                                      :color (or (plist-get style :stroke) (plist-get style :fill)
+                                                                                 eas-legend-default-color))
+                                                              (list :value v :label (eas-expr--string v)
+                                                                    :color (eas-scale-apply scale v)))
+                                                            (when-let* ((ss (plist-get spec :shape-scale)))
+                                                              (list :shape (eas-scale-apply ss v)))))
                                                          (plist-get scale :domain))))))
           ("sequential"
            (append base (list :type "gradient" :stops (plist-get scale :range) :domain (plist-get scale :domain)
@@ -78,7 +88,7 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
   "Gradient length: one row per label in text, clamp(plot height, 64, 200) in svg."
   (if (eas-layout-text-p metrics)
       (* (max 5 (length (plist-get legend :entries))) (plist-get metrics :row))
-    (max 64 (min 200 (or (plist-get legend :plot-h) 200)))))
+    (or (plist-get legend :gradient-length) (max 64 (min 200 (or (plist-get legend :plot-h) 200))))))
 
 (defun eas-legend--gradient-entries (legend metrics)
   "LEGEND's gradient labels: d3 ticks, as many as Vega asks for its length."
@@ -159,12 +169,19 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
        (list :size (or (plist-get e :size) (plist-get metrics :symbol-size))
              :fill (cond (stroked "transparent")
                          ((member channel '("color" "fill")) (plist-get e :color))
+                         ;; Vega-Lite draws other legends' symbols in black when color maps a field.
+                         ((plist-get style :field-color) "black")
                          (t (plist-get style :fill)))
              :stroke (cond (stroked (plist-get e :color))
-                           ((member channel '("size" "opacity")) "transparent")
+                           ((member channel '("size" "opacity"))
+                            (if (and (plist-get style :field-color) (plist-get style :stroke)) (plist-get style :stroke)
+                              "transparent"))
                            (t (plist-get style :stroke)))
              :stroke-width sw
              :opacity (or (plist-get e :opacity) (plist-get style :opacity) 1))
+       (when (and (not stroked) (not (member channel '("color" "fill"))) (plist-get style :field-color)
+                  (plist-get style :opacity))
+         (list :fill-opacity (plist-get style :opacity)))
        (when (plist-get e :dash) (list :dash (plist-get e :dash)))))))
 
 (defun eas-legend--title (legend x y metrics)
@@ -179,9 +196,12 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
   (let* ((fs (plist-get metrics :legend-label-size))
          (title (eas-legend--title legend x y metrics))
          (looks (mapcar (lambda (e) (eas-legend--symbol legend e metrics)) (plist-get legend :entries)))
-         (sizes (mapcar (lambda (s) (max (ceiling (+ (sqrt (plist-get s :size)) (plist-get s :stroke-width))) fs))
-                        looks))
-         (offset (apply #'max 0 sizes))
+         (widths (mapcar (lambda (s) (max (ceiling (+ (sqrt (plist-get s :size)) (plist-get s :stroke-width))) fs))
+                         looks))
+         ;; legend.clipHeight caps an entry's height; its symbol is clipped.
+         (clip (plist-get legend :clip-height))
+         (sizes (if clip (mapcar (lambda (w) (min w clip)) widths) widths))
+         (offset (apply #'max 0 widths))
          (ey (cdr title)) (prev-y2 nil) (box nil)
          (entries
           (cl-loop
@@ -192,12 +212,14 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
                   (cy (/ size 2.0))
                   (lbox (eas-layout-text-bounds metrics (plist-get e :label) fs (+ offset (plist-get metrics :legend-label-offset))
                                                   cy "left" "middle"))
-                  (y1 (min (aref lbox 1) (- cy r grow))) (y2 (max (aref lbox 3) (+ cy r grow)))
+                  (half (if clip (min (+ r grow) (/ clip 2.0)) (+ r grow)))
+                  (y1 (min (aref lbox 1) (- cy half))) (y2 (max (aref lbox 3) (+ cy half)))
                   (x2 (max (aref lbox 2) (+ (/ offset 2.0) r grow))))
              (when prev-y2 (setq ey (+ ey prev-y2 (plist-get metrics :legend-row-pad) (if (< y1 0) (ceiling (- y1)) 0))))
              (setq prev-y2 (ceiling y2)
                    box (eas-layout-union box (vector x (+ ey y1) (+ x x2) (+ ey y2))))
-             (append s e (list :sx (+ x (/ offset 2.0)) :sy (+ ey cy)
+             (append s e (when clip (list :clip (vector x (+ ey cy (- half)) offset (* 2 half))))
+                     (list :sx (+ x (/ offset 2.0)) :sy (+ ey cy)
                                :lx (+ x offset (plist-get metrics :legend-label-offset)) :ly (+ ey cy)
                                :bounds (vector x ey (max offset x2) size)))))))
     (when (car title)
@@ -249,6 +271,7 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
 (defun eas-legend-place (legend x y metrics)
   "Return LEGEND with geometry, its top-left corner at X Y."
   (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
+        ((eas-legend-extra-horizontal-p legend metrics) (eas-legend-extra-place-horizontal legend x y metrics))
         ((equal (plist-get legend :type) "gradient") (eas-legend--place-gradient legend x y metrics))
         (t (eas-legend--place-symbols legend x y metrics))))
 

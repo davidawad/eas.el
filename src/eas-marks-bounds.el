@@ -31,7 +31,7 @@
 
 (defun eas-marks-legend-style (unit _metrics)
   "UNIT's constant look that legend symbols copy.
-A plist (:fill :stroke :stroke-width :opacity :stroked)."
+A plist (:fill :stroke :stroke-width :opacity :stroked :field-color)."
   (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type))
          (stroked (or (member type '("line" "rule" "trail"))
                       (and (equal type "point") (not (eq (plist-get mark :filled) t)))))
@@ -43,7 +43,11 @@ A plist (:fill :stroke :stroke-width :opacity :stroked)."
           :stroke-width (plist-get mark :strokeWidth)
           :opacity (or (funcall value :opacity) (plist-get mark :opacity)
                        (and (member type '("point" "circle" "square" "tick")) (not (plist-get unit :aggregated)) 0.7))
-          :stroked stroked)
+          :stroked stroked
+          ;; Vega-Lite draws other legends' symbols in black when color maps a field.
+          :field-color (and (seq-some (lambda (ch) (let ((d (plist-get enc ch))) (and (eas-object-p d) (plist-get d :field))))
+                                      '(:color :fill))
+                            t))
      ;; Vega-Lite strokes a trail's legends: color as rings, size as ring widths.
      (when (equal type "trail") (list :trail t)))))
 
@@ -72,7 +76,7 @@ A plist (:fill :stroke :stroke-width :opacity :stroked)."
   "Vega's bounds of ITEM of mark TYPE, or nil.
 Transparent items count too, so hover and selection never move layout."
   (pcase type
-      ((or "bar" "rect")
+      ((or "bar" "rect" "image")
        (eas-marks--grow (vector (plist-get item :x) (plist-get item :y)
                                   (+ (plist-get item :x) (plist-get item :w)) (+ (plist-get item :y) (plist-get item :h)))
                           item))

@@ -1,0 +1,16 @@
+             Horror┤                      ●
+             Comedy┤                       ●
+    Romantic Comedy┤                       ●
+             Action┤                        ●
+Concert/Performance┤                         ●
+          Adventure┤                         ●
+                   │
+  Thriller/Suspense┤                         ●
+            Musical┤                         ●
+               null┤                          ●
+              Drama┤                           ●
+       Black Comedy┤                           ●
+            Western┤                           ●
+        Documentary┤                           ●
+                   └┬───────────────────┬───────────────────
+                  Poor              Neutral               Gr

@@ -1,0 +1,16 @@
+            Drought┤●● ●● ●● ●●●●●●●●●  Annual Global Deaths
+         Earthquake┤●●●●●●●●●●●●●●●●●●  ● 0
+                   │                    ● 1,000,000
+           Epidemic┤●●●●●●●●●●●●●●●●●●  ● 2,000,000
+Extreme temperature┤     ● ●●●●●●●●●●●  ● 3,000,000
+    Extreme weather┤●●●●●●●●●●●●●●●●●●
+                   │
+              Flood┤●●  ●●●●●●●●●●●●●●
+          Landslide┤ ● ●●●●●●●●●●●●●●●
+Mass movement (dry)┤●●●  ●  ●●● ●●●●●●
+                   │
+  Volcanic activity┤●●● ●●●●●●●●●●●●●●
+           Wildfire┤ ●●●● ●●● ●●●●●●●●
+                   └──┬────────┬──────
+                    .913     .971
+                           Year

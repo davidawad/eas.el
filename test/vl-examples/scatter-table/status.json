@@ -1,0 +1,134 @@
+{
+  "circle": {
+    "ratio": 0.0026,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0026 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "circle_binned": {
+    "ratio": 0.0078,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0078 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "circle_bubble_health_income": {
+    "ratio": 0.0022,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0022 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "circle_custom_tick_labels": {
+    "ratio": 0.0004,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0004 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "circle_github_punchcard": {
+    "ratio": 0.0005,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0005 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "circle_natural_disasters": {
+    "ratio": 0.0254,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0254 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "layer_text_heatmap": {
+    "ratio": 0.0289,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0289 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "point_2d": {
+    "ratio": 0.0026,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0026 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "point_angle_windvector": {
+    "note": "needs the equalEarth projection, which is not implemented natively",
+    "reason": "needs the equalEarth projection, which is not implemented natively; projection/equalEarth is not in the native subset; the chart falls back to a static image",
+    "status": "unsupported"
+  },
+  "point_bubble": {
+    "ratio": 0.0023,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0023 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "point_color_with_shape": {
+    "ratio": 0.0233,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0233 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "point_invalid_color": {
+    "ratio": 0.022,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0220 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "point_offset_random": {
+    "note": "Vega's random() is Math.random, so the reference's jitter cannot be reproduced; native uses a deterministic hash of the row (positions differ, the layout matches)",
+    "ratio": 0.0646,
+    "reason": "Vega's random() is Math.random, so the reference's jitter cannot be reproduced; native uses a deterministic hash of the row (positions differ, the layout matches); svg and text render natively at 3 sizes; oracle ratio 0.0646 (threshold 0.03)",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "rect_binned_heatmap": {
+    "ratio": 0.0032,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0032 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "rect_heatmap": {
+    "ratio": 0.0257,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0257 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "rect_heatmap_weather": {
+    "ratio": 0.0083,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0083 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "rect_lasagna": {
+    "note": "labelOverlap false keeps every label, so at 320x200 the yearly labels collide as they would in Vega",
+    "ratio": 0.0069,
+    "reason": "labelOverlap false keeps every label, so at 320x200 the yearly labels collide as they would in Vega; svg and text render natively at 3 sizes; oracle ratio 0.0069 (threshold 0.03); overlaps: 320x200: x axis labels of view main collide",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "rect_mosaic_labelled_with_offset": {
+    "note": "needs the stack transform (integrated with fc-qx1.25's)",
+    "reason": "needs the stack transform (integrated with fc-qx1.25's); Transform stack is not in the native subset",
+    "status": "unsupported"
+  },
+  "scatter_image": {
+    "ratio": 0.0256,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0256 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "text_scatterplot_colored": {
+    "ratio": 0.0034,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0034 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "tick_dot": {
+    "ratio": 0.0083,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0083 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "tick_strip": {
+    "ratio": 0.0,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  }
+}

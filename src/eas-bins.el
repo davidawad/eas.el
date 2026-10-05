@@ -111,7 +111,9 @@ LOCAL-SCALE maps a channel to GROUP's scale over its unplaced plot."
                                                        (plist-get (plist-get (caar pairs) :encoding) :y)
                                                        (plist-get group :h)))))
              (step (if steps (apply #'min steps) 20)))
-        (vector (aref (plist-get size :range) 0) (expt (* 0.95 step) 2))))))
+        (let ((sp (plist-get (cdar pairs) :scale)))
+          (vector (or (plist-get sp :rangeMin) (aref (plist-get size :range) 0))
+                  (or (plist-get sp :rangeMax) (expt (* 0.95 step) 2))))))))
 
 (defun eas-bins-pad-log (domain frac nice)
   "Log DOMAIN widened by FRAC about its centre in log space, as Vega's padDomain.

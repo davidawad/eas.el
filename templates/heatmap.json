@@ -1,0 +1,111 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "heatmap",
+    "version": "1.0.0",
+    "doc": "A labeled numeric matrix (e.g. correlations) as coloured cells on a diverging scale centred on zero, values printed.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "long rows {row, column, value} in display order; financial-chart's matrix adapter lowers a matrix to these"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A labeled numeric matrix (e.g. correlations) as coloured cells on a diverging scale centred on zero, values printed.",
+        "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"
+      },
+      "labels": {
+        "type": "boolean",
+        "default": true,
+        "doc": "print each cell's value"
+      }
+    },
+    "example": "examples/heatmap.data.json"
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "step": 48
+  },
+  "height": {
+    "step": 24
+  },
+  "data": {
+    "name": "data"
+  },
+  "encoding": {
+    "x": {
+      "field": "column",
+      "type": "nominal",
+      "sort": null,
+      "title": null,
+      "axis": {
+        "orient": "top"
+      }
+    },
+    "y": {
+      "field": "row",
+      "type": "nominal",
+      "sort": null,
+      "title": null
+    }
+  },
+  "layer": [
+    {
+      "name": "cells",
+      "mark": "rect",
+      "encoding": {
+        "color": {
+          "field": "value",
+          "type": "quantitative",
+          "title": null,
+          "scale": {
+            "scheme": "redyellowgreen",
+            "domainMid": 0
+          }
+        },
+        "tooltip": [
+          {
+            "field": "row",
+            "type": "nominal"
+          },
+          {
+            "field": "column",
+            "type": "nominal"
+          },
+          {
+            "field": "value",
+            "type": "quantitative",
+            "format": ".2f"
+          }
+        ]
+      }
+    },
+    {
+      "x-eas:when": "labels",
+      "spec": {
+        "name": "values",
+        "mark": {
+          "type": "text",
+          "fontSize": 10
+        },
+        "encoding": {
+          "text": {
+            "field": "value",
+            "type": "quantitative",
+            "format": ".2f"
+          }
+        }
+      }
+    }
+  ]
+}

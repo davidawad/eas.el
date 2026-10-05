@@ -1,0 +1,127 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "sparkline",
+    "version": "1.0.0",
+    "doc": "A word-sized line with no axes, for tables and mode lines; the last point is marked.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows {x, y}, oldest first: x a number (an index or epoch ms) or date, y the value; financial-chart's series adapter lowers a series to these"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A word-sized line with no axes, for tables and mode lines; the last point is marked.",
+        "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"
+      },
+      "x_type": {
+        "enum": [
+          "quantitative",
+          "temporal"
+        ],
+        "default": "quantitative",
+        "doc": "temporal when x holds dates or epoch milliseconds"
+      },
+      "x_title": {
+        "type": "string",
+        "default": "x"
+      },
+      "y_title": {
+        "type": "string",
+        "default": "value",
+        "doc": "y-axis title, e.g. the unit"
+      }
+    },
+    "example": "examples/area.data.json"
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": 120,
+  "height": 24,
+  "data": {
+    "name": "data"
+  },
+  "encoding": {
+    "x": {
+      "field": "x",
+      "type": {
+        "x-eas:slot": "x_type"
+      },
+      "title": {
+        "x-eas:slot": "x_title"
+      },
+      "axis": null
+    },
+    "y": {
+      "field": "y",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {
+        "zero": false
+      }
+    },
+    "tooltip": [
+      {
+        "field": "x",
+        "type": {
+          "x-eas:slot": "x_type"
+        },
+        "title": {
+          "x-eas:slot": "x_title"
+        }
+      },
+      {
+        "field": "y",
+        "type": "quantitative",
+        "title": {
+          "x-eas:slot": "y_title"
+        }
+      }
+    ]
+  },
+  "layer": [
+    {
+      "name": "series",
+      "mark": {
+        "type": "line",
+        "color": "#4c78a8"
+      }
+    },
+    {
+      "name": "last",
+      "transform": [
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "n"
+            }
+          ],
+          "sort": [
+            {
+              "field": "x",
+              "order": "descending"
+            }
+          ]
+        },
+        {
+          "filter": "datum.n == 1"
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "color": "#4c78a8"
+      }
+    }
+  ]
+}

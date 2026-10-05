@@ -1,0 +1,148 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "multi",
+    "version": "1.0.0",
+    "doc": "Named series on one shared scale for comparison, optionally rebased so each starts at NORMALIZE.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows {series, x, y}, each series oldest first; financial-chart's multi-series adapter lowers (LABEL . SERIES) entries to these"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "Named series on one shared scale for comparison, optionally rebased so each starts at NORMALIZE.",
+        "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"
+      },
+      "normalize": {
+        "type": "number",
+        "default": 0,
+        "doc": "rebase every series to start at this value (100 for an index); 0 plots raw values"
+      },
+      "x_type": {
+        "enum": [
+          "quantitative",
+          "temporal"
+        ],
+        "default": "quantitative",
+        "doc": "temporal when x holds dates or epoch milliseconds"
+      },
+      "x_title": {
+        "type": "string",
+        "default": "x"
+      },
+      "y_title": {
+        "type": "string",
+        "default": "value",
+        "doc": "y-axis title, e.g. the unit"
+      }
+    },
+    "example": "examples/multi.data.json"
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": 400,
+  "height": 200,
+  "data": {
+    "name": "data"
+  },
+  "params": [
+    {
+      "name": "normalize",
+      "value": {
+        "x-eas:slot": "normalize"
+      }
+    }
+  ],
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "first_value",
+          "field": "y",
+          "as": "first"
+        }
+      ],
+      "groupby": [
+        "series"
+      ],
+      "sort": [
+        {
+          "field": "x"
+        }
+      ],
+      "frame": [
+        null,
+        null
+      ]
+    },
+    {
+      "calculate": "normalize > 0 ? normalize * datum.y / datum.first : datum.y",
+      "as": "value"
+    }
+  ],
+  "name": "series",
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "x",
+      "type": {
+        "x-eas:slot": "x_type"
+      },
+      "title": {
+        "x-eas:slot": "x_title"
+      }
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "title": {
+        "x-eas:slot": "y_title"
+      },
+      "scale": {
+        "zero": false
+      }
+    },
+    "color": {
+      "field": "series",
+      "type": "nominal",
+      "sort": null,
+      "title": null
+    },
+    "tooltip": [
+      {
+        "field": "series",
+        "type": "nominal"
+      },
+      {
+        "field": "x",
+        "type": {
+          "x-eas:slot": "x_type"
+        },
+        "title": {
+          "x-eas:slot": "x_title"
+        }
+      },
+      {
+        "field": "y",
+        "type": "quantitative",
+        "title": "value"
+      },
+      {
+        "field": "value",
+        "type": "quantitative",
+        "format": ".2f",
+        "title": "plotted"
+      }
+    ]
+  }
+}

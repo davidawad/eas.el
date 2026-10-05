@@ -120,6 +120,13 @@ Templates are JSON files in `templates/`, one per kind, each with a
 golden fixture. Adding a kind means writing one file. Lisp code is
 needed only if the kind needs a new transform.
 
+A slot that holds an array can expand into views:
+`{"x-eas:each": SLOT, "spec": X}` in any array becomes one X per item,
+and inside X `{"x-eas:item": KEY, "default": D}` reads the item (`"."`
+is the item itself; a missing KEY with no default drops its key). The
+`ohlc` template draws one overlay layer and one pane per entry of its
+`indicators` and `oscillators` slots this way (`fc-qx1.36`).
+
 ### L4 compile: scene/v1
 
 `compile(resolved, rows, size, view-state)` produces the scene graph,
@@ -344,9 +351,13 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
   conformance oracle, never a runtime dependency (section 6). Same IR,
   same envelope, same reason codes.
 - financial-chart.el: its public API (`financial-chart-plot`, kinds,
-  presets, `bin/financial-chart`) stays unchanged. Internally each kind
-  is routed to a template once that kind passes parity. The old
-  renderer stays until then.
+  presets, `bin/financial-chart`) stays unchanged. Every kind has a
+  template (`fc-qx1.36`), and `financial-chart-eas-parity` checks as
+  data that the template plots the kind's own numbers. With
+  `financial-chart-eas-route` set, `financial-chart-plot` draws the
+  kinds at parity (or the listed kinds) with their templates; it is nil
+  by default, so the old renderers and their goldens stay until the
+  switch is made.
 - health-charts.el already proves the "Lisp never draws, fill a
   template" model with Vega-Lite and gnuplot templates. It converges on
   eas templates (`fc-qx1.20`). The deferred medical presets (`fc-8yx`)

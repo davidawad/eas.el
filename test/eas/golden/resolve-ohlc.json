@@ -11,49 +11,54 @@
     ]
   },
   "description": "Candlesticks from OHLC bars: a low-high wick and an open-close body per bar, up bars green.",
-  "encoding": {
-    "color": {
-      "condition": {"test": "datum.open <= datum.close", "value": "#06982d"},
-      "value": "#ae1325"
-    },
-    "tooltip": [
-      {"field": "time", "title": "date", "type": "temporal"},
-      {"field": "open", "type": "quantitative"},
-      {"field": "high", "type": "quantitative"},
-      {"field": "low", "type": "quantitative"},
-      {"field": "close", "type": "quantitative"}
-    ],
-    "x": {"field": "time", "title": "date", "type": "temporal"}
-  },
-  "height": 200,
-  "layer": [
-    {
-      "encoding": {
-        "y": {
-          "field": "low",
-          "scale": {"zero": false},
-          "title": "price",
-          "type": "quantitative"
-        },
-        "y2": {"field": "high"}
-      },
-      "mark": {"type": "rule"},
-      "name": "wicks"
-    },
-    {
-      "encoding": {
-        "y": {
-          "field": "open",
-          "scale": {"zero": false},
-          "title": "price",
-          "type": "quantitative"
-        },
-        "y2": {"field": "close"}
-      },
-      "mark": {"type": "bar"},
-      "name": "candles"
-    }
-  ],
   "title": "Daily bars",
-  "width": 400
+  "vconcat": [
+    {
+      "encoding": {
+        "color": {
+          "condition": {"test": "datum.open <= datum.close", "value": "#06982d"},
+          "value": "#ae1325"
+        },
+        "tooltip": [
+          {"field": "time", "title": "date", "type": "temporal"},
+          {"field": "open", "type": "quantitative"},
+          {"field": "high", "type": "quantitative"},
+          {"field": "low", "type": "quantitative"},
+          {"field": "close", "type": "quantitative"}
+        ],
+        "x": {"field": "time", "title": "date", "type": "temporal"}
+      },
+      "height": 200,
+      "layer": [
+        {
+          "encoding": {
+            "y": {
+              "field": "low",
+              "scale": {"zero": false},
+              "title": "price",
+              "type": "quantitative"
+            },
+            "y2": {"field": "high"}
+          },
+          "mark": {"type": "rule"},
+          "name": "wicks"
+        },
+        {
+          "encoding": {
+            "y": {
+              "field": "open",
+              "scale": {"zero": false},
+              "title": "price",
+              "type": "quantitative"
+            },
+            "y2": {"field": "close"}
+          },
+          "mark": {"type": "bar"},
+          "name": "candles"
+        }
+      ],
+      "name": "price",
+      "width": 400
+    }
+  ]
 }

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "series-line",
+    "version": "1.0.0",
+    "doc": "One value series as a line (financial-chart's line kind): x an index, number or date.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows {x, y}, oldest first: x a number (an index or epoch ms) or date, y the value; financial-chart's series adapter lowers a series to these"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "One value series as a line (financial-chart's line kind): x an index, number or date.",
+        "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"
+      },
+      "x_type": {
+        "enum": [
+          "quantitative",
+          "temporal"
+        ],
+        "default": "quantitative",
+        "doc": "temporal when x holds dates or epoch milliseconds"
+      },
+      "x_title": {
+        "type": "string",
+        "default": "x"
+      },
+      "y_title": {
+        "type": "string",
+        "default": "value",
+        "doc": "y-axis title, e.g. the unit"
+      },
+      "scale": {
+        "enum": [
+          "linear",
+          "log"
+        ],
+        "default": "linear",
+        "doc": "y scale"
+      }
+    },
+    "example": "examples/area.data.json"
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": 400,
+  "height": 200,
+  "data": {
+    "name": "data"
+  },
+  "mark": {
+    "type": "line",
+    "color": "#4c78a8"
+  },
+  "name": "series",
+  "encoding": {
+    "x": {
+      "field": "x",
+      "type": {
+        "x-eas:slot": "x_type"
+      },
+      "title": {
+        "x-eas:slot": "x_title"
+      }
+    },
+    "y": {
+      "field": "y",
+      "type": "quantitative",
+      "title": {
+        "x-eas:slot": "y_title"
+      },
+      "scale": {
+        "type": {
+          "x-eas:slot": "scale"
+        },
+        "zero": false
+      }
+    },
+    "tooltip": [
+      {
+        "field": "x",
+        "type": {
+          "x-eas:slot": "x_type"
+        },
+        "title": {
+          "x-eas:slot": "x_title"
+        }
+      },
+      {
+        "field": "y",
+        "type": "quantitative",
+        "title": {
+          "x-eas:slot": "y_title"
+        }
+      }
+    ]
+  }
+}

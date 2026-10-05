@@ -1,0 +1,30 @@
+{
+  "title": "Return correlation",
+  "data": [
+    {"row": "SPY", "column": "SPY", "value": 1.0},
+    {"row": "SPY", "column": "QQQ", "value": 0.84},
+    {"row": "SPY", "column": "TLT", "value": -0.26},
+    {"row": "SPY", "column": "GLD", "value": 0.03},
+    {"row": "SPY", "column": "USO", "value": 0.22},
+    {"row": "QQQ", "column": "SPY", "value": 0.84},
+    {"row": "QQQ", "column": "QQQ", "value": 1.0},
+    {"row": "QQQ", "column": "TLT", "value": -0.18},
+    {"row": "QQQ", "column": "GLD", "value": -0.04},
+    {"row": "QQQ", "column": "USO", "value": 0.17},
+    {"row": "TLT", "column": "SPY", "value": -0.26},
+    {"row": "TLT", "column": "QQQ", "value": -0.18},
+    {"row": "TLT", "column": "TLT", "value": 1.0},
+    {"row": "TLT", "column": "GLD", "value": 0.12},
+    {"row": "TLT", "column": "USO", "value": -0.31},
+    {"row": "GLD", "column": "SPY", "value": 0.03},
+    {"row": "GLD", "column": "QQQ", "value": -0.04},
+    {"row": "GLD", "column": "TLT", "value": 0.12},
+    {"row": "GLD", "column": "GLD", "value": 1.0},
+    {"row": "GLD", "column": "USO", "value": 0.14},
+    {"row": "USO", "column": "SPY", "value": 0.22},
+    {"row": "USO", "column": "QQQ", "value": 0.17},
+    {"row": "USO", "column": "TLT", "value": -0.31},
+    {"row": "USO", "column": "GLD", "value": 0.14},
+    {"row": "USO", "column": "USO", "value": 1.0}
+  ]
+}

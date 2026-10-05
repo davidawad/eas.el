@@ -1,0 +1,148 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "histogram",
+    "version": "1.0.0",
+    "doc": "Distribution of consecutive simple returns of a value series, with the mean marked.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows {x, y}, oldest first: x a number (an index or epoch ms) or date, y the value; financial-chart's series adapter lowers a series to these"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "Distribution of consecutive simple returns of a value series, with the mean marked.",
+        "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"
+      },
+      "bins": {
+        "type": "integer",
+        "default": 20,
+        "doc": "most bins (Vega-Lite maxbins; edges are rounded)"
+      }
+    },
+    "example": "examples/area.data.json"
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": 400,
+  "height": 160,
+  "data": {
+    "name": "data"
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "lag",
+          "field": "y",
+          "as": "prev"
+        }
+      ],
+      "sort": [
+        {
+          "field": "x"
+        }
+      ]
+    },
+    {
+      "filter": "isValid(datum.prev) && isValid(datum.y) && datum.prev != 0"
+    },
+    {
+      "calculate": "datum.y / datum.prev - 1",
+      "as": "return"
+    }
+  ],
+  "layer": [
+    {
+      "name": "bins",
+      "mark": {
+        "type": "bar",
+        "color": "#4c78a8"
+      },
+      "encoding": {
+        "x": {
+          "field": "return",
+          "type": "quantitative",
+          "title": "return",
+          "bin": {
+            "maxbins": {
+              "x-eas:slot": "bins"
+            }
+          },
+          "axis": {
+            "format": ".1%"
+          }
+        },
+        "y": {
+          "aggregate": "count",
+          "type": "quantitative",
+          "title": "periods"
+        }
+      }
+    },
+    {
+      "name": "mean",
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "mean",
+              "field": "return",
+              "as": "mean"
+            },
+            {
+              "op": "stdev",
+              "field": "return",
+              "as": "stdev"
+            },
+            {
+              "op": "count",
+              "as": "n"
+            }
+          ]
+        }
+      ],
+      "mark": {
+        "type": "rule",
+        "color": "#ae1325",
+        "strokeDash": [
+          4,
+          2
+        ]
+      },
+      "encoding": {
+        "x": {
+          "field": "mean",
+          "type": "quantitative"
+        },
+        "tooltip": [
+          {
+            "field": "mean",
+            "type": "quantitative",
+            "format": ".3%"
+          },
+          {
+            "field": "stdev",
+            "type": "quantitative",
+            "format": ".3%",
+            "title": "sample stdev"
+          },
+          {
+            "field": "n",
+            "type": "quantitative",
+            "title": "returns"
+          }
+        ]
+      }
+    }
+  ]
+}

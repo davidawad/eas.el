@@ -11,6 +11,11 @@
 ;; key.  The output is a complete, standalone Vega-Lite spec that
 ;; `bin/chart build' renders as-is.  It is pure and deterministic, and
 ;; `eas-resolve-hash' content-hashes it.
+;;
+;; An array element {"x-eas:each": SLOT, "spec": X} becomes one X per
+;; item of array SLOT; inside X, {"x-eas:item": KEY [, "default": D]}
+;; reads the item (KEY "." is the item itself) and a missing KEY with no
+;; default drops the enclosing key or array element.
 
 ;;; Code:
 
@@ -31,6 +36,43 @@ PATH locates the placeholder for failures."
     (let ((value (plist-get values key)))
       (if (eas-data-p value) (plist-get value :rows) value))))
 
+(defvar eas-resolve--item nil
+  "The array item an {\"x-eas:each\"} element is expanding, as (ITEM).")
+
+(defconst eas-resolve--absent (make-symbol "absent")
+  "An {\"x-eas:item\"} placeholder naming a key its item lacks.")
+
+(defun eas-resolve--item-value (node values path)
+  "Return the value of item placeholder NODE inside x-eas:each.
+\"x-eas:item\" names a key of the item (\".\" is the item itself); a
+missing key gives NODE's \"default\" (substituted with VALUES), else
+`eas-resolve--absent', which drops the enclosing key.  PATH locates
+NODE for failures."
+  (unless eas-resolve--item
+    (eas-signal "INVALID_INPUT" "x-eas:item is only meaningful inside an x-eas:each spec"
+                  :path path))
+  (let* ((item (car eas-resolve--item))
+         (key (plist-get node :x-eas:item)))
+    (cond
+     ((equal key ".") item)
+     ((and (eas-object-p item) (plist-member item (eas-key key)))
+      (plist-get item (eas-key key)))
+     ((plist-member node :default)
+      (eas-resolve--substitute (plist-get node :default) values path))
+     (t eas-resolve--absent))))
+
+(defun eas-resolve--each (el values path)
+  "Expand {\"x-eas:each\": SLOT, \"spec\": X}: one X per item of SLOT.
+VALUES are the slot values; PATH locates EL."
+  (let ((items (eas-resolve--slot-value values (plist-get el :x-eas:each) path)))
+    (unless (vectorp items)
+      (eas-signal "SLOT_TYPE" (format "x-eas:each at %s needs an array slot" path)
+                    :slot (plist-get el :x-eas:each) :path path))
+    (seq-map (lambda (item)
+               (let ((eas-resolve--item (list item)))
+                 (eas-resolve--substitute (plist-get el :spec) values path)))
+             items)))
+
 (defun eas-resolve--substitute (node values path)
   "Replace slot placeholders and named data in NODE using slot VALUES."
   (cond
@@ -39,23 +81,30 @@ PATH locates the placeholder for failures."
       (seq-doseq (el node)
         (setq i (1+ i))
         (let ((epath (format "%s/%d" path i)))
-          (if (and (eas-object-p el) (plist-get el :x-eas:when))
-              (when (eas-true-p (eas-resolve--slot-value
-                                   values (plist-get el :x-eas:when) epath))
-                (push (eas-resolve--substitute (plist-get el :spec) values epath) out))
-            (push (eas-resolve--substitute el values epath) out))))
+          (cond
+           ((and (eas-object-p el) (plist-get el :x-eas:when))
+            (when (eas-true-p (eas-resolve--slot-value
+                                 values (plist-get el :x-eas:when) epath))
+              (push (eas-resolve--substitute (plist-get el :spec) values epath) out)))
+           ((and (eas-object-p el) (plist-get el :x-eas:each))
+            (dolist (spec (eas-resolve--each el values epath)) (push spec out)))
+           (t (let ((value (eas-resolve--substitute el values epath)))
+                (unless (eq value eas-resolve--absent) (push value out)))))))
       (vconcat (nreverse out))))
    ((and (eas-object-p node) node (plist-get node :x-eas:slot))
     (eas-resolve--slot-value values (plist-get node :x-eas:slot) path))
+   ((and (eas-object-p node) node (plist-member node :x-eas:item))
+    (eas-resolve--item-value node values path))
    ((and (eas-object-p node) node)
     (cl-loop for (key value) on node by #'cddr
              for kpath = (concat path "/" (eas-key-name key))
-             append (list key
-                          (if (and (eq key :data) (stringp (plist-get value :name))
-                                   (eas-data-p (plist-get values (eas-key (plist-get value :name)))))
-                              (list :values (eas-resolve--slot-value
-                                             values (plist-get value :name) kpath))
-                            (eas-resolve--substitute value values kpath)))))
+             for new = (if (and (eq key :data) (stringp (plist-get value :name))
+                                (eas-data-p (plist-get values (eas-key (plist-get value :name)))))
+                           (list :values (eas-resolve--slot-value
+                                          values (plist-get value :name) kpath))
+                         (eas-resolve--substitute value values kpath))
+             unless (eq new eas-resolve--absent)
+             append (list key new)))
    (t node)))
 
 (defun eas-resolve--materialize (view cell path)

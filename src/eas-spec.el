@@ -176,6 +176,11 @@ A known operation key wins; else the first key that is not a parameter."
 
 ;;; Feature walk
 
+(defun eas-spec--placeholder-p (value)
+  "Non-nil when VALUE is a template slot or item placeholder."
+  (and (eas-object-p value) value
+       (or (plist-member value :x-eas:slot) (plist-member value :x-eas:item))))
+
 (defun eas-spec-features (spec)
   "Return every feature SPEC uses, as plists (:feature ID :path POINTER).
 IDs look like \"mark/bar\", \"encoding/color\", \"scale/log\",
@@ -197,7 +202,7 @@ come back as (:invalid MESSAGE :path P)."
            (cond
             ((not (and view (eas-object-p view)))
              (bad "Each view must be a JSON object" path))
-            ((plist-get view :x-eas:when)
+            ((or (plist-get view :x-eas:when) (plist-get view :x-eas:each))
              (walk-view (plist-get view :spec) (concat path "/spec")))
             (t
              (check-keys view eas-spec--view-keys path)
@@ -250,7 +255,7 @@ come back as (:invalid MESSAGE :path P)."
                (bad "An encoding channel must be an object (or an array for tooltip)" path)
              (check-keys def eas-spec--channel-def-keys path)
              (when-let* ((type (plist-get def :type)))
-               (unless (member type eas-spec--types)
+               (unless (or (member type eas-spec--types) (eas-spec--placeholder-p type))
                  (bad (format "type must be one of %s" (string-join eas-spec--types ", "))
                       (concat path "/type"))))
              (when (plist-get def :condition)
@@ -263,7 +268,8 @@ come back as (:invalid MESSAGE :path P)."
              (let ((scale (plist-get def :scale)))
                (when (and scale (eas-object-p scale))
                  (check-keys scale eas-spec--scale-keys (concat path "/scale"))
-                 (when-let* ((type (plist-get scale :type)))
+                 (when-let* ((type (plist-get scale :type))
+                             ((not (eas-spec--placeholder-p type))))
                    (add (concat "scale/" type) (concat path "/scale/type")
                         :unknown (not (member type eas-spec--scale-types))))))))
          (walk-transforms (transforms path)

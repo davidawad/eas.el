@@ -12,9 +12,11 @@
 ;;
 ;;   data.url, data.sequence   inline data.values (eas-data-url.el)
 ;;   datasets + data.name      the named dataset's rows as data.values
-;;   repeat + spec             layer (repeat.layer), vconcat (repeat.row
-;;                             or a plain array) or hconcat (repeat.column),
-;;                             {"repeat": "layer"} references substituted
+;;   repeat + spec             layer (repeat.layer), vconcat (repeat.row),
+;;                             hconcat (repeat.column or a plain array), a
+;;                             grid of rows (row and column, or an array
+;;                             with "columns"); {"repeat": "layer"}
+;;                             references substituted
 ;;   mark.point on line/area   a layer of the line and a point overlay,
 ;;                             as Vega-Lite's PathOverlayNormalizer does
 ;;   top-level view            merged into config.view (it styles the
@@ -49,23 +51,32 @@
 (defun eas-vl-lower--repeat (spec)
   "SPEC's repeat expanded into layer, vconcat or hconcat."
   (let* ((repeat (plist-get spec :repeat)) (inner (plist-get spec :spec))
-         (outer (eas--plist-without (eas--plist-without spec :repeat) :spec))
+         (columns (plist-get spec :columns))
+         (outer (eas--plist-without (eas--plist-without (eas--plist-without spec :repeat) :spec) :columns))
+         ;; Rows of cells laid out as Vega-Lite's grid (align "all").
+         (grid (lambda (rows) (eas-plist-put (eas-plist-put outer :x-eas (eas-plist-put (plist-get outer :x-eas) :grid t))
+                                             :vconcat (vconcat (mapcar (lambda (r) (list :hconcat (vconcat r))) rows)))))
          (cells (lambda (key values bindings)
                   (vconcat (mapcar (lambda (v) (eas-vl-lower--substitute inner (cons (cons key v) bindings)))
                                    values)))))
     (cond
-     ((vectorp repeat) (eas-plist-put outer :vconcat (funcall cells "repeat" repeat nil)))
+     ;; An array repeats across one row, or wraps after "columns" cells.
+     ((vectorp repeat)
+      (let ((all (append (funcall cells "repeat" repeat nil) nil)))
+        (if (not (and (numberp columns) (> columns 0) (< columns (length all))))
+            (eas-plist-put outer :hconcat (vconcat all))
+          (funcall grid (cl-loop for i from 0 below (length all) by columns
+                                 collect (seq-subseq all i (min (length all) (+ i columns))))))))
      ((plist-get repeat :layer)
       (when (or (plist-get repeat :row) (plist-get repeat :column))
         (eas-signal "UNSUPPORTED_FEATURE" "repeat.layer with row or column is not supported natively"
                     :path "/repeat" :feature "composition/repeat"))
       (eas-plist-put outer :layer (funcall cells "layer" (plist-get repeat :layer) nil)))
      ((and (plist-get repeat :row) (plist-get repeat :column))
-      (eas-plist-put outer :vconcat
-                     (vconcat (mapcar (lambda (r)
-                                        (list :hconcat (funcall cells "column" (plist-get repeat :column)
-                                                                (list (cons "row" r)))))
-                                      (plist-get repeat :row)))))
+      (funcall grid (mapcar (lambda (r) (append (funcall cells "column" (plist-get repeat :column)
+                                                         (list (cons "row" r)))
+                                                nil))
+                            (plist-get repeat :row))))
      ((plist-get repeat :row) (eas-plist-put outer :vconcat (funcall cells "row" (plist-get repeat :row) nil)))
      ;; Vega-Lite aligns repeated cells ("align": "all"), one row of them too.
      ((plist-get repeat :column)

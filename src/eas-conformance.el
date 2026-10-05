@@ -178,6 +178,7 @@ Return (:name :ok :features :svg :text :error)."
   (add-hook 'eas-describe-functions #'eas-conformance-describe))
 
 (require 'eas-vl-gallery)
+(require 'eas-vl-gallery-custom)
 
 (provide 'eas-conformance)
 ;;; eas-conformance.el ends here

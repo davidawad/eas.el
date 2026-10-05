@@ -161,10 +161,12 @@ Domain transforms must precede native transforms in an array."
              append (list key (eas-resolve--strip value))))
    (t node)))
 
+(defvar eas-facet-keep)
+
 (defun eas-resolve-spec (spec &optional values)
   "Resolve chart/v1 SPEC to pure Vega-Lite using slot VALUES (a plist).
 VALUES come from `eas-template-bind'; nil for a plain spec."
-  (let* ((spec (eas-spec-parse spec))
+  (let* ((spec (let ((eas-facet-keep t)) (eas-spec-parse spec)))
          (body (eas-resolve--substitute spec values ""))
          (body (eas-resolve--materialize body nil ""))
          (body (eas-resolve--strip body)))

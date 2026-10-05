@@ -33,7 +33,9 @@
 (defconst eas-spec--view-keys
   '(:$schema :data :mark :encoding :transform :layer :vconcat :hconcat
     :width :height :title :description :name :params :config :autosize
-    :padding :background :resolve :usermeta :x-eas :spacing :projection :datasets)
+    :padding :background :resolve :usermeta :x-eas :spacing :projection :datasets
+    ;; multiview (fc-qx1.45)
+    :bounds)
   "Keys a chart/v1 view or composition may carry.")
 
 (defconst eas-spec--marks
@@ -94,7 +96,9 @@
 
 (defconst eas-spec--scale-types
   '("linear" "log" "time" "utc" "band" "point" "ordinal"
-    "sqrt")
+    "sqrt"
+    ;; multiview (fc-qx1.45)
+    "quantize" "quantile" "threshold")
   "Scale types chart/v1 recognises.")
 
 (defconst eas-spec--scale-keys

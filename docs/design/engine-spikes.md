@@ -1284,3 +1284,51 @@ The heaviest examples now: interactive_multi_line_tooltip (167 ms svg
 compile+render: 4400 tooltips formatting dates), interactive_splom
 (136 ms: 10,752 points), interactive_bin_extent (123 ms: a `calculate`
 expression over 10,000 rows, interpreted per row).
+
+## 12. Vega-Lite gallery: multiview, second pass (fc-qx1.45)
+
+Multiview went from 2 pass / 9 partial / 8 unsupported to 19 / 0 / 0 (the
+11 topojson maps stay out of scope).  The box had no librsvg, so the image
+oracle ran through a stand-in (resvg with Arimo for Arial); it scores the
+committed passing examples within about 0.01 of their recorded ratios,
+never better.  What the group needed, all shared code:
+
+| feature | where |
+|---|---|
+| every facet form (row, column, row x column, wrapped `facet` + `columns`, top-level `facet`) lowered to a vconcat of hconcat cells; levels sorted as Vega-Lite does (null first, by an aggregate, data order when the cells aggregate the sort field away), rows with invalid x/y dropped first | `eas-facet-grid.el` |
+| Vega's trellis inside the shared concat layout: cells' x/y scales and bins shared, spacing between cell contents (align "all", bounds "full"; align "none" along an independent scale), axes only on the outer cells (a wrapped column's axis moved under the last row), row/column labels and bold field titles as text marks | `eas-facet-layout.el` |
+| `repeat` with `columns`, row x column repeats kept as a grid placed by Vega's gridLayout (spacing honoured) | `eas-vl-lower.el`, `eas-compile-grid.el` |
+| `bounds: "flush"` (a nested concat counts 0x0, as in Vega) | `eas-concat-flush.el` |
+| titles of nested concats | `eas-concat-title.el` |
+| quantize, quantile and threshold scales; bucket legends ("< t1", "t1 – t2", "≥ tn"), merged with a same-field size legend, or Vega's discrete gradient for color alone | `eas-scale-discretize.el`, `eas-legend.el` |
+| shared legends with orient top or bottom, in a row (titleOrient left), side by side; config.legend orient/direction; horizontal gradients clamp(width, 100, 200) | `eas-legend-row.el`, `eas-compile-shared.el` |
+| albersUsa (d3's composite, exact to 1e-15 against d3-geo), albers, mercator, equirectangular, equalEarth for longitude/latitude points, fitted to the view | `eas-geo.el` |
+| `ticks: false` drops the tick length from the label offset; `sort: "descending"` reverses a continuous scale; a stacked measure keeps `title: null`; `config.countTitle`; axis `titleLimit` | layout, scales, marks, encode |
+| no plot fitted so small that its axis labels collide (the canvas grows instead) | `eas-place-fit`, grid and facet fits |
+| `check` reports the facet properties the trellis ignores (`header.labelOrient`, `facet.align`, ...) with their paths | `eas-spec-feature-functions` |
+
+Export keeps facets, projections and nested titles as Vega-Lite wrote
+them (the lowerings skip while resolving), so `export --vl` still goes to
+bin/chart unchanged.
+
+Efficiency (`bin/eas bench SPEC --n 5`, byte-compiled, mean ms; all
+examples in `test/vl-examples/multiview/bench.json`):
+
+| example | rows | compile-svg before -> after | render-svg | hover |
+|---|---:|---|---:|---:|
+| trellis_area_seattle (24 cells) | 8759 | (unsupported; the first native cut took 6366) -> 952 | 111 | 9.7 |
+| vconcat_weather | 2922 | 380 -> 67 | 6.7 | 0.34 |
+| area_density_facet | 344 | 280 -> 123 | 14 | 0.53 |
+| trellis_area | 560 | 117 -> 50 | 9.3 | 1.5 |
+| geo_circle | 42049 | (unsupported) -> 2569 | 2030 | 73 |
+
+Three cuts made the difference: a facet's shared transforms run once and
+its rows are partitioned among the cells in one pass (they keep their
+source index, so drill-to-row still works) instead of 24 filters over all
+rows; parse, check and compile share one lowering; and calendar fields in
+a named zone use an offset cached per quarter hour (exact: transitions
+fall on quarter hours, and a bucket holding one decodes directly; 81 600
+random instants in three zones matched `decode-time`) with encoded local
+fields memoized, which took `decode-time`/`encode-time` from 80% of a
+temporal compile to nothing.  geo_circle's 42k circles stay heavy: one
+SVG element each.

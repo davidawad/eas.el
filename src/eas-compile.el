@@ -165,10 +165,15 @@ a child field or datum def inherits the parent def's other properties."
          (own (eas-compile--merge-encoding (plist-get ctx :encoding) (plist-get node :encoding))))
     (cond
      ((or (plist-get node :vconcat) (plist-get node :hconcat))
-      (let ((key (if (plist-get node :vconcat) :vconcat :hconcat)))
+      (let* ((key (if (plist-get node :vconcat) :vconcat :hconcat))
+             ;; A facet's rows are transformed and partitioned once for all its cells.
+             (pre (eas-facet-layout-partition node ctx rows env))
+             (node (if pre (car pre) node))
+             (rows (if pre (cdr pre) rows)))
         (list :concat (if (eq key :vconcat) "v" "h")
               :spacing (let ((s (plist-get node :spacing))) (and (numberp s) s))
               :grid (plist-get (plist-get node :x-eas) :grid)
+              :x-eas (plist-get node :x-eas) :bounds (plist-get node :bounds) ; facet, flush layouts
               :children (let ((eas-link--scope (eas-link-scope node)))
                           (seq-map-indexed
                            (lambda (child i)
@@ -244,8 +249,13 @@ a child field or datum def inherits the parent def's other properties."
     (plist-put group :legend-specs
                (delq nil (list (when color (append (funcall spec (nth 0 color) (nth 1 color) (nth 2 color))
                                                    (when (eas-compile-channels-legend-shape units)
-                                                     (list :shape-scale shape-scale))))
-                               (when size (funcall spec :size (funcall first-def :size) size))
+                                                     (list :shape-scale shape-scale))
+                                                   ;; Vega-Lite merges a discretized size legend of the same field.
+                                                   (when (eas-scale-discretize-merge-p (nth 1 color) (funcall first-def :size) size)
+                                                     (list :size-scale size))))
+                               (when (and size (not (and color (eas-scale-discretize-merge-p
+                                                                 (nth 1 color) (funcall first-def :size) size))))
+                                 (funcall spec :size (funcall first-def :size) size))
                                (when opacity (funcall spec :opacity (funcall first-def :opacity) opacity))
                                (when dash (funcall spec :strokeDash (funcall first-def :strokeDash) dash)))))))
 
@@ -344,7 +354,8 @@ a child field or datum def inherits the parent def's other properties."
                     (mapcar (lambda (l) (eas-legend-place (nth 0 l) (nth 1 l) (nth 2 l) metrics))
                             (plist-get group :shared-legends)))
           :marks (vconcat (append (eas-compile--brushes group state) marks
-                                  (delq nil (list (eas-title-view-mark group metrics)))))
+                                  (delq nil (list (eas-title-view-mark group metrics)))
+                                  (eas-facet-layout-view-marks group)))
           :params (vconcat (mapcar (lambda (p) (plist-get p :name)) (plist-get group :params))))))
 
 (defun eas-compile--title-frame (spec)
@@ -421,6 +432,8 @@ compiling again."
            (title (eas-compile--title spec))
            (title-h (eas-title-height spec metrics)))
       (dolist (g groups) (eas-compile--scales g state metrics))
+      (eas-facet-layout-share tree state metrics)
+      (eas-concat-flush-prepare tree metrics)
       (eas-shared-prepare tree groups spec)
       (eas-shared-pos-prepare tree groups spec state)
       (let ((total (eas-place-layout tree metrics title-h size)))
@@ -482,9 +495,13 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
           (plist-put g :scope-over (aref (funcall over sbox) 2)))))
     grew))
 
+(defvar eas-encode-count-title)
+
 (defun eas-compile-scene (plan state)
   "Assemble scene/v1 from PLAN under view STATE, reusing cached items."
   (let* ((gc-cons-threshold (max gc-cons-threshold eas-compile-gc-threshold))
+         (eas-encode-count-title (let ((c (plist-get (plist-get (plist-get plan :spec) :config) :countTitle)))
+                                   (and (stringp c) c)))
          (metrics (plist-get plan :metrics)) (total (plist-get plan :total))
          (spec (plist-get plan :spec)) (groups (plist-get plan :groups)) (title (plist-get plan :title)))
     (append

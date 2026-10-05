@@ -1,0 +1,18 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: a wrapped facet (columns) sorted by an aggregate, with independent y scales and a header format.",
+  "data": {"url": "../../data/cars.json"},
+  "width": 140,
+  "height": 90,
+  "mark": {"type": "point", "filled": true, "size": 20, "opacity": 0.6},
+  "encoding": {
+    "facet": {"field": "Cylinders", "type": "ordinal", "columns": 3, "spacing": 16,
+              "sort": {"field": "Horsepower", "op": "mean", "order": "descending"},
+              "title": "Cylinders (by mean horsepower)",
+              "header": {"format": "d", "labelFontSize": 11, "labelPadding": 3, "titlePadding": 6}},
+    "x": {"field": "Horsepower", "type": "quantitative", "scale": {"zero": false}},
+    "y": {"field": "Miles_per_Gallon", "type": "quantitative", "title": "MPG"},
+    "color": {"field": "Origin", "type": "nominal"}
+  },
+  "resolve": {"scale": {"y": "independent"}}
+}

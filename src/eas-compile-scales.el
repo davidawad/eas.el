@@ -23,6 +23,7 @@
 (require 'eas-time-band)
 (require 'eas-compile-sort)
 (require 'eas-color-names)
+(require 'eas-scale-discretize)
 
 (defun eas-compile--defs (units channel)
   "Return (UNIT . DEF) pairs for CHANNEL across UNITS with a data def."
@@ -146,7 +147,10 @@ With KEEP-NULL, null values count too (discrete domains show them)."
                                     :field (plist-get def :field)
                                     ;; utc scales tick and label in UTC whatever `eas-time-zone' is.
                                     :utc (if (equal (plist-get sp :type) "utc") t :false)
-                                    :reverse (if (eq (plist-get sp :reverse) t) t :false))
+                                    :reverse (if (if (plist-member sp :reverse) (eq (plist-get sp :reverse) t)
+                                                   ;; Vega-Lite: sort descending reverses a continuous scale.
+                                                   (equal (plist-get def :sort) "descending"))
+                                               t :false))
             (when-let* ((bins (and binned (not custom) (equal type "linear")
                                    (eas-bins-boundaries def (plist-get (caar pairs) :rows) lo hi))))
               (list :bins bins))
@@ -270,6 +274,8 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                     (when (and (eas-encode-discrete-p def) (eas-compile--field-missing-p pairs))
                       (push nil values))
                     (list channel def
+                          (if (eas-scale-discretize-p def)
+                              (eas-scale-discretize-make def values channel config)
                           (if (eas-encode-discrete-p def)
                               (let ((domain (if (vectorp (plist-get sp :domain)) (plist-get sp :domain)
                                               (eas-compile--discrete-domain pairs values))))
@@ -301,7 +307,7 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                                                    (or (eas-compile--config-range config :heatmap)
                                                        eas-scale-yellowgreenblue)
                                                  (or (eas-compile--config-range config :ramp) eas-scale-blues)))
-                                    :field (plist-get def :field))))))))
+                                    :field (plist-get def :field)))))))))
 
 (defconst eas-compile-dash-range [[1 0] [4 2] [2 1] [1 1] [1 2 4 2]]
   "Vega-Lite's default strokeDash range (config.range.strokeDash).")
@@ -333,6 +339,10 @@ for a discrete scale, else its ramp stops)."
 The scale's own range wins; a trail's size is its width, onto
 Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
   (when-let* ((pairs (seq-filter (lambda (p) (plist-get (cdr p) :field)) (eas-compile--defs units channel))))
+    (or
+     (eas-scale-discretize-make (cdar pairs) (eas-compile--values pairs channel) channel
+                                (plist-get (plist-get (caar pairs) :ctx) :config)
+                                (plist-get (plist-get (caar pairs) :mark) :type))
     (let* ((nums (seq-filter #'numberp (eas-compile--values pairs channel)))
            (sp (plist-get (cdar pairs) :scale))
            (range (cond ((and (vectorp (plist-get sp :range)) (= (length (plist-get sp :range)) 2)) (plist-get sp :range))
@@ -344,7 +354,7 @@ Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
       (if (and (vectorp explicit) (numberp (aref explicit 0)))
           (eas-scale-continuous "linear" (aref explicit 0) (aref explicit 1) range :field (plist-get (cdar pairs) :field))
         (eas-scale-continuous "linear" (if (eq channel :size) 0 (if nums (apply #'min nums) 0))
-                              (if nums (apply #'max nums) 1) range :field (plist-get (cdar pairs) :field))))))
+                              (if nums (apply #'max nums) 1) range :field (plist-get (cdar pairs) :field)))))))
 
 (defun eas-compile-set-range (scale range)
   "Return SCALE mapped onto RANGE (recomputing band geometry).

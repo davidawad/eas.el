@@ -1,0 +1,23 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: a row x column facet with non-default header, spacing, sort and legend properties.",
+  "data": {"url": "../../data/barley.json"},
+  "width": 120,
+  "height": {"step": 8},
+  "spacing": {"row": 12, "column": 6},
+  "mark": {"type": "bar", "color": "#4c78a8"},
+  "encoding": {
+    "x": {"field": "yield", "type": "quantitative", "aggregate": "sum", "title": "Total yield", "axis": {"format": "d", "tickCount": 3}},
+    "y": {"field": "variety", "type": "nominal", "axis": null},
+    "color": {"field": "year", "type": "nominal", "scale": {"range": ["#e45756", "#4c78a8"]},
+              "legend": {"orient": "bottom", "titleOrient": "left", "columnPadding": 14}},
+    "row": {"field": "year", "type": "ordinal", "sort": "descending", "title": "Harvest year",
+            "header": {"labelAngle": 0, "labelAlign": "left", "labelPadding": 6, "labelFontSize": 12,
+                       "labelColor": "#555555", "labelFontWeight": "bold",
+                       "titleFontSize": 13, "titleColor": "#333333", "titlePadding": 4}},
+    "column": {"field": "site", "type": "nominal", "title": "Site",
+               "header": {"labelExpr": "upper(slice(datum.label, 0, 3))", "labelFontSize": 9, "labelPadding": 4,
+                          "titleFontWeight": "normal"}}
+  },
+  "config": {"header": {"titleFontSize": 12}}
+}

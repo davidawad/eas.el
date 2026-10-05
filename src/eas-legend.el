@@ -26,6 +26,10 @@
 (require 'eas-legend-orient)
 
 (declare-function eas-expr--string "eas-expr")
+(declare-function eas-legend-row-p "eas-legend-row")
+(declare-function eas-scale-discretize-entries "eas-scale-discretize")
+(declare-function eas-scale-discretize-gradient "eas-scale-discretize")
+(declare-function eas-legend-row-place "eas-legend-row")
 
 (defconst eas-legend-default-color "#4c78a8"
   "Symbol color when the mark has no constant color of its own.")
@@ -72,7 +76,31 @@ restyles it (eas-legend-style.el)."
         ;; overrides config.legend for this legend only.
         (when-let* ((props (eas-legend--props legend)))
           (setq base (append base (list :props props))))
+        ;; Row layout (eas-legend-row.el) of a top or bottom legend.
+        (when (stringp (plist-get legend :titleOrient))
+          (setq base (append base (list :title-orient (plist-get legend :titleOrient)))))
+        (when (numberp (plist-get legend :columnPadding))
+          (setq base (append base (list :column-padding (plist-get legend :columnPadding)))))
+        (when (numberp (plist-get legend :titlePadding))
+          (setq base (append base (list :title-padding (plist-get legend :titlePadding)))))
         (pcase (plist-get scale :type)
+          ;; Discretizing scales: one entry per bucket (eas-scale-discretize.el);
+          ;; a merged size scale of the same field gives the entries and areas.
+          ((and (or "quantize" "quantile" "threshold")
+                (guard (and (memq channel '(:color :fill :stroke)) (null (plist-get spec :size-scale)))))
+           ;; Color alone: Vega's discrete gradient, labelled at the thresholds.
+           (let ((g (eas-scale-discretize-gradient scale (and (eas-object-p legend) (plist-get legend :format)))))
+             (append base (list :type "gradient" :stops (plist-get g :stops) :domain (plist-get g :domain)
+                                :entries [] :fixed-entries (plist-get g :entries)))))
+          ((or "quantize" "quantile" "threshold")
+           (let* ((size (plist-get spec :size-scale))
+                  (primary (or size scale)))
+             (append base (list :type "symbol"
+                                :entries (eas-scale-discretize-entries
+                                          primary (and (eas-object-p legend) (plist-get legend :format))
+                                          (and (memq channel '(:color :fill :stroke)) (lambda (v) (eas-scale-apply scale v)))
+                                          (cond ((eq channel :size) (lambda (v) (eas-scale-apply scale v)))
+                                                (size (lambda (v) (eas-scale-apply size v)))))))))
           ("ordinal"
            (append base (list :type "symbol"
                               :entries (vconcat (seq-map (lambda (v)
@@ -137,7 +165,11 @@ restyles it (eas-legend-style.el)."
   "Gradient length: one row per label in text, clamp(plot height, 64, 200) in svg."
   (if (eas-layout-text-p metrics)
       (* (max 5 (length (plist-get legend :entries))) (plist-get metrics :row))
-    (or (plist-get legend :gradient-length) (max 64 (min 200 (or (plist-get legend :plot-h) 200))))))
+    (or (plist-get legend :gradient-length)
+        ;; Vega-Lite: clamp(plot height, 64, 200), or clamp(plot width, 100, 200) horizontally.
+        (if (equal (plist-get legend :direction) "horizontal")
+            (max 100 (min 200 (or (plist-get legend :plot-w) 200)))
+          (max 64 (min 200 (or (plist-get legend :plot-h) 200)))))))
 
 (defun eas-legend--gradient-entries (legend metrics)
   "LEGEND's gradient labels: d3 ticks, as many as Vega asks for its length."
@@ -155,7 +187,8 @@ restyles it (eas-legend-style.el)."
 (defun eas-legend-sized (legend metrics)
   "LEGEND with its gradient entries filled in for its final length."
   (if (equal (plist-get legend :type) "gradient")
-      (eas-legend-style-labels (eas-plist-put legend :entries (eas-legend--gradient-entries legend metrics)))
+      (eas-legend-style-labels (eas-plist-put legend :entries (or (plist-get legend :fixed-entries)
+                                                                       (eas-legend--gradient-entries legend metrics))))
     legend))
 
 (defun eas-legend-size (legend metrics)
@@ -325,6 +358,7 @@ restyles it (eas-legend-style.el)."
     (eas-legend-style-looks
      (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
            ((eas-legend-extra-horizontal-p legend metrics) (eas-legend-extra-place-horizontal legend x y metrics))
+           ((and (fboundp 'eas-legend-row-p) (eas-legend-row-p legend metrics)) (eas-legend-row-place legend x y metrics))
            ((eas-legend-orient-row-p legend metrics) (eas-legend-orient-place-row legend x y metrics))
            ((equal (plist-get legend :type) "gradient") (eas-legend--place-gradient legend x y metrics))
            (t (eas-legend--place-symbols legend x y metrics))))))

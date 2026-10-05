@@ -245,8 +245,9 @@ threshold, no overlap."
                                  :facet (:row (:field "g" :type "ordinal" :header (:labelAngle 0)))
                                  :resolve (:scale (:x "independent"))
                                  :spec (:mark "bar" :encoding (:x (:field "v" :type "quantitative")))))))
+    ;; A grid of one-cell rows (eas-facet-grid.el); the header goes to the trellis.
     (should (= (length (plist-get spec :vconcat)) 2))
-    (should (eql (plist-get (plist-get (plist-get (aref (plist-get spec :vconcat) 0) :x-eas) :header) :angle) 0))))
+    (should (eql (plist-get (plist-get (plist-get (plist-get spec :x-eas) :facet) :row-header) :labelAngle) 0))))
 
 ;;; Bars: stack transform, discrete offsets, time-unit bars, SI axis labels, corners
 

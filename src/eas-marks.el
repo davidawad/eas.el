@@ -639,7 +639,7 @@ Bars and areas with a discrete color/fill/detail field stack by default
                       (plist-put :rows out)
                       (plist-put :encoding (eas-plist-put enc measure
                                                             (append (list :field end :stack-start start
-                                                                          :title (eas-encode-title mdef))
+                                                                          :title (or (eas-encode-title mdef) :null))
                                                                     (eas--plist-without mdef :field)))))))))
 
 (provide 'eas-marks)

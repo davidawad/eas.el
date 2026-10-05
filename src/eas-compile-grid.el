@@ -24,6 +24,7 @@ single views (a column repeat), else its children's cells."
            (seq-every-p (lambda (c) (plist-get c :group)) (plist-get node :children)))
       (list (plist-get node :children))
     (mapcar (lambda (row) (plist-get row :children)) (plist-get node :children))))
+(declare-function eas-facet-layout-min-plot "eas-facet-layout")
 
 (defun eas-place-grid-p (node)
   "Non-nil when layout NODE is a grid: rows of single-view cells."
@@ -36,29 +37,35 @@ single views (a column repeat), else its children's cells."
 
 (defun eas-place-arrange-grid (node ox oy metrics)
   "Place grid NODE's cells with its top-left at OX OY; return (W . H).
-Vega-Lite's align \"all\": every cell is as wide and as tall as the
-largest, and every plot sits at the same offset inside its cell."
-  (let* ((spacing (plist-get metrics :spacing))
-         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) row)) (eas-place--grid-rows node)))
+Vega's gridLayout with align \"all\" and bounds \"full\": each cell's
+box is its plot with its chrome; columns are as wide as the widest box
+plus the spacing and the largest left chrome of the later columns, rows
+likewise, so the spacing separates the boxes and plots line up."
+  (let* ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing)))
+         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) (plist-get row :children)))
+                       (plist-get node :children)))
+         (chrome (lambda (g k) (or (plist-get (plist-get g :chrome) k) 0)))
+         (x2 (lambda (g) (ceiling (+ (plist-get g :w) (funcall chrome g :right)))))
+         (y2 (lambda (g) (ceiling (max (+ (plist-get g :h) (funcall chrome g :bottom)) (funcall chrome g :legend-h)))))
          (cells (apply #'append rows))
-         (most (lambda (fn) (apply #'max 0 (mapcar fn cells))))
-         (chrome (lambda (g k) (plist-get (plist-get g :chrome) k)))
-         (left (funcall most (lambda (g) (funcall chrome g :left))))
-         (top (funcall most (lambda (g) (funcall chrome g :top))))
-         (width (+ left (funcall most (lambda (g) (+ (plist-get g :w) (funcall chrome g :right))))))
-         (height (+ top (funcall most (lambda (g) (max (+ (plist-get g :h) (funcall chrome g :bottom))
-                                                       (or (funcall chrome g :legend-h) 0)))))))
+         (xmax (apply #'max 0 (mapcar x2 cells)))
+         (ymax (apply #'max 0 (mapcar y2 cells)))
+         (offx (apply #'max 0 (cl-loop for r in rows append (mapcar (lambda (g) (+ spacing (ceiling (funcall chrome g :left)))) (cdr r)))))
+         (offy (apply #'max 0 (mapcar (lambda (g) (+ spacing (ceiling (funcall chrome g :top)))) (apply #'append (cdr rows)))))
+         (left (apply #'max 0 (mapcar (lambda (r) (funcall chrome (car r) :left)) rows)))
+         (top (apply #'max 0 (mapcar (lambda (g) (funcall chrome g :top)) (car rows)))))
     (cl-loop for r in rows for i from 0
              do (cl-loop for g in r for j from 0
-                         do (plist-put g :x0 (+ ox (* j (+ width spacing)) left))
-                         (plist-put g :y0 (+ oy (* i (+ height spacing)) top))))
-    (cons (- (* (apply #'max (mapcar #'length rows)) (+ width spacing)) spacing)
-          (- (* (length rows) (+ height spacing)) spacing))))
+                         do (plist-put g :x0 (+ ox left (* j (+ xmax offx))))
+                         (plist-put g :y0 (+ oy top (* i (+ ymax offy))))))
+    (cons (+ left (* (1- (apply #'max (mapcar #'length rows))) (+ xmax offx)) xmax)
+          (+ top (* (1- (length rows)) (+ ymax offy)) ymax))))
 
 (defun eas-place-fit-grid (node width height metrics)
   "Resize grid NODE's plots so the grid is WIDTH by HEIGHT."
-  (let* ((spacing (plist-get metrics :spacing))
-         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) row)) (eas-place--grid-rows node)))
+  (let* ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing)))
+         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) (plist-get row :children)))
+                       (plist-get node :children)))
          (cells (apply #'append rows))
          (most (lambda (k) (apply #'max 0 (mapcar (lambda (g) (plist-get (plist-get g :chrome) k)) cells))))
          (ncol (apply #'max (mapcar #'length rows)))
@@ -66,6 +73,11 @@ largest, and every plot sits at the same offset inside its cell."
          (ch (/ (- height (* spacing (1- (length rows)))) (float (length rows))))
          (w (max (* 4 (aref (plist-get metrics :cell) 0)) (- cw (funcall most :left) (funcall most :right))))
          (h (max (* 2 (aref (plist-get metrics :cell) 1)) (- ch (funcall most :top) (funcall most :bottom)))))
+    ;; Never so small that a cell's axis labels collide (the canvas grows instead).
+    (when (fboundp 'eas-facet-layout-min-plot)
+      (dolist (g cells)
+        (let ((least (eas-facet-layout-min-plot g metrics)))
+          (setq w (max w (car least)) h (max h (cdr least))))))
     (dolist (g cells) (plist-put g :w w) (plist-put g :h h))))
 
 (provide 'eas-compile-grid)

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: a wrapped repeat (columns) with spacing, countTitle, axis title limits and step widths.",
+  "data": {"url": "../../data/cars.json"},
+  "repeat": ["Horsepower", "Miles_per_Gallon", "Acceleration"],
+  "columns": 2,
+  "spacing": 30,
+  "spec": {
+    "width": 160,
+    "height": 80,
+    "mark": {"type": "bar", "cornerRadiusEnd": 2},
+    "encoding": {
+      "x": {"field": {"repeat": "repeat"}, "type": "quantitative", "bin": {"maxbins": 12}},
+      "y": {"aggregate": "count", "type": "quantitative"},
+      "color": {"field": "Origin", "type": "nominal", "scale": {"scheme": "set2"}}
+    }
+  },
+  "config": {"countTitle": "Cars", "axisX": {"titleLimit": 90}, "axisY": {"minExtent": 36}}
+}

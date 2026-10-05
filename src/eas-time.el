@@ -230,6 +230,20 @@ MONTH (1-12), DAY and the clock fields may overflow; they are normalized."
          (or milliseconds 0)))
      (t (eas-time--utc-ms year month day hours minutes seconds milliseconds)))))
 
+(defvar eas-time--encoded (make-hash-table :test 'equal)
+  "Epoch ms of local calendar fields already encoded: (ZONE Y M D H MI S).
+Time units truncate many rows to the same few fields.")
+
+(defun eas-time--encode (year month day hours minutes seconds)
+  "Epoch ms of the local fields YEAR .. SECONDS in `eas-time-zone'."
+  (let ((key (list eas-time-zone year month day hours minutes seconds)))
+    (or (gethash key eas-time--encoded)
+        (progn
+          (when (> (hash-table-count eas-time--encoded) 200000) (clrhash eas-time--encoded))
+          (puthash key (* 1000 (time-convert (encode-time (list seconds minutes hours day month year nil -1 eas-time-zone))
+                                             'integer))
+                   eas-time--encoded)))))
+
 (defun eas-time--utc-ms (year &optional month day hours minutes seconds milliseconds)
   "UTC epoch milliseconds for calendar fields YEAR MONTH DAY HOURS
 MINUTES SECONDS MILLISECONDS (see `eas-time-ms')."

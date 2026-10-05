@@ -161,6 +161,8 @@ in compile's per-row loops."
                            (and j (+ start (* step (if rev (- n 1 j) j))))))))))
       (_ (lambda (v) (eas-scale-apply scale v))))))
 
+(declare-function eas-scale-discretize-apply "eas-scale-discretize")
+
 (defun eas-scale-apply (scale value)
   "Map data VALUE through SCALE; nil when VALUE has no position."
   (let ((domain (plist-get scale :domain)))
@@ -187,7 +189,8 @@ in compile's per-row loops."
       ("ordinal"
        (let ((i (eas-scale--index scale value)) (range (plist-get scale :range)))
          (and i (> (length range) 0) (aref range (mod i (length range))))))
-      ("sequential" (eas-scale-color-ramp scale value)))))
+      ("sequential" (eas-scale-color-ramp scale value))
+      ((or "quantize" "quantile" "threshold") (eas-scale-discretize-apply scale value)))))
 
 (defun eas-scale-invert (scale px)
   "Map range position PX back to data space through SCALE.

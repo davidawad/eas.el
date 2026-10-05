@@ -1,0 +1,294 @@
+{
+  "emacs": "30.1",
+  "compiled": true,
+  "zone": "America/Chicago",
+  "reps": 5,
+  "examples": {
+    "area_density_facet": {
+      "rows": 344,
+      "items": 7,
+      "ms": {
+        "compile-svg": 122.527,
+        "compile-text": 118.348,
+        "hover": 0.529,
+        "render-svg": 13.993,
+        "render-text": 16.733
+      },
+      "baseline_ms": {
+        "compile-svg": 279.75,
+        "compile-text": 208.351,
+        "hover": 0.539,
+        "render-svg": 24.616,
+        "render-text": 25.101
+      }
+    },
+    "concat_bar_scales_discretize": {
+      "rows": 9,
+      "items": 27,
+      "ms": {
+        "compile-svg": 5.205,
+        "compile-text": 4.09,
+        "hover": 0.166,
+        "render-svg": 4.232,
+        "render-text": 12.156
+      }
+    },
+    "concat_marginal_histograms": {
+      "rows": 3201,
+      "items": 83,
+      "ms": {
+        "compile-svg": 92.394,
+        "compile-text": 96.04,
+        "hover": 0.419,
+        "render-svg": 7.361,
+        "render-text": 4.5
+      }
+    },
+    "concat_population_pyramid": {
+      "rows": 570,
+      "items": 78,
+      "ms": {
+        "compile-svg": 19.508,
+        "compile-text": 18.292,
+        "hover": 0.383,
+        "render-svg": 6.834,
+        "render-text": 13.21
+      },
+      "baseline_ms": {
+        "compile-svg": 13.755,
+        "compile-text": 14.399,
+        "hover": 0.387,
+        "render-svg": 7.492,
+        "render-text": 9.886
+      }
+    },
+    "facet_grid_bar": {
+      "rows": 27,
+      "items": 35,
+      "ms": {
+        "compile-svg": 16.047,
+        "compile-text": 9.402,
+        "hover": 0.568,
+        "render-svg": 10.366,
+        "render-text": 1.509
+      }
+    },
+    "geo_circle": {
+      "rows": 42049,
+      "items": 42049,
+      "ms": {
+        "compile-svg": 2568.911,
+        "compile-text": 2046.054,
+        "hover": 73.117,
+        "render-svg": 2029.859,
+        "render-text": 254.704
+      }
+    },
+    "interactive_splom": {
+      "rows": 0,
+      "items": 3584,
+      "ms": {
+        "compile-svg": 228.376,
+        "compile-text": 132.887,
+        "hover": 8.13,
+        "render-svg": 205.06,
+        "render-text": 75.676
+      },
+      "baseline_ms": {
+        "compile-svg": 157.358,
+        "compile-text": 155.427,
+        "hover": 8.517,
+        "render-svg": 219.338,
+        "render-text": 61.257
+      }
+    },
+    "nested_concat_align": {
+      "rows": 3201,
+      "items": 60,
+      "ms": {
+        "compile-svg": 93.478,
+        "compile-text": 103.379,
+        "hover": 0.405,
+        "render-svg": 10.602,
+        "render-text": 4.466
+      },
+      "baseline_ms": {
+        "compile-svg": 99.077,
+        "compile-text": 105.583,
+        "hover": 0.474,
+        "render-svg": 11.591,
+        "render-text": 3.504
+      }
+    },
+    "repeat_histogram": {
+      "rows": 0,
+      "items": 76,
+      "ms": {
+        "compile-svg": 39.766,
+        "compile-text": 34.101,
+        "hover": 0.587,
+        "render-svg": 13.798,
+        "render-text": 19.745
+      }
+    },
+    "repeat_layer": {
+      "rows": 3201,
+      "items": 2,
+      "ms": {
+        "compile-svg": 63.012,
+        "compile-text": 57.832,
+        "hover": 0.172,
+        "render-svg": 2.474,
+        "render-text": 4.648
+      },
+      "baseline_ms": {
+        "compile-svg": 54.624,
+        "compile-text": 64.085,
+        "hover": 0.177,
+        "render-svg": 2.575,
+        "render-text": 2.979
+      }
+    },
+    "trellis_anscombe": {
+      "rows": 44,
+      "items": 49,
+      "ms": {
+        "compile-svg": 16.982,
+        "compile-text": 4.512,
+        "hover": 0.284,
+        "render-svg": 18.524,
+        "render-text": 17.051
+      },
+      "baseline_ms": {
+        "compile-svg": 26.77,
+        "compile-text": 4.954,
+        "hover": 0.378,
+        "render-svg": 17.22,
+        "render-text": 16.102
+      }
+    },
+    "trellis_area": {
+      "rows": 560,
+      "items": 9,
+      "ms": {
+        "compile-svg": 49.718,
+        "compile-text": 45.211,
+        "hover": 1.493,
+        "render-svg": 9.27,
+        "render-text": 15.161
+      },
+      "baseline_ms": {
+        "compile-svg": 116.617,
+        "compile-text": 82.26,
+        "hover": 1.214,
+        "render-svg": 50.79,
+        "render-text": 17.687
+      }
+    },
+    "trellis_area_seattle": {
+      "rows": 8759,
+      "items": 49,
+      "ms": {
+        "compile-svg": 951.56,
+        "compile-text": 899.953,
+        "hover": 9.687,
+        "render-svg": 111.256,
+        "render-text": 238.919
+      }
+    },
+    "trellis_bar": {
+      "rows": 570,
+      "items": 41,
+      "ms": {
+        "compile-svg": 11.949,
+        "compile-text": 9.296,
+        "hover": 0.324,
+        "render-svg": 6.863,
+        "render-text": 7.1
+      },
+      "baseline_ms": {
+        "compile-svg": 22.464,
+        "compile-text": 31.649,
+        "hover": 0.329,
+        "render-svg": 13.266,
+        "render-text": 10.192
+      }
+    },
+    "trellis_bar_histogram": {
+      "rows": 406,
+      "items": 24,
+      "ms": {
+        "compile-svg": 23.703,
+        "compile-text": 7.638,
+        "hover": 0.246,
+        "render-svg": 6.22,
+        "render-text": 5.946
+      },
+      "baseline_ms": {
+        "compile-svg": 21.422,
+        "compile-text": 8.665,
+        "hover": 0.325,
+        "render-svg": 13.972,
+        "render-text": 19.743
+      }
+    },
+    "trellis_barley": {
+      "rows": 120,
+      "items": 127,
+      "ms": {
+        "compile-svg": 16.063,
+        "compile-text": 11.25,
+        "hover": 0.889,
+        "render-svg": 19.333,
+        "render-text": 14.801
+      }
+    },
+    "trellis_scatter": {
+      "rows": 3201,
+      "items": 571,
+      "ms": {
+        "compile-svg": 75.973,
+        "compile-text": 61.756,
+        "hover": 1.205,
+        "render-svg": 27.95,
+        "render-text": 20.453
+      }
+    },
+    "trellis_stacked_bar": {
+      "rows": 120,
+      "items": 123,
+      "ms": {
+        "compile-svg": 13.505,
+        "compile-text": 10.679,
+        "hover": 1.025,
+        "render-svg": 8.815,
+        "render-text": 6.062
+      },
+      "baseline_ms": {
+        "compile-svg": 24.982,
+        "compile-text": 15.889,
+        "hover": 0.949,
+        "render-svg": 17.345,
+        "render-text": 7.368
+      }
+    },
+    "vconcat_weather": {
+      "rows": 2922,
+      "items": 38,
+      "ms": {
+        "compile-svg": 66.696,
+        "compile-text": 63.586,
+        "hover": 0.343,
+        "render-svg": 6.71,
+        "render-text": 4.02
+      },
+      "baseline_ms": {
+        "compile-svg": 379.978,
+        "compile-text": 242.196,
+        "hover": 8.519,
+        "render-svg": 7.552,
+        "render-text": 6.808
+      }
+    }
+  }
+}

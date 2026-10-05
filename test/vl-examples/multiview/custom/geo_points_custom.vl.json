@@ -1,0 +1,26 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: projected longitude/latitude points under a rotated mercator, with sized, shaped and colored symbols.",
+  "width": 360,
+  "height": 220,
+  "data": {"values": [
+    {"city": "Lisbon", "lon": -9.14, "lat": 38.72, "pop": 0.55, "region": "Europe"},
+    {"city": "Reykjavik", "lon": -21.94, "lat": 64.15, "pop": 0.13, "region": "Europe"},
+    {"city": "Cairo", "lon": 31.24, "lat": 30.04, "pop": 9.5, "region": "Africa"},
+    {"city": "Lagos", "lon": 3.38, "lat": 6.52, "pop": 8.0, "region": "Africa"},
+    {"city": "Nairobi", "lon": 36.82, "lat": -1.29, "pop": 4.4, "region": "Africa"},
+    {"city": "Cape Town", "lon": 18.42, "lat": -33.92, "pop": 4.6, "region": "Africa"},
+    {"city": "Moscow", "lon": 37.62, "lat": 55.75, "pop": 12.5, "region": "Europe"},
+    {"city": "Tehran", "lon": 51.39, "lat": 35.69, "pop": 8.7, "region": "Asia"},
+    {"city": "Mumbai", "lon": 72.88, "lat": 19.08, "pop": 12.4, "region": "Asia"},
+    {"city": "Berlin", "lon": 13.4, "lat": 52.52, "pop": 3.6, "region": "Europe"}]},
+  "projection": {"type": "mercator", "rotate": [-20, 0, 0]},
+  "mark": {"type": "point", "filled": true, "opacity": 0.8, "strokeWidth": 1, "stroke": "#333333"},
+  "encoding": {
+    "longitude": {"field": "lon", "type": "quantitative"},
+    "latitude": {"field": "lat", "type": "quantitative"},
+    "size": {"field": "pop", "type": "quantitative", "scale": {"range": [30, 400]}, "title": "Population (M)"},
+    "shape": {"field": "region", "type": "nominal"},
+    "color": {"field": "region", "type": "nominal", "scale": {"scheme": "dark2"}}
+  }
+}

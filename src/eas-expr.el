@@ -204,6 +204,15 @@
         ((stringp value) (or (eas-time-parse value) 0.0e+NaN))
         (t 0.0e+NaN)))
 
+(defun eas-expr--slice (v a b)
+  "JavaScript's V.slice(A, B) for a string or array V."
+  (let* ((n (length v))
+         (pos (lambda (x d) (let ((x (if (numberp x) (truncate x) d))) (max 0 (min n (if (< x 0) (+ n x) x))))))
+         (a (funcall pos a 0)) (b (funcall pos b n)))
+    (cond ((stringp v) (if (< a b) (substring v a b) ""))
+          ((vectorp v) (if (< a b) (seq-subseq v a b) []))
+          (t (eas-expr--slice (eas-expr--string v) a b)))))
+
 (defun eas-expr--string (value)
   "Coerce VALUE to a string the way JavaScript does."
   (cond ((stringp value) value)
@@ -376,6 +385,12 @@ goldens and replays reproduce exactly."
     ("length" . ,(lambda (v) (length v)))
     ("upper" . ,(lambda (s) (upcase (eas-expr--string s))))
     ("lower" . ,(lambda (s) (downcase (eas-expr--string s))))
+    ;; JavaScript's slice (negative ends count from the end) and substring.
+    ("slice" . ,(lambda (v a &optional b) (eas-expr--slice v a b)))
+    ("substring" . ,(lambda (s a &optional b)
+                      (let* ((s (eas-expr--string s)) (n (length s))
+                             (a (max 0 (min n (truncate (or a 0))))) (b (max 0 (min n (truncate (or b n))))))
+                        (substring s (min a b) (max a b)))))
     ("inrange" . ,(lambda (v range)
                     (let ((lo (min (aref range 0) (aref range 1)))
                           (hi (max (aref range 0) (aref range 1))))

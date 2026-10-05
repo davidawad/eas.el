@@ -207,6 +207,10 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
 
 ;;; Titles and tooltips
 
+(defvar eas-encode-count-title nil
+  "config.countTitle while compiling (set by `eas-compile-scene'), for callers
+that have no config at hand.")
+
 (defun eas-encode-title (def &optional config)
   "Vega-Lite's default title for DEF, or DEF's explicit :title.
 CONFIG's countTitle names a count of records."
@@ -219,7 +223,8 @@ CONFIG's countTitle names a count of records."
               (plist-get def :arg)))
      ((equal (plist-get def :derived) "aggregate")
       (if (and (equal (plist-get def :op) "count") (null (plist-get def :source)))
-          (let ((c (plist-get config :countTitle))) (if (stringp c) c "Count of Records"))
+          (let ((c (plist-get config :countTitle)))
+            (cond ((stringp c) c) (eas-encode-count-title) (t "Count of Records")))
         ;; Vega-Lite's verbal title: titleCase(op) of field, FIELD for min ARG.
         (let* ((op (plist-get def :op)) (arg (eas-encode--arg-op op)))
           (if arg (format "%s for %s %s" (plist-get def :source) (if (equal (car arg) "argmin") "min" "max") (cdr arg))

@@ -28,7 +28,8 @@
   (let* ((fs (plist-get metrics :legend-label-size))
          (title (eas-legend--title legend x y metrics))
          (by (cdr title)) (thick (plist-get metrics :gradient-thickness))
-         (glen (or (plist-get legend :gradient-length) 200))
+         ;; Vega-Lite: clamp(plot width, 100, 200).
+         (glen (or (plist-get legend :gradient-length) (max 100 (min 200 (or (plist-get legend :plot-w) 200)))))
          (d (plist-get legend :domain)) (span (max 1e-9 (- (aref d 1) (aref d 0))))
          (ly (+ by thick (plist-get metrics :legend-label-offset)))
          (box (vector x by (+ x glen) (+ by thick)))

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: flush bounds, a titled view, reversed (descending) axes and a shared legend on top.",
+  "data": {
+    "url": "../../data/cars.json"
+  },
+  "bounds": "flush",
+  "spacing": 8,
+  "vconcat": [
+    {
+      "mark": "bar",
+      "width": 200,
+      "height": 50,
+      "encoding": {
+        "x": {
+          "field": "Horsepower",
+          "bin": true,
+          "axis": null
+        },
+        "y": {
+          "aggregate": "count",
+          "title": null
+        },
+        "color": {
+          "field": "Origin",
+          "legend": {
+            "orient": "top",
+            "direction": "horizontal",
+            "title": null
+          }
+        }
+      },
+      "title": "Horsepower"
+    },
+    {
+      "spacing": 8,
+      "bounds": "flush",
+      "hconcat": [
+        {
+          "mark": {
+            "type": "circle",
+            "opacity": 0.5
+          },
+          "width": 200,
+          "height": 160,
+          "encoding": {
+            "x": {
+              "field": "Horsepower",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Miles_per_Gallon",
+              "type": "quantitative",
+              "sort": "descending"
+            },
+            "color": {
+              "field": "Origin"
+            }
+          }
+        },
+        {
+          "mark": "bar",
+          "width": 50,
+          "height": 160,
+          "encoding": {
+            "y": {
+              "field": "Miles_per_Gallon",
+              "bin": true,
+              "axis": null,
+              "sort": "descending"
+            },
+            "x": {
+              "aggregate": "count",
+              "title": null
+            },
+            "color": {
+              "field": "Origin"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "ticks": false,
+      "labelPadding": 3
+    }
+  }
+}

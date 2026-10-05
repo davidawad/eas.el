@@ -1,0 +1,21 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "fc-qx1.44 customization: a rect heatmap with text labels, a named scheme, a short horizontal gradient legend and band paddings.",
+  "data": {"url": "../../data/cars.json"},
+  "transform": [{"aggregate": [{"op": "count", "as": "n"}], "groupby": ["Origin", "Cylinders"]}],
+  "encoding": {
+    "y": {"field": "Origin", "type": "ordinal", "scale": {"paddingInner": 0.1, "paddingOuter": 0.05},
+          "axis": {"labelFontWeight": "bold", "ticks": false, "domain": false, "labelPadding": 6, "title": null}},
+    "x": {"field": "Cylinders", "type": "ordinal", "scale": {"paddingInner": 0.1},
+          "axis": {"orient": "top", "labelAngle": 0, "ticks": false, "domain": false, "title": "Cylinders", "titlePadding": 6}}
+  },
+  "layer": [
+    {"mark": {"type": "rect", "cornerRadius": 3, "stroke": "#ffffff", "strokeWidth": 1},
+     "encoding": {"color": {"field": "n", "type": "quantitative", "scale": {"scheme": "purples"},
+                            "legend": {"title": "Cars", "direction": "horizontal", "gradientLength": 120, "orient": "bottom-right", "offset": 4}}}},
+    {"mark": {"type": "text", "fontSize": 11, "fontWeight": "bold"},
+     "encoding": {"text": {"field": "n", "type": "quantitative"},
+                  "color": {"condition": {"test": "datum.n > 80", "value": "white"}, "value": "#3f007d"}}}
+  ],
+  "config": {"view": {"step": 46, "stroke": null}, "scale": {"bandPaddingInner": 0.2}}
+}

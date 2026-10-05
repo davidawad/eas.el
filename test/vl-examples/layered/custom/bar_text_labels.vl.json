@@ -1,0 +1,29 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "fc-qx1.44 customization: a layered bar chart with text labels, every guide and mark property away from its default.",
+  "width": 360,
+  "height": 220,
+  "title": {"text": "Fruit sold (customized)", "anchor": "start", "color": "#7a2e0e", "fontSize": 15, "fontWeight": "normal", "offset": 14},
+  "data": {"values": [
+    {"fruit": "Apples", "sold": 28}, {"fruit": "Bananas", "sold": 55}, {"fruit": "Cherries", "sold": 43},
+    {"fruit": "Dragonfruit", "sold": 9}, {"fruit": "Elderberries", "sold": 37}
+  ]},
+  "encoding": {
+    "x": {"field": "fruit", "type": "nominal",
+          "axis": {"labelAngle": -30, "labelColor": "#7a2e0e", "labelFontSize": 10, "labelPadding": 6,
+                   "tickColor": "#7a2e0e", "tickSize": 7, "tickWidth": 2, "domainColor": "#333333", "domainWidth": 2,
+                   "title": "Fruit", "titleColor": "#7a2e0e", "titleFontSize": 13, "titleFontWeight": "bold", "titlePadding": 10}},
+    "y": {"field": "sold", "type": "quantitative", "scale": {"domain": [0, 60], "nice": false},
+          "axis": {"tickCount": 4, "format": ".0f", "grid": true, "gridColor": "#d9c7b8", "gridDash": [4, 2], "gridWidth": 1.5,
+                   "domain": false, "ticks": false, "labelPadding": 8, "title": "Crates sold", "titleColor": "#555555"}}
+  },
+  "layer": [
+    {"mark": {"type": "bar", "color": "#e8a33d", "stroke": "#7a2e0e", "strokeWidth": 1.5, "cornerRadiusEnd": 6, "opacity": 0.9}},
+    {"mark": {"type": "text", "baseline": "bottom", "dy": -4, "fontSize": 12, "fontWeight": "bold", "fontStyle": "italic",
+              "color": "#7a2e0e"},
+     "encoding": {"text": {"field": "sold", "type": "quantitative", "format": ".0f"}}},
+    {"mark": {"type": "text", "baseline": "top", "dy": 6, "fontSize": 9, "limit": 20, "color": "white", "text": ["in", "crates"]},
+     "transform": [{"filter": "datum.sold > 30"}]}
+  ],
+  "config": {"view": {"stroke": "#bbbbbb"}}
+}

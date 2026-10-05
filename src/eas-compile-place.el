@@ -78,6 +78,15 @@ Polar units have no position channels and keep the view size."
                                    (vector 0 (if (eq channel :x) (plist-get group :w) (plist-get group :h)))
                                  (vector (plist-get group :h) 0)))))
 
+(defun eas-place--frame-half (metrics)
+  "Half the width of the view frame's stroke under METRICS, or 0.
+Any truthy config.view.stroke counts, \"transparent\" too."
+  (let* ((view (eas-theme-get (plist-get metrics :config) :view))
+         (stroke (plist-get view :stroke)) (sw (plist-get view :strokeWidth)))
+    (if (and (stringp stroke) (not (string-empty-p stroke)))
+        (/ (if (numberp sw) sw 1) 2.0)
+      0)))
+
 (defun eas-place--svg-chrome (group axes legends metrics)
   "Chrome and legend offsets of GROUP in svg; return the chrome plist."
   (let* ((w (plist-get group :w)) (h (plist-get group :h)) (plot (vector 0 0 w h))
@@ -102,7 +111,7 @@ Polar units have no position channels and keep the view size."
          (if corner
             ;; Inside the plot, its box flush with the corner less the offset.
             (let* ((b (plist-get (eas-legend-place legend 0 0 metrics) :box))
-                   (off (plist-get metrics :legend-offset))
+                   (off (or (plist-get legend :offset) (plist-get metrics :legend-offset)))
                    (right (string-suffix-p "right" (car corner)))
                    (bottom (string-prefix-p "bottom" (car corner))))
               (push (cons (if right (- w off (aref b 2)) (- off (aref b 0)))
@@ -126,6 +135,13 @@ Polar units have no position channels and keep the view size."
     (plist-put group :legend-offsets (nreverse offsets))
     ;; The exact left edge of the content; Vega's frame-bounds titles start there.
     (plist-put group :content-x1 (aref box 0))
+    (plist-put group :content-y1 (aref box 1))
+    ;; A concat cell is placed by its group's bounds, which Vega grows by
+    ;; half the frame's stroke all round (boundStroke); its title is placed
+    ;; from the content.  A single view's autosize never sees the frame.
+    (when (plist-get group :grid-cell)
+      (let ((half (eas-place--frame-half metrics)))
+        (setq box (vector (- (aref box 0) half) (- (aref box 1) half) (+ (aref box 2) half) (+ (aref box 3) half)))))
     (list :left (max 0 (ceiling (- (aref box 0)))) :top (max 0 (ceiling (- (aref box 1))))
           :right (max 0 (ceiling (- (aref box 2) w))) :bottom (max 0 (ceiling (- (aref box 3) h))))))
 
@@ -190,7 +206,10 @@ tallest column."
         (plist-put chrome (car e) (+ (plist-get chrome (car e)) (cdr e)))))
     ;; A concat cell's title sits above its axes (eas-title.el).
     (when-let* ((node (plist-get group :title-node)))
-      (plist-put group :axis-top (plist-get chrome :top))
+      ;; Vega titles a cell from its content's exact top, not the rounded chrome.
+      (plist-put group :axis-top (if (and (not (eas-layout-text-p metrics)) (plist-get group :content-y1))
+                                     (max 0 (- (plist-get group :content-y1)))
+                                   (plist-get chrome :top)))
       (plist-put chrome :top (+ (plist-get chrome :top) (eas-title-height node metrics))))
     (plist-put group :axes-model axes)
     (plist-put group :legends-model legends)
@@ -276,6 +295,7 @@ TITLE-H is the chart title's height.  SIZE, when non-nil, is the target
 plot sizes (a relayout after marks were measured)."
   (let ((groups (eas-place--groups tree)) (pad (plist-get metrics :pad)) (shared 0))
     (dolist (g groups)
+      (when (plist-get tree :concat) (plist-put g :grid-cell t))
       (unless sized (eas-place-natural-size g metrics))
       (eas-place-chrome g metrics))
     ;; Legends shared across concat views sit right of the whole block.

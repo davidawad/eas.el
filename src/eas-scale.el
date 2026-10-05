@@ -369,7 +369,8 @@ and strftime-style time formats are honored."
         ((and format (string-match "\\.\\([0-9]+\\)%" format))
          (let ((d (string-to-number (match-string 1 format))))
            (lambda (v) (concat (eas-scale-format-number (* 100 v) d) "%"))))
-        ((and format (string-match "\\.\\([0-9]+\\)f" format))
+        ;; ",.Nf" here; any other specifier (a symbol, a sign, no grouping) is d3's own.
+        ((and format (string-match "\\`,\\.\\([0-9]+\\)f\\'" format))
          (let ((d (string-to-number (match-string 1 format))))
            (lambda (v) (eas-scale-format-number v d))))
         ;; d3 tickFormat: an SI prefix format ("s") without a precision takes the

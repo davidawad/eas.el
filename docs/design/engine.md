@@ -331,9 +331,16 @@ renders natively without it (`eas-spec-props.el`, fc-qx1.43).
   `UNSUPPORTED_FEATURE`. eas never runs bin/chart to display a chart
   unless `eas-static-fallback` is t; then the view (and svg render)
   uses bin/chart's image. Properties inside the subset that are drawn
-  without (eas-spec-props.el, fc-qx1.42) are `check` warnings with
-  `ignored: true` and do not make a view static. The native subset
+  without (eas-spec-props.el, fc-qx1.43) are `check` warnings with
+  `property: true` and do not make a view static. The native subset
   grows one gallery entry at a time.
+- One level finer (fc-qx1.44): a guide, title, scale or config
+  *property* Vega-Lite documents but the renderers ignore (say
+  `axis.titleAngle`, `legend.columns`, `config.axisBand`) is an
+  `UNSUPPORTED_FEATURE` warning in `check` with its path and a
+  `:property` flag (`eas-spec-props.el`). It does not make the chart
+  static: the chart draws natively with that property at its default,
+  and `check` keeps `native: true`.
 - bin/chart's role is decided (fc-qx1.37): test oracle (dev/CI, refs
   committed so CI needs only rsvg-convert) and static export. It is
   never a runtime dependency.

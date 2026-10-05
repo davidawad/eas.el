@@ -1,0 +1,217 @@
+{
+  "emacs": null,
+  "compiled": null,
+  "zone": "America/Chicago",
+  "reps": null,
+  "examples": {
+    "area_horizon": {
+      "rows": 20,
+      "items": 2,
+      "ms": {
+        "compile-svg": 9.724,
+        "compile-text": 8.809,
+        "hover": 0.235,
+        "render-svg": 11.886,
+        "render-text": 14.245
+      }
+    },
+    "bar_layered_weather": {
+      "rows": 10,
+      "items": 50,
+      "ms": {
+        "compile-svg": 6.478,
+        "compile-text": 8.176,
+        "hover": 0.415,
+        "render-svg": 8.892,
+        "render-text": 3.004
+      }
+    },
+    "concat_layer_voyager_result": {
+      "rows": 4,
+      "items": 15,
+      "ms": {
+        "compile-svg": 9.336,
+        "compile-text": 7.435,
+        "hover": 0.119,
+        "render-svg": 2.369,
+        "render-text": 1.692
+      }
+    },
+    "facet_bullet": {
+      "rows": 5,
+      "items": 30,
+      "ms": {
+        "compile-svg": 23.842,
+        "compile-text": 13.571,
+        "hover": 0.818,
+        "render-svg": 11.871,
+        "render-text": 15.614
+      }
+    },
+    "layer_bar_annotations": {
+      "rows": 0,
+      "items": 18,
+      "ms": {
+        "compile-svg": 9.658,
+        "compile-text": 6.442,
+        "hover": 0.246,
+        "render-svg": 3.67,
+        "render-text": 1.229
+      }
+    },
+    "layer_bar_fruit": {
+      "rows": 8,
+      "items": 16,
+      "ms": {
+        "compile-svg": 7.302,
+        "compile-text": 2.297,
+        "hover": 0.209,
+        "render-svg": 2.901,
+        "render-text": 6.671
+      }
+    },
+    "layer_bar_labels": {
+      "rows": 3,
+      "items": 6,
+      "ms": {
+        "compile-svg": 2.25,
+        "compile-text": 1.711,
+        "hover": 0.137,
+        "render-svg": 1.698,
+        "render-text": 4.583
+      }
+    },
+    "layer_candlestick": {
+      "rows": 44,
+      "items": 88,
+      "ms": {
+        "compile-svg": 10.916,
+        "compile-text": 9.161,
+        "hover": 4.707,
+        "render-svg": 13.654,
+        "render-text": 3.169
+      }
+    },
+    "layer_dual_axis": {
+      "rows": 2922,
+      "items": 2,
+      "ms": {
+        "compile-svg": 83.221,
+        "compile-text": 69.754,
+        "hover": 0.59,
+        "render-svg": 4.329,
+        "render-text": 7.732
+      }
+    },
+    "layer_falkensee": {
+      "rows": 38,
+      "items": 41,
+      "ms": {
+        "compile-svg": 9.416,
+        "compile-text": 9.713,
+        "hover": 0.617,
+        "render-svg": 5.398,
+        "render-text": 5.196
+      }
+    },
+    "layer_histogram_global_mean": {
+      "rows": 3201,
+      "items": 10,
+      "ms": {
+        "compile-svg": 33.904,
+        "compile-text": 36.466,
+        "hover": 0.153,
+        "render-svg": 3.09,
+        "render-text": 1.89
+      }
+    },
+    "layer_likert": {
+      "rows": 7,
+      "items": 53,
+      "ms": {
+        "compile-svg": 7.569,
+        "compile-text": 5.121,
+        "hover": 0.403,
+        "render-svg": 3.785,
+        "render-text": 3.43
+      }
+    },
+    "layer_line_co2_concentration": {
+      "rows": 741,
+      "items": 24,
+      "ms": {
+        "compile-svg": 117.607,
+        "compile-text": 118.183,
+        "hover": 0.582,
+        "render-svg": 14.478,
+        "render-text": 31.347
+      }
+    },
+    "layer_line_mean_point_raw": {
+      "rows": 560,
+      "items": 69,
+      "ms": {
+        "compile-svg": 11.904,
+        "compile-text": 7.591,
+        "hover": 0.837,
+        "render-svg": 4.551,
+        "render-text": 2.048
+      }
+    },
+    "layer_line_rolling_mean_point_raw": {
+      "rows": 1461,
+      "items": 1462,
+      "ms": {
+        "compile-svg": 133.998,
+        "compile-text": 126.999,
+        "hover": 3.203,
+        "render-svg": 68.285,
+        "render-text": 13.796
+      }
+    },
+    "layer_precipitation_mean": {
+      "rows": 1461,
+      "items": 13,
+      "ms": {
+        "compile-svg": 30.07,
+        "compile-text": 27.213,
+        "hover": 0.23,
+        "render-svg": 3.767,
+        "render-text": 1.51
+      }
+    },
+    "layer_ranged_dot": {
+      "rows": 620,
+      "items": 15,
+      "ms": {
+        "compile-svg": 10.844,
+        "compile-text": 9.349,
+        "hover": 0.264,
+        "render-svg": 2.725,
+        "render-text": 1.66
+      }
+    },
+    "layer_text_heatmap": {
+      "rows": 406,
+      "items": 18,
+      "ms": {
+        "compile-svg": 5.851,
+        "compile-text": 4.443,
+        "hover": 0.193,
+        "render-svg": 2.447,
+        "render-text": 1.156
+      }
+    },
+    "wheat_wages": {
+      "rows": 52,
+      "items": 84,
+      "ms": {
+        "compile-svg": 13.862,
+        "compile-text": 9.589,
+        "hover": 0.673,
+        "render-svg": 14.733,
+        "render-text": 28.614
+      }
+    }
+  }
+}

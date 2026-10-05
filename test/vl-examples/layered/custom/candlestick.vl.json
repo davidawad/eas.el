@@ -1,0 +1,23 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "fc-qx1.44 customization: rule and bar layers as a candlestick, with config-level axis styling and conditional colors.",
+  "width": 420,
+  "height": 220,
+  "data": {"url": "../../data/ohlc.json"},
+  "encoding": {
+    "x": {"field": "date", "type": "temporal", "title": "2009",
+          "axis": {"format": "%m/%d", "labelAngle": -45, "tickCount": 6, "titleFontWeight": "bold"}},
+    "y": {"type": "quantitative", "scale": {"zero": false, "padding": 6}, "axis": {"title": "Price", "format": "$.0f"}},
+    "color": {"condition": {"test": "datum.open < datum.close", "value": "#1a9850"}, "value": "#d73027"}
+  },
+  "layer": [
+    {"mark": {"type": "rule", "strokeWidth": 1.5}, "encoding": {"y": {"field": "low"}, "y2": {"field": "high"}}},
+    {"mark": {"type": "bar", "cornerRadius": 1, "stroke": "#333333", "strokeWidth": 0.5},
+     "encoding": {"y": {"field": "open"}, "y2": {"field": "close"}}}
+  ],
+  "config": {
+    "axis": {"gridColor": "#eeeeee", "gridWidth": 1, "labelFontSize": 10, "labelColor": "#444444", "domainColor": "#444444"},
+    "axisX": {"grid": true, "tickColor": "#444444", "tickSize": 5},
+    "axisY": {"grid": true, "domain": false, "ticks": false, "labelPadding": 6}
+  }
+}

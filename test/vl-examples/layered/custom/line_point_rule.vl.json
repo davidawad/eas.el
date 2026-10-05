@@ -1,0 +1,36 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "fc-qx1.44 customization: line, point and mean-rule layers with a customized legend, top and right axes and a front axis (zindex).",
+  "width": 360,
+  "height": 200,
+  "data": {"values": [
+    {"t": 1, "v": 3.1, "s": "north"}, {"t": 2, "v": 4.6, "s": "north"}, {"t": 3, "v": 4.1, "s": "north"}, {"t": 4, "v": 6.2, "s": "north"},
+    {"t": 5, "v": 5.4, "s": "north"}, {"t": 6, "v": 7.9, "s": "north"}, {"t": 7, "v": 7.1, "s": "north"}, {"t": 8, "v": 8.8, "s": "north"},
+    {"t": 1, "v": 1.2, "s": "south"}, {"t": 2, "v": 2.0, "s": "south"}, {"t": 3, "v": 3.4, "s": "south"}, {"t": 4, "v": 2.9, "s": "south"},
+    {"t": 5, "v": 4.0, "s": "south"}, {"t": 6, "v": 3.6, "s": "south"}, {"t": 7, "v": 5.1, "s": "south"}, {"t": 8, "v": 4.7, "s": "south"}
+  ]},
+  "encoding": {
+    "color": {"field": "s", "type": "nominal", "scale": {"range": ["#1b7837", "#762a83"]},
+              "legend": {"title": "Station", "orient": "top-left", "offset": 6}}
+  },
+  "layer": [
+    {"mark": {"type": "line", "strokeWidth": 3, "strokeDash": [6, 3], "interpolate": "monotone", "opacity": 0.8},
+     "encoding": {
+       "x": {"field": "t", "type": "quantitative", "scale": {"domain": [0, 9], "nice": false},
+             "axis": {"orient": "top", "values": [1, 3, 5, 7], "title": "Hour", "labelColor": "#555555", "tickSize": 6}},
+       "y": {"field": "v", "type": "quantitative", "scale": {"zero": false, "domain": [0, 10]},
+             "axis": {"orient": "right", "tickCount": 5, "zindex": 1, "gridColor": "#ffffff", "gridWidth": 2,
+                      "title": "Reading", "titleColor": "#1b7837", "minExtent": 40}}
+     }},
+    {"mark": {"type": "point", "shape": "diamond", "filled": true, "size": 90, "stroke": "white", "strokeWidth": 1},
+     "encoding": {"x": {"field": "t", "type": "quantitative"}, "y": {"field": "v", "type": "quantitative"}}},
+    {"mark": {"type": "rule", "strokeDash": [2, 2], "strokeWidth": 2},
+     "encoding": {"y": {"aggregate": "mean", "field": "v", "type": "quantitative"}}}
+  ],
+  "config": {
+    "view": {"stroke": null},
+    "axis": {"domainColor": "#888888", "tickColor": "#888888", "labelFontSize": 10, "titleFontSize": 12, "titlePadding": 8},
+    "legend": {"labelFontSize": 12, "titleFontSize": 12, "titleFontWeight": "bold", "symbolType": "square",
+               "symbolSize": 120, "symbolStrokeWidth": 0, "rowPadding": 6}
+  }
+}

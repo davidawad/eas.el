@@ -1,0 +1,26 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "fc-qx1.44 customization: an area band with a line on top, customized scales, axes, view frame and background.",
+  "width": 380,
+  "height": 180,
+  "background": "#f4f1ea",
+  "title": {"text": "Seattle temperature band", "anchor": "end", "fontSize": 12, "color": "#333333", "offset": 6},
+  "data": {"url": "../../data/seattle-weather.csv"},
+  "transform": [{"filter": "time(datum.date) < time('2012-03-01')"}],
+  "encoding": {
+    "x": {"field": "date", "type": "temporal",
+          "axis": {"format": "%b %d", "tickCount": 4, "labelAngle": 0, "labelFlush": false, "grid": true, "gridOpacity": 0.4,
+                   "gridDash": [1, 3], "title": null}}
+  },
+  "layer": [
+    {"mark": {"type": "area", "color": "#c06c3e", "opacity": 0.35, "interpolate": "monotone"},
+     "encoding": {
+       "y": {"field": "temp_min", "type": "quantitative", "scale": {"zero": false, "nice": false, "domain": [-6, 18]},
+             "axis": {"title": "°C", "labelOverlap": false, "tickCount": 6, "offset": 4}},
+       "y2": {"field": "temp_max"}
+     }},
+    {"mark": {"type": "line", "color": "#7a2e0e", "strokeWidth": 1.5, "strokeCap": "butt", "interpolate": "monotone"},
+     "encoding": {"y": {"field": "temp_max", "type": "quantitative"}}}
+  ],
+  "config": {"view": {"stroke": "#7a2e0e", "strokeWidth": 1}, "axis": {"labelColor": "#7a2e0e", "tickColor": "#7a2e0e"}}
+}

@@ -41,6 +41,7 @@
 (require 'eas-chart)
 (require 'eas-png)
 (require 'eas-vl-gallery-mask)
+(require 'eas-vl-gallery-defect)
 
 (defvar eas-vl-gallery-directory
   (expand-file-name "test/vl-examples" eas-template--root)
@@ -300,10 +301,13 @@ is non-nil when both backends rendered."
              (omit (eas-vl-gallery-ref-omits group name))
              (svg (eas-vl-gallery-svg spec))
              (text (eas-vl-gallery-text spec))
+             ;; A recorded reference defect: the oracle sees the spec without it.
+             (defect (eas-vl-gallery-defect (eas-vl-gallery-status group) name))
              (cmp (and compare (eas-vl-gallery-compare
-                                group name (if omit (eas-vl-gallery--native
-                                                     (eas-svg-render (eas-vl-gallery-omit-marks (eas-compile spec) omit)))
-                                             svg)
+                                group name (cond (defect (eas-vl-gallery-svg (eas-vl-gallery-defect-apply spec defect)))
+                                                 (omit (eas-vl-gallery--native
+                                                        (eas-svg-render (eas-vl-gallery-omit-marks (eas-compile spec) omit))))
+                                                 (t svg))
                                 (eas-vl-gallery-mask group name spec)))))
         (list :name name :ok t :svg svg :text text
               :ratio (plist-get cmp :ratio) :size-delta (plist-get cmp :size-delta)
@@ -388,7 +392,9 @@ the entry has a \"note\" (a written reason, kept).  refOmits is kept too."
                                                 (cl-loop for k in '(:ref :interim_ref :ref_build :mask)
                                                          when (plist-get prev k) append (list k (plist-get prev k)))
                                                 (when (plist-get prev :refOmits)
-                                                  (list :refOmits (plist-get prev :refOmits)))))))))))
+                                                  (list :refOmits (plist-get prev :refOmits)))
+                                                (when (plist-get prev :ref_defect)
+                                                  (list :ref_defect (plist-get prev :ref_defect)))))))))))
     (with-temp-file (eas-vl-gallery-status-file group)
       (set-buffer-file-coding-system 'utf-8-unix)
       (insert (eas-json-pretty new)))
@@ -419,9 +425,11 @@ prove goes into supported.json."
            append (cl-loop for (name . threshold) in (eas-vl-gallery-passing group)
                            for dir = (eas-vl-gallery-group-directory group)
                            for spec = (eas-vl-gallery-spec group name)
+                           for defect = (eas-vl-gallery-defect (eas-vl-gallery-status group) name)
                            collect (list :name (concat group "/" name)
                                          :file (expand-file-name (concat name ".vl.json") dir)
-                                         :spec spec
+                                         ;; What the oracle can judge: without a recorded reference defect.
+                                         :spec (if defect (eas-vl-gallery-defect-apply spec defect) spec)
                                          :threshold threshold
                                          :ref (eas-vl-gallery-ref-file group name)
                                          :ref-problem (eas-vl-gallery-ref-problem group name)

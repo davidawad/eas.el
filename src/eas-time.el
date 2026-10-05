@@ -23,6 +23,24 @@
   "Zone for local time, or nil for UTC.
 A `decode-time' ZONE such as \"America/Chicago\".")
 
+(defvar eas-time--local nil
+  "The zone `eas-time-with-local-zone' made Emacs's local time zone, or nil.")
+
+(defmacro eas-time-with-local-zone (&rest body)
+  "Run BODY with Emacs's local time zone set to `eas-time-zone'.
+Converting in a named zone loads its rules on every `decode-time' and
+`encode-time' call, about 50 times the local zone's cost, so a compile
+converting thousands of dates sets the zone once (setenv TZ) and the
+conversions take the local path; the previous TZ comes back on exit."
+  `(if (or (not (stringp eas-time-zone)) (equal eas-time--local eas-time-zone)) (progn ,@body)
+     (let ((old-tz (getenv "TZ")) (eas-time--local eas-time-zone))
+       (unwind-protect (progn (setenv "TZ" eas-time-zone) ,@body)
+         (setenv "TZ" old-tz)))))
+
+(defsubst eas-time--zone ()
+  "The ZONE argument for `eas-time-zone': nil when it is the local zone."
+  (if (and eas-time--local (equal eas-time--local eas-time-zone)) nil eas-time-zone))
+
 (defconst eas-time--iso-regexp
   (concat "\\`\\([0-9]\\{4\\}\\)\\(?:[-/]\\([0-9]\\{1,2\\}\\)"
           "\\(?:[-/]\\([0-9]\\{1,2\\}\\)"
@@ -207,7 +225,7 @@ MONTH (1-12), DAY and the clock fields may overflow; they are normalized."
      ((and off (eql off guess)) (- local off))
      (eas-time-zone
       (+ (* 1000 (time-convert (encode-time (list (or seconds 0) (or minutes 0) (or hours 0) (or day 1)
-                                                  (or month 1) year nil -1 eas-time-zone))
+                                                  (or month 1) year nil -1 (eas-time--zone)))
                                'integer))
          (or milliseconds 0)))
      (t (eas-time--utc-ms year month day hours minutes seconds milliseconds)))))

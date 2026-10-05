@@ -12,10 +12,9 @@
     "threshold": 0.03
   },
   "concat_layer_voyager_result": {
-    "note": "native canvas is 3px wider and 9px shorter than bin/chart's: the second cell's arrow-label text blocks and its triangle symbols are placed a few pixels off Vega's (everything else matches)",
-    "ratio": 0.0689,
-    "reason": "native canvas is 3px wider and 9px shorter than bin/chart's: the second cell's arrow-label text blocks and its triangle symbols are placed a few pixels off Vega's (everything else matches); svg and text render natively at 3 sizes; oracle ratio 0.0689 (threshold 0.03), size delta [3 -9] px",
-    "status": "partial",
+    "ratio": 0.0273,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0273 (threshold 0.03), measured with resvg 0.48 and Liberation Sans standing in for rsvg-convert, absent from the fc-qx1.44 box; canvas matches bin/chart's 607x146 exactly",
+    "status": "pass",
     "threshold": 0.03
   },
   "facet_bullet": {
@@ -111,10 +110,18 @@
     "threshold": 0.03
   },
   "wheat_wages": {
-    "note": "bin/chart's reference lacks the wheat bars: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set (as for distributions/layer_cumulative_histogram), so the reference is blank where native draws them; native also does not map a missing commonwealth value to the first color of its fill scale (Vega treats undefined as a category), so the monarchs' rects are not black",
-    "ratio": 0.3358,
-    "reason": "bin/chart's reference lacks the wheat bars: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set (as for distributions/layer_cumulative_histogram), so the reference is blank where native draws them; native also does not map a missing commonwealth value to the first color of its fill scale (Vega treats undefined as a category), so the monarchs' rects are not black; svg and text render natively at 3 sizes; oracle ratio 0.3358 (threshold 0.03), size delta [21 15] px",
-    "status": "partial",
+    "ratio": 0.0137,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0137 (threshold 0.03) against the reference with its recorded ref_defect masked (the full render: 0.2862, all of it the wheat bars Vega-Lite drops), measured with resvg 0.48 and Liberation Sans standing in for rsvg-convert, absent from the fc-qx1.44 box; canvas matches bin/chart's 937x435 exactly",
+    "ref_defect": {
+      "set": [
+        {
+          "path": "/layer/0/mark/opacity",
+          "value": 0
+        }
+      ],
+      "why": "Vega-Lite 6.4.1 drops the wheat bars under bin/chart's config.bar.cornerRadiusEnd: it rewrites the ranged binned bar (bin binned with x2) into a group whose y reads min_wheat_start/max_wheat_end, fields no transform makes, so every bar is NaN and is not drawn (verified with vega-lite 6.4.1's compile output). The oracle compares the native render with that layer transparent; the full spec still renders natively."
+    },
+    "status": "pass",
     "threshold": 0.03
   }
 }

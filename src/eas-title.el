@@ -62,7 +62,11 @@ on a bottom baseline, round(0.8 size) - round(-0.21 size) above it."
     (let* ((text (eas-layout-text-p metrics))
            (frame (or (plist-get (eas-title--object spec) :frame) "bounds"))
            (bounds (not (equal frame "group")))
-           (edge (lambda (g side) (if bounds (or (plist-get (plist-get g :chrome) side) 0) 0)))
+           ;; Frame bounds start at the content's exact left edge, as Vega's do.
+           (edge (lambda (g side) (cond ((not bounds) 0)
+                                        ((and (eq side :left) (not text) (plist-get g :content-x1))
+                                         (- (plist-get g :content-x1)))
+                                        (t (or (plist-get (plist-get g :chrome) side) 0)))))
            (x1 (apply #'min (mapcar (lambda (g) (- (plist-get g :x0) (funcall edge g :left))) groups)))
            (x2 (apply #'max (mapcar (lambda (g) (+ (plist-get g :x0) (plist-get g :w) (funcall edge g :right))) groups)))
            (anchor (if text "middle" (eas-title--get spec metrics :anchor :chart-title-anchor)))

@@ -105,6 +105,9 @@ CONFIG is the Vega config in force; ENV holds param values."
       (setq model (plist-put model :grid t)))
     (when (eas-axis-extra--off-p axis config channel :domain) (setq model (plist-put model :domain-off t)))
     (when (eas-axis-extra--off-p axis config channel :ticks) (setq model (plist-put model :ticks-off t)))
+    ;; zindex 1 or more draws the axis (grid too) in front of the marks.
+    (let ((z (eas-axis-extra--prop axis config channel :zindex)))
+      (when (and (numberp z) (> z 0)) (setq model (plist-put model :zindex z))))
     model))
 
 (defun eas-axis-extra-tick-color (axis tk default)

@@ -83,7 +83,7 @@ distinct default title of the channel and its x2/y2 partner joined by
                                           (plist-get (plist-get (cdr explicit) :axis) :title)))
                            first))
          (t (let ((titles (delete-dups (delq nil (mapcar (lambda (d) (eas-encode-title (cdr d))) defs)))))
-              (if (cdr titles) (append (list :title (string-join titles ", ")) first) first))))))))
+              (if (cdr titles) (append (list :title (string-join titles ", ") :title-joined t) first) first))))))))
 
 (defun eas-bins--step-px (scale def extent)
   "Pixel step of positional SCALE (DEF its field) spanning EXTENT pixels, or nil."

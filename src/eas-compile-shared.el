@@ -112,7 +112,8 @@ by \", \" unless the first def sets one."
          (titles (delete-dups (delq nil (mapcar (lambda (p) (eas-encode-title (cdr p))) pairs)))))
     (if (or (cdr titles) (null titles)) 
         (if (or (plist-member (plist-get def :axis) :title) (plist-member def :title) (null (cdr titles))) def
-          (eas-plist-put def :title (string-join titles ", ")))
+          ;; A derived title, so config.axis.title still overrides it.
+          (eas-plist-put (eas-plist-put def :title (string-join titles ", ")) :title-joined t))
       def)))
 
 (provide 'eas-compile-shared)

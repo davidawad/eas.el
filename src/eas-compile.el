@@ -534,8 +534,9 @@ the text target (:cols C :rows R); nil keeps the spec's own sizes.
 STATE is view state: (:domains (VIEW-KEY (:x [LO HI]) ...) :params ...).
 Signals UNSUPPORTED_FEATURE (with the JSON path) for anything outside
 the native subset."
-  (let ((scene (eas-compile-scene (eas-compile-plan spec :rows rows :size size :target target :cell cell :state state)
-                                  state)))
+  (let ((scene (eas-time-with-local-zone
+                (eas-compile-scene (eas-compile-plan spec :rows rows :size size :target target :cell cell :state state)
+                                   state))))
     ;; Selections with an initial value start non-empty, as Vega draws them.
     (if-let* (((null state)) (init (eas-params-initial-state scene)))
         (eas-params-with-state init

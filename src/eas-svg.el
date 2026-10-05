@@ -96,7 +96,8 @@
 (defun eas-svg--text (text x y size &rest props)
   "A <text> node for TEXT at X Y with font SIZE.
 PROPS: :align :baseline :angle :fill :weight :opacity, and :font,
-:style (font style) and :line-height."
+:style (font style) and :line-height, and :lines-down
+(the first line on the anchor, the rest below)."
   (let* ((baseline (plist-get props :baseline))
          (dy (floor (+ 0.5 (* size (pcase baseline ("top" 0.79) ("middle" 0.30) ("bottom" -0.21) (_ 0))))))
          (angle (or (plist-get props :angle) 0))
@@ -114,7 +115,7 @@ PROPS: :align :baseline :angle :fill :weight :opacity, and :font,
         (append node (list (eas-svg--escape text)))
       ;; Multi-line text: one tspan per line, raised per the baseline.
       (let* ((lines (split-string text "\n")) (lh (or (plist-get props :line-height) (+ size 2)))
-             (lift (pcase baseline ("top" 0) ("middle" (/ (* lh (1- (length lines))) 2.0))
+             (lift (pcase (if (plist-get props :lines-down) "top" baseline) ("top" 0) ("middle" (/ (* lh (1- (length lines))) 2.0))
                      (_ (* lh (1- (length lines)))))))
         (append node
                 (seq-map-indexed (lambda (line i)
@@ -230,7 +231,9 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                      (list :align (plist-get item :align) :baseline (plist-get item :baseline) :fill fill
                            :opacity opacity :weight (plist-get item :fontWeight) :angle (plist-get item :angle)
                            :font (plist-get item :font) :style (plist-get item :fontStyle)
-                           :line-height (plist-get item :lineHeight))))
+                           :line-height (plist-get item :lineHeight)
+                           ;; Vega draws a text mark's first line on the anchor, the rest below it.
+                           :lines-down t)))
       ("trail" (eas-svg--node 'path :d (eas-svg--trail (plist-get item :points) (plist-get item :widths))
                                 :fill (if (equal fill "none") stroke fill) :opacity opacity))
       ((or "line" "area")

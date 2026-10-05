@@ -1181,3 +1181,66 @@ opacity, tick and domain opacity, `domainDash` and caps, axis
 properties. bin/chart is not in this box, so their references are
 built by `eas-vl-custom-build-refs` (and the ERT oracle test) wherever
 it is installed. Until then that test reports itself skipped.
+
+## 12. Layered gallery polish (fc-qx1.44)
+
+Box without rsvg-convert or bin/chart: images were compared through a
+`rsvg-convert` stand-in over resvg 0.48 with Liberation Sans (Arial's
+metrics), and Vega's own geometry read from vega-lite 6.4.1 + vega 6 under
+node (SVG, scenegraph bounds). The stand-in reads a few thousandths
+above librsvg on text-heavy charts (concat_layer_voyager_result: 0.0728
+here, 0.0689 recorded), so the recorded ratios of the two new passes are
+upper bounds. Every gallery group was re-scored before and after: the
+changes moved no other example up by more than 0.0007, and
+bar/bar_negative_horizontal_label went from 0.0558 to 0.0105.
+
+layered: 19 pass, 0 partial (was 17 and 2).
+
+| example | was | now | what was wrong (all shared code) |
+|---|---|---|---|
+| concat_layer_voyager_result | 0.0689, canvas +3 -9 px | 0.0273, canvas exact | multi-line text marks were centred on the anchor (Vega draws line 1 on it, the rest below, and bounds them all); labels of an axis with `ticks: false` sat past the tick length; a stroked view frame (`"transparent"` too) grows a concat cell's group bounds by half the stroke all round, which `gridLayout` places by; a cell title starts from the content's exact edges |
+| wheat_wages | 0.3358, canvas +21 +15 px | 0.0137 with its ref_defect, canvas exact | `config.axis.title: null` lost to the title joined from the layers' fields; `fontStyle` and `font` were dropped; a row missing the fill field is Vega's `undefined` category, first in the domain; a binned first layer left the x scale un-niced, where Vega-Lite merges nice from the next layer; the wheat bars are Vega-Lite's defect (below) |
+
+wheat_wages' reference has no wheat bars: under bin/chart's
+`config.bar.cornerRadiusEnd`, vega-lite 6.4.1 compiles the ranged binned
+bar into a group whose y reads `min_wheat_start`/`max_wheat_end`, fields
+no transform makes, so every bar is NaN. Its status.json `ref_defect`
+records that and the oracle compares with that layer transparent
+(`eas-vl-gallery-defect.el`).
+
+Customization (`test/vl-examples/layered/custom/`, six specs: bar with
+text labels, line + point + mean rule, area band, candlestick, text
+heatmap, ranged dot over a multi-line note) checked against Vega's
+render turned up more shared bugs, now fixed: a title object's `anchor`
+was ignored (only `config.title.anchor` was read); axis formats such as
+`"$.0f"` or `".0f"` went through the `,.Nf` path (no symbol, always
+grouped); a padded linear domain was niced before padding, where Vega
+pads then nices; rect marks ignored `cornerRadius`; corner legends
+ignored their own `offset`. Newly honored: axis `zindex`, mark `limit`,
+`fontStyle`, `font`, `config.scale.barBandPaddingInner` and
+`tickBandPaddingInner`. `check` now names every documented property
+still ignored (`eas-spec-props.el`; gallery-coverage.md lists them).
+
+Latency, `scripts/eas-gallery-bench.sh layered` (byte-compiled, mean of
+7, ms; `test/vl-examples/layered/bench.json`). Dates in a named zone
+were the cost: `decode-time` with a zone string loads the zone's rules
+each call (0.060 ms) where the local zone takes 0.0013 ms, so
+`eas-compile` makes the chart's zone Emacs's local one for its duration
+(`eas-time-with-local-zone`; TZ is restored on exit, conversions outside
+it are unchanged). `eas-expr-evaluate` also stopped allocating a hash
+table per call for `random()`.
+
+| example | rows | compile-svg was | now | compile-text was | now |
+|---|---:|---:|---:|---:|---:|
+| layer_dual_axis | 2922 | 413 | 83 | 406 | 70 |
+| layer_line_co2_concentration | 741 | 405 | 118 | 359 | 118 |
+| layer_precipitation_mean | 1461 | 188 | 30 | 194 | 27 |
+| layer_line_rolling_mean_point_raw | 1461 | 156 | 134 | 119 | 127 |
+| layer_falkensee | 38 | 75 | 9 | 42 | 10 |
+| layer_histogram_global_mean | 3201 | 47 | 34 | 35 | 36 |
+| layer_line_mean_point_raw | 560 | 28 | 12 | 24 | 8 |
+| all 19 | | 1429 | 538 | | |
+
+The rest compile in under 25 ms. What remains in co2 is the expression
+interpreter (four calculate transforms over 741 rows) and in rolling mean
+the window frames (31 rows each) and 1462 point items.

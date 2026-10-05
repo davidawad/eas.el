@@ -75,7 +75,9 @@ With KEEP-NULL, null values count too (discrete domains show them)."
 
 (defun eas-compile--less (a b)
   "Ascending order for mixed domain values A and B; null first, as in Vega."
-  (cond ((eq a :null) (not (eq b :null)))
+  (cond ((null a) (not (null b)))
+        ((null b) nil)
+        ((eq a :null) (not (eq b :null)))
         ((eq b :null) nil)
         ((and (numberp a) (numberp b)) (< a b))
         (t (string< (format "%s" a) (format "%s" b)))))
@@ -133,7 +135,10 @@ With KEEP-NULL, null values count too (discrete domains show them)."
          (fix-lo (and (not custom) (numberp (plist-get sp :domainMin))))
          (fix-hi (and (not custom) (numberp (plist-get sp :domainMax))))
          (nice (if (plist-member sp :nice) (eq (plist-get sp :nice) t)
-                 (and (member type '("linear" "log")) positional (not binned) (not custom) (not fix-lo) (not fix-hi))))
+                 (and (member type '("linear" "log")) positional (not custom) (not fix-lo) (not fix-hi)
+                      ;; Vega-Lite merges a layer's nice from the first layer that sets one:
+                      ;; a binned layer leaves it to the next (fc-qx1.44).
+                      (seq-some (lambda (p) (not (plist-get (cdr p) :bin-end))) pairs))))
          (lo (if (and zero fix-hi (not fix-lo)) (min lo 0) lo))
          (hi (if (and zero fix-lo (not fix-hi)) (max hi 0) hi))
          (zero (and zero (not fix-lo) (not fix-hi))))
@@ -240,6 +245,13 @@ ZOOM is a [LO HI] domain from view state, or nil."
                     (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)))
         (eas-compile--continuous type pairs channel values zoom)))))
 
+(defun eas-compile--field-missing-p (pairs)
+  "Non-nil when a row of PAIRS lacks its def's field altogether."
+  (seq-some (lambda (p)
+              (when-let* ((k (and (plist-get (cdr p) :field) (eas-encode-field (cdr p)))))
+                (seq-some (lambda (row) (not (plist-member row k))) (plist-get (car p) :rows))))
+            pairs))
+
 (defun eas-compile-color-scale (units &optional config)
   "Return (CHANNEL DEF SCALE) for the first field-mapped color channel.
 Ranges come from CONFIG's range.category, .heatmap and .ramp."
@@ -253,6 +265,10 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
            when pairs
            return (let* ((def (cdar pairs)) (sp (plist-get def :scale))
                          (values (eas-compile--values pairs channel)))
+                    ;; Vega keeps a row's missing (undefined) field as a category of
+                    ;; its own, first in order: the domain holds it as nil.
+                    (when (and (eas-encode-discrete-p def) (eas-compile--field-missing-p pairs))
+                      (push nil values))
                     (list channel def
                           (if (eas-encode-discrete-p def)
                               (let ((domain (if (vectorp (plist-get sp :domain)) (plist-get sp :domain)

@@ -445,3 +445,38 @@ pane asks for. Drags again arrived as down/motion/up with no
   report rate and SGR-pixel (1016) support, and tmux forwarding from
   them. Here tmux forwarding was checked only with injected input.
 - A recorded human hover session for the perceived update rate.
+
+## 9. Terminal parity through a real terminal (fc-qx1.8)
+
+`scripts/easel-spikes/tty-parity.sh` opens a point chart (brush, click
+selection, legend) in `emacs -nw` inside tmux (TERM `tmux-256color`).
+It injects SGR mouse reports at the cells of real data and then types
+keys. Showing the chart turned on `xterm-mouse-mode` by itself
+(`easel-tty-xterm-mouse`). Motion with no button, a press, motion with
+the button held, and a release reached the reducer as pointermove,
+pointerdown, pointermove and pointerup, and the drag brushed. `z`, `[`,
+`n`, RET and a wheel report followed. The recorded log, replayed in
+lockstep on a fresh text view and a fresh SVG view
+(`easel-parity-replay`), gave 9 steps with 0 mismatches, and the fresh
+text view's state equalled the live one.
+
+What the run and the parity tests found and fixed in the text glue:
+- A text cell is 7x14 px, wider than the 3 px click slop, so a click
+  at a cell's centre could miss the point drawn in it. Press, release,
+  click and RET now snap to the datum the cell shows (allowing one cell
+  of slack, because the renderer pulls edge glyphs inward). Hover does
+  not snap: what a cell shows changes as the crosshair redraws, and
+  snapping made the hover oscillate between the line and the rule.
+- Point-as-pointer re-hovered after every command, which broke
+  xterm-mouse drags and undid mouse hovers. Hover now follows point only
+  when point moves to another cell.
+- A redraw restored point by buffer position. Line lengths change with
+  the axis labels, so after a zoom point landed on another cell and the
+  hover jumped. Point now keeps its line and column.
+
+Pixel logs are geometry-specific, because the text target snaps the
+layout to cells. Parity is therefore defined through data space:
+`easel-parity-translate` maps each event's pixels from one scene to the
+other through the scales (legend entries map to the same entry), and
+`easel-parity-state` compares domains, selections, the hovered and
+clicked datum, history depth and drag mode, within a relative 1e-9.

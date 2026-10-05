@@ -27,6 +27,7 @@
 (require 'eas-adapters)
 (require 'eas-chart)
 (require 'eas-tip)
+(require 'eas-strip)
 
 (defvar eas-views (make-hash-table :test 'equal)
   "Live views by id.")
@@ -302,6 +303,7 @@ Cached per mark rows and domain: hover keeps both (fc-qx1.9)."
                                  :row (eas--plist-without (plist-get hover :row) eas-params-row-key)
                                  :tooltip (or (eas-tip-tooltip scene (eas-view-plan view) hover) :null))
                    :null)
+          :strip (or (eas-strip scene (eas-view-plan view) state) :null)
           :click (or (plist-get state :click) :null)
           :warnings (vconcat (eas-view-warnings view))
           :last-event (let ((e (car (eas-view-log view)))) (if e (plist-get e :summary) :null)))))

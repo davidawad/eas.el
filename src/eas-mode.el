@@ -33,6 +33,7 @@
 (require 'eas-zoom)
 (require 'eas-crosshair)
 (require 'eas-mode-patch)
+(require 'eas-mode-strip)
 (require 'eas-gc)
 
 (defvar-local eas-mode--view nil "The view this buffer shows.")
@@ -67,7 +68,8 @@ events use the cell under the pointer (SNAP as in `eas-mode-point-px')."
   "Scene pixels at the centre of the text cell at POS (default point).
 With SNAP, the datum drawn in the cell when it holds one: a cell is
 wider than the click slop, so clicks and presses snap to hit what is
-shown.  Hover never snaps; what a cell shows changes as hover redraws."
+shown.  Point-motion hover snaps too, since hover needs the pointer on a
+mark; xterm-mouse motion does not."
   (save-excursion
     (goto-char (or pos (point)))
     (let ((cell (eas-mode--cell)))
@@ -104,10 +106,11 @@ Collection waits until Emacs is idle (`eas-gc-defer')."
 ;;; Rendering
 
 (defun eas-mode--window-size (window target)
-  "Size to compile for WINDOW and TARGET."
+  "Size to compile for WINDOW and TARGET, leaving a line for the values strip."
   (if (eq target 'svg)
-      (cons (window-body-width window t) (- (window-body-height window t) 4))
-    (list :cols (max 20 (1- (window-body-width window))) :rows (max 6 (1- (window-body-height window))))))
+      (cons (window-body-width window t)
+            (- (window-body-height window t) 4 (with-selected-window window (default-line-height))))
+    (list :cols (max 20 (1- (window-body-width window))) :rows (max 6 (- (window-body-height window) 2)))))
 
 (defun eas-mode-redraw (&optional buffer)
   "Redraw BUFFER (default current) from its view's scene."
@@ -127,9 +130,10 @@ Collection waits until Emacs is idle (`eas-gc-defer')."
           (let ((image (eas-svg-image scene :scale 1)))
             (erase-buffer)
             (insert-image image "[chart]")
+            (insert "\n" (eas-mode-strip-string view))
             (eas-mode--hot-spot-keys image)))
        ;; Terminal hover moves one column: rewrite only changed cells (fc-qx1.14).
-       (t (eas-mode-patch-text (eas-text-render scene))))
+       (t (eas-mode-patch-text (concat (eas-text-render scene) "\n" (eas-mode-strip-string view)))))
       (if (eas-mode--gui-p) (goto-char (min pos (point-max)))
         (goto-char (point-min))
         (forward-line (1- line))
@@ -160,14 +164,17 @@ There is an image only when `eas-static-fallback' is non-nil."
 
 (defun eas-mode--readout ()
   "Show the hovered datum's readout (or the view id) in the header line.
-The readout lists its encoding.tooltip fields (`eas-crosshair-readout')."
-  (let* ((inspect (eas-inspect eas-mode--view)) (hover (plist-get inspect :hover)))
+The readout lists its encoding.tooltip fields (`eas-crosshair-readout').
+The values strip under the chart follows the pointer's column."
+  (let* ((view eas-mode--view) (hover (plist-get (eas-view-state view) :hover))
+         (last (car (eas-view-log view))))
     (setq header-line-format
-          (if (and hover (not (eq hover :null)))
-              (format " %s  %s" (eas-view-id eas-mode--view)
-                      (eas-crosshair-format (eas-crosshair-view-readout eas-mode--view)))
-            (format " %s  %s" (eas-view-id eas-mode--view)
-                    (or (plist-get inspect :last-event) ""))))))
+          (string-trim-right
+           (if hover
+               (format " %s  %s" (eas-view-id view)
+                       (eas-crosshair-format (eas-crosshair-view-readout view)))
+             (format " %s  %s" (eas-view-id view) (or (plist-get last :summary) "")))))
+    (eas-mode-strip-update view)))
 
 (defun eas-mode--schedule (view)
   "Coalesce a redraw of every buffer showing VIEW."
@@ -271,7 +278,9 @@ their own pointer, and a key pressed after them keeps the mouse's hover."
       (cond ((consp last-command-event) (setq eas-mode--last-cell cell))
             ((not (equal cell eas-mode--last-cell))
              (setq eas-mode--last-cell cell)
-             (let ((px (eas-mode-point-px)))
+             ;; Hover needs the pointer on a mark (fc-qx1.34): a cell that
+             ;; draws a datum aims at it, as clicks do.
+             (let ((px (eas-mode-point-px nil t)))
                (unless (equal px eas-mode--last-px)
                  (setq eas-mode--last-px px)
                  (eas-mode--send (list :type "pointermove" :px px))

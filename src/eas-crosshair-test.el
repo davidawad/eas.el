@@ -192,9 +192,12 @@
                 (let ((col (eas-crosshair-test--rule-column view))
                       (tooltip (plist-get (plist-get (eas-inspect view) :hover) :tooltip)))
                   (push col columns)
-                  ;; The buffer is exactly the new grid, point did not move,
-                  ;; and only the crosshair's cells were rewritten.
-                  (should (equal-including-properties (buffer-string) (eas-text-render (eas-view-scene view))))
+                  ;; The buffer is exactly the new grid over the values strip,
+                  ;; point did not move, and only the crosshair's cells (and
+                  ;; the strip) were rewritten.
+                  (should (equal-including-properties
+                           (buffer-substring (point-min) (1- (text-property-any (point-min) (point-max) 'eas-strip t)))
+                           (eas-text-render (eas-view-scene view))))
                   (should (= (point) pos))
                   ;; The default theme has no frame, so lines are right-trimmed
                   ;; and a rule past a line's end also writes the blank run to it

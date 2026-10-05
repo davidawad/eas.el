@@ -13,6 +13,7 @@
 ;;   :domains  (VIEW-KEY (:x [LO HI] :y [LO HI]))  zoom/pan (bind "scales")
 ;;   :params   (NAME STORE)                        selection stores
 ;;   :hover    hit plist or nil                     readout and crosshair
+;;   :pointer  last pointermove px or nil           the values strip's column
 ;;   :drag     in-progress pointer drag
 ;;   :history / :future                             zoom history stack
 ;;   :wheel    (VIEW PX DOMAINS) of the last wheel  one history entry per gesture
@@ -25,6 +26,7 @@
 (require 'eas-hit)
 (require 'eas-params)
 (require 'eas-zoom)
+(require 'eas-intersect)
 
 (defconst eas-reduce-click-slop 3 "Pixels a press may move and still be a click.")
 (defconst eas-reduce-hover-radius 30 "Pixels beyond which hover finds nothing.")
@@ -142,15 +144,18 @@ one history entry."
          (x-only (seq-some (lambda (p) (and (plist-get (plist-get p :def) :nearest)
                                             (equal (append (plist-get (plist-get p :def) :encodings) nil) '("x"))))
                            movers))
-         (hit (and view (eas-hit scene id px x-only)))
-         (hit (and hit (or x-only (<= (plist-get hit :distance) eas-reduce-hover-radius)) hit)))
-    (setq state (eas-reduce--put state :hover hit))
+         (nearest (and view (or x-only (seq-some (lambda (p) (plist-get (plist-get p :def) :nearest)) movers))
+                       (eas-hit scene id px x-only)))
+         (nearest (and nearest (or x-only (<= (plist-get nearest :distance) eas-reduce-hover-radius)) nearest))
+         ;; Marks interact only where the pointer touches them (fc-qx1.34);
+         ;; an x-only crosshair snaps anywhere in the plot.
+         (hit (if x-only nearest (and view (eas-intersect scene view px)))))
+    (setq state (eas-reduce--put (eas-reduce--put state :hover hit) :pointer px))
     (dolist (p movers)
-      (setq state (eas-reduce--store
-                   state (plist-get p :name)
-                   (and hit (or (plist-get (plist-get p :def) :nearest)
-                                (<= (plist-get hit :distance) eas-reduce-click-slop))
-                        (eas-params-point-store (eas-params-point-fields scene p) (list (plist-get hit :row)))))))
+      (let ((h (if (plist-get (plist-get p :def) :nearest) nearest hit)))
+        (setq state (eas-reduce--store
+                     state (plist-get p :name)
+                     (and h (eas-params-point-store (eas-params-point-fields scene p) (list (plist-get h :row))))))))
     state))
 
 (defun eas-reduce--legend-click (state scene px)
@@ -319,7 +324,7 @@ The previous domains go on the history, so [ undoes it."
       ("pointerleave"
        (dolist (p (eas-params-of scene "point"))
          (when (eas-reduce--on-p p "pointermove") (setq state (eas-reduce--store state (plist-get p :name) nil))))
-       (eas-reduce--put (eas-reduce--put state :hover nil) :drag nil))
+       (eas-reduce--put (eas-reduce--put (eas-reduce--put state :hover nil) :drag nil) :pointer nil))
       ("wheel" (eas-reduce--wheel state scene px (plist-get event :delta)))
       ("drag"
        (let* ((s (eas-reduce--press state scene (plist-get event :from)))

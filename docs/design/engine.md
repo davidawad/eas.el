@@ -255,6 +255,13 @@ second language.
 | linked views (`.6`) | the same param across `vconcat`/`hconcat`, shared scale binds | one state per spec; cross-buffer views join a named param bus |
 | legend toggle (`.5`) | `point` selection with `bind: "legend"` | legend `:map` areas |
 | live data (`.7`) | `x-eas.stream` | `eas-push`, frame cap, pause while pointer/brush active |
+| values strip (`.34`) | none: always on, no mode | state.pointer column (else latest datum) -> a line under the plot; inspect `strip` |
+
+Hover is touch-only (`.34`): state.hover, tooltips and `pointermove`
+selections without `nearest` need the pointer on a drawn mark (within
+the stroke, symbol or box, plus half a character cell); `nearest`
+selections, and so the crosshair, still follow the nearest datum. What
+a chart reads where the pointer merely is goes in the values strip.
 
 Semantics follow the Vega-Lite docs (Selection, Bind, Parameter,
 Tooltip). The static path renders the initial state, which is what

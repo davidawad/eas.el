@@ -743,3 +743,39 @@ CI runs `make bench` on the Emacs 30.1 job and uploads the JSON.
   idle; brushing (interval stores) still tests every row; compile at
   100k (357 ms) is linear and is paid on zoom, pan and push; the text
   redraw at 100k (25 ms) could patch only changed cells (section 5).
+
+## 11. Linked views (fc-qx1.6)
+
+Measured on Linux, Emacs 30.1, byte-compiled, `gc-cons-threshold`
+64 MB, 59 pointer moves across two 800x300 line charts with the line
+template's crosshair (a nearest x point selection plus a rule filtered
+by it) and a scales-bound zoom. "Linked" joins both to one bus, so each
+move also dispatches a link event to the second view and redraws its
+rule.
+
+| rows per view | hover, one view (mean / max ms) | hover, two linked views (mean / max ms) |
+|---:|---:|---:|
+| 1,000 | 0.39 / 0.61 | 0.69 / 0.89 |
+| 10,000 | 0.33 / 0.48 | 1.02 / 1.57 |
+
+A linked hover costs one more view's hover plus snapping the x to the
+receiver's nearest datum (one hit-test). `make bench` stays within
+`bench-budget.json` (hover at 100k: 0.53 ms mean).
+
+**Decisions:**
+- One spec: Vega-Lite's own constructs, no engine API. A select param
+  on a concat (optionally limited with `views`) is defined in every
+  named view with one store; a param bound to scales held by several
+  views zooms them together (`eas-link-scales`, after every reducer
+  step, keeps a wheel gesture as one history entry); a scale domain of
+  `{"param": NAME}` follows that interval and clips the view, as
+  Vega-Lite does (overview + detail).
+- Across buffers: a named bus delivers changes as `link` event/v1,
+  keyed by channel, not field name, so two tickers whose date fields
+  differ still share "the same x". Receivers log link events and never
+  forward them, so a bus cannot echo and a receiver's log replays alone.
+- Still open: `resolve.scale.x: "shared"` on a concat (one unioned
+  scale, so bar panes pad like line panes) is not implemented; panes
+  with independent scales keep Vega-Lite's per-view padding. Pixel
+  conformance of the gallery's linked examples could not be run in the
+  fc-qx1.6 box (no `rsvg-convert`); they are tested as behaviour.

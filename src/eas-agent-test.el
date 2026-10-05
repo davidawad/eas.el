@@ -76,7 +76,10 @@
     ("inspect" ("t") ("nope"))
     ("dispatch" ("t" "{\"type\":\"key\",\"key\":\"+\"}") ("t" "{\"type\":\"teleport\"}"))
     ("log" ("t" :n 5) ("nope"))
-    ("selection" ("t" :as "org") ("t" :as "xml")))
+    ("selection" ("t" :as "org") ("t" :as "xml"))
+    ("link" ("t" "agent-test-bus") ("nope" "agent-test-bus"))
+    ("unlink" ("t") ("t" :bus "no-such-bus"))
+    ("buses" () (:bogus 1)))
   "VERB, success args and failure args; functions are called for values.")
 
 (defun eas-agent-test--args (args)

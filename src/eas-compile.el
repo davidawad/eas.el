@@ -31,6 +31,7 @@
 (require 'eas-marks-bounds)
 (require 'eas-theme)
 (require 'eas-legend)
+(require 'eas-link-scale)
 
 (defvar eas-compile-gc-threshold (* 64 1024 1024)
   "GC threshold compile runs under; compile allocates many small plists.")
@@ -110,17 +111,20 @@
      ((or (plist-get node :vconcat) (plist-get node :hconcat))
       (let ((key (if (plist-get node :vconcat) :vconcat :hconcat)))
         (list :concat (if (eq key :vconcat) "v" "h")
-              :children (seq-map-indexed
-                         (lambda (child i)
-                           (eas-compile--collect child (eas-compile--child-ctx node ctx key i rows)
-                                                   env nil nil))
-                         (plist-get node key)))))
+              :children (let ((eas-link--scope (eas-link-scope node)))
+                          (seq-map-indexed
+                           (lambda (child i)
+                             (eas-compile--collect child (eas-compile--child-ctx node ctx key i rows)
+                                                     env nil nil))
+                           (plist-get node key))))))
      (t
       (let* ((g (or group (list :id (eas-compile--view-id node (plist-get ctx :path))
                                 :path (plist-get ctx :path) :units nil
                                 :spec-w (or (plist-get node :width) (plist-get ctx :width))
                                 :spec-h (or (plist-get node :height) (plist-get ctx :height))
                                 :params nil))))
+        (when-let* ((inherited (and (not group) (eas-link-scoped-params node))))
+          (plist-put g :params (mapcar (lambda (p) (append p (list :view (plist-get g :id)))) inherited)))
         (when (plist-get node :params)
           (plist-put g :params (append (plist-get g :params)
                                        (mapcar (lambda (p) (append p (list :view (plist-get g :id))))
@@ -156,7 +160,8 @@
                  (list :channel channel :def def :scale scale :shape shape :style style))))
     (plist-put group :scales
                (append (cl-loop for ch in '(:x :y)
-                                for s = (eas-compile-position-scale units ch (plist-get zoom ch))
+                                for s = (eas-compile-position-scale
+                                         units ch (or (plist-get zoom ch) (eas-link-param-domain units ch state)))
                                 when s append (list ch s))
                        (when color (list (nth 0 color) (nth 2 color)))
                        (when size (list :size size))
@@ -312,10 +317,12 @@ compiling again."
 
 (defun eas-compile--clipped-p (group state)
   "Non-nil when GROUP's marks are clipped to its plot.
-Vega-Lite clips zoomable views (a param bound to scales), marks with
-clip: true, and eas clips views zoomed in STATE."
+Vega-Lite clips zoomable views (a param bound to scales or a scale
+domain from a selection), marks with clip: true, and eas clips views
+zoomed in STATE."
   (or (plist-get (plist-get state :domains) (eas-key (plist-get group :id)))
       (seq-some (lambda (p) (equal (plist-get p :bind) "scales")) (plist-get group :params))
+      (eas-link-domain-params (plist-get group :units))
       (seq-some (lambda (u) (eq (plist-get (plist-get u :mark) :clip) t)) (plist-get group :units))))
 
 (defun eas-compile--measure-marks (groups metrics state)

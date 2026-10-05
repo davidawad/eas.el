@@ -27,6 +27,7 @@
 (require 'eas-params)
 (require 'eas-zoom)
 (require 'eas-intersect)
+(require 'eas-link)
 
 (defconst eas-reduce-click-slop 3 "Pixels a press may move and still be a click.")
 (defconst eas-reduce-hover-radius 30 "Pixels beyond which hover finds nothing.")
@@ -302,7 +303,12 @@ The previous domains go on the history, so [ undoes it."
         (eas-reduce--store state (plist-get p :name) (append store (list :fields fields)))))))
 
 (defun eas-reduce (state event scene)
-  "Return the view state after EVENT, given the current SCENE.  Pure."
+  "Return the view state after EVENT, given the current SCENE.  Pure.
+Views sharing a param bound to scales move together (`eas-link-scales')."
+  (eas-link-scales state (eas-reduce--step state event scene) scene))
+
+(defun eas-reduce--step (state event scene)
+  "The view state after EVENT under SCENE, before linked views follow."
   (let ((px (plist-get event :px)))
     (pcase (plist-get event :type)
       ("pointermove" (if (plist-get state :drag) (eas-reduce--drag-to state scene px)
@@ -332,6 +338,7 @@ The previous domains go on the history, so [ undoes it."
          (eas-reduce--release s scene (plist-get event :to))))
       ("brush" (eas-reduce--brush-event state scene event))
       ("key" (eas-reduce--key state scene (plist-get event :key)))
+      ("link" (eas-link-reduce state event scene))
       ("push" (eas-reduce--put state :stream-cursor
                                  (+ (or (plist-get state :stream-cursor) 0) (length (plist-get event :rows)))))
       (_ state))))

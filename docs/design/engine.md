@@ -252,7 +252,7 @@ second language.
 | crosshair (`.2`) | `point` selection, `on: pointermove`, `nearest: true`, plus a rule layer filtered by it | hit-test index -> datum -> state.hover |
 | zoom/pan (`.3`) | `interval` selection with `bind: "scales"` | reducer edits scale domains; wheel, drag, keys |
 | brush (`.4`) | `interval` selection with `encodings: ["x"]` | state.params[name] = range; selection verb |
-| linked views (`.6`) | the same param across `vconcat`/`hconcat`, shared scale binds | one state per spec; cross-buffer views join a named param bus |
+| linked views (`.6`) | the same param across `vconcat`/`hconcat` (top-level `params` with `views`), shared scale binds, `scale.domain: {"param": ...}` | one state per spec; cross-buffer views join a named param bus that delivers `link` events (spikes section 11) |
 | legend toggle (`.5`) | `point` selection with `bind: "legend"` | legend `:map` areas |
 | live data (`.7`) | `x-eas.stream` | `eas-push`, frame cap, pause while pointer/brush active |
 | values strip (`.34`) | none: always on, no mode | state.pointer column (else latest datum) -> a line under the plot; inspect `strip` |

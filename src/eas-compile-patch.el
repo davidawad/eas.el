@@ -16,7 +16,8 @@
 ;;   anything else                       reuse cached items and index
 ;;
 ;; It returns nil whenever a full compile is the only correct answer
-;; (zoom, push, conditions on position, values outside a scale).
+;; (zoom, push, conditions on position, values outside a scale, a scale
+;; domain that follows a changed selection).
 
 ;;; Code:
 
@@ -26,6 +27,7 @@
 (require 'eas-marks)
 (require 'eas-compile)
 (require 'eas-compile-scales)
+(require 'eas-link-scale)
 
 (defun eas-patch--param-names (value)
   "Param names referenced by {\"param\": ...} anywhere in VALUE."
@@ -118,6 +120,8 @@ Must run with selection hooks bound to NEW (`eas-params-with-state')."
     (let* ((changed (eas-patch--changed old new))
            (env (eas-compile--env (plist-get plan :spec) new))
            (metrics (plist-get plan :metrics)))
+      ;; A scale domain that follows a changed selection moves every item.
+      (when (seq-intersection changed (eas-link-plan-domain-params plan)) (throw 'full nil))
       (when changed
         (dolist (group (plist-get plan :groups))
           (plist-put

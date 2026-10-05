@@ -17,6 +17,8 @@
 ;;   {"type": "key", "key": "+" | "-" | "0" | "left" | "right" | "up" | "down"
 ;;                        | "escape" | "[" | "]" | "z"}   (z zooms into the brush)
 ;;   {"type": "push", "rows": [ROW, ...], "window"?: N}  (keep the last N rows)
+;;   {"type": "link", "param": NAME, "store": STORE | null, "from"?: VIEW}
+;;                                     (a linked view's selection, eas-link.el)
 ;;
 ;; Pixel coordinates are scene pixels.  `eas-event-parse' validates
 ;; and signals EVENT_INVALID naming the offending field.
@@ -27,7 +29,7 @@
 
 (defconst eas-event-types
   '("pointermove" "pointerdown" "pointerup" "pointerleave" "click" "dblclick"
-    "wheel" "drag" "brush" "key" "push")
+    "wheel" "drag" "brush" "key" "push" "link")
   "event/v1 types.")
 
 (defconst eas-event-keys '("+" "=" "-" "0" "left" "right" "up" "down" "escape" "[" "]" "z")
@@ -68,6 +70,12 @@
       ("key" (unless (member (plist-get event :key) eas-event-keys)
                (eas-event--invalid "key" (format "Unknown key %S; keys: %s" (plist-get event :key)
                                                    (string-join eas-event-keys " ")))))
+      ("link" (unless (stringp (plist-get event :param))
+                (eas-event--invalid "param" "link needs param: the selection's name"))
+              (let ((store (plist-get event :store)))
+                (unless (or (null store) (eq store :null)
+                            (and (eas-object-p store) (member (plist-get store :type) '("point" "interval"))))
+                  (eas-event--invalid "store" "link store is null or {\"type\": \"point\"|\"interval\", ...}"))))
       ("push" (unless (or (vectorp (plist-get event :rows)) (listp (plist-get event :rows)))
                 (eas-event--invalid "rows" "push needs rows: [{...}, ...]"))
               (let ((window (plist-get event :window)))
@@ -87,6 +95,17 @@
     ("push" (format "push %d rows%s" (length (plist-get event :rows))
                     (if-let* ((w (plist-get event :window))) (format " (window %d)" w) "")))
     ("drag" (format "drag %s -> %s" (plist-get event :from) (plist-get event :to)))
+    ("link" (let ((store (plist-get event :store)))
+              (format "link %s%s%s" (plist-get event :param)
+                      (if (or (null store) (eq store :null)) " cleared"
+                        (if (equal (plist-get store :type) "point")
+                            (format " %d point%s" (length (plist-get store :values))
+                                    (if (= 1 (length (plist-get store :values))) "" "s"))
+                          (mapconcat (lambda (f) (if-let* ((r (plist-get store f)))
+                                                     (format " %s %s..%s" (eas-key-name f) (aref r 0) (aref r 1))
+                                                   ""))
+                                     '(:x :y) "")))
+                      (if-let* ((from (plist-get event :from))) (format " from %s" from) ""))))
     (type (if (plist-get event :px) (format "%s at %s" type (plist-get event :px)) type))))
 
 (provide 'eas-event)

@@ -27,6 +27,7 @@
 (require 'eas-agent-core)
 (require 'eas-agent-verbs)
 (require 'eas-agent-live)
+(require 'eas-agent-link)
 (require 'eas-agent-health)
 
 (defun eas-agent--failure-next (verb pos evidence)

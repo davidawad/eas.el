@@ -13,11 +13,17 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-time)
 (require 'eas-transform-dist)
 
 (defun eas-agg--valid (values)
   "VALUES without nulls, as numbers where possible."
   (seq-remove (lambda (v) (memq v '(nil :null))) values))
+
+(defun eas-agg--numbers (values)
+  "The numbers in VALUES; when there are none, its dates as epoch ms."
+  (or (seq-filter #'numberp values)
+      (delq nil (mapcar (lambda (v) (and (stringp v) (eas-time-parse v))) values))))
 
 (defun eas-agg--quantile (values p)
   "R-7 quantile P of numeric VALUES."
@@ -50,8 +56,8 @@
     ("median" . ,(lambda (vs) (eas-agg--quantile vs 0.5)))
     ("q1" . ,(lambda (vs) (eas-agg--quantile vs 0.25)))
     ("q3" . ,(lambda (vs) (eas-agg--quantile vs 0.75)))
-    ("min" . ,(lambda (vs) (let ((n (seq-filter #'numberp vs))) (if n (apply #'min n) :null))))
-    ("max" . ,(lambda (vs) (let ((n (seq-filter #'numberp vs))) (if n (apply #'max n) :null))))
+    ("min" . ,(lambda (vs) (let ((n (eas-agg--numbers vs))) (if n (apply #'min n) :null))))
+    ("max" . ,(lambda (vs) (let ((n (eas-agg--numbers vs))) (if n (apply #'max n) :null))))
     ("variance" . ,(lambda (vs) (eas-agg--variance vs t)))
     ("variancep" . ,(lambda (vs) (eas-agg--variance vs nil)))
     ("stdev" . ,(lambda (vs) (let ((v (eas-agg--variance vs t))) (if (numberp v) (sqrt v) v))))

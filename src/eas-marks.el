@@ -90,7 +90,7 @@ per unit and shared by every item."
         (let ((enc (plist-get unit :encoding)))
           (seq-some (lambda (ch) (let ((d (plist-get enc ch)))
                                    (and d (or (plist-get d :field) (plist-get d :condition)))))
-                    '(:color :fill :stroke :opacity))))
+                    '(:color :fill :stroke :opacity :fillOpacity :strokeOpacity :strokeWidth))))
       (eas-marks--style-1 unit scales row)
     (eas-marks--memo 'style (eas-marks--style-1 unit scales row))))
 
@@ -108,7 +108,11 @@ per unit and shared by every item."
                       (if (and (member type '("point" "circle" "square" "tick"))
                                (not (plist-get unit :aggregated)))
                           0.7 1))))
-    (eas-paint-style (list :fill fill :stroke stroke :opacity opacity))))
+    (eas-paint-style (append (list :fill (if (eq fill :null) "none" fill) :stroke (if (eq stroke :null) "none" stroke) :opacity opacity)
+                             (cl-loop for ch in '(:fillOpacity :strokeOpacity :strokeWidth)
+                                      for v = (or (eas-marks--channel unit scales ch row)
+                                                  (and (not (eq ch :strokeWidth)) (plist-get mark ch)))
+                                      when (numberp v) append (list ch v))))))
 
 (defun eas-marks--extras (unit row)
   "Tooltip and href for ROW in UNIT, as a plist (omitting absent ones)."
@@ -204,20 +208,22 @@ Returns the plot centre when the channel is absent."
        (let ((x (eas-marks--pos unit scales :x row bounds))
              (y (eas-marks--pos unit scales :y row bounds)))
          (when (and (numberp x) (numberp y))
-           (append (if (equal type "text")
-                       ;; dx/dy shift the text in pixels (whole cells in a terminal).
-                       (let ((dx (eas-marks--mark-value unit :dx row)) (dy (eas-marks--mark-value unit :dy row))
-                             (cell (and (eas-layout-text-p metrics) (plist-get metrics :cell))))
-                         (list :datum i
-                               :x (+ x (if (numberp dx) (if cell (* (aref cell 0) (round dx (aref cell 0))) dx) 0))
-                               :y (+ y (if (numberp dy) (if cell (* (aref cell 1) (round dy (aref cell 1))) dy) 0))))
-                     (list :datum i :x x :y y))
+           (append (let* ((xo (or (plist-get mark :xOffset) 0)) (yo (or (plist-get mark :yOffset) 0)))
+                     (if (equal type "text")
+                         ;; dx/dy shift the text in pixels (whole cells in a terminal).
+                         (let ((dx (eas-marks--mark-value unit :dx row)) (dy (eas-marks--mark-value unit :dy row))
+                               (cell (and (eas-layout-text-p metrics) (plist-get metrics :cell))))
+                           (list :datum i
+                                 :x (+ x xo (if (numberp dx) (if cell (* (aref cell 0) (round dx (aref cell 0))) dx) 0))
+                                 :y (+ y yo (if (numberp dy) (if cell (* (aref cell 1) (round dy (aref cell 1))) dy) 0))))
+                       (list :datum i :x (+ x xo) :y (+ y yo))))
                    (if (equal type "text")
                        (let ((text (eas-marks--channel unit scales :text row)))
                          (append
                           (list :text (let ((v (or text (plist-get mark :text) "")))
                                         ;; An array is one line per element.
-                                        (if (vectorp v) (mapconcat #'eas-expr--string v "\n") (eas-expr--string v)))
+                                        (if (vectorp v) (mapconcat #'eas-expr--string v "\n")
+                                          (eas-marks--text (plist-get (plist-get unit :encoding) :text) v)))
                                :fontSize (if (eas-layout-text-p metrics) (aref (plist-get metrics :cell) 1)
                                            ;; Vega-Lite: size sets a text mark's font size.
                                            (or (eas-marks--channel unit scales :size row)
@@ -232,7 +238,8 @@ Returns the plot centre when the channel is absent."
                                              (plist-get mark :size) 30)
                                    :shape (or (eas-marks--channel unit scales :shape row) (plist-get mark :shape)
                                               (if (equal type "point") "circle" type))
-                                   :strokeWidth (or (plist-get mark :strokeWidth) 2))
+                                   :strokeWidth (or (eas-marks--channel unit scales :strokeWidth row)
+                                                    (plist-get mark :strokeWidth) 2))
                              (when-let* ((a (or (eas-marks--channel unit scales :angle row) (plist-get mark :angle))))
                                (list :angle a))
                              (eas-marks--style
@@ -241,6 +248,14 @@ Returns the plot centre when the channel is absent."
                                 unit)
                               scales row)))
                    (eas-marks--extras unit row)))))))
+
+(defun eas-marks--text (def v)
+  "Text mark string for value V of text channel DEF.\nDates read as Vega-Lite formats them."
+  (let ((ms (and (member (plist-get def :type) '("temporal")) (eas-time-parse v))))
+    (cond ((and ms (equal (plist-get def :derived) "timeUnit"))
+           (let ((system-time-locale "C")) (eas-time-format ms (eas-layout-time-unit-format (plist-get def :field)))))
+          (ms (eas-encode-format-value def v))
+          (t (eas-expr--string v)))))
 
 (defun eas-marks--stack-ends (unit measure dim)
   "Hash of (DIM-VALUE . SIGN) -> the extreme MEASURE value of UNIT's stacks."
@@ -377,7 +392,7 @@ ranged (x2/y2) bar."
 (defun eas-marks--series-key (unit row)
   "The series a ROW of a line/area UNIT belongs to."
   (let ((enc (plist-get unit :encoding)))
-    (mapcar (lambda (ch) (let ((d (plist-get enc ch)))
+    (mapcar (lambda (ch) (let ((d (eas-encode-data-def (plist-get enc ch))))
                            (and d (eas-object-p d) (eas-encode-discrete-p d) (eas-encode-raw d row))))
             '(:color :fill :stroke :strokeDash :detail))))
 
@@ -512,7 +527,7 @@ Bars and areas with a discrete color/fill/detail field stack by default
                         ((and x (equal (plist-get x :type) "quantitative") (not (plist-get x :bin-end))) :x)))
          (mdef (and measure (plist-get enc measure)))
          (by (seq-filter (lambda (d) (and d (eas-object-p d) (plist-get d :field) (eas-encode-discrete-p d)))
-                         (mapcar (lambda (ch) (plist-get enc ch)) '(:color :fill :detail))))
+                         (mapcar (lambda (ch) (eas-encode-data-def (plist-get enc ch))) '(:color :fill :detail))))
          (offset (and mdef (plist-get mdef :stack))))
     (if (or (null measure) (memq offset '(:null :false))
             (and (null offset) (or (null by) (not (member type '("bar" "area")))))

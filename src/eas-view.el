@@ -109,7 +109,12 @@ TARGET and CELL are as in `eas-compile'."
                 :bindings bindings :data data :size size :target (or target 'svg) :cell cell
                 :state nil :log nil)))
     (condition-case err
-        (setf (eas-view-scene view) (eas-view--compile view))
+        (progn
+          (setf (eas-view-scene view) (eas-view--compile view))
+          ;; Selections with an initial value start non-empty.
+          (when-let* ((init (eas-params-initial-state (eas-view-scene view))))
+            (setf (eas-view-state view) init
+                  (eas-view-scene view) (eas-view--compile view))))
       (eas-unsupported-feature (eas-view--fallback view err)))
     (puthash (eas-view-id view) view eas-views)
     view))

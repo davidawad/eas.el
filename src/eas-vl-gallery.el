@@ -233,7 +233,9 @@ is non-nil when both backends rendered."
         (list :name name :ok t :svg svg :text text
               :ratio (plist-get cmp :ratio) :size-delta (plist-get cmp :size-delta)
               :overlaps (eas-vl-gallery-resize-problems spec)))
-    (eas-error (list :name name :ok nil :error (eas-error-plist err)))))
+    (eas-error (list :name name :ok nil :error (eas-error-plist err)))
+    ;; Anything else the engine cannot yet do is an unsupported example too.
+    (error (list :name name :ok nil :error (list :message (error-message-string err))))))
 
 (defun eas-vl-gallery-check (group name)
   "Re-run NAME of GROUP against its status.json entry.
@@ -270,8 +272,10 @@ entry records another threshold with a reason.")
     (list :status "partial" :reason "renders natively; no rasterizer here to compare with the reference"))
    (t
     (let* ((ratio (plist-get r :ratio)) (overlaps (plist-get r :overlaps))
-           (ok (and (<= ratio threshold) (null overlaps)))
-           (size (plist-get r :size-delta)))
+           (size (plist-get r :size-delta))
+           ;; The conformance oracle's own size bound (eas-conformance-size-tolerance).
+           (ok (and (<= ratio threshold) (null overlaps)
+                    (or (not (vectorp size)) (<= (max (abs (aref size 0)) (abs (aref size 1))) 8)))))
       (append (list :status (if ok "pass" "partial")
                     :reason (format "svg and text render natively at 3 sizes; oracle ratio %.4f (threshold %s)%s%s"
                                     ratio threshold

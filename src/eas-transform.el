@@ -25,6 +25,7 @@
 (require 'eas-transform-dist)
 (require 'eas-transform-pivot)
 (require 'eas-transform-calc)
+(require 'eas-transform-lookup)
 
 (defvar eas-transform-param-predicate
   (lambda (_param _row _env empty) empty)
@@ -194,6 +195,18 @@ OPTS is a Vega-Lite bin object (:maxbins :step :nice :base :minstep)."
       (let ((v (max start (min v (- stop step)))))
         (+ start (* step (floor (+ 1e-14 (/ (- v start) step)))))))))
 
+(defun eas-transform--bin-extent (tr env)
+  "TR with a bin extent given as {\"param\": NAME} read from ENV.
+The extent is the selection's first interval, or dropped when empty."
+  (let* ((opts (plist-get tr :bin)) (extent (and (eas-object-p opts) (plist-get opts :extent))))
+    (if (not (and (consp extent) (plist-get extent :param))) tr
+      (let* ((store (plist-get env (eas-key (plist-get extent :param))))
+             (range (and (consp store) (or (plist-get store :x) (plist-get store :y)))))
+        (eas-plist-put tr :bin (if (vectorp range)
+                                   (eas-plist-put opts :extent (vector (min (aref range 0) (aref range 1))
+                                                                       (max (aref range 0) (aref range 1))))
+                                 (eas--plist-without opts :extent)))))))
+
 (defun eas-transform-bin (tr rows)
   "Apply bin transform TR to ROWS."
   (let* ((field (eas-key (plist-get tr :field)))
@@ -242,13 +255,15 @@ ENV is a plist of param values; PATH the array's JSON pointer."
                    (seq-map (lambda (row) (eas-plist-put row as (eas-time-unit-floor
                                                                     unit (plist-get row field))))
                             rows)))
-                ((plist-get tr :bin) (eas-transform-bin tr rows))
+                ((plist-get tr :bin) (eas-transform-bin (eas-transform--bin-extent tr env) rows))
                 ((plist-get tr :aggregate) (eas-transform-aggregate tr rows tpath))
                 ((plist-get tr :joinaggregate) (eas-transform-joinaggregate tr rows tpath))
                 ((plist-get tr :window) (eas-transform-window tr rows tpath))
                 ((plist-get tr :flatten) (eas-transform-flatten tr rows))
                 ((plist-get tr :density) (eas-transform-density tr rows))
                 ((plist-get tr :pivot) (eas-transform-pivot tr rows tpath))
+                ;; A lookup against the rows a selection holds needs the live param state.
+                ((and (plist-get tr :lookup) (plist-get (plist-get tr :from) :param)) (eas-transform-lookup tr rows env))
                 ((eas-transform-calc-key tr) (eas-transform-calc-apply tr rows tpath))
                 (t (eas-signal "UNSUPPORTED_FEATURE"
                                  (format "Transform %s is not in the native subset"

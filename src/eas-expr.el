@@ -24,6 +24,7 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-expr-regexp)
 (require 'eas-time)
 (require 'eas-format)
 (require 'eas-expr-stats)
@@ -378,7 +379,9 @@ goldens and replays reproduce exactly."
     ("quantileNormal" . ,(eas-expr--num-fn #'eas-expr-stats-quantile-normal))
     ("format" . ,(lambda (v spec) (eas-format-number (eas-expr--string spec) v)))
     ;; Evaluated per datum by `eas-expr-eval' (`eas-expr--random').
-    ("random" . ignore))
+    ("random" . ignore)
+    ("regexp" . eas-expr-regexp-make)
+    ("test" . eas-expr-regexp-test))
   "Functions callable from expressions: (NAME . FUNCTION).")
 
 (provide 'eas-expr)

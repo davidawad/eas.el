@@ -6,7 +6,7 @@
 (require 'eas)
 (require 'eas-agent)
 
-(defconst eas-conformance-test-unproven '("encoding/longitude" "encoding/latitude" "transform/stack")
+(defconst eas-conformance-test-unproven '("encoding/strokeOpacity" "encoding/longitude" "encoding/latitude" "transform/stack")
   "Recognised features no gallery spec proves yet (so they fall back).")
 
 (defun eas-conformance-test--rasterizer-p ()

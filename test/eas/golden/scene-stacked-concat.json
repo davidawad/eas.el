@@ -62,7 +62,7 @@
   "size": {
     "cell": [7, 14],
     "h": 440.0,
-    "w": 535
+    "w": 574
   },
   "target": "svg",
   "views": [
@@ -223,36 +223,36 @@
       "id": "vconcat_0",
       "legends": [
         {
-          "box": [104, 11, 125, 52],
+          "box": [548, 11, 569, 52],
           "channel": "color",
           "entries": [
             {
-              "bounds": [104, 27, 20.5, 11],
+              "bounds": [548, 27, 20.5, 11],
               "color": "#2a78d6",
               "fill": "#2a78d6",
               "label": "x",
-              "lx": 119,
+              "lx": 563,
               "ly": 32.5,
               "opacity": 1,
               "size": 80,
               "stroke": {},
               "stroke-width": 1.5,
-              "sx": 109.5,
+              "sx": 553.5,
               "sy": 32.5,
               "value": "x"
             },
             {
-              "bounds": [104, 41, 20.5, 11],
+              "bounds": [548, 41, 20.5, 11],
               "color": "#eb6834",
               "fill": "#eb6834",
               "label": "y",
-              "lx": 119,
+              "lx": 563,
               "ly": 46.5,
               "opacity": 1,
               "size": 80,
               "stroke": {},
               "stroke-width": 1.5,
-              "sx": 109.5,
+              "sx": 553.5,
               "sy": 46.5,
               "value": "y"
             }
@@ -264,10 +264,10 @@
           "style": {"field-color": true, "fill": "#2a78d6", "opacity": {}, "stroke": {}, "stroke-width": {}, "stroked": {}},
           "symbol-type": "circle",
           "title": "c",
-          "title-mark": {"align": "left", "baseline": "top", "text": "c", "x": 104, "y": 11},
+          "title-mark": {"align": "left", "baseline": "top", "text": "c", "x": 548, "y": 11},
           "type": "symbol",
           "width": 21,
-          "x": 104,
+          "x": 548,
           "y": 11
         }
       ],

@@ -149,7 +149,7 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
                                                                              (or (plist-get a :argmax) (plist-get a :argmin)))))
                                                            (eas--plist-without
                                                             (eas--plist-without d :field) :aggregate))))))
-                      (dolist (f (list (plist-get d :field) (plist-get d :bin-end)))
+                      (dolist (f (let ((d (eas-encode-data-def d))) (list (plist-get d :field) (plist-get d :bin-end))))
                         (when (and f (not (member f groupby))) (push f groupby)))))))
     (if (null ops)
         (cons encoding rows)
@@ -187,6 +187,13 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
     (or (seq-find (lambda (c) (eas-encode--condition-holds c row env))
                   (cond ((vectorp conds) conds) (conds (list conds))))
         def)))
+
+(defun eas-encode-data-def (def)
+  "DEF, or for a value DEF its first field condition (which owns the scale)."
+  (if (or (not (eas-object-p def)) (plist-get def :field) (plist-member def :datum)) def
+    (let ((c (plist-get def :condition)))
+      (seq-find (lambda (d) (and (eas-object-p d) (plist-get d :field)))
+                (if (vectorp c) c (list c))))))
 
 (defun eas-encode-discrete-p (def)
   "Non-nil when DEF's type is nominal or ordinal."

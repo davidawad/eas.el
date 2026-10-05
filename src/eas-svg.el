@@ -193,13 +193,15 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
         (opacity (let ((o (plist-get item :opacity))) (and o (/= o 1) o))))
     (pcase (plist-get mark :mark)
       ((or "bar" "rect" "brush")
-       (if-let* ((corners (plist-get item :corners)))
-           (eas-svg--node 'path :d (eas-svg--rounded-rect (plist-get item :x) (plist-get item :y)
-                                                              (max 0 (plist-get item :w)) (max 0 (plist-get item :h)) corners)
-                            :fill fill :stroke (unless (equal stroke "none") stroke) :opacity opacity)
-         (eas-svg--node 'rect :x (plist-get item :x) :y (plist-get item :y)
-                          :width (max 0 (plist-get item :w)) :height (max 0 (plist-get item :h))
-                          :fill fill :stroke (unless (equal stroke "none") stroke) :opacity opacity)))
+       (eas-svg--styled
+        (if-let* ((corners (plist-get item :corners)))
+            (eas-svg--node 'path :d (eas-svg--rounded-rect (plist-get item :x) (plist-get item :y)
+                                                           (max 0 (plist-get item :w)) (max 0 (plist-get item :h)) corners)
+                           :fill fill :stroke (unless (equal stroke "none") stroke) :opacity opacity)
+          (eas-svg--node 'rect :x (plist-get item :x) :y (plist-get item :y)
+                         :width (max 0 (plist-get item :w)) :height (max 0 (plist-get item :h))
+                         :fill fill :stroke (unless (equal stroke "none") stroke) :opacity opacity))
+        item t))
       ("image"
        (eas-svg--node 'image :x (plist-get item :x) :y (plist-get item :y)
                       :width (plist-get item :w) :height (plist-get item :h)
@@ -228,10 +230,20 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                           :stroke-dasharray (and (plist-get item :strokeDash)
                                                  (mapconcat #'eas-svg--n (plist-get item :strokeDash) ","))
                           :opacity opacity)))
-      (_ (eas-svg--symbol (plist-get item :shape) (plist-get item :x) (plist-get item :y) (plist-get item :size)
-                            :angle (plist-get item :angle) :fill fill :stroke (unless (equal stroke "none") stroke)
-                            :stroke-width (unless (equal stroke "none") (plist-get item :strokeWidth))
-                            :opacity opacity)))))
+      (_ (eas-svg--styled
+          (eas-svg--symbol (plist-get item :shape) (plist-get item :x) (plist-get item :y) (plist-get item :size)
+                           :angle (plist-get item :angle) :fill fill :stroke (unless (equal stroke "none") stroke)
+                           :stroke-width (unless (equal stroke "none") (plist-get item :strokeWidth))
+                           :opacity opacity)
+          item)))))
+
+(defun eas-svg--styled (node item &optional width)
+  "NODE with ITEM's fillOpacity and strokeOpacity (and strokeWidth when WIDTH)."
+  (let ((extra (cl-loop for (key attr) in (append '((:fillOpacity fill-opacity) (:strokeOpacity stroke-opacity))
+                                                  (when width '((:strokeWidth stroke-width))))
+                        for v = (plist-get item key)
+                        when (numberp v) collect (cons attr (eas-svg--n v)))))
+    (if extra (cl-list* (car node) (append (cadr node) extra) (cddr node)) node)))
 
 (defun eas-svg--axis (axis theme)
   "SVG nodes for placed AXIS under THEME."

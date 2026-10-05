@@ -51,7 +51,7 @@
   "Field mapped to CHANNEL (\"x\") in SCENE's view VIEW-ID."
   (when-let* ((view (seq-find (lambda (v) (equal (plist-get v :id) view-id)) (plist-get scene :views)))
               (scale (plist-get (plist-get view :scales) (eas-key channel))))
-    (plist-get scale :field)))
+    (or (plist-get scale :bin-source) (plist-get scale :field))))
 
 (defun eas-params-point-fields (scene param)
   "The fields a point selection PARAM stores in SCENE."

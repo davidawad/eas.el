@@ -25,7 +25,7 @@
 (defun eas-compile--defs (units channel)
   "Return (UNIT . DEF) pairs for CHANNEL across UNITS with a data def."
   (cl-loop for u in units
-           for d = (plist-get (plist-get u :encoding) channel)
+           for d = (eas-encode-data-def (plist-get (plist-get u :encoding) channel))
            when (and d (eas-object-p d) (or (plist-get d :field) (plist-member d :datum)))
            collect (cons u d)))
 
@@ -107,7 +107,7 @@ With KEEP-NULL, null values count too (discrete domains show them)."
 (defun eas-compile--continuous (type pairs channel values zoom)
   "Continuous scale of TYPE for CHANNEL over VALUES (ZOOM overrides domain)."
   (let* ((def (cdar pairs)) (sp (plist-get def :scale))
-         (explicit (and (vectorp (plist-get sp :domain)) (plist-get sp :domain)))
+         (explicit (eas-compile--domain (plist-get sp :domain) (plist-get (caar pairs) :env) channel))
          (nums (if (equal type "time") (delq nil (mapcar #'eas-time-parse values))
                  (seq-filter #'numberp values)))
          (positional (memq channel '(:x :y)))
@@ -133,6 +133,10 @@ With KEEP-NULL, null values count too (discrete domains show them)."
             (when-let* ((bins (and binned (not custom) (equal type "linear")
                                    (eas-bins-boundaries def (plist-get (caar pairs) :rows) lo hi))))
               (list :bins bins))
+            ;; Selections over a binned field test the raw field, as Vega-Lite's
+            ;; do, and Vega-Lite ticks a binned axis at the bin boundaries.
+            (when (and binned positional (equal (plist-get def :derived) "bin"))
+              (list :bin-source (plist-get def :source) :bin-step (eas-compile--bin-step pairs)))
             ;; Vega-Lite pads a bar's continuous dimension by continuousBandSize.
             (let ((pad (or (plist-get sp :padding)
                            (and (not custom) (not binned) (not (plist-get def :derived)) (not (plist-get def :binned))
@@ -143,6 +147,29 @@ With KEEP-NULL, null values count too (discrete domains show them)."
               (when pad (append (list :padding pad)
                                 ;; Vega nices a padded log domain again.
                                 (when (and nice (equal type "log")) (list :renice t))))))))
+
+(defun eas-compile--bin-step (pairs)
+  "The bin width of the binned def in PAIRS, read off its rows."
+  (let* ((def (cdar pairs)) (k0 (eas-encode-field def)) (k1 (eas-key (plist-get def :bin-end))))
+    (seq-some (lambda (row) (let ((a (plist-get row k0)) (b (plist-get row k1)))
+                              (and (numberp a) (numberp b) (> b a) (- b a))))
+              (plist-get (caar pairs) :rows))))
+
+(defun eas-compile--range (range env)
+  "An explicit RANGE array with {\"expr\": E} entries evaluated in ENV."
+  (when (vectorp range)
+    (vconcat (mapcar (lambda (v) (if (and (consp v) (plist-get v :expr)) (eas-expr-evaluate (plist-get v :expr) nil env) v))
+                     range))))
+
+(defun eas-compile--domain (domain env channel)
+  "An explicit scale DOMAIN: an array, or {\"param\": NAME} for the
+interval selection NAME's range on CHANNEL in ENV (nil while empty)."
+  (cond ((vectorp domain) domain)
+        ((and (consp domain) (plist-get domain :param))
+         (let* ((store (plist-get env (eas-key (plist-get domain :param))))
+                (r (and (consp store) (or (plist-get store (eas-key (or (plist-get domain :encoding) (eas-key-name channel))))
+                                          (plist-get store :x) (plist-get store :y)))))
+           (and (vectorp r) (vector (min (aref r 0) (aref r 1)) (max (aref r 0) (aref r 1))))))))
 
 (defun eas-compile--dimension-p (pairs channel)
   "Non-nil when CHANNEL is the dimension (not the measure) of a bar, area
@@ -182,9 +209,12 @@ ZOOM is a [LO HI] domain from view state, or nil."
                  (tick (and (equal type "band") (funcall only "tick")))
                  ;; and bands holding a nested offset pad 0.2 both ways.
                  (nested (and (equal type "band") (seq-some (lambda (p) (eas-compile--offset-p p channel)) pairs)))
+                 (cfg (and (equal type "band") (plist-get (plist-get (plist-get (car (car pairs)) :ctx) :config) :scale)))
                  (inner (or (plist-get sp :paddingInner) (plist-get sp :padding)
+                            (plist-get cfg (if rect :rectBandPaddingInner :bandPaddingInner))
                             (cond (rect 0) (tick 0.25) (nested 0.2))))
                  (outer (or (plist-get sp :paddingOuter) (plist-get sp :padding)
+                            (and (not rect) (plist-get cfg :bandPaddingOuter))
                             (cond (rect 0) (tick 0.125) (nested 0.2)))))
             (append (eas-scale-band type (eas-compile--discrete-domain pairs values) [0 1] inner outer)
                     (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)))
@@ -203,13 +233,15 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                          (values (eas-compile--values pairs channel)))
                     (list channel def
                           (if (eas-encode-discrete-p def)
-                              (let ((domain (or (and (vectorp (plist-get sp :domain)) (plist-get sp :domain))
-                                                (eas-compile--discrete-domain pairs values))))
+                              (let ((domain (if (vectorp (plist-get sp :domain)) (plist-get sp :domain)
+                                              (eas-compile--discrete-domain pairs values))))
                                 (append (eas-scale-ordinal domain
-                                                           (or (and (vectorp (plist-get sp :range)) (plist-get sp :range))
+                                                           (or (eas-compile--range (plist-get sp :range) (plist-get (caar pairs) :env))
                                                                (and (plist-get sp :scheme)
                                                                     (eas-scheme-discrete-range (plist-get sp :scheme) (length domain)))
-                                                               (eas-compile--config-range config :category)
+                                                               (and (equal (plist-get def :type) "ordinal")
+                                                                    (eas-compile--config-range config :ordinal (length domain)))
+                                                               (eas-compile--config-range config :category (length domain))
                                                                eas-scale-tableau10))
                                         (list :field (plist-get def :field))))
                             (let ((nums (if (equal (plist-get def :type) "temporal")
@@ -246,9 +278,14 @@ Its range is the scale's own, else config.range.strokeDash, else
                                        (t eas-compile-dash-range)))
               (list :field (plist-get def :field))))))
 
-(defun eas-compile--config-range (config key)
-  "CONFIG's range KEY when it is an explicit array of colors."
-  (let ((r (plist-get (plist-get config :range) key))) (and (vectorp r) (> (length r) 0) r)))
+(defun eas-compile--config-range (config key &optional count)
+  "CONFIG's range KEY: an array of colors, or a {scheme} (sampled COUNT times
+for a discrete scale, else its ramp stops)."
+  (let ((r (plist-get (plist-get config :range) key)))
+    (cond ((and (vectorp r) (> (length r) 0)) r)
+          ((and (eas-object-p r) (plist-get r :scheme))
+           (if count (eas-scheme-discrete-range (plist-get r :scheme) count)
+             (eas-scheme-ramp (plist-get r :scheme)))))))
 
 (defun eas-compile-aux-scale (units channel range)
   "Linear scale for CHANNEL (size or opacity) onto RANGE, or nil.
@@ -261,9 +298,12 @@ Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
                         ((and (eq channel :size) (equal (plist-get (plist-get (caar pairs) :mark) :type) "trail")) [1 4])
                         (t range)))
            (range (vector (or (plist-get sp :rangeMin) (aref range 0))
-                          (or (plist-get sp :rangeMax) (aref range 1)))))
-      (eas-scale-continuous "linear" (if (eq channel :size) 0 (if nums (apply #'min nums) 0))
-                              (if nums (apply #'max nums) 1) range :field (plist-get (cdar pairs) :field)))))
+                          (or (plist-get sp :rangeMax) (aref range 1))))
+           (explicit (plist-get sp :domain)))
+      (if (and (vectorp explicit) (numberp (aref explicit 0)))
+          (eas-scale-continuous "linear" (aref explicit 0) (aref explicit 1) range :field (plist-get (cdar pairs) :field))
+        (eas-scale-continuous "linear" (if (eq channel :size) 0 (if nums (apply #'min nums) 0))
+                              (if nums (apply #'max nums) 1) range :field (plist-get (cdar pairs) :field))))))
 
 (defun eas-compile-set-range (scale range)
   "Return SCALE mapped onto RANGE (recomputing band geometry).

@@ -24,6 +24,7 @@
 
 (require 'eas-core)
 (require 'eas-layout)
+(require 'eas-theme)
 (require 'eas-legend)
 (require 'eas-legend-fit)
 (require 'eas-compile-scales)
@@ -31,6 +32,8 @@
 (require 'eas-facet)
 (require 'eas-title)
 (require 'eas-polar)
+(require 'eas-compile-shared)
+(require 'eas-compile-grid)
 
 (defun eas-place-natural-size (group metrics)
   "Set GROUP's natural :w and :h from its spec and scales under METRICS."
@@ -184,14 +187,35 @@ tallest column."
     (plist-put group :legends-model legends)
     (plist-put group :chrome chrome)))
 
+(defun eas-place-title-mark (group metrics)
+  "GROUP's view title as a list of one non-interactive text mark, or nil."
+  (when-let* ((title (plist-get group :title)))
+    (list (list :id (format "%s/title" (plist-get group :id)) :mark "text" :interactive-off t :rows []
+                :items (vector (list :text title :x (plist-get group :x0)
+                                     :y (- (plist-get group :y0) (plist-get (plist-get group :chrome) :top))
+                                     :fontSize (plist-get metrics :chart-title-size)
+                                     :fontWeight (plist-get metrics :chart-title-weight)
+                                     :align "left" :baseline "top"
+                                     :fill (or (eas-theme-get (plist-get metrics :config) :title :color) "black")))))))
+
 (defun eas-place--groups (node)
   "All groups under layout NODE, in order."
   (if (plist-get node :group) (list (plist-get node :group))
     (apply #'append (mapcar #'eas-place--groups (plist-get node :children)))))
 
+(defun eas-place--lead (node key)
+  "Chrome on side KEY (:top or :left) before NODE's leading plots.
+Nested concatenations align their plots with their siblings' too."
+  (cond ((plist-get node :group) (plist-get (plist-get (plist-get node :group) :chrome) key))
+        ((eas-place-grid-p node) 0)
+        ((equal (plist-get node :concat) (if (eq key :top) "h" "v"))
+         (apply #'max 0 (mapcar (lambda (ch) (eas-place--lead ch key)) (plist-get node :children))))
+        (t (eas-place--lead (car (plist-get node :children)) key))))
+
 (defun eas-place-arrange (node ox oy metrics)
   "Place NODE's groups with the block's top-left at OX OY; return (W . H)."
   (let ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing))))
+    (if (eas-place-grid-p node) (eas-place-arrange-grid node ox oy metrics)
     (if-let* ((g (plist-get node :group)))
         (let ((c (plist-get g :chrome)))
           (plist-put g :x0 (+ ox (plist-get c :left)))
@@ -202,27 +226,23 @@ tallest column."
       (let* ((vertical (equal (plist-get node :concat) "v"))
              (children (plist-get node :children))
              (key (if vertical :left :top))
-             (align (apply #'max 0 (mapcar (lambda (ch) (if (plist-get ch :group)
-                                                            (plist-get (plist-get (plist-get ch :group) :chrome) key)
-                                                          0))
-                                           children)))
+             (align (apply #'max 0 (mapcar (lambda (ch) (eas-place--lead ch key)) children)))
              (cursor 0) (cross 0))
         (dolist (child children)
-          (let* ((inset (if (plist-get child :group)
-                            (- align (plist-get (plist-get (plist-get child :group) :chrome) key))
-                          0))
+          (let* ((inset (- align (eas-place--lead child key)))
                  (size (if vertical
                            (eas-place-arrange child (+ ox inset) (+ oy cursor) metrics)
                          (eas-place-arrange child (+ ox cursor) (+ oy inset) metrics))))
             (setq cursor (+ cursor (if vertical (cdr size) (car size)) spacing)
                   cross (max cross (+ inset (if vertical (car size) (cdr size)))))))
         (setq cursor (max 0 (- cursor spacing)))
-        (if vertical (cons cross cursor) (cons cursor cross))))))
+        (if vertical (cons cross cursor) (cons cursor cross)))))))
 
 (defun eas-place-fit (node width height metrics)
   "Resize NODE's plots so its block is WIDTH by HEIGHT."
   (let ((min-w (* 4 (aref (plist-get metrics :cell) 0)))
         (min-h (* 2 (aref (plist-get metrics :cell) 1))))
+    (if (eas-place-grid-p node) (eas-place-fit-grid node width height metrics)
     (if-let* ((g (plist-get node :group)))
         (let ((c (plist-get g :chrome)))
           (plist-put g :fit-height height)
@@ -238,17 +258,19 @@ tallest column."
         (cl-loop for child in children for a in along
                  do (if vertical
                         (eas-place-fit child width (* avail (/ (float a) total)) metrics)
-                      (eas-place-fit child (* avail (/ (float a) total)) height metrics)))))))
+                      (eas-place-fit child (* avail (/ (float a) total)) height metrics))))))))
 
 (defun eas-place-layout (tree metrics title-h size &optional sized)
   "Size, chrome and arrange TREE; return the scene size (W . H).
 TITLE-H is the chart title's height.  SIZE, when non-nil, is the target
 \(W . H) the plots are fitted to.  SIZED non-nil keeps the groups' current
 plot sizes (a relayout after marks were measured)."
-  (let ((groups (eas-place--groups tree)) (pad (plist-get metrics :pad)))
+  (let ((groups (eas-place--groups tree)) (pad (plist-get metrics :pad)) (shared 0))
     (dolist (g groups)
       (unless sized (eas-place-natural-size g metrics))
       (eas-place-chrome g metrics))
+    ;; Legends shared across concat views sit right of the whole block.
+    (setq shared (eas-shared-extent tree metrics (plist-get (car groups) :h)))
     (when size
       ;; Legends taller than the target flow into columns.
       (dolist (g groups)
@@ -256,10 +278,13 @@ plot sizes (a relayout after marks were measured)."
         (eas-place-chrome g metrics)))
     (when size
       (dotimes (_ 2)
-        (eas-place-fit tree (- (car size) (* 2 pad)) (- (cdr size) (* 2 pad) title-h) metrics)
+        (eas-place-fit tree (- (car size) (* 2 pad) shared) (- (cdr size) (* 2 pad) title-h) metrics)
         (dolist (g groups) (eas-place-chrome g metrics))))
     (let ((block (eas-place-arrange tree pad (+ pad title-h) metrics)))
-      (or size (cons (+ (car block) (* 2 pad)) (+ (cdr block) title-h (* 2 pad)))))))
+      (eas-shared-place tree groups metrics (+ pad (car block)) (plist-get (car groups) :y0))
+      ;; A size too small for the chrome grows the canvas rather than clip it.
+      (let ((need (cons (+ (car block) shared (* 2 pad)) (+ (cdr block) title-h (* 2 pad)))))
+        (if size (cons (max (car size) (car need)) (max (cdr size) (cdr need))) need)))))
 
 (provide 'eas-compile-place)
 ;;; eas-compile-place.el ends here

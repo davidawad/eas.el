@@ -52,8 +52,8 @@
                    '(:mark "point"
                      :params [(:name "p" :bind (:input "range"))
                               (:name "q" :expr "1 + 1")])))
-                 '(("UNSUPPORTED_FEATURE" . "/params/0/bind")
-                   ("UNSUPPORTED_FEATURE" . "/params/1")))))
+                 ;; Input binds are native now (fc-qx1.33); expression params are not.
+                 '(("UNSUPPORTED_FEATURE" . "/params/1")))))
 
 (ert-deftest eas-spec-check-restricts-to-supported-list ()
   (let ((eas-spec-supported-function (lambda () '("mark/line"))))

@@ -40,7 +40,12 @@ A plist (:fill :stroke :stroke-width :opacity :stroked :field-color)."
          (stroked (or (member type '("line" "rule" "trail"))
                       (and (equal type "point") (not (eq (plist-get mark :filled) t)))))
          (enc (plist-get unit :encoding))
-         (value (lambda (ch) (let ((d (plist-get enc ch))) (and (eas-object-p d) (plist-get d :value))))))
+         (value (lambda (ch) (let* ((d (plist-get enc ch)) (c (plist-get d :condition)) (c (if (vectorp c) (aref c 0) c)))
+                               ;; Symbols show a selection's empty state: its condition holds.
+                               (and (eas-object-p d)
+                                    (if (and c (plist-member c :value) (not (eq (plist-get c :empty) :false)))
+                                        (plist-get c :value)
+                                      (plist-get d :value)))))))
     (append
      (list :fill (or (funcall value :fill) (plist-get mark :fill) (funcall value :color) (plist-get mark :color))
           :stroke (or (funcall value :stroke) (let ((s (plist-get mark :stroke))) (and (stringp s) s)))

@@ -356,6 +356,10 @@ and strftime-style time formats are honored."
     ((or "linear" "log")
      (let ((decimals (eas-scale-tick-decimals scale count)))
        (cond
+        ((and format (string-match-p "\\`,?%\\'" format))
+         ;; d3 tickFormat "%": the step's precision less two places.
+         (let ((d (max 0 (- decimals 2))))
+           (lambda (v) (concat (eas-scale-format-number (* 100 v) d) "%"))))
         ((and format (string-match "\\.\\([0-9]+\\)%" format))
          (let ((d (string-to-number (match-string 1 format))))
            (lambda (v) (concat (eas-scale-format-number (* 100 v) d) "%"))))

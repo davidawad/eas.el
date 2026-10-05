@@ -190,7 +190,7 @@ PLOT-SIZE is the plot extent along the axis."
                           ;; Vega-Lite: ceil(size/40), ceil(width/10) for binned x.
                           (max 1 (ceiling (/ plot-size (if (or (equal (plist-get def :derived) "bin") (plist-get def :bin-end)) 10.0
                                                          (float spacing))))))))
-             (fmt (if (and discrete (equal (plist-get def :derived) "timeUnit")
+             (fmt (if (and (equal (plist-get def :derived) "timeUnit")
                            (or (null (plist-get axis :format)) (stringp (plist-get axis :format))))
                       (let ((f (if (plist-get axis :format) (eas-scale--d3-time-format (plist-get axis :format))
                                  (eas-layout-time-unit-format (plist-get def :field)))))
@@ -203,6 +203,10 @@ PLOT-SIZE is the plot extent along the axis."
                     (eas-scale-tick-format scale count (or (plist-get axis :format) (plist-get def :format)))))
              (values (cond ((plist-get axis :values) (append (plist-get axis :values) nil))
                            ((plist-get scale :bins) (append (plist-get scale :bins) nil))
+                           ((plist-get scale :bin-step)
+                            (let ((d (plist-get scale :domain)) (step (plist-get scale :bin-step)))
+                              (cl-loop for v = (aref d 0) then (+ v step) while (<= v (+ (aref d 1) (* 1e-9 step)))
+                                       collect v)))
                            (t (eas-scale-ticks scale count))))
              (title (let ((tt (cond ((plist-member axis :title)
                                      (let ((tt (plist-get axis :title))) (and (stringp tt) tt)))
@@ -230,6 +234,9 @@ PLOT-SIZE is the plot extent along the axis."
             (if (or (member (plist-get axis :orient) '("top" "right")) (plist-get x :offset)) x
               ;; Any other axis keeps the placement it had; only its colors and fonts apply.
               (when (plist-get x :style) (list :style (plist-get x :style)))))
+          (when-let* ((m (or (plist-get axis :minExtent)
+                             (eas-theme-axis (plist-get metrics :config) channel :minExtent))))
+            (list :minExtent m))
           (when (memq (if (plist-member axis :domain) (plist-get axis :domain)
                         (car (eas-layout--axis-config config channel :domain)))
                       '(:false :null))
@@ -439,6 +446,10 @@ labels, title) without the half-pixel translate of the drawn lines."
                                                          (vector (+ x0 0.5) p (+ x0 w 0.5) p)))))))
                              ticks)))
            (title (plist-get axis :title))
+           ;; Vega's minExtent: the title clears at least this much axis.
+           (ab (if-let* ((m (plist-get axis :minExtent)))
+                   (eas-layout-union ab (if bottom (vector x0 (+ y0 h) x0 (+ y0 h m)) (vector (- x0 m) y0 x0 y0)))
+                 ab))
            (tsize (plist-get metrics :title-size)) (tpad (plist-get metrics :title-pad))
            (weight (plist-get metrics :title-weight))
            (tm (when title

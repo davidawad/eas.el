@@ -44,6 +44,7 @@
 (require 'eas-axis)
 (require 'eas-compile-aux)
 (require 'eas-compile-channels)
+(require 'eas-params-init)
 
 (defvar eas-compile-gc-threshold (* 64 1024 1024)
   "GC threshold compile runs under; compile allocates many small plists.")
@@ -83,6 +84,18 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
      (t (eas-signal "UNSUPPORTED_FEATURE" "Only inline data.values compiles natively"
                       :path (concat (plist-get ctx :path) "/data") :feature "data/url")))))
 
+(defun eas-compile--valid-rows (enc rows type)
+  "ROWS without those whose continuous x or y under ENC is null.
+Vega-Lite's mark.invalid \"filter\" drops them from marks and scales;
+lines and areas keep them (their default breaks the path instead)."
+  (let ((keys (cl-loop for ch in '(:x :y :x2 :y2)
+                       for d = (plist-get enc ch)
+                       when (and (eas-object-p d) (plist-get d :field)
+                                 (member (plist-get d :type) '("quantitative" "temporal")))
+                       collect (eas-encode-field d))))
+    (if (or (null keys) (member type '("line" "area"))) rows
+      (vconcat (seq-remove (lambda (row) (seq-some (lambda (k) (memq (plist-get row k) '(nil :null))) keys)) rows)))))
+
 (defun eas-compile--unit (node ctx env)
   "Compile unit NODE under CTX into a unit plist (rows, encoding, mark)."
   (let* ((path (plist-get ctx :path))
@@ -95,6 +108,7 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
          (enc (eas-encode-normalize encoding rows))
          (derived (eas-encode-derive enc rows env))
          (mark (plist-get node :mark))
+         (derived (cons (car derived) (eas-compile--valid-rows (car derived) (cdr derived) (plist-get mark :type))))
          (unit (list :path path :name (plist-get node :name)
                      :mark (eas-marks-resolve-mark
                             mark (or (plist-get ctx :config)
@@ -150,6 +164,7 @@ a child field or datum def inherits the parent def's other properties."
       (let ((key (if (plist-get node :vconcat) :vconcat :hconcat)))
         (list :concat (if (eq key :vconcat) "v" "h")
               :spacing (let ((s (plist-get node :spacing))) (and (numberp s) s))
+              :grid (plist-get (plist-get node :x-eas) :grid)
               :children (let ((eas-link--scope (eas-link-scope node)))
                           (seq-map-indexed
                            (lambda (child i)
@@ -198,7 +213,8 @@ a child field or datum def inherits the parent def's other properties."
          (dash (eas-compile-dash-scale units config))
          (channels (eas-compile-channels-scales units))
          (first-def (lambda (ch) (cdar (eas-compile--defs units ch))))
-         (unit (car units))
+         ;; Legend symbols copy the mark that encodes the legend's channel.
+         (unit (or (caar (eas-compile--defs units (if color (nth 0 color) :size))) (car units)))
          (shape (let ((type (plist-get (plist-get unit :mark) :type)))
                   (cond ((member type '("bar" "rect" "area" "square")) "square")
                         ((member type '("line" "rule" "trail")) "stroke") (t "circle"))))
@@ -243,23 +259,29 @@ a child field or datum def inherits the parent def's other properties."
     (eas-polar-ranges group)
     (eas-independent-ranges group)))
 
+(defun eas-compile--brush-span (scale range lo len)
+  "Pixel span (START . SIZE) of RANGE on SCALE; the whole LO..LO+LEN without RANGE."
+  (if (not (vectorp range)) (cons lo len)
+    (let ((a (and scale (eas-scale-apply scale (aref range 0))))
+          (b (and scale (eas-scale-apply scale (aref range 1)))))
+      (and a b (cons (max lo (min a b)) (- (min (+ lo len) (max a b)) (max lo (min a b))))))))
+
 (defun eas-compile--brushes (group state)
   "Brush marks for GROUP's interval params that hold a value in STATE."
-  (let ((bounds (vector (plist-get group :x0) (plist-get group :y0) (plist-get group :w) (plist-get group :h)))
-        out)
+  (let ((x0 (plist-get group :x0)) (y0 (plist-get group :y0)) out)
     (dolist (p (plist-get group :params))
       (let* ((select (plist-get p :select))
              (value (plist-get (plist-get state :params) (eas-key (plist-get p :name))))
-             (xs (plist-get (plist-get group :scales) :x)))
+             (scales (plist-get group :scales)))
         (when (and (or (equal select "interval") (equal (plist-get select :type) "interval"))
                    (not (equal (plist-get p :bind) "scales"))
-                   (vectorp (plist-get value :x)) xs)
-          (let ((a (eas-scale-apply xs (aref (plist-get value :x) 0)))
-                (b (eas-scale-apply xs (aref (plist-get value :x) 1))))
-            (when (and a b)
+                   (or (vectorp (plist-get value :x)) (vectorp (plist-get value :y))))
+          (let ((xs (eas-compile--brush-span (plist-get scales :x) (plist-get value :x) x0 (plist-get group :w)))
+                (ys (eas-compile--brush-span (plist-get scales :y) (plist-get value :y) y0 (plist-get group :h))))
+            (when (and xs ys)
               (push (list :id (format "%s/brush:%s" (plist-get group :id) (plist-get p :name))
                           :mark "brush" :param (plist-get p :name) :interactive-off t :rows []
-                          :items (vector (list :x (min a b) :y (aref bounds 1) :w (abs (- b a)) :h (aref bounds 3)
+                          :items (vector (list :x (car xs) :y (car ys) :w (cdr xs) :h (cdr ys)
                                                :fill "#333333" :opacity 0.125 :stroke "#ffffff")))
                     out))))))
     (nreverse out)))
@@ -308,8 +330,10 @@ a child field or datum def inherits the parent def's other properties."
                       (cl-mapcar (lambda (legend at)
                                    (eas-legend-place legend (+ (aref bounds 0) (car at)) (+ (aref bounds 1) (cdr at))
                                                        metrics))
-                                 (plist-get group :legends-model) (plist-get group :legend-offsets))))
-          :marks (vconcat (append marks (eas-compile--brushes group state)
+                                 (plist-get group :legends-model) (plist-get group :legend-offsets)))
+                    (mapcar (lambda (l) (eas-legend-place (nth 0 l) (nth 1 l) (nth 2 l) metrics))
+                            (plist-get group :shared-legends)))
+          :marks (vconcat (append (eas-compile--brushes group state) marks
                                   (delq nil (list (eas-title-view-mark group metrics)))))
           :params (vconcat (mapcar (lambda (p) (plist-get p :name)) (plist-get group :params))))))
 
@@ -384,6 +408,7 @@ compiling again."
            (title (eas-compile--title spec))
            (title-h (eas-title-height spec metrics)))
       (dolist (g groups) (eas-compile--scales g state metrics))
+      (eas-shared-prepare tree groups spec)
       (let ((total (eas-place-layout tree metrics title-h size)))
         (dolist (g groups) (eas-compile--ranges g))
         ;; Vega's canvas also holds whatever the marks overhang: measure
@@ -411,7 +436,11 @@ zoomed in STATE."
   (or (plist-get (plist-get state :domains) (eas-key (plist-get group :id)))
       (seq-some (lambda (p) (equal (plist-get p :bind) "scales")) (plist-get group :params))
       (eas-link-domain-params (plist-get group :units))
-      (seq-some (lambda (u) (eq (plist-get (plist-get u :mark) :clip) t)) (plist-get group :units))))
+      (seq-some (lambda (u) (eq (plist-get (plist-get u :mark) :clip) t)) (plist-get group :units))
+      ;; A domain bound to a selection zooms the view, which Vega-Lite clips.
+      (seq-some (lambda (u) (seq-some (lambda (ch) (plist-get (plist-get (plist-get (plist-get (plist-get u :encoding) ch) :scale) :domain) :param))
+                                      '(:x :y)))
+                (plist-get group :units))))
 
 (defun eas-compile--measure-marks (groups metrics state)
   "Compute GROUPS' items and record how far they overhang each plot.
@@ -490,8 +519,13 @@ the text target (:cols C :rows R); nil keeps the spec's own sizes.
 STATE is view state: (:domains (VIEW-KEY (:x [LO HI]) ...) :params ...).
 Signals UNSUPPORTED_FEATURE (with the JSON path) for anything outside
 the native subset."
-  (eas-compile-scene (eas-compile-plan spec :rows rows :size size :target target :cell cell :state state)
-                       state))
+  (let ((scene (eas-compile-scene (eas-compile-plan spec :rows rows :size size :target target :cell cell :state state)
+                                  state)))
+    ;; Selections with an initial value start non-empty, as Vega draws them.
+    (if-let* (((null state)) (init (eas-params-initial-state scene)))
+        (eas-params-with-state init
+          (eas-compile spec :rows rows :size size :target target :cell cell :state init))
+      scene)))
 
 (provide 'eas-compile)
 ;;; eas-compile.el ends here

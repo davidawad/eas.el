@@ -21,6 +21,7 @@
 
 (require 'eas-core)
 (require 'seq)
+(require 'eas-repeat)
 
 (defconst eas-spec-vega-lite-version "6.4.1"
   "The Vega-Lite version chart/v1 follows (the version bin/chart pins).")
@@ -55,7 +56,9 @@
     ;; scatter and table plots (fc-qx1.27)
     :shape :angle :url
     ;; calculations (fc-qx1.30)
-    :x :y :x2 :y2 :xOffset :x2Offset :yOffset :y2Offset :font :fontStyle :limit)
+    :x :y :x2 :y2 :xOffset :x2Offset :yOffset :y2Offset :font :fontStyle :limit
+    ;; interactive (fc-qx1.33)
+    :cursor)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels
@@ -66,7 +69,9 @@
     :shape :row
     :strokeDash
     ;; scatter and table plots (fc-qx1.27)
-    :angle :yOffset :url :longitude :latitude)
+    :angle :yOffset :url :longitude :latitude
+    ;; interactive (fc-qx1.33)
+    :fillOpacity :strokeOpacity :strokeWidth)
   "Encoding channels chart/v1 recognises.")
 
 (defconst eas-spec--channel-def-keys
@@ -105,7 +110,7 @@
   "Map projections drawn natively: none (a projection is unsupported).")
 
 (defconst eas-spec--select-keys
-  '(:type :on :nearest :fields :encodings :clear :toggle :resolve :mark)
+  '(:type :on :nearest :fields :encodings :clear :toggle :resolve :mark :translate :zoom)
   "Selection definition keys chart/v1 recognises.")
 
 ;;; Parse
@@ -140,14 +145,14 @@ Signals PARSE_ERROR or INVALID_INPUT."
     (eas-spec--normalize spec)))
 
 (defun eas-spec--normalize (spec)
-  "Return SPEC with mark shorthand expanded, recursively."
-  (let ((out spec))
-    (when (stringp (plist-get spec :mark))
-      (setq out (eas-plist-put out :mark (list :type (plist-get spec :mark)))))
+  "Return SPEC with mark shorthand and repeat expanded, recursively."
+  (let ((out (eas-repeat-expand spec)))
+    (when (stringp (plist-get out :mark))
+      (setq out (eas-plist-put out :mark (list :type (plist-get out :mark)))))
     (dolist (key '(:layer :vconcat :hconcat))
-      (when (vectorp (plist-get spec key))
+      (when (vectorp (plist-get out key))
         (setq out (eas-plist-put out key (vconcat (mapcar #'eas-spec--normalize
-                                                            (plist-get spec key)))))))
+                                                            (plist-get out key)))))))
     out))
 
 (defun eas-spec-mark-type (spec)
@@ -301,8 +306,11 @@ come back as (:invalid MESSAGE :path P)."
              (cond ((null bind))
                    ((member bind '("scales" "legend"))
                     (add (concat "bind/" bind) (concat ppath "/bind")))
-                   ((and (eas-object-p bind) (plist-get bind :input))
-                    (add "bind/input" (concat ppath "/bind") :unknown t))
+                   ;; Input widgets, one or one per field: set by "param" events.
+                   ((and (eas-object-p bind)
+                         (or (plist-get bind :input)
+                             (cl-loop for (_ v) on bind by #'cddr always (and (eas-object-p v) (plist-get v :input)))))
+                    (add "bind/input" (concat ppath "/bind")))
                    (t (add "bind/other" (concat ppath "/bind") :unknown t))))))
       (walk-view spec ""))
     (nreverse found)))

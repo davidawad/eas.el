@@ -25,6 +25,7 @@
 (require 'eas-scale)
 (require 'eas-hit)
 (require 'eas-params)
+(require 'eas-params-init)
 (require 'eas-zoom)
 (require 'eas-intersect)
 (require 'eas-link)
@@ -206,7 +207,7 @@ one history entry."
     (dolist (channel (eas-reduce--channels param))
       (when-let* ((scale (eas-reduce--scale scene (plist-get param :view) channel)))
         (let ((i (if (eq channel :x) 0 1)))
-          (setq fields (append fields (list channel (plist-get scale :field))))
+          (setq fields (append fields (list channel (or (plist-get scale :bin-source) (plist-get scale :field)))))
           (setq store (append store (list channel (vector (min (eas-scale-invert scale (aref start i))
                                                                (eas-scale-invert scale (aref end i)))
                                                           (max (eas-scale-invert scale (aref start i))
@@ -280,6 +281,8 @@ The previous domains go on the history, so [ undoes it."
 (defun eas-reduce--brush-event (state scene event)
   "Apply an agent's brush EVENT (data-space ranges)."
   (let* ((params (eas-params-of scene "interval"))
+         ;; A repeated spec has one param per view: "view" picks the cell.
+         (params (or (seq-filter (lambda (p) (equal (plist-get p :view) (plist-get event :view))) params) params))
          (p (if (plist-get event :param)
                 (seq-find (lambda (p) (equal (plist-get p :name) (plist-get event :param))) params)
               (or (seq-find #'eas-reduce--brush-p params) (car params))))
@@ -337,6 +340,7 @@ Views sharing a param bound to scales move together (`eas-link-scales')."
               (s (eas-reduce--drag-to s scene (plist-get event :to))))
          (eas-reduce--release s scene (plist-get event :to))))
       ("brush" (eas-reduce--brush-event state scene event))
+      ("param" (eas-params-set state scene (plist-get event :param) (plist-get event :value)))
       ("key" (eas-reduce--key state scene (plist-get event :key)))
       ("link" (eas-link-reduce state event scene))
       ("push" (eas-reduce--put state :stream-cursor

@@ -235,8 +235,11 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
 
 (defun eas-svg--axis (axis theme)
   "SVG nodes for placed AXIS under THEME."
-  (let* ((channel (if (equal (plist-get axis :orient) "bottom") :x :y))
-         (get (lambda (key) (eas-theme-axis theme channel key)))
+  (let* ((horizontal (member (plist-get axis :orient) '("bottom" "top")))
+         (channel (if horizontal :x :y))
+         ;; An axis's own style (eas-axis.el) overrides the theme.
+         (style (plist-get axis :style))
+         (get (lambda (key) (if (plist-member style key) (plist-get style key) (eas-theme-axis theme channel key))))
          out)
     (seq-doseq (tk (plist-get axis :ticks))
       (when (plist-get tk :grid)
@@ -244,10 +247,10 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                                (funcall get :gridOpacity) (plist-get tk :grid-dash))
               out)))
     (when-let* ((domain (plist-get axis :domain-line)))
-      (unless (plist-get axis :domain-off)
+      (unless (or (plist-get axis :domain-off) (plist-get axis :no-domain))
         (push (eas-svg--line domain (funcall get :domainColor) (or (funcall get :domainWidth) 1)) out)))
     (seq-doseq (tk (plist-get axis :ticks))
-      (unless (equal (plist-get axis :tickSize) 0)
+      (unless (or (equal (plist-get axis :tickSize) 0) (null (plist-get tk :tick)))
         (when-let* ((color (eas-axis-extra-tick-color axis tk (funcall get :tickColor))))
           (push (eas-svg--line (plist-get tk :tick) color (or (funcall get :tickWidth) 1)
                                nil (plist-get tk :tick-dash))
@@ -256,8 +259,8 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
         (push (eas-svg--text (plist-get tk :label) (plist-get tk :lx) (plist-get tk :ly)
                                (or (funcall get :labelFontSize) 10)
                                :align (plist-get tk :align) :baseline (plist-get tk :baseline)
-                               :angle (if (equal (plist-get axis :orient) "bottom")
-                                          (plist-get axis :labelAngle) 0)
+                               :angle (if horizontal (plist-get axis :labelAngle) 0)
+                               :weight (funcall get :labelFontWeight)
                                :fill (or (plist-get tk :label-color) (funcall get :labelColor)))
               out)))
     (when-let* ((tm (plist-get axis :title-mark)))
@@ -359,11 +362,14 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
           (when (plist-get legend :bar) (push (eas-svg--gradient-def legend) defs))
           (setq children (append (reverse (eas-svg--legend legend theme)) children)))))
     (when-let* ((title (plist-get scene :title)))
-      (push (eas-svg--text (plist-get title :text) (plist-get title :x) (plist-get title :y)
-                             (plist-get title :fontSize) :align (or (plist-get title :align) "center") :baseline "top"
-                             :weight (or (plist-get title :fontWeight) "bold")
-                             :fill (plist-get (plist-get theme :title) :color))
-            children))
+      (seq-do-indexed
+       (lambda (line i)
+         (push (eas-svg--text line (plist-get title :x) (+ (plist-get title :y) (* i (or (plist-get title :lineHeight) 0)))
+                              (plist-get title :fontSize) :align (or (plist-get title :align) "center") :baseline "top"
+                              :weight (or (plist-get title :fontWeight) "bold")
+                              :fill (or (plist-get title :color) (plist-get (plist-get theme :title) :color)))
+               children))
+       (or (plist-get title :lines) (vector (plist-get title :text)))))
     (apply #'dom-node 'svg
            `((xmlns . "http://www.w3.org/2000/svg")
              (width . ,(eas-svg--n (plist-get size :w))) (height . ,(eas-svg--n (plist-get size :h)))

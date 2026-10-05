@@ -179,5 +179,67 @@ threshold, no overlap."
     (should (seq-every-p (lambda (q) (<= -1e-9 (cadr q) (+ 10 1e-9))) curve))
     (should (equal (eas-curve-apply pts "linear") pts))))
 
+;;; Layers: nested fields, independent scales, top axes, titles, datasets, facets
+
+(defun eas-vl-gallery-test--view (spec &rest args)
+  (aref (plist-get (apply #'eas-compile spec args) :views) 0))
+
+(ert-deftest eas-vl-gallery-nested-fields-read-into-rows ()
+  (let* ((spec '(:data (:values [(:k "a" :rec (:lo 1 :hi 5) :ranges [2 4 6])
+                                 (:k "b" :rec (:lo 2 :hi 8) :ranges [3 5 9])])
+                 :mark "bar"
+                 :encoding (:x (:field "k" :type "nominal")
+                            :y (:field "rec.lo" :type "quantitative") :y2 (:field "rec.hi"))))
+         (items (plist-get (aref (plist-get (eas-vl-gallery-test--view spec) :marks) 0) :items)))
+    (should (= (length items) 2))
+    (should (> (plist-get (aref items 0) :h) 0)))
+  (should (equal (eas-nested-path "a.b[1]['c']") '("a" "b" 1 "c")))
+  (should (equal (eas-nested-path "a\\.b") nil)))
+
+(ert-deftest eas-vl-gallery-top-and-right-axes ()
+  (let* ((spec '(:data (:values [(:x 1 :y 2) (:x 2 :y 4)]) :mark "point"
+                 :encoding (:x (:field "x" :type "quantitative" :axis (:orient "top"))
+                            :y (:field "y" :type "quantitative" :axis (:orient "right")))))
+         (axes (plist-get (eas-vl-gallery-test--view spec) :axes))
+         (orients (mapcar (lambda (a) (plist-get a :orient)) axes)))
+    (should (equal (sort (copy-sequence orients) #'string<) '("right" "top")))
+    (let ((top (seq-find (lambda (a) (equal (plist-get a :orient) "top")) axes))
+          (b (plist-get (eas-vl-gallery-test--view spec) :bounds)))
+      (should (< (aref (plist-get top :domain-line) 1) (+ 1 (aref b 1)))))))
+
+(ert-deftest eas-vl-gallery-independent-layers-draw-two-axes ()
+  (let* ((spec '(:data (:values [(:t 1 :a 10 :b 0.1) (:t 2 :a 20 :b 0.5)])
+                 :resolve (:scale (:y "independent"))
+                 :encoding (:x (:field "t" :type "quantitative"))
+                 :layer [(:mark "line" :encoding (:y (:field "a" :type "quantitative")))
+                         (:mark "line" :encoding (:y (:field "b" :type "quantitative")))]))
+         (view (eas-vl-gallery-test--view spec))
+         (ys (seq-filter (lambda (a) (member (plist-get a :orient) '("left" "right"))) (plist-get view :axes))))
+    (should (= (length ys) 2))
+    (should (equal (sort (mapcar (lambda (a) (plist-get a :orient)) ys) #'string<) '("left" "right")))))
+
+(ert-deftest eas-vl-gallery-title-lines-and-concat-cell-titles ()
+  (let* ((scene (eas-compile '(:title (:text ["One" "Two"]) :data (:values [(:x 1)]) :mark "point"
+                               :encoding (:x (:field "x" :type "quantitative")))))
+         (title (plist-get scene :title)))
+    (should (equal (plist-get title :lines) ["One" "Two"]))
+    (should (= (plist-get title :lineHeight) 18)))
+  (let* ((scene (eas-compile '(:vconcat [(:title "Cell" :data (:values [(:x 1)]) :mark "point"
+                                          :encoding (:x (:field "x" :type "quantitative")))])))
+         (marks (plist-get (aref (plist-get scene :views) 0) :marks)))
+    (should (seq-some (lambda (m) (string-suffix-p "/title" (plist-get m :id))) marks))))
+
+(ert-deftest eas-vl-gallery-datasets-and-facet-spec-are-lowered ()
+  (let ((spec (eas-vl-lower '(:datasets (:d [(:g "a" :v 1) (:g "b" :v 2)]) :data (:name "d") :mark "bar"
+                              :encoding (:x (:field "g" :type "nominal") :y (:field "v" :type "quantitative"))))))
+    (should (equal (plist-get (plist-get spec :data) :values) [(:g "a" :v 1) (:g "b" :v 2)]))
+    (should-not (plist-member spec :datasets)))
+  (let ((spec (eas-facet-lower '(:data (:values [(:g "a" :v 1) (:g "b" :v 2)])
+                                 :facet (:row (:field "g" :type "ordinal" :header (:labelAngle 0)))
+                                 :resolve (:scale (:x "independent"))
+                                 :spec (:mark "bar" :encoding (:x (:field "v" :type "quantitative")))))))
+    (should (= (length (plist-get spec :vconcat)) 2))
+    (should (eql (plist-get (plist-get (plist-get (aref (plist-get spec :vconcat) 0) :x-eas) :header) :angle) 0))))
+
 (provide 'eas-vl-gallery-test)
 ;;; eas-vl-gallery-test.el ends here

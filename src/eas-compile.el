@@ -37,6 +37,11 @@
 (require 'eas-bins)
 (require 'eas-composite)
 (require 'eas-facet)
+(require 'eas-nested)
+(require 'eas-layer)
+(require 'eas-independent)
+(require 'eas-title)
+(require 'eas-axis)
 (require 'eas-compile-aux)
 (require 'eas-compile-channels)
 
@@ -81,9 +86,13 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
 (defun eas-compile--unit (node ctx env)
   "Compile unit NODE under CTX into a unit plist (rows, encoding, mark)."
   (let* ((path (plist-get ctx :path))
-         (rows (eas-transform-run (vconcat (plist-get ctx :transforms)) (plist-get ctx :rows) env
-                                    (concat path "/transform")))
-         (enc (eas-encode-normalize (plist-get ctx :encoding) rows))
+         (encoding (eas-layer-drop-empty (plist-get ctx :encoding)))
+         (rows (eas-layer-coerce
+                (eas-nested-flatten (eas-transform-run (vconcat (plist-get ctx :transforms)) (plist-get ctx :rows) env
+                                                       (concat path "/transform"))
+                                    encoding)
+                encoding))
+         (enc (eas-encode-normalize encoding rows))
          (derived (eas-encode-derive enc rows env))
          (mark (plist-get node :mark))
          (unit (list :path path :name (plist-get node :name)
@@ -140,6 +149,7 @@ a child field or datum def inherits the parent def's other properties."
      ((or (plist-get node :vconcat) (plist-get node :hconcat))
       (let ((key (if (plist-get node :vconcat) :vconcat :hconcat)))
         (list :concat (if (eq key :vconcat) "v" "h")
+              :spacing (let ((s (plist-get node :spacing))) (and (numberp s) s))
               :children (let ((eas-link--scope (eas-link-scope node)))
                           (seq-map-indexed
                            (lambda (child i)
@@ -151,6 +161,9 @@ a child field or datum def inherits the parent def's other properties."
                                 :path (plist-get ctx :path) :units nil
                                 :spec-w (or (plist-get node :width) (plist-get ctx :width))
                                 :spec-h (or (plist-get node :height) (plist-get ctx :height))
+                                :resolve (plist-get node :resolve)
+                                ;; A concat cell's own title (the root's is the chart title).
+                                :title-node (and (not (string-empty-p (plist-get ctx :path))) (eas-title-lines node) node)
                                 :header (plist-get (plist-get node :x-eas) :header)
                                 :params nil))))
         (when-let* ((inherited (and (not group) (eas-link-scoped-params node))))
@@ -207,6 +220,7 @@ a child field or datum def inherits the parent def's other properties."
                        (when dash (list :strokeDash dash))
                        channels))
     (plist-put group :axis-defs (list :x (eas-bins-axis-def units :x) :y (eas-bins-axis-def units :y)))
+    (eas-independent-scales group zoom)
     (plist-put group :legend-specs
                (delq nil (list (when color (append (funcall spec (nth 0 color) (nth 1 color) (nth 2 color))
                                                    (when (eas-compile-channels-legend-shape units)
@@ -226,7 +240,8 @@ a child field or datum def inherits the parent def's other properties."
                                          y (if (member (plist-get y :type) '("band" "point"))
                                                (vector y0 (+ y0 h)) (vector (+ y0 h) y0))))))
     (plist-put group :scales scales)
-    (eas-polar-ranges group)))
+    (eas-polar-ranges group)
+    (eas-independent-ranges group)))
 
 (defun eas-compile--brushes (group state)
   "Brush marks for GROUP's interval params that hold a value in STATE."
@@ -256,7 +271,8 @@ a child field or datum def inherits the parent def's other properties."
          (marks (seq-map-indexed
                  (lambda (unit k)
                    (unless (plist-get unit :items)
-                     (setq unit (plist-put unit :items (eas-marks-items unit scales bounds metrics)))
+                     (setq unit (plist-put unit :items (eas-marks-items unit (eas-independent-unit-scales group unit)
+                                                                          bounds metrics)))
                      (setq unit (plist-put unit :index nil)))
                    (let ((mark (list :id (or (plist-get unit :name) (format "%s/%d" (plist-get group :id) k))
                                      :mark (plist-get (plist-get unit :mark) :type)
@@ -293,7 +309,8 @@ a child field or datum def inherits the parent def's other properties."
                                    (eas-legend-place legend (+ (aref bounds 0) (car at)) (+ (aref bounds 1) (cdr at))
                                                        metrics))
                                  (plist-get group :legends-model) (plist-get group :legend-offsets))))
-          :marks (vconcat (append marks (eas-compile--brushes group state)))
+          :marks (vconcat (append marks (eas-compile--brushes group state)
+                                  (delq nil (list (eas-title-view-mark group metrics)))))
           :params (vconcat (mapcar (lambda (p) (plist-get p :name)) (plist-get group :params))))))
 
 (defun eas-compile--title-frame (spec)
@@ -315,16 +332,16 @@ a child field or datum def inherits the parent def's other properties."
           (not (equal (plist-get metrics :chart-title-anchor) "start")))
       total
     (let ((need (+ (eas-compile--title-start groups metrics spec)
-                   (eas-layout-text-width metrics title (plist-get metrics :chart-title-size)
-                                          (plist-get metrics :chart-title-weight))
+                   (apply #'max (mapcar (lambda (line)
+                                          (eas-layout-text-width metrics line (plist-get metrics :chart-title-size)
+                                                                 (plist-get metrics :chart-title-weight)))
+                                        (eas-title-lines spec)))
                    (plist-get metrics :pad))))
       (if (> need (car total)) (cons (ceiling need) (cdr total)) total))))
 
 (defun eas-compile--title (spec)
-  "The chart title text of SPEC, or nil."
-  (let ((title (plist-get spec :title)))
-    (cond ((and (stringp title) (not (string-empty-p title))) title)
-          ((and (eas-object-p title) (stringp (plist-get title :text))) (plist-get title :text)))))
+  "The chart title text of SPEC (its lines joined by spaces), or nil."
+  (eas-title-text spec))
 
 (defun eas-compile--env (spec state)
   "Param values visible to expressions: spec param :value defaults, then STATE."
@@ -365,7 +382,7 @@ compiling again."
                                          env rows nil))
            (groups (eas-place--groups tree))
            (title (eas-compile--title spec))
-           (title-h (if title (+ (plist-get metrics :chart-title-size) (plist-get metrics :chart-title-pad)) 0)))
+           (title-h (eas-title-height spec metrics)))
       (dolist (g groups) (eas-compile--scales g state metrics))
       (let ((total (eas-place-layout tree metrics title-h size)))
         (dolist (g groups) (eas-compile--ranges g))
@@ -411,7 +428,7 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
              mbox sbox)
         (dolist (u (plist-get g :units))
           (unless (plist-get u :items)
-            (plist-put u :items (eas-marks-items u (plist-get g :scales) bounds metrics)))
+            (plist-put u :items (eas-marks-items u (eas-independent-unit-scales g u) bounds metrics)))
           (unless (eas-compile--clipped-p g state)
             (let ((b (eas-marks-bounds u metrics)))
               (setq mbox (eas-layout-union mbox b))
@@ -437,16 +454,30 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
        (let* ((x1 (eas-compile--title-start groups metrics spec))
               (x2 (apply #'max (mapcar (lambda (g) (+ (plist-get g :x0) (plist-get g :w))) groups)))
               (anchor (if (eas-layout-text-p metrics) "middle" (plist-get metrics :chart-title-anchor))))
-         (list :title (list :text title
+         (list :title (append (list :text title
                             ;; Vega-Lite's title frame "bounds": start and end are the chart's edges.
-                            :x (pcase anchor ("start" (if (or (eas-layout-text-p metrics) (equal (eas-compile--title-frame spec) "bounds"))
+                            :x (pcase anchor ("start" (if (or (eas-layout-text-p metrics) (equal (eas-compile--title-frame spec) "bounds")
+                                            ;; An explicit frame "group" anchors to the plots.
+                                            (let ((tt (plist-get spec :title)))
+                                              (and (eas-object-p tt) (equal (plist-get tt :frame) "group"))))
                                           x1 (plist-get metrics :pad)))
                                  ("end" (if (eas-layout-text-p metrics) x2 (- (car total) (plist-get metrics :pad))))
                                  (_ (if (eas-layout-text-p metrics) (/ (car total) 2.0) (/ (+ x1 x2) 2.0))))
-                            :y (plist-get metrics :pad)
+                            :y (+ (plist-get metrics :pad)
+                                  (if (eas-layout-text-p metrics) 0
+                                    (- (eas-layout--round (* 0.8 (eas-title--get spec metrics :fontSize :chart-title-size)))
+                                       (eas-layout--round (* 0.79 (eas-title--get spec metrics :fontSize :chart-title-size))))))
                             :align (pcase anchor ("start" "left") ("end" "right") (_ "center")) :baseline "top"
-                            :fontSize (plist-get metrics :chart-title-size)
-                            :fontWeight (plist-get metrics :chart-title-weight)))))
+                            :fontSize (if (eas-layout-text-p metrics) (plist-get metrics :chart-title-size)
+                                        (eas-title--get spec metrics :fontSize :chart-title-size))
+                            :fontWeight (eas-title--get spec metrics :fontWeight :chart-title-weight))
+                      (let ((lines (eas-title-lines spec)))
+                        (when (cdr lines)
+                          (list :lines (vconcat lines)
+                                :lineHeight (if (eas-layout-text-p metrics) (plist-get metrics :chart-title-size)
+                                              (+ (eas-title--get spec metrics :fontSize :chart-title-size) 2)))))
+                      (let ((color (plist-get (eas-title--object spec) :color)))
+                        (when (stringp color) (list :color color)))))))
      (list :views (vconcat (mapcar (lambda (g) (eas-compile--view g metrics state)) groups))
            :params (vconcat (apply #'append (mapcar (lambda (g) (plist-get g :params)) groups)))))))
 

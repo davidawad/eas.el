@@ -1,0 +1,16 @@
+Country
+                                                      Year
+       Brazil                        ●⠉⠉⠉⠉⠉⠉⠉⠉⠉●      ━ 1955
+                                                      ━ 2000
+        China                          ●⠤⠤⠤⠤⠤⠤⠤●
+
+
+        India                      ●⠉⠉⠉⠉⠉⠉⠉●
+
+    Indonesia                      ●⠒⠒⠒⠒⠒⠒⠒⠒⠒●
+
+United States                                  ●⣀⣀●
+
+              ┬────────┬─────────┬────────┬─────────┬
+              0       20        40        60      80
+                      Life Expectancy (years)

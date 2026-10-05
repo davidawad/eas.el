@@ -26,6 +26,9 @@
 (require 'eas-layout-axis-style)
 (require 'eas-axis-extra)
 
+(declare-function eas-axis-extras "eas-axis")
+(declare-function eas-axis-place "eas-axis")
+
 (defun eas-layout-metrics (target &optional cell config)
   "Return layout metrics for TARGET (svg or text); CELL is [W H] in px.
 CONFIG is the Vega config in force (default `eas-theme-default')."
@@ -140,6 +143,17 @@ This is how Vega truncates labels past labelLimit."
             (setq hi (1- mid)))))
       (concat (substring text 0 lo) "\u2026"))))
 
+(defun eas-layout-empty-title-point (tm pad)
+  "Bounds of the empty axis title TM placed PAD past the labels.
+bin/chart's empty (\"\") titles grow an axis by half its title padding
+\(measured on the Vega-Lite gallery), not by a line of text."
+  (let* ((x (- (plist-get tm :x) 0.5)) (y (- (plist-get tm :y) 0.5))
+         (back (/ pad 2.0))
+         (y (pcase (plist-get tm :baseline) ("top" (- y back)) ("bottom" (+ y back)) (_ y)))
+         (x (if (zerop (or (plist-get tm :angle) 0)) x
+              (if (< (plist-get tm :angle) 0) (+ x back) (- x back)))))
+    (vector x y x y)))
+
 (defun eas-layout-time-unit-format (field)
   "Vega-Lite's label format for a timeUnit-derived FIELD (UNIT_SOURCE)."
   (let ((unit (car (split-string field "_"))))
@@ -211,6 +225,11 @@ PLOT-SIZE is the plot extent along the axis."
         (eas-axis-extra-apply
          (append
           (eas-layout-axis-style-props axis)
+          ;; A top or right axis is placed by eas-axis.el.
+          (let ((x (eas-axis-extras def channel metrics)))
+            (if (or (member (plist-get axis :orient) '("top" "right")) (plist-get x :offset)) x
+              ;; Any other axis keeps the placement it had; only its colors and fonts apply.
+              (when (plist-get x :style) (list :style (plist-get x :style)))))
           (when (memq (if (plist-member axis :domain) (plist-get axis :domain)
                         (car (eas-layout--axis-config config channel :domain)))
                       '(:false :null))
@@ -256,8 +275,9 @@ PLOT-SIZE is the plot extent along the axis."
   (let* ((labels (+ (eas-layout--tick axis metrics) (plist-get metrics :label-pad)
                     (eas-layout-axis-label-extent axis metrics)))
          (title (and (plist-get axis :title) (plist-get metrics :title-size)))
-         (left (equal (plist-get axis :orient) "left")))
-    (append (list (cons (if left :left :bottom) (+ labels (if (and title (not left)) title 0))))
+         (orient (plist-get axis :orient))
+         (left (member orient '("left" "right"))))
+    (append (list (cons (intern (concat ":" orient)) (+ labels (if (and title (not left)) title 0))))
             (when (and left title) (list (cons :top (plist-get metrics :title-size)))))))
 
 (defun eas-layout--thin (ticks overlap-p strategy &optional keep-last)
@@ -353,7 +373,9 @@ Overlapping labels drop their ticks too; lines sit at cell centres."
   "Return AXIS with geometry for SCALE inside plot BOUNDS [x0 y0 w h].
 The svg result carries :bounds, Vega's axis bounds (ticks, visible
 labels, title) without the half-pixel translate of the drawn lines."
-  (eas-axis-extra-place (eas-layout--axis-place axis scale bounds metrics) scale metrics))
+  (if (or (member (plist-get axis :orient) '("top" "right")) (plist-get axis :offset))
+      (eas-axis-place axis scale bounds metrics)
+    (eas-axis-extra-place (eas-layout--axis-place axis scale bounds metrics) scale metrics)))
 
 (defun eas-layout--axis-place (axis scale bounds metrics)
   "`eas-layout-axis-place' before the axis extras."

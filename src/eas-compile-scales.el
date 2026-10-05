@@ -151,7 +151,9 @@ or line in PAIRS; Vega-Lite does not extend dimension scales to zero."
               (let* ((u (car p)) (enc (plist-get u :encoding))
                      (type (plist-get (plist-get u :mark) :type))
                      (x (plist-get enc :x)) (y (plist-get enc :y))
-                     (horizontal (and x y (eas-encode-discrete-p y) (not (eas-encode-discrete-p x)))))
+                     (horizontal (or (and x y (eas-encode-discrete-p y) (not (eas-encode-discrete-p x)))
+                                     ;; x alone, continuous: a horizontal bar's measure.
+                                     (and x (null y) (not (eas-encode-discrete-p x))))))
                 (and (member type '("bar" "area" "line" "trail"))
                      (eq channel (if horizontal :y :x)))))
             pairs))

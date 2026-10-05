@@ -215,7 +215,9 @@ Returns the plot centre when the channel is absent."
                    (if (equal type "text")
                        (let ((text (eas-marks--channel unit scales :text row)))
                          (append
-                          (list :text (eas-expr--string (or text (plist-get mark :text) ""))
+                          (list :text (let ((v (or text (plist-get mark :text) "")))
+                                        ;; An array is one line per element.
+                                        (if (vectorp v) (mapconcat #'eas-expr--string v "\n") (eas-expr--string v)))
                                :fontSize (if (eas-layout-text-p metrics) (aref (plist-get metrics :cell) 1)
                                            ;; Vega-Lite: size sets a text mark's font size.
                                            (or (eas-marks--channel unit scales :size row)
@@ -278,7 +280,10 @@ ranged (x2/y2) bar."
          (xs (plist-get scales :x)) (ys (plist-get scales :y))
          (xband (member (plist-get xs :type) '("band" "point")))
          (yband (member (plist-get ys :type) '("band" "point")))
-         (horizontal (and yband (not xband)))
+         (enc (plist-get unit :encoding))
+         (horizontal (or (and yband (not xband))
+                         (and (null (plist-get enc :y)) (plist-get enc :x) (not xband))))
+         (size (let ((s (plist-get mark :size))) (and (numberp s) s)))
          (text (eas-layout-text-p metrics))
          (corners (and (not text) (equal (plist-get mark :type) "bar") (eas-marks--corners unit horizontal)))
          (thin (if text (aref (plist-get metrics :cell) 0) 5)))
@@ -288,6 +293,12 @@ ranged (x2/y2) bar."
                           (q (eas-marks--secondary unit scales channel row)))
                      (cond
                       ((null p) nil)
+                      ;; No channel: the bar spans the plot (Vega-Lite's
+                      ;; full-range default), or mark.size about its middle.
+                      ((null (plist-get enc channel))
+                       (let ((lo (aref bounds (if (eq channel :x) 0 1)))
+                             (ext (aref bounds (if (eq channel :x) 2 3))))
+                         (if size (cons (- p (/ size 2.0)) (+ p (/ size 2.0))) (cons lo (+ lo ext)))))
                       ;; Ranged bars on a point scale span from point to point.
                       ((and band q (equal (plist-get scale :type) "point")) (cons (min p q) (max p q)))
                       ;; A bar's size is its thickness, centred in the band.
@@ -345,6 +356,9 @@ ranged (x2/y2) bar."
                     ((and tick x y) (vector (- x half) y (+ x half) y))
                     ((and x y y2) (vector x y x y2))
                     ((and x y x2) (vector x y x2 y))
+                    ;; A range on one axis with no cross channel: across the plot's middle.
+                    ((and x x2 (not (plist-get enc :y))) (vector x (+ y0 (/ h 2.0)) x2 (+ y0 (/ h 2.0))))
+                    ((and y y2 (not (plist-get enc :x))) (vector (+ x0 (/ w 2.0)) y (+ x0 (/ w 2.0)) y2))
                     ((and tick x (not (plist-get enc :y)))
                      ;; Vega-Lite: 3/4 of the 20px default step, centred.
                      (let ((c (+ y0 (/ h 2.0))) (q (min (/ h 2.0) (/ (or (plist-get mark :size) 15) 2.0))))

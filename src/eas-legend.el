@@ -51,6 +51,8 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
           (setq base (append base (list :clip-height (plist-get legend :clipHeight)))))
         (when (numberp (plist-get legend :gradientLength))
           (setq base (append base (list :gradient-length (plist-get legend :gradientLength)))))
+        (when (numberp (plist-get legend :offset))
+          (setq base (append base (list :offset (plist-get legend :offset)))))
         (pcase (plist-get scale :type)
           ("ordinal"
            (append base (list :type "symbol"

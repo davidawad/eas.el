@@ -11,6 +11,7 @@
 ;; see the lowered spec and export stays pure Vega-Lite:
 ;;
 ;;   data.url, data.sequence   inline data.values (eas-data-url.el)
+;;   datasets + data.name      the named dataset's rows as data.values
 ;;   repeat + spec             layer (repeat.layer), vconcat (repeat.row
 ;;                             or a plain array) or hconcat (repeat.column),
 ;;                             {"repeat": "layer"} references substituted
@@ -103,10 +104,28 @@
         (cl-loop for (k v) on view by #'cddr do (setq cv (eas-plist-put cv k v)))
         (eas-plist-put (eas--plist-without spec :view) :config (eas-plist-put config :view cv))))))
 
+(defun eas-vl-lower--named (spec datasets)
+  "SPEC with every data.name that DATASETS defines replaced by its rows."
+  (cond
+   ((vectorp spec) (vconcat (mapcar (lambda (s) (eas-vl-lower--named s datasets)) spec)))
+   ((and (consp spec) (keywordp (car spec)))
+    (cl-loop for (k v) on spec by #'cddr
+             append (list k (if (and (eq k :data) (eas-object-p v) (stringp (plist-get v :name))
+                                     (vectorp (plist-get datasets (eas-key (plist-get v :name)))))
+                                (list :values (plist-get datasets (eas-key (plist-get v :name))))
+                              (eas-vl-lower--named v datasets)))))
+   (t spec)))
+
+(defun eas-vl-lower--datasets (spec)
+  "SPEC with its top-level datasets inlined where data.name uses them."
+  (let ((datasets (plist-get spec :datasets)))
+    (if (not (and datasets (eas-object-p datasets))) spec
+      (eas-vl-lower--named (eas--plist-without spec :datasets) datasets))))
+
 (defun eas-vl-lower (spec)
   "SPEC with Vega-Lite sugar lowered to the native subset, recursively."
   (if (not (and spec (eas-object-p spec))) spec
-    (let ((out (eas-vl-lower--view (eas-data-url-inline spec))))
+    (let ((out (eas-vl-lower--view (eas-data-url-inline (eas-vl-lower--datasets spec)))))
       (when (plist-get out :repeat) (setq out (eas-vl-lower--repeat out)))
       (dolist (key '(:layer :vconcat :hconcat))
         (when (vectorp (plist-get out key))

@@ -28,6 +28,56 @@
 
 (declare-function eas-compile--discrete-domain "eas-compile-scales")
 
+;;; Top-level facet: {"facet": {"row": F}, "spec": S}
+
+(defun eas-facet--sorted (values)
+  "VALUES sorted ascending (numbers before strings), duplicates removed."
+  (sort (delete-dups (copy-sequence values))
+        (lambda (a b) (if (and (numberp a) (numberp b)) (< a b) (string< (format "%s" a) (format "%s" b))))))
+
+(defun eas-facet-lower (spec)
+  "SPEC with a top-level facet over inline data lowered to a concat of cells.
+{\"facet\": {\"row\": F}, \"spec\": S} with every scale resolved independent
+is the same chart as a vconcat (row) or hconcat (column) of S once per value
+of F, each cell filtered to its value and headed by it.  Any other facet is
+left alone and reported unsupported."
+  (let* ((facet (plist-get spec :facet)) (inner (plist-get spec :spec))
+         (channel (and (eas-object-p facet) (cond ((plist-get facet :row) :row) ((plist-get facet :column) :column))))
+         (def (and channel (plist-get facet channel)))
+         (field (and (eas-object-p def) (plist-get def :field)))
+         (values (plist-get (plist-get spec :data) :values))
+         (scale (plist-get (plist-get spec :resolve) :scale)))
+    (if (not (and field (eas-object-p inner) (vectorp values)
+                  scale (cl-loop for (_ v) on scale by #'cddr always (equal v "independent"))))
+        spec
+      (let* ((key (eas-key field))
+             (levels (let ((vs (seq-remove (lambda (v) (memq v '(nil :null)))
+                                           (seq-map (lambda (r) (plist-get r key)) values))))
+                       (if (vectorp (plist-get def :sort)) (append (plist-get def :sort) nil)
+                         (let ((s (eas-facet--sorted vs))) (if (equal (plist-get def :sort) "descending") (nreverse s) s)))))
+             (header (let ((h (plist-get def :header))) (and (eas-object-p h) h)))
+             (labels (vconcat (mapcar (lambda (v) (format "%s" v)) levels)))
+             (spacing (let ((s (plist-get spec :spacing))) (cond ((numberp s) s) ((eas-object-p s) (plist-get s channel)))))
+             (cells (mapcar
+                     (lambda (v)
+                       (let ((cell (eas-plist-put (copy-sequence inner) :transform
+                                                  (vconcat (list (list :filter (list :field field :equal v)))
+                                                           (plist-get inner :transform)))))
+                         (eas-plist-put cell :x-eas
+                                        (eas-plist-put (plist-get inner :x-eas) :header
+                                                       (append (list :text (format "%s" v) :labels labels
+                                                                     :orient (if (eq channel :row) "left" "top")
+                                                                     :fontSize (or (plist-get header :labelFontSize) 10))
+                                                               (when (numberp (plist-get header :labelAngle))
+                                                                 (list :angle (plist-get header :labelAngle))))))))
+                     levels))
+             (out (eas--plist-without (eas--plist-without (eas--plist-without spec :facet) :spec) :resolve)))
+        (setq out (eas-plist-put out (if (eq channel :row) :vconcat :hconcat) (vconcat cells)))
+        (if spacing (eas-plist-put out :spacing spacing) (eas--plist-without out :spacing))))))
+
+(defvar eas-spec-rewrite-functions)
+(add-hook 'eas-spec-rewrite-functions #'eas-facet-lower t)
+
 (defconst eas-facet-header-size 10 "Vega-Lite's header labelFontSize.")
 (defconst eas-facet-header-padding 10 "Vega-Lite's header labelPadding.")
 
@@ -108,10 +158,16 @@
 
 (defun eas-facet-header-extent (header metrics)
   "Space HEADER needs beside its plot: (SIDE . PIXELS)."
-  (if (eas-layout-text-p metrics)
-      (cons :top (plist-get metrics :label-size))
-    (cons (if (equal (plist-get header :orient) "top") :top :left)
-          (+ eas-facet-header-padding eas-facet-header-size 1))))
+  (cond
+   ((eas-layout-text-p metrics)
+    (cons :top (plist-get metrics :label-size)))
+   ;; A horizontal row label takes its widest text.
+   ((and (equal (plist-get header :orient) "left") (eql (plist-get header :angle) 0))
+    (cons :left (+ eas-facet-header-padding
+                   (apply #'max 0 (mapcar (lambda (l) (eas-layout-text-width metrics l (plist-get header :fontSize)))
+                                          (append (plist-get header :labels) nil))))))
+   (t (cons (if (equal (plist-get header :orient) "top") :top :left)
+            (+ eas-facet-header-padding eas-facet-header-size 1)))))
 
 (defun eas-facet-header-place (header bounds inset metrics)
   "HEADER placed beside plot BOUNDS [X Y W H], outside INSET pixels of axes.
@@ -127,6 +183,9 @@ Return (:text :x :y :angle :align :baseline :fontSize)."
      ((equal (plist-get header :orient) "top")
       (list :text text :x (+ x0 (/ w 2.0)) :y (- y0 eas-facet-header-padding) :angle 0
             :align "center" :baseline "bottom" :fontSize eas-facet-header-size))
+     ((eql (plist-get header :angle) 0)
+      (list :text text :x (- x0 eas-facet-header-padding) :y (+ y0 (/ h 2.0)) :angle 0
+            :align "right" :baseline "middle" :fontSize eas-facet-header-size))
      (t (list :text text :x (- x0 eas-facet-header-padding) :y (+ y0 (/ h 2.0)) :angle -90
               :align "center" :baseline "bottom" :fontSize eas-facet-header-size)))))
 

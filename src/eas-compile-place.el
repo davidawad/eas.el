@@ -29,6 +29,7 @@
 (require 'eas-compile-scales)
 (require 'eas-bins)
 (require 'eas-facet)
+(require 'eas-title)
 (require 'eas-polar)
 
 (defun eas-place-natural-size (group metrics)
@@ -75,7 +76,7 @@ Polar units have no position channels and keep the view size."
                                                           group (eas-key (plist-get axis :channel)))
                                                     plot metrics))
                          axes))
-         (yaxes (seq-filter (lambda (a) (equal (plist-get a :orient) "left")) placed))
+         (yaxes (seq-filter (lambda (a) (member (plist-get a :orient) '("left" "right"))) placed))
          (over (or (plist-get group :mark-over) [0 0 0 0]))
          (lx (+ (ceiling (max (+ w (or (plist-get group :scope-over) 0))
                               (aref (apply #'eas-layout-union plot (mapcar (lambda (a) (plist-get a :bounds)) yaxes)) 2)))
@@ -100,7 +101,9 @@ Polar units have no position channels and keep the view size."
             (let ((at (cons (plist-get legend :legendX) (plist-get legend :legendY))))
               (push at offsets)
               (setq box (eas-layout-union box (plist-get (eas-legend-place legend (car at) (cdr at) metrics) :box))))
-          (let ((b (plist-get (eas-legend-place legend lx ly metrics) :box)))
+          (let* ((lx (+ lx (- (or (plist-get legend :offset) (plist-get metrics :legend-offset))
+                              (plist-get metrics :legend-offset))))
+                 (b (plist-get (eas-legend-place legend lx ly metrics) :box)))
             ;; A legend that would end below the target height starts a new column.
             (when (and limit (> ly 0) (> (+ ly (- (aref b 3) (aref b 1))) limit))
               (setq lx (+ lx col-w (plist-get metrics :legend-offset)) ly 0 col-w 0
@@ -143,6 +146,12 @@ tallest column."
          ;; Fitted to a size, legends get the height beside the plot.
          (room (and (plist-get group :fit-height)
                     (- (plist-get group :fit-height) (or (plist-get (plist-get group :chrome) :top) 0))))
+         ;; Independent layers' own axes (eas-independent.el).
+         (axes (append axes (delq nil (mapcar (lambda (pair)
+                                                (eas-layout-axis (car pair) (cdr pair) (plist-get scales (car pair))
+                                                                 (plist-get group (if (string-prefix-p ":x" (symbol-name (car pair))) :w :h))
+                                                                 metrics))
+                                              (plist-get group :extra-axes)))))
          (legends (delq nil (mapcar (lambda (spec)
                                       (let ((l (eas-legend-model spec metrics)))
                                         (and l (eas-legend-fit
@@ -167,6 +176,10 @@ tallest column."
       (let ((e (eas-facet-header-extent header metrics)))
         (plist-put group :header-inset (plist-get chrome (car e)))
         (plist-put chrome (car e) (+ (plist-get chrome (car e)) (cdr e)))))
+    ;; A concat cell's title sits above its axes (eas-title.el).
+    (when-let* ((node (plist-get group :title-node)))
+      (plist-put group :axis-top (plist-get chrome :top))
+      (plist-put chrome :top (+ (plist-get chrome :top) (eas-title-height node metrics))))
     (plist-put group :axes-model axes)
     (plist-put group :legends-model legends)
     (plist-put group :chrome chrome)))
@@ -178,7 +191,7 @@ tallest column."
 
 (defun eas-place-arrange (node ox oy metrics)
   "Place NODE's groups with the block's top-left at OX OY; return (W . H)."
-  (let ((spacing (plist-get metrics :spacing)))
+  (let ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing))))
     (if-let* ((g (plist-get node :group)))
         (let ((c (plist-get g :chrome)))
           (plist-put g :x0 (+ ox (plist-get c :left)))
@@ -217,7 +230,7 @@ tallest column."
           (plist-put g :h (max min-h (- height (plist-get c :top) (plist-get c :bottom)))))
       (let* ((vertical (equal (plist-get node :concat) "v"))
              (children (plist-get node :children))
-             (spacing (plist-get metrics :spacing))
+             (spacing (or (plist-get node :spacing) (plist-get metrics :spacing)))
              (natural (mapcar (lambda (ch) (eas-place-arrange ch 0 0 metrics)) children))
              (along (mapcar (lambda (s) (if vertical (cdr s) (car s))) natural))
              (total (max 1 (apply #'+ along)))

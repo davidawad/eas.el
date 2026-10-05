@@ -88,9 +88,16 @@ Transparent items count too, so hover and selection never move layout."
        (eas-marks--grow (vector (min (plist-get item :x1) (plist-get item :x2)) (min (plist-get item :y1) (plist-get item :y2))
                                   (max (plist-get item :x1) (plist-get item :x2)) (max (plist-get item :y1) (plist-get item :y2)))
                           item))
-      ("text" (eas-layout-text-bounds metrics (plist-get item :text) (plist-get item :fontSize)
-                                        (plist-get item :x) (plist-get item :y) (plist-get item :align)
-                                        (plist-get item :baseline)))
+      ("text" (let ((lines (or (plist-get item :lines) (vector (plist-get item :text))))
+                    (lh (+ (plist-get item :fontSize) 2)))
+                (apply #'eas-layout-union
+                       (seq-map-indexed
+                        (lambda (line i)
+                          (eas-layout-text-bounds metrics line (plist-get item :fontSize) (plist-get item :x)
+                                                  (+ (plist-get item :y) (* lh (- i (eas-marks-line-shift item))))
+                                                  (plist-get item :align) (plist-get item :baseline) nil
+                                                  (plist-get item :fontWeight)))
+                        lines))))
       ("arc" (eas-marks--grow (eas-arc-bounds item) item))
       ("line" (eas-marks--grow (eas-marks--points-box (plist-get item :points)) item))
       ("trail" (let ((b (eas-marks--points-box (plist-get item :points)))
@@ -100,6 +107,13 @@ Transparent items count too, so hover and selection never move layout."
                                   (eas-marks--points-box (plist-get item :base))))
       (_ (let ((r (/ (sqrt (or (plist-get item :size) 0)) 2.0)) (x (plist-get item :x)) (y (plist-get item :y)))
            (eas-marks--grow (vector (- x r) (- y r) (+ x r) (+ y r)) item)))))
+
+(defun eas-marks-line-shift (item)
+  "Lines a multi-line text ITEM's first line sits above its anchor.
+Only bottom-anchored text grows upward; bin/chart's top and middle
+text keep the first line on the anchor."
+  (let ((n (length (or (plist-get item :lines) [""]))))
+    (if (member (plist-get item :baseline) '("bottom" "alphabetic")) (1- n) 0)))
 
 (defun eas-marks-bounds (unit metrics)
   "Union of the bounds of UNIT's items, or nil."

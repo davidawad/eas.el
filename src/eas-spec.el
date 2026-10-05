@@ -31,7 +31,7 @@
 (defconst eas-spec--view-keys
   '(:$schema :data :mark :encoding :transform :layer :vconcat :hconcat
     :width :height :title :description :name :params :config :autosize
-    :padding :background :resolve :usermeta :x-eas :spacing :projection)
+    :padding :background :resolve :usermeta :x-eas :spacing :projection :datasets)
   "Keys a chart/v1 view or composition may carry.")
 
 (defconst eas-spec--marks

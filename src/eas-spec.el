@@ -68,7 +68,9 @@
     ;; Vega-Lite style properties, honored or named by check (fc-qx1.43, eas-spec-props.el)
     :lineHeight :ellipsis :lineBreak :dir :bandSize
     :continuousBandSize :discreteBandSize :minBandSize :timeUnitBandSize :timeUnitBandPosition
-    :smooth :ariaRole :ariaRoleDescription)
+    :smooth :ariaRole :ariaRoleDescription
+    ;; line (fc-qx1.41): "order": false keeps a path in data order
+    :order)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels

@@ -65,8 +65,7 @@
         ]
       },
       "legend": {
-        "title": "Penguin",
-        "labelLimit": 60
+        "title": "Penguin"
       }
     }
   },

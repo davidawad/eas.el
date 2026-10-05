@@ -1,121 +1,121 @@
 {
   "connected_scatterplot": {
-    "ratio": 0.0026,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0026 (threshold 0.03)",
+    "ratio": 0.0057,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0057 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_line_co2_concentration": {
-    "ratio": 0.0017,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0017 (threshold 0.03)",
+    "ratio": 0.0041,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0041 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "line": {
-    "ratio": 0.0028,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0028 (threshold 0.03)",
+    "ratio": 0.005,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0050 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "line_bump": {
-    "ratio": 0.0,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
+    "ratio": 0.0106,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0106 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "line_color": {
-    "ratio": 0.0025,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03)",
+    "ratio": 0.006,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0060 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "line_color_halo": {
-    "ratio": 0.0025,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03)",
+    "ratio": 0.006,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0060 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "line_conditional_axis": {
-    "ratio": 0.0,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "line_dashed_part": {
-    "ratio": 0.0017,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0017 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "line_monotone": {
-    "ratio": 0.0036,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0036 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "line_overlay": {
-    "ratio": 0.0034,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0034 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "line_overlay_stroked": {
-    "ratio": 0.0024,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0024 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "line_skip_invalid_mid_overlay": {
-    "ratio": 0.0027,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0027 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "line_slope": {
-    "ratio": 0.0015,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0015 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "line_step": {
-    "ratio": 0.0029,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0029 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "line_strokedash": {
-    "ratio": 0.0029,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0029 (threshold 0.03)",
-    "status": "pass",
-    "threshold": 0.03
-  },
-  "repeat_layer": {
     "ratio": 0.0021,
     "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0021 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
+  "line_dashed_part": {
+    "ratio": 0.0051,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0051 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "line_monotone": {
+    "ratio": 0.0058,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0058 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "line_overlay": {
+    "ratio": 0.0074,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0074 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "line_overlay_stroked": {
+    "ratio": 0.0065,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0065 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "line_skip_invalid_mid_overlay": {
+    "ratio": 0.0053,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0053 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "line_slope": {
+    "ratio": 0.0087,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0087 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "line_step": {
+    "ratio": 0.0051,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0051 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "line_strokedash": {
+    "ratio": 0.0063,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0063 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "repeat_layer": {
+    "ratio": 0.0052,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0052 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
   "sequence_line_fold": {
-    "ratio": 0.0036,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0036 (threshold 0.03)",
+    "ratio": 0.0073,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0073 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "trail_color": {
-    "ratio": 0.0025,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03)",
+    "ratio": 0.0067,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0067 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "trail_comet": {
-    "ratio": 0.0243,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0243 (threshold 0.03)",
+    "ratio": 0.0225,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0225 (threshold 0.03), size delta [0 2] px",
     "status": "pass",
     "threshold": 0.03
   },
   "window_rank": {
-    "ratio": 0.0025,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03), size delta [1 0] px",
+    "ratio": 0.0236,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0236 (threshold 0.03), size delta [1 0] px",
     "status": "pass",
     "threshold": 0.03
   }

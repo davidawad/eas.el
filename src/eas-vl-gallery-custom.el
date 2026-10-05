@@ -20,8 +20,8 @@
 ;;   - the native SVG is within the threshold of bin/chart's image.
 ;;     The harness builds custom/ref/NAME.png with bin/chart when it is
 ;;     on PATH; without it a committed reference is compared wherever a
-;;     rasterizer exists, and with neither the image check is
-;;     reported as unverified rather than passed.
+;;     rasterizer exists.  With no reference the image check is
+;;     "ref-pending", with no rasterizer "unverified"; neither is a pass.
 
 ;;; Code:
 
@@ -82,7 +82,8 @@ Return (:status pass|fail|unverified :detail D [:ratio R])."
           (insert (eas-chart-build spec "png")))))
     (cond
      ((not (file-exists-p ref))
-      (list :status "unverified" :detail (format "no reference: %s builds custom/ref/%s.png" eas-chart-program name)))
+      ;; ref-pending: no bin/chart reference yet; never a failure.
+      (list :status "ref-pending" :detail (format "no reference: %s builds custom/ref/%s.png" eas-chart-program name)))
      ((not (eas-vl-gallery-rasterizer-p))
       (list :status "unverified" :detail (format "%s is not on PATH to rasterize native SVG" eas-chart-rsvg-program)))
      (t (let ((mine (make-temp-file "eas-custom" nil ".png")))

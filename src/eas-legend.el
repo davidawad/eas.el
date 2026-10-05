@@ -268,6 +268,14 @@ restyles it (eas-legend-style.el)."
          (list :fill-opacity (plist-get style :opacity)))
        (when (plist-get e :dash) (list :dash (plist-get e :dash)))))))
 
+(defun eas-legend-symbol-type (legend metrics)
+  "LEGEND's symbol shape: its own symbolType, else its point mark's
+constant shape, else config.legend's (METRICS)."
+  (or (let ((o (plist-get (plist-get legend :overrides) :symbolType))) (and (stringp o) o))
+      (let ((p (plist-get (plist-get legend :props) :symbolType))) (and (stringp p) p))
+      (plist-get (plist-get legend :style) :mark-shape)
+      (plist-get metrics :symbol-type)))
+
 (defun eas-legend--title (legend x y metrics)
   "LEGEND's title mark at X Y and the y where its body starts, as (MARK . Y)."
   (if-let* ((title (plist-get legend :title)))
@@ -311,7 +319,7 @@ restyles it (eas-legend-style.el)."
                                                                   (plist-get metrics :legend-title-size) x y "left" "top"
                                                                   0 (plist-get metrics :legend-title-weight)))))
     (append (eas--plist-without legend :entries)
-            (list :x x :y y :width (if box (ceiling (- (aref box 2) x)) 0) :font-size fs :symbol-type (plist-get metrics :symbol-type)
+            (list :x x :y y :width (if box (ceiling (- (aref box 2) x)) 0) :font-size fs :symbol-type (eas-legend-symbol-type legend metrics)
                   :box (if box (vector x y (+ x (ceiling (- (aref box 2) x))) (+ y (ceiling (- (aref box 3) y))))
                          (vector x y x y))
                   :entries (vconcat entries))
@@ -358,7 +366,12 @@ restyles it (eas-legend-style.el)."
     (eas-legend-style-looks
      (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
            ((eas-legend-extra-horizontal-p legend metrics) (eas-legend-extra-place-horizontal legend x y metrics))
-           ((and (fboundp 'eas-legend-row-p) (eas-legend-row-p legend metrics)) (eas-legend-row-place legend x y metrics))
+           ((and (fboundp 'eas-legend-row-p)
+                 (or (eas-legend-row-p legend metrics)
+                     ;; A view's own top or bottom legend titled on its left is a row too.
+                     (and (equal (plist-get legend :title-orient) "left") (equal (plist-get legend :type) "symbol")
+                          (eas-legend-orient-row-p legend metrics))))
+            (eas-legend-row-place legend x y metrics))
            ((eas-legend-orient-row-p legend metrics) (eas-legend-orient-place-row legend x y metrics))
            ((equal (plist-get legend :type) "gradient") (eas-legend--place-gradient legend x y metrics))
            (t (eas-legend--place-symbols legend x y metrics))))))

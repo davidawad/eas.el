@@ -234,8 +234,11 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                            :line-height (plist-get item :lineHeight)
                            ;; Vega draws a text mark's first line on the anchor, the rest below it.
                            :lines-down t)))
-      ("trail" (eas-svg--node 'path :d (eas-svg--trail (plist-get item :points) (plist-get item :widths))
-                                :fill (if (equal fill "none") stroke fill) :opacity opacity))
+      ("trail" (eas-mark-style-svg
+                (eas-svg--node 'path :d (eas-svg--trail (plist-get item :points) (plist-get item :widths))
+                               :fill (if (equal fill "none") stroke fill) :opacity opacity)
+                ;; A trail is filled: its stroke properties do not apply.
+                (eas--plist-without (eas--plist-without (eas--plist-without item :strokeCap) :strokeJoin) :strokeDash)))
       ((or "line" "area")
        (let ((area (plist-get item :base)))
          (eas-mark-style-svg
@@ -391,7 +394,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
               defs)
         ;; The view's background: config.view fill under its frame stroke.
         (let ((frame (plist-get view :frame)) (vc (plist-get (plist-get scene :config) :view)))
-          (when (or frame (stringp (plist-get vc :fill)))
+          (when (and (not (eq (plist-get view :cell) :false)) (or frame (stringp (plist-get vc :fill))))
             (push (eas-svg--node 'rect :x (aref b 0) :y (aref b 1) :width (aref b 2) :height (aref b 3)
                                  :fill (let ((f (plist-get vc :fill))) (if (stringp f) f "none"))
                                  :stroke (plist-get frame :stroke) :stroke-width (plist-get vc :strokeWidth)
@@ -429,6 +432,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
          (push (eas-svg--text line (plist-get title :x) (+ (plist-get title :y) (* i (or (plist-get title :lineHeight) 0)))
                               (plist-get title :fontSize) :align (or (plist-get title :align) "center") :baseline "top"
                               :weight (or (plist-get title :fontWeight) "bold")
+                              :font (eas-svg--font-name (plist-get title :font)) :style (plist-get title :fontStyle)
                               :fill (or (plist-get title :color) (plist-get (plist-get theme :title) :color)))
                children))
        (if title (or (plist-get title :lines) (vector (plist-get title :text))) [])))

@@ -136,7 +136,7 @@ With KEEP-NULL, null values count too (discrete domains show them)."
          (fix-lo (and (not custom) (numberp (plist-get sp :domainMin))))
          (fix-hi (and (not custom) (numberp (plist-get sp :domainMax))))
          (nice (if (plist-member sp :nice) (eq (plist-get sp :nice) t)
-                 (and (member type '("linear" "log")) positional (not custom) (not fix-lo) (not fix-hi)
+                 (and (member type '("linear" "log" "sqrt" "pow")) positional (not custom) (not fix-lo) (not fix-hi)
                       ;; Vega-Lite merges a layer's nice from the first layer that sets one:
                       ;; a binned layer leaves it to the next (fc-qx1.44).
                       (seq-some (lambda (p) (not (plist-get (cdr p) :bin-end))) pairs))))
@@ -244,7 +244,8 @@ ZOOM is a [LO HI] domain from view state, or nil."
                             (cond (rect 0) (tick 0.25) (nested 0.2))))
                  (outer (or (plist-get sp :paddingOuter) (plist-get sp :padding)
                             (and nested 0.2) (and (not rect) (plist-get cfg :bandPaddingOuter))
-                            (cond (rect 0) (tick 0.125) (nested 0.2)))))
+                            ;; Vega-Lite: paddingInner / 2 (0.125 for a tick's default 0.25).
+                            (cond (rect 0) (tick (/ inner 2.0)) (nested 0.2)))))
             (append (eas-scale-band type (eas-compile--discrete-domain pairs values) [0 1] inner outer)
                     (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)))
         (eas-compile--continuous type pairs channel values zoom)))))

@@ -27,16 +27,23 @@
 (require 'eas-vl-gallery)
 (require 'eas-agent-health)
 (require 'eas-bench)
+(require 'eas-memo)
 
 (defun eas-vl-gallery-bench-example (group name n)
-  "bench data for example NAME of GROUP over N repetitions."
+  "bench data for example NAME of GROUP over N repetitions.
+Stage :compile-cold is an SVG compile with every memo table emptied
+first (`eas-memo-clear'), as the first compile of a session runs."
   (let* ((spec (eas-vl-gallery-spec group name))
+         (cold (let ((eas-time-zone eas-vl-gallery-zone) (eas-spec-supported-function nil))
+                 (eas-agent--time n (lambda () (eas-memo-clear) (eas-compile spec)))))
          (env (let ((eas-time-zone eas-vl-gallery-zone) (eas-spec-supported-function nil))
                 (eas-agent-bench (list spec) (list :n n))))
          (data (plist-get env :data)) (ms (plist-get data :ms)))
     (list :rows (plist-get data :rows) :items (plist-get data :items)
-          :ms (cl-loop for (stage v) on ms by #'cddr
-                       unless (eq v :null) append (list stage (plist-get v :mean))))))
+          :ms (cons :compile-cold
+                    (cons (plist-get cold :mean)
+                          (cl-loop for (stage v) on ms by #'cddr
+                                   unless (eq v :null) append (list stage (plist-get v :mean))))))))
 
 (defun eas-vl-gallery-bench (group &optional n)
   "Bench every example of GROUP (N repetitions, default 10).

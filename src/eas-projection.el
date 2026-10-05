@@ -112,6 +112,12 @@ placed on projected x and y."
                                                         (plist-get out k)))))))
     out))
 
+(defun eas-projection-view-p (group)
+  "Non-nil when GROUP draws projected positions (this file's or eas-geo's).
+Vega-Lite styles such a view \"view\", not \"cell\": config.view's fill
+and frame stroke do not paint it."
+  (member (plist-get (plist-get (plist-get group :scales) :x) :field) (list eas-projection--x "x_projected")))
+
 (defun eas-projection--fit (scale lo hi)
   "SCALE with domain [LO HI], keeping its range."
   (plist-put (copy-sequence scale) :domain (vector lo hi)))

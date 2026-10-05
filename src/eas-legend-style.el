@@ -63,10 +63,11 @@
           (let ((v (plist-get o (car pair))))
             (when (or (numberp v) (stringp v)) (setq m (plist-put m (cdr pair) v)))))))))
 
-(defun eas-legend-style--label (o value label)
-  "LABEL of entry VALUE after overrides O's format and labelExpr."
+(defun eas-legend-style--label (o value label &optional formatted)
+  "LABEL of entry VALUE after overrides O's format and labelExpr.
+FORMATTED non-nil: LABEL carries the format already (a bucket's range)."
   (let* ((fmt (plist-get o :format))
-         (label (if (and (stringp fmt) (numberp value))
+         (label (if (and (stringp fmt) (numberp value) (not formatted))
                     (eas-format-number fmt value)
                   label)))
     (eas-layout-axis-style-label o value label)))
@@ -77,7 +78,8 @@
     (if (not (or (plist-get o :format) (plist-get o :labelExpr))) legend
       (eas-plist-put legend :entries
                      (vconcat (mapcar (lambda (e) (eas-plist-put e :label (eas-legend-style--label
-                                                                           o (plist-get e :value) (plist-get e :label))))
+                                                                           o (plist-get e :value) (plist-get e :label)
+                                                                           (plist-get e :formatted))))
                                       (plist-get legend :entries)))))))
 
 (defun eas-legend-style-model (def model)

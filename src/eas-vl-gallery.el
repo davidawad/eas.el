@@ -73,9 +73,20 @@
 
 ;;; Loading
 
+(defconst eas-vl-gallery--datasets-url
+  "\\`https://cdn\\.jsdelivr\\.net/npm/vega-datasets@[^/]+/data/\\([^/]+\\)\\'"
+  "A vega-datasets CDN URL; group 1 is the file name.")
+
+(defun eas-vl-gallery--mirror (url)
+  "URL, or the file test/vl-examples/data/ mirrors when it is a
+vega-datasets CDN URL (the gallery reads no network)."
+  (if (string-match eas-vl-gallery--datasets-url url)
+      (expand-file-name (concat "data/" (match-string 1 url)) eas-vl-gallery-directory)
+    url))
+
 (defun eas-vl-gallery--read-url (url dir format)
   "Rows of data URL (relative to DIR) parsed per FORMAT (data.format)."
-  (let* ((file (expand-file-name url dir))
+  (let* ((file (expand-file-name (eas-vl-gallery--mirror url) dir))
          (type (or (plist-get format :type) (file-name-extension file))))
     (unless (file-readable-p file)
       (eas-signal "NOT_FOUND" (format "No data file %s" file) :path url))
@@ -139,6 +150,16 @@ legend's column from its title to its last entry."
         (vector (plist-get legend :x) (plist-get legend :y) (plist-get legend :width)
                 (- bottom (plist-get legend :y)))))))
 
+(defun eas-vl-gallery--rotated-box (metrics tk size angle)
+  "Tick TK's label box in the frame its labels are rotated into by ANGLE
+\(degrees): parallel rotated labels collide only when these boxes overlap."
+  (let* ((x (plist-get tk :lx)) (y (plist-get tk :ly))
+         (b (eas-layout-text-bounds metrics (plist-get tk :label) size x y (plist-get tk :align) (plist-get tk :baseline)))
+         (a (degrees-to-radians angle))
+         ;; The anchor in the rotated frame, R(-angle) applied to it.
+         (rx (+ (* x (cos a)) (* y (sin a)))) (ry (- (* y (cos a)) (* x (sin a)))))
+    (vector (+ rx (- (aref b 0) x)) (+ ry (- (aref b 1) y)) (+ rx (- (aref b 2) x)) (+ ry (- (aref b 3) y)))))
+
 (defun eas-vl-gallery--label-collisions (scene)
   "Axes of SCENE whose shown tick labels collide, as problem strings.
 An axis whose spec sets labelOverlap false asked for every label, as
@@ -149,12 +170,16 @@ Vega draws them, colliding or not: its labels are not a layout problem."
          (size (plist-get metrics :label-size)) out)
     (seq-doseq (view (plist-get scene :views))
       (seq-doseq (axis (seq-remove (lambda (a) (plist-get a :label-overlap-off)) (plist-get view :axes)))
-        (let ((boxes (cl-loop for tk across (plist-get axis :ticks)
-                              unless (string-empty-p (plist-get tk :label))
-                              collect (eas-layout-text-bounds
-                                       metrics (plist-get tk :label) size (plist-get tk :lx) (plist-get tk :ly)
-                                       (plist-get tk :align) (plist-get tk :baseline)
-                                       (and (equal (plist-get axis :orient) "bottom") (plist-get axis :labelAngle))))))
+        (let* ((size (or (plist-get (plist-get axis :style) :labelFontSize) size))
+               (angle (and (equal (plist-get axis :orient) "bottom") (numberp (plist-get axis :labelAngle))
+                           (/= 0 (mod (plist-get axis :labelAngle) 180)) (plist-get axis :labelAngle)))
+               (boxes (cl-loop for tk across (plist-get axis :ticks)
+                               unless (string-empty-p (plist-get tk :label))
+                               collect (if angle
+                                           (eas-vl-gallery--rotated-box metrics tk size angle)
+                                         (eas-layout-text-bounds
+                                          metrics (plist-get tk :label) size (plist-get tk :lx) (plist-get tk :ly)
+                                          (plist-get tk :align) (plist-get tk :baseline))))))
           (when (cl-loop for (a b) on boxes while b
                          thereis (and (< (+ (aref a 0) 1) (aref b 2)) (< (+ (aref b 0) 1) (aref a 2))
                                       (< (+ (aref a 1) 1) (aref b 3)) (< (+ (aref b 1) 1) (aref a 3))))

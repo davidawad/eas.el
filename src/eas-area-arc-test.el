@@ -233,14 +233,14 @@
 
 (ert-deftest eas-area-arc-check-reports-ignored-properties ()
   (let* ((spec '(:data (:values [(:k "a" :v 1)]) :mark (:type "arc" :aria :false)
-                 :title (:text "T" :font "serif")
+                 :title (:text "T" :angle 10)
                  :encoding (:theta (:field "v" :type "quantitative")
                             :color (:field "k" :type "nominal" :legend (:labelFont "serif" :orient "bottom" :columns 1)))
                  :config (:axis (:labelFont "serif") :locale (:number (:decimal ",")))))
          (findings (eas-spec-props-findings spec))
          (env (eas-agent "check" (eas-json-encode spec))))
     (should (equal (mapcar (lambda (f) (plist-get f :path)) findings)
-                   '("/title/font")))
+                   '("/title/angle")))
     (should (cl-every (lambda (f) (and (equal (plist-get f :code) "UNSUPPORTED_FEATURE") (plist-get f :property)))
                       findings))
     ;; Ignored properties warn; the chart stays native.

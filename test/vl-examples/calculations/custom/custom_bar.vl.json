@@ -26,5 +26,7 @@
     "color": {"field": "region", "type": "nominal", "scale": {"range": ["#3b6ea8", "#e0913c"]},
               "legend": {"orient": "top-left", "symbolType": "square", "symbolSize": 120, "labelColor": "#1d1d3b", "labelFontSize": 12, "titleColor": "#1d1d3b", "titleFontWeight": "bold", "title": "Region"}}
   },
-  "config": {"view": {"stroke": "#d8d2b8"}, "axis": {"labelFont": "Courier New"}}
+  "config": {"view": {"stroke": "#d8d2b8"}, "axis": {"labelFont": "Courier New"}},
+  "usermeta": {"eas": {"threshold": 0.035,
+                       "note": "fc-qx1.48: threshold 0.035 for rasterizer drift. On rsvg-convert 2.62.4 / cairo 1.18.6 the ratio is 0.0324; the pixel diff is the dashed bar outlines' and glyphs' anti-aliasing, no geometry moved"}}
 }

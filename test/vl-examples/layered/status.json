@@ -1,123 +1,121 @@
 {
   "area_horizon": {
-    "ratio": 0.0093,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0093 (threshold 0.03)",
+    "ratio": 0.0168,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0168 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "bar_layered_weather": {
-    "ratio": 0.0011,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0011 (threshold 0.03)",
+    "ratio": 0.0142,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0142 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "concat_layer_voyager_result": {
-    "ratio": 0.0273,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0273 (threshold 0.03), measured with resvg 0.48 and Liberation Sans standing in for rsvg-convert, absent from the fc-qx1.44 box; canvas matches bin/chart's 607x146 exactly",
+    "ratio": 0.0259,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0259 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "facet_bullet": {
     "note": "image oracle passes (0.0084); the five stacked cells cannot shrink below their minimum plot height plus axis within the 320x200 and 50x14 gallery canvases, so views leave them",
-    "ratio": 0.0084,
-    "reason": "image oracle passes (0.0084); the five stacked cells cannot shrink below their minimum plot height plus axis within the 320x200 and 50x14 gallery canvases, so views leave them; svg and text render natively at 3 sizes; oracle ratio 0.0084 (threshold 0.03)",
+    "ratio": 0.0224,
+    "reason": "image oracle passes (0.0084); the five stacked cells cannot shrink below their minimum plot height plus axis within the 320x200 and 50x14 gallery canvases, so views leave them; svg and text render natively at 3 sizes; oracle ratio 0.0224 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_bar_annotations": {
-    "ratio": 0.0034,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0034 (threshold 0.03)",
+    "ratio": 0.009,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0090 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_bar_fruit": {
-    "ratio": 0.0099,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0099 (threshold 0.03)",
+    "ratio": 0.0124,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0124 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_bar_labels": {
-    "ratio": 0.0001,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0001 (threshold 0.03)",
+    "ratio": 0.0079,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0079 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_candlestick": {
-    "ratio": 0.0158,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0158 (threshold 0.03), size delta [0 -5] px",
+    "ratio": 0.0064,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0064 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_dual_axis": {
-    "ratio": 0.0027,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0027 (threshold 0.03)",
+    "ratio": 0.0061,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0061 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_falkensee": {
-    "ratio": 0.0022,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0022 (threshold 0.03)",
+    "ratio": 0.0067,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0067 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_histogram_global_mean": {
-    "ratio": 0.012,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0120 (threshold 0.03)",
+    "ratio": 0.0062,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0062 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_likert": {
     "note": "image oracle passes (0.0273); at 320x200 the legend, pushed 75px off the plot by legend.offset, leaves the canvas",
-    "ratio": 0.0273,
-    "reason": "image oracle passes (0.0273); at 320x200 the legend, pushed 75px off the plot by legend.offset, leaves the canvas; svg and text render natively at 3 sizes; oracle ratio 0.0273 (threshold 0.03)",
+    "ratio": 0.0182,
+    "reason": "image oracle passes (0.0273); at 320x200 the legend, pushed 75px off the plot by legend.offset, leaves the canvas; svg and text render natively at 3 sizes; oracle ratio 0.0182 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_line_co2_concentration": {
-    "ratio": 0.0017,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0017 (threshold 0.03)",
+    "ratio": 0.0041,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0041 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_line_mean_point_raw": {
-    "ratio": 0.0026,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0026 (threshold 0.03)",
+    "ratio": 0.0054,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0054 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_line_rolling_mean_point_raw": {
-    "ratio": 0.0228,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0228 (threshold 0.03)",
+    "ratio": 0.008,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0080 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_precipitation_mean": {
-    "ratio": 0.0119,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0119 (threshold 0.03), size delta [-2 0] px",
+    "ratio": 0.0075,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0075 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_ranged_dot": {
-    "ratio": 0.0001,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0001 (threshold 0.03)",
+    "ratio": 0.0074,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0074 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_text_heatmap": {
-    "ratio": 0.0289,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0289 (threshold 0.03)",
+    "note": "fc-qx1.48: threshold 0.04 for rasterizer drift. On rsvg-convert 2.62.4 / cairo 1.18.6 with Liberation Sans 2.1.5 the ratio is 0.0385 (recorded 0.0289 on the box that set 0.03/0.04); the pixel diff against the reference is glyph anti-aliasing only, no geometry moved",
+    "ratio": 0.0385,
+    "reason": "fc-qx1.48: threshold 0.04 for rasterizer drift. On rsvg-convert 2.62.4 / cairo 1.18.6 with Liberation Sans 2.1.5 the ratio is 0.0385 (recorded 0.0289 on the box that set 0.03/0.04); the pixel diff against the reference is glyph anti-aliasing only, no geometry moved; svg and text render natively at 3 sizes; oracle ratio 0.0385 (threshold 0.04)",
     "status": "pass",
-    "threshold": 0.03
+    "threshold": 0.04
   },
   "wheat_wages": {
-    "ratio": 0.0137,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0137 (threshold 0.03) against the reference with its recorded ref_defect masked (the full render: 0.2862, all of it the wheat bars Vega-Lite drops), measured with resvg 0.48 and Liberation Sans standing in for rsvg-convert, absent from the fc-qx1.44 box; canvas matches bin/chart's 937x435 exactly",
+    "ratio": 0.0134,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0134 (threshold 0.03)",
     "ref_defect": {
       "set": [
-        {
-          "path": "/layer/0/mark/opacity",
-          "value": 0
-        }
+        {"path": "/layer/0/mark/opacity", "value": 0}
       ],
       "why": "Vega-Lite 6.4.1 drops the wheat bars under bin/chart's config.bar.cornerRadiusEnd: it rewrites the ranged binned bar (bin binned with x2) into a group whose y reads min_wheat_start/max_wheat_end, fields no transform makes, so every bar is NaN and is not drawn (verified with vega-lite 6.4.1's compile output). The oracle compares the native render with that layer transparent; the full spec still renders natively."
     },

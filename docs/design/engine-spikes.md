@@ -1332,3 +1332,31 @@ random instants in three zones matched `decode-time`) with encoded local
 fields memoized, which took `decode-time`/`encode-time` from 80% of a
 temporal compile to nothing.  geo_circle's 42k circles stay heavy: one
 SVG element each.
+
+## 13. Integrated verification (fc-qx1.48)
+
+The first run of the engine with all eleven polish branches integrated
+(515bfd3), on one 4-core Linux box, Emacs 30.1, rsvg-convert 2.62.4
+(cairo 1.18.6, conda-forge) and Liberation Sans 2.1.5; bin/chart absent,
+so the oracle compared against the committed references.
+
+| run | before fixes | after |
+|---|---|---|
+| `make test` | 710 tests: 682 pass, 25 fail, 3 skip; 72 s | 710: 708 pass, 0 fail, 2 skip (bin/chart absent); 89 s |
+| `make -j4 test-gallery` | 7 of 10 targets fail | 10 of 10 pass (19 tests, 0 skip); 6 min 17 s wall |
+| `make compile` | clean | clean |
+| `make bench` | | budget pass: 36 stages, 0 violations; hover 0.98 ms at 10k points (target 50) |
+
+Rasterizer drift.  Re-measuring every passing gallery example against
+its recorded ratio: median +0.0024, 39 of 188 up by more than 0.005,
+9 down by more.  Diffing the PNGs (differing pixels painted) shows glyph
+edges only for every one checked, including `line_bump`, recorded at
+0.0000: this cairo/freetype draws text a little differently from the box
+that recorded the ratios.  Hinting settings made no difference.  Five
+examples crossed their threshold that way and carry a written note
+(gallery-coverage.md); none moved geometry.
+
+Two genuine regressions hid among them (ratio 0.87 and 0.096: a
+projected view painted with `config.view.fill`, and quantile legend
+labels reformatted from their lower bounds); the per-example sweep of
+fresh ratio against recorded ratio is what told them apart from drift.

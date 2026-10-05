@@ -42,8 +42,8 @@ box is its plot with its chrome; columns are as wide as the widest box
 plus the spacing and the largest left chrome of the later columns, rows
 likewise, so the spacing separates the boxes and plots line up."
   (let* ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing)))
-         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) (plist-get row :children)))
-                       (plist-get node :children)))
+         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) row))
+                       (eas-place--grid-rows node)))
          (chrome (lambda (g k) (or (plist-get (plist-get g :chrome) k) 0)))
          (x2 (lambda (g) (ceiling (+ (plist-get g :w) (funcall chrome g :right)))))
          (y2 (lambda (g) (ceiling (max (+ (plist-get g :h) (funcall chrome g :bottom)) (funcall chrome g :legend-h)))))
@@ -52,8 +52,9 @@ likewise, so the spacing separates the boxes and plots line up."
          (ymax (apply #'max 0 (mapcar y2 cells)))
          (offx (apply #'max 0 (cl-loop for r in rows append (mapcar (lambda (g) (+ spacing (ceiling (funcall chrome g :left)))) (cdr r)))))
          (offy (apply #'max 0 (mapcar (lambda (g) (+ spacing (ceiling (funcall chrome g :top)))) (apply #'append (cdr rows)))))
-         (left (apply #'max 0 (mapcar (lambda (r) (funcall chrome (car r) :left)) rows)))
-         (top (apply #'max 0 (mapcar (lambda (g) (funcall chrome g :top)) (car rows)))))
+         ;; align "all": the first column and row line up with the widest chrome of any cell.
+         (left (apply #'max 0 (mapcar (lambda (g) (funcall chrome g :left)) cells)))
+         (top (apply #'max 0 (mapcar (lambda (g) (funcall chrome g :top)) cells))))
     (cl-loop for r in rows for i from 0
              do (cl-loop for g in r for j from 0
                          do (plist-put g :x0 (+ ox left (* j (+ xmax offx))))
@@ -64,8 +65,8 @@ likewise, so the spacing separates the boxes and plots line up."
 (defun eas-place-fit-grid (node width height metrics)
   "Resize grid NODE's plots so the grid is WIDTH by HEIGHT."
   (let* ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing)))
-         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) (plist-get row :children)))
-                       (plist-get node :children)))
+         (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) row))
+                       (eas-place--grid-rows node)))
          (cells (apply #'append rows))
          (most (lambda (k) (apply #'max 0 (mapcar (lambda (g) (plist-get (plist-get g :chrome) k)) cells))))
          (ncol (apply #'max (mapcar #'length rows)))

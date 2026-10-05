@@ -1,7 +1,7 @@
 {
   "bar": {
-    "ratio": 0.0022,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0022 (threshold 0.03)",
+    "ratio": 0.0054,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0054 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
@@ -12,8 +12,8 @@
     "threshold": 0.03
   },
   "bar_aggregate_sort_by_encoding": {
-    "ratio": 0.0,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
+    "ratio": 0.0031,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0031 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
@@ -24,8 +24,8 @@
     "threshold": 0.03
   },
   "bar_color_disabled_scale": {
-    "ratio": 0.0025,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03)",
+    "ratio": 0.0099,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0099 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
@@ -37,20 +37,20 @@
     "threshold": 0.05
   },
   "bar_diverging_stack_transform": {
-    "ratio": 0.0005,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0005 (threshold 0.03)",
+    "ratio": 0.0074,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0074 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "bar_gantt": {
-    "ratio": 0.0,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
+    "ratio": 0.0042,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0042 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "bar_grouped": {
-    "ratio": 0.0036,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0036 (threshold 0.03)",
+    "ratio": 0.0063,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0063 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
@@ -67,20 +67,20 @@
     "threshold": 0.03
   },
   "bar_layered_transparent": {
-    "ratio": 0.0022,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0022 (threshold 0.03)",
+    "ratio": 0.0066,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0066 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "bar_month_temporal_band_center": {
-    "ratio": 0.0027,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0027 (threshold 0.03)",
+    "ratio": 0.0055,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0055 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "bar_month_temporal_initial": {
-    "ratio": 0.0026,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0026 (threshold 0.03)",
+    "ratio": 0.0051,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0051 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
@@ -103,32 +103,32 @@
     "threshold": 0.03
   },
   "layer_bar_labels": {
-    "ratio": 0.0001,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0001 (threshold 0.03)",
+    "ratio": 0.0079,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0079 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "layer_bar_labels_grey": {
-    "ratio": 0.0012,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0012 (threshold 0.03)",
+    "ratio": 0.0174,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0174 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "stacked_bar_count_corner_radius_mark": {
-    "ratio": 0.0049,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0049 (threshold 0.03)",
+    "ratio": 0.0087,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0087 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "stacked_bar_h": {
-    "ratio": 0.0004,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0004 (threshold 0.03)",
+    "ratio": 0.006,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0060 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
   "stacked_bar_h_normalized_labeled": {
-    "ratio": 0.0165,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0165 (threshold 0.03)",
+    "ratio": 0.014,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0140 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },
@@ -139,8 +139,8 @@
     "threshold": 0.03
   },
   "stacked_bar_weather": {
-    "ratio": 0.002,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0020 (threshold 0.03)",
+    "ratio": 0.0058,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0058 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   }

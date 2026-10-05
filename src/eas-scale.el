@@ -98,7 +98,8 @@ PROPS may set :zero and :nice, applied here, plus provenance keys."
               hi (+ hi (if (zerop hi) 1.0 (* 0.5 (abs hi)))))))
     (when (plist-get props :nice)
       (pcase type
-        ("linear" (let ((n (eas-scale-nice-linear lo hi 10))) (setq lo (car n) hi (cdr n))))
+        ;; d3's pow scales are linearish: niced on the untransformed domain.
+        ((or "linear" "sqrt" "pow") (let ((n (eas-scale-nice-linear lo hi 10))) (setq lo (car n) hi (cdr n))))
         ("log" (setq lo (expt 10.0 (floor (log lo 10))) hi (expt 10.0 (ceiling (log hi 10)))))))
     (append (list :type type :domain (vector lo hi) :range range)
             (eas--plist-without (eas--plist-without props :zero) :nice))))

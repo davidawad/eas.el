@@ -42,8 +42,8 @@
   },
   "layer_cumulative_histogram": {
     "note": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars when config.bar.cornerRadiusEnd is set (same spec as distributions/layer_cumulative_histogram). The oracle compares the axes and canvas without the bars (refOmits); native must draw them",
-    "ratio": 0.0098,
-    "reason": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars when config.bar.cornerRadiusEnd is set (same spec as distributions/layer_cumulative_histogram). The oracle compares the axes and canvas without the bars (refOmits); native must draw them; svg and text render natively at 3 sizes; oracle ratio 0.0098 (threshold 0.03)",
+    "ratio": 0.0051,
+    "reason": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars when config.bar.cornerRadiusEnd is set (same spec as distributions/layer_cumulative_histogram). The oracle compares the axes and canvas without the bars (refOmits); native must draw them; svg and text render natively at 3 sizes; oracle ratio 0.0051 (threshold 0.03)",
     "refOmits": {
       "marks": ["bar"],
       "reason": "Vega-Lite 6.4.1 drops ranged binned bars under config.bar.cornerRadiusEnd"
@@ -100,8 +100,8 @@
     "threshold": 0.03
   },
   "ternary": {
-    "ratio": 0.0118,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0118 (threshold 0.03), size delta [0 1] px",
+    "ratio": 0.0085,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0085 (threshold 0.03), size delta [0 1] px",
     "status": "pass",
     "threshold": 0.03
   },

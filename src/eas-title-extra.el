@@ -25,6 +25,7 @@
 
 (declare-function eas-title--object "eas-title")
 (declare-function eas-title--line-height "eas-title")
+(declare-function eas-title-style "eas-title")
 
 (defconst eas-title-extra-subtitle-padding 3 "Vega's default title.subtitlePadding.")
 
@@ -66,6 +67,9 @@
            (n (length (or (plist-get title :lines) [t])))
            (size (plist-get title :fontSize)))
       (append (eas-plist-put (eas-plist-put title :x x) :y y)
+              ;; Its font and fontStyle (eas-title-style), drawn by eas-svg.
+              (let ((style (eas-title-style spec metrics)))
+                (cl-loop for k in '(:font :fontStyle) when (plist-get style k) append (list k (plist-get style k))))
               (when lines
                 (let ((sub (eas-title-extra--size spec metrics)))
                   (list :subtitle
@@ -77,6 +81,11 @@
                                :fontSize (if text size sub)
                                :fontWeight (eas-title-extra--get spec metrics :subtitleFontWeight "normal")
                                :color (eas-title-extra--get spec metrics :subtitleColor "black"))
+                         ;; subtitleFont and subtitleFontStyle, drawn by eas-svg as the title's.
+                         (unless text
+                           (cl-loop for (k . key) in '((:subtitleFont . :font) (:subtitleFontStyle . :fontStyle))
+                                    for v = (eas-title-extra--get spec metrics k nil)
+                                    when (stringp v) append (list key v)))
                          (when (cdr lines) (list :lines (vconcat lines) :lineHeight (if text size (+ sub 2))))))))))))
 
 (provide 'eas-title-extra)

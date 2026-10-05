@@ -48,7 +48,9 @@ and bounds every line."
          (svg (eas-svg-render (eas-compile spec))))
     (should (string-suffix-p "…" (plist-get item :text)))
     (should (< (length (plist-get item :text)) 10))
-    (should (string-match-p "font-style=\"italic\" font-family=\"Georgia\"" svg))))
+    ;; Both attributes on the text element, in whichever order eas-svg writes them.
+    (should (string-match-p "<text[^>]*font-style=\"italic\"[^>]*>a lo" svg))
+    (should (string-match-p "<text[^>]*font-family=\"Georgia\"[^>]*>a lo" svg))))
 
 ;;; Scales
 

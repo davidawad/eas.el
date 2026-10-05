@@ -39,28 +39,28 @@
 ;;; What eas honors (each entry proven by `eas-spec-props-audit')
 
 (defconst eas-spec-props-honored
-  '(("bar" cornerRadius cornerRadiusEnd cornerRadiusTopLeft cornerRadiusTopRight cornerRadiusBottomLeft cornerRadiusBottomRight orient width height size color fill stroke opacity fillOpacity strokeOpacity strokeWidth strokeDash strokeCap strokeJoin clip filled xOffset yOffset x2Offset y2Offset)
+  '(("bar" binSpacing cornerRadius cornerRadiusEnd cornerRadiusTopLeft cornerRadiusTopRight cornerRadiusBottomLeft cornerRadiusBottomRight orient width height size color fill stroke opacity fillOpacity strokeOpacity strokeWidth strokeDash strokeCap strokeJoin clip filled xOffset yOffset x2Offset y2Offset)
     ("line" interpolate tension point orient size color fill stroke opacity fillOpacity strokeOpacity strokeWidth strokeDash strokeDashOffset strokeCap strokeJoin strokeMiterLimit blend clip)
     ("area" interpolate tension point line orient color fill stroke opacity fillOpacity strokeOpacity strokeWidth strokeDash strokeDashOffset strokeCap strokeJoin strokeMiterLimit blend clip filled)
     ("point" shape size angle color fill stroke opacity fillOpacity strokeOpacity strokeWidth clip filled xOffset yOffset)
     ("rule" size color stroke opacity strokeWidth strokeDash strokeCap clip xOffset yOffset x2Offset)
-    ("tick" thickness (orient "vertical") size color stroke opacity strokeWidth strokeDash strokeCap clip xOffset yOffset)
+    ("tick" thickness bandSize (orient "vertical") size color stroke opacity strokeWidth strokeDash strokeCap clip xOffset yOffset)
     ("text" align baseline dx dy angle font fontSize fontStyle fontWeight limit lineHeight ellipsis text radius color fill opacity clip xOffset yOffset)
-    (axis bandPosition domain domainColor domainDash domainOpacity domainWidth format grid gridColor gridDash gridOpacity gridWidth labelAlign labelAngle labelBaseline labelColor labelExpr labelFlush labelFont labelFontSize labelFontStyle labelFontWeight labelLimit labelOffset labelOpacity labelPadding labels minExtent offset orient tickBand tickColor tickCount tickDash tickOpacity tickSize tickWidth ticks title titleAlign titleAngle titleBaseline titleColor titleFont titleFontSize titleFontStyle titleFontWeight titleLimit titleOpacity titlePadding titleX titleY values)
-    (legend clipHeight columns direction format gradientLength gradientThickness labelColor labelExpr labelFont labelFontSize labelFontStyle labelFontWeight labelOffset labelOpacity legendX legendY offset orient rowPadding symbolOpacity symbolSize symbolStrokeColor symbolStrokeWidth symbolType title titleColor titleFont titleFontSize titleFontStyle titleFontWeight titleOpacity titlePadding values)
+    (axis bandPosition domain domainCap domainColor domainDash domainOpacity domainWidth format grid gridCap gridColor gridDash gridOpacity gridWidth labelAlign labelAngle labelBaseline labelColor labelExpr labelFlush labelFont labelFontSize labelFontStyle labelFontWeight labelLimit labelOffset labelOpacity labelOverlap labelPadding labels minExtent offset orient tickBand tickCap tickColor tickCount tickDash tickOpacity tickSize tickWidth ticks title titleAlign titleAngle titleBaseline titleColor titleFont titleFontSize titleFontStyle titleFontWeight titleLimit titleOpacity titlePadding titleX titleY values)
+    (legend clipHeight columnPadding columns direction format gradientLength gradientThickness labelColor labelExpr labelFont labelFontSize labelFontStyle labelFontWeight labelOffset labelOpacity legendX legendY offset orient rowPadding symbolFillColor symbolOpacity symbolSize symbolStrokeColor symbolStrokeWidth symbolType title titleColor titleFont titleFontSize titleFontStyle titleFontWeight titleOpacity titleOrient titlePadding values)
     (scale type domain domainMax domainMin domainMid range rangeMax rangeMin scheme reverse nice zero padding paddingInner paddingOuter)
-    (title text subtitle anchor color dx dy fontSize fontWeight frame offset (orient "top") subtitleColor subtitleFontSize subtitleFontWeight subtitlePadding)
+    (title text subtitle anchor color dx dy font fontSize fontStyle fontWeight frame offset (orient "top") subtitleColor subtitleFont subtitleFontSize subtitleFontStyle subtitleFontWeight subtitlePadding)
     (view stroke strokeWidth strokeDash strokeOpacity fill fillOpacity continuousWidth continuousHeight step)
     (config background padding font countTitle)
-    (config-axis bandPosition domain domainColor domainDash domainOpacity domainWidth grid gridColor gridDash gridOpacity gridWidth labelAngle labelColor labelFlush labelFont labelFontSize labelFontStyle labelFontWeight labelLimit labelOpacity labelPadding labels minExtent offset tickBand tickColor tickDash tickOpacity tickSize tickWidth ticks title titleAlign titleAngle titleBaseline titleColor titleFont titleFontSize titleFontStyle titleFontWeight titleLimit titleOpacity titlePadding titleX titleY)
+    (config-axis bandPosition domain domainCap domainColor domainDash domainOpacity domainWidth grid gridCap gridColor gridDash gridOpacity gridWidth labelAngle labelColor labelFlush labelFont labelFontSize labelFontStyle labelFontWeight labelLimit labelOpacity labelOverlap labelPadding labels minExtent offset tickBand tickCap tickColor tickDash tickOpacity tickSize tickWidth ticks title titleAlign titleAngle titleBaseline titleColor titleFont titleFontSize titleFontStyle titleFontWeight titleLimit titleOpacity titlePadding titleX titleY)
     (config-legend (columns 1) direction gradientThickness labelColor labelFont labelFontSize labelFontStyle labelFontWeight labelOffset labelOpacity offset (orient "right" "left" "top" "bottom" "top-left" "top-right" "bottom-left" "bottom-right") rowPadding symbolSize symbolStrokeWidth symbolType titleColor titleFont titleFontSize titleFontStyle titleFontWeight titleOpacity titlePadding)
-    (config-title anchor color dx dy fontSize fontWeight offset (orient "top"))
-    ("config.bar" cornerRadius cornerRadiusEnd cornerRadiusTopLeft cornerRadiusTopRight cornerRadiusBottomLeft cornerRadiusBottomRight orient width size color fill stroke opacity fillOpacity strokeOpacity strokeWidth strokeDash strokeCap strokeJoin clip filled xOffset yOffset y2Offset)
+    (config-title anchor color dx dy font fontSize fontStyle fontWeight offset (orient "top"))
+    ("config.bar" binSpacing cornerRadius cornerRadiusEnd cornerRadiusTopLeft cornerRadiusTopRight cornerRadiusBottomLeft cornerRadiusBottomRight orient width size color fill stroke opacity fillOpacity strokeOpacity strokeWidth strokeDash strokeCap strokeJoin clip filled xOffset yOffset x2Offset y2Offset)
     ("config.line" interpolate tension orient size color fill stroke opacity fillOpacity strokeOpacity strokeWidth strokeDash strokeDashOffset strokeCap strokeJoin strokeMiterLimit blend clip)
     ("config.area" interpolate tension orient color fill stroke opacity fillOpacity strokeOpacity strokeWidth strokeDash strokeDashOffset strokeCap strokeJoin strokeMiterLimit blend clip filled)
     ("config.point" shape size angle color fill stroke opacity fillOpacity strokeOpacity strokeWidth clip filled xOffset yOffset)
     ("config.rule" size color stroke opacity strokeWidth strokeDash strokeCap clip xOffset yOffset x2Offset)
-    ("config.tick" thickness (orient "vertical") size color stroke opacity strokeWidth strokeDash strokeCap clip xOffset yOffset)
+    ("config.tick" thickness bandSize (orient "vertical") size color stroke opacity strokeWidth strokeDash strokeCap clip xOffset yOffset)
     ("config.text" align baseline dx dy angle font fontSize fontStyle fontWeight limit ellipsis color fill opacity clip xOffset yOffset))
   "Alist (SCOPE . KEYS) of the properties eas draws, per scope.")
 
@@ -168,6 +168,14 @@ that eas does not draw, each with :property t and its JSON path."
      ("rule" '(:x (:field "i" :type "quantitative") :x2 (:field "j") :y (:field "b" :type "quantitative")))
      (_ '(:x (:field "i" :type "quantitative") :y (:field "b" :type "quantitative"))))))
 
+(defun eas-spec-props--extra-encodings (type)
+  "More base encodings for mark TYPE, where a property only shows in
+another context: a bar's binSpacing between bins, a tick's bandSize
+on continuous scales."
+  (pcase type
+    ("bar" (list '(:x (:field "b" :bin t) :y (:aggregate "count"))))
+    ("tick" (list '(:x (:field "i" :type "quantitative") :y (:field "b" :type "quantitative"))))))
+
 (defun eas-spec-props--mark (type)
   "The base mark object of TYPE (text marks draw a constant label)."
   (if (equal type "text") (list :type type :text "label") (list :type type)))
@@ -200,7 +208,14 @@ ENTRY's key set to VALUE."
   "Axis base charts: OBJ as a y, a nominal x and a continuous x axis, or CONFIG."
   (list (eas-spec-props--in-channel "bar" :y (and obj :axis) obj config)
         (eas-spec-props--in-channel "bar" :x (and obj :axis) obj config)
-        (eas-spec-props--in-channel "point" :x (and obj :axis) obj config)))
+        (eas-spec-props--in-channel "point" :x (and obj :axis) obj config)
+        ;; Crowded nominal labels: where labelOverlap and friends show.
+        (append (list :data (list :values (vconcat (mapcar (lambda (i) (list :a (format "category %d" i) :b i))
+                                                           (number-sequence 1 12))))
+                      :mark "bar" :width 120
+                      :encoding (list :x (append '(:field "a" :type "nominal") (and obj (list :axis obj)))
+                                      :y '(:field "b" :type "quantitative")))
+                (when config (list :config config)))))
 
 (defun eas-spec-props--block (key obj)
   "A config holding OBJ as block KEY, or nil when OBJ is empty (an empty
@@ -213,8 +228,9 @@ block would replace the theme's)."
     (pcase scope
       ((pred (lambda (s) (and (stringp s) (string-prefix-p "config." s))))
        (let ((type (substring scope 7)))
-         (list (list :data (eas-spec-props--data t) :mark (eas-spec-props--mark type)
-                     :config (eas-spec-props--block (eas-key type) (funcall put nil)) :encoding (eas-spec-props--encoding type)))))
+         (mapcar (lambda (enc) (list :data (eas-spec-props--data t) :mark (eas-spec-props--mark type)
+                                     :config (eas-spec-props--block (eas-key type) (funcall put nil)) :encoding enc))
+                 (cons (eas-spec-props--encoding type) (eas-spec-props--extra-encodings type)))))
       ((pred stringp)
        (append (list (list :data (eas-spec-props--data t) :mark (funcall put (eas-spec-props--mark scope))
                            :encoding (eas-spec-props--encoding scope)))
@@ -222,6 +238,9 @@ block would replace the theme's)."
                (when (equal scope "bar")
                  (list (list :data (eas-spec-props--data) :mark (funcall put (eas-spec-props--mark scope))
                              :encoding '(:y (:field "a" :type "nominal") :x (:field "b" :type "quantitative")))))
+               (mapcar (lambda (enc) (list :data (eas-spec-props--data) :mark (funcall put (eas-spec-props--mark scope))
+                                           :encoding enc))
+                       (eas-spec-props--extra-encodings scope))
                ;; A text mark's polar properties (radius, theta) only place it beside an arc.
                (when (equal scope "text")
                  (list (list :data (eas-spec-props--data)
@@ -232,7 +251,14 @@ block would replace the theme's)."
       ('axis (eas-spec-props--axis-charts (funcall put nil) nil))
       ('config-axis (eas-spec-props--axis-charts nil (eas-spec-props--block :axis (funcall put nil))))
       ('legend (list (eas-spec-props--colored "a" "nominal" :legend (funcall put nil))
-                     (eas-spec-props--colored "q" "quantitative" :legend (funcall put nil))))
+                     (eas-spec-props--colored "q" "quantitative" :legend (funcall put nil))
+                     ;; A size legend's symbols take symbolFillColor and friends.
+                     (list :data (eas-spec-props--data) :mark "point"
+                           :encoding (append (eas-spec-props--encoding "point")
+                                             (list :size (list :field "q" :type "quantitative" :legend (funcall put nil)))))
+                     ;; A bottom legend lays out in a row (titleOrient and friends).
+                     (eas-spec-props--colored "a" "nominal" :legend
+                                              (let ((o (funcall put nil))) (if (plist-member o :orient) o (append o (list :orient "bottom")))))))
       ('config-legend (list (eas-spec-props--colored "a" "nominal" nil nil (eas-spec-props--block :legend (funcall put nil)))
                             (eas-spec-props--colored "q" "quantitative" nil nil (eas-spec-props--block :legend (funcall put nil)))))
       ('scale (list (list :data (eas-spec-props--data) :mark "arc"

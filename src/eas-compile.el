@@ -321,13 +321,16 @@ a child field or datum def inherits the parent def's other properties."
                      (append mark (list :index (plist-get unit :index)))))
                  (plist-get group :units)))
          (legend-y (plist-get group :y0)))
-    (list :id (plist-get group :id) :path (plist-get group :path) :bounds bounds
+    (append
+     ;; A projected view is no cell: no config.view fill or frame.
+     (when (eas-projection-view-p group) (list :cell :false))
+     (list :id (plist-get group :id) :path (plist-get group :path) :bounds bounds
           :header (when-let* ((h (plist-get group :header)))
                     (eas-facet-header-place h bounds (or (plist-get group :header-inset) 0) metrics))
           :clip (if (eas-compile--clipped-p group state) t :false)
           ;; Vega-Lite frames each plot with config.view.stroke; terminals don't.
           :frame (let ((stroke (plist-get (eas-theme-get (plist-get metrics :config) :view) :stroke)))
-                   (unless (or (eas-layout-text-p metrics) (eq stroke :null))
+                   (unless (or (eas-layout-text-p metrics) (eq stroke :null) (eas-projection-view-p group))
                      (append (list :stroke (if (stringp stroke) stroke "#ddd"))
                              ;; config.view's other stroke properties (fc-qx1.40).
                              (cl-loop with view = (eas-theme-get (plist-get metrics :config) :view)
@@ -356,7 +359,7 @@ a child field or datum def inherits the parent def's other properties."
           :marks (vconcat (append (eas-compile--brushes group state) marks
                                   (delq nil (list (eas-title-view-mark group metrics)))
                                   (eas-facet-layout-view-marks group)))
-          :params (vconcat (mapcar (lambda (p) (plist-get p :name)) (plist-get group :params))))))
+          :params (vconcat (mapcar (lambda (p) (plist-get p :name)) (plist-get group :params)))))))
 
 (defun eas-compile--title-frame (spec)
   "SPEC's title.frame: \"bounds\" or \"group\" (the default)."
@@ -376,7 +379,12 @@ a child field or datum def inherits the parent def's other properties."
   (if (or (null title) (eas-layout-text-p metrics)
           (not (equal (eas-title-anchor spec metrics) "start")))
       total
-    (let ((need (+ (eas-compile--title-start groups metrics spec)
+    ;; The x the title is drawn at (see the scene's :title): the plots'
+    ;; edge with an explicit frame, else the chart's padding.
+    (let ((need (+ (if (or (equal (eas-compile--title-frame spec) "bounds")
+                           (let ((tt (plist-get spec :title))) (and (eas-object-p tt) (equal (plist-get tt :frame) "group"))))
+                       (eas-compile--title-start groups metrics spec)
+                     (plist-get metrics :pad))
                    (apply #'max (mapcar (lambda (line)
                                           (eas-layout-text-width metrics line (plist-get metrics :chart-title-size)
                                                                  (plist-get metrics :chart-title-weight)))

@@ -60,23 +60,35 @@ splits lines but not trails."
     :encoding (:x (:field "x" :type "quantitative") :y (:field "y" :type "quantitative")
                :column (:field "s" :title "Series" :header (:labelColor "#aa0000" :labelFontSize 12)))))
 
+(defun eas-vl-line-test--headers (scene)
+  "Items of SCENE's facet-headers mark (the facet grid draws labels and title there)."
+  (seq-some (lambda (v) (seq-some (lambda (m) (and (string-suffix-p "/facet-headers" (plist-get m :id))
+                                                   (append (plist-get m :items) nil)))
+                                  (plist-get v :marks)))
+            (plist-get scene :views)))
+
 (ert-deftest eas-vl-line-facet-title-and-header-style ()
-  (let* ((scene (eas-compile eas-vl-line-test--facet))
+  (let* ((eas-spec-supported-function nil)
+         (scene (eas-compile eas-vl-line-test--facet))
          (v0 (aref (plist-get scene :views) 0)) (v1 (aref (plist-get scene :views) 1))
-         (title (aref (plist-get (eas-scene-mark scene "hconcat_0/facet-title") :items) 0)))
-    (should (equal (plist-get title :text) "Series"))
+         (items (eas-vl-line-test--headers scene))
+         (item (lambda (text) (seq-find (lambda (i) (equal (plist-get i :text) text)) items)))
+         (title (funcall item "Series")) (label (funcall item "a")))
+    (should title)
     ;; Centred over both cells' plots, 20px above the labels' tops.
     (should (= (plist-get title :x) (/ (+ (aref (plist-get v0 :bounds) 0)
                                           (aref (plist-get v1 :bounds) 0) (aref (plist-get v1 :bounds) 2))
                                        2.0)))
-    (should (= (plist-get title :y) (- (plist-get (plist-get v0 :header) :y) 12 20)))
-    (should (equal (plist-get (plist-get v0 :header) :color) "#aa0000"))
-    (should (equal (aref (plist-get v0 :bounds) 1) (aref (plist-get v1 :bounds) 1))))
-  (should-not (eas-scene-mark (eas-compile (plist-put (copy-tree eas-vl-line-test--facet) :encoding
-                                                      '(:x (:field "x" :type "quantitative")
-                                                        :y (:field "y" :type "quantitative")
-                                                        :column (:field "s" :header (:title :null)))))
-                              "hconcat_0/facet-title")))
+    (should (= (plist-get title :y) (- (plist-get label :y) 12 20)))
+    (should (equal (plist-get label :fill) "#aa0000"))
+    (should (equal (aref (plist-get v0 :bounds) 1) (aref (plist-get v1 :bounds) 1)))
+    ;; A null header title draws none.
+    (should-not (funcall (lambda (items) (seq-find (lambda (i) (equal (plist-get i :text) "s")) items))
+                         (eas-vl-line-test--headers
+                          (eas-compile (plist-put (copy-tree eas-vl-line-test--facet) :encoding
+                                                  '(:x (:field "x" :type "quantitative")
+                                                    :y (:field "y" :type "quantitative")
+                                                    :column (:field "s" :header (:title :null))))))))))
 
 ;;; Check
 

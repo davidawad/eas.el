@@ -146,7 +146,8 @@ and SIZE-OF map a bucket's value to its symbol's color and area (or nil)."
                                           (t (concat "≥ " (funcall f v)))))
                              ;; A bucket's symbol shows the scales at its lower bound.
                              (probe (if (= v -1.0e+INF) (if th (1- (car th)) 0) v)))
-                        (append (list :value probe :label label)
+                        ;; :formatted, the legend's format is in the label already.
+                        (append (list :value probe :label label :formatted t)
                                 (when color-of (list :color (funcall color-of probe)))
                                 (when size-of (list :size (funcall size-of probe)))))))))
 

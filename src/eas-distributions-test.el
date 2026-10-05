@@ -13,6 +13,7 @@
 (require 'eas)
 (require 'eas-agent)
 (require 'eas-vl-gallery)
+(require 'eas-vl-gallery-custom)
 (require 'eas-vl-gallery-bench)
 (require 'eas-spec-props)
 
@@ -54,8 +55,9 @@
                      '("ref/s.vega.png" "node x" "emoji" 0.01))))))
 
 (ert-deftest eas-distributions-custom-groups-are-groups ()
-  (should (member "distributions/custom" (eas-vl-gallery-groups)))
-  (should (>= (length (eas-vl-gallery-names "distributions/custom")) 8)))
+  ;; The customization specs run under eas-vl-gallery-custom.el's harness.
+  (should (member "distributions" (eas-vl-gallery-custom-groups)))
+  (should (>= (length (eas-vl-gallery-custom-names "distributions")) 8)))
 
 (ert-deftest eas-distributions-emoji-mask ()
   (let* ((scene '(:views [(:marks [(:mark "text" :items [(:x 50 :y 40 :text "🐖" :fontSize 20

@@ -362,10 +362,13 @@ A band axis keeps every label (rotated labels need their font height
 each, others their width); a continuous axis keeps at least its first
 and last label."
   (let ((size (plist-get metrics :label-size)) (w 0) (h 0))
-    ;; In a terminal y labels take a row each, and band labels are thinned:
-    ;; only a continuous x axis's labels can collide.
+    ;; In a terminal y labels take a row each and band labels are thinned,
+    ;; except fewer than three, which Vega's overlap removal never thins:
+    ;; only those and a continuous x axis's labels can collide.
     (dolist (axis (if (eas-layout-text-p metrics)
-                      (seq-filter (lambda (a) (and (equal (plist-get a :channel) "x") (not (eq (plist-get a :discrete) t))))
+                      (seq-filter (lambda (a) (and (equal (plist-get a :channel) "x")
+                                                   (or (not (eq (plist-get a :discrete) t))
+                                                       (< (length (plist-get a :ticks)) 3))))
                                   (plist-get group :axes-model))
                     (plist-get group :axes-model)))
       (let* ((labels (delq nil (mapcar (lambda (tk) (let ((l (plist-get tk :label))) (and (stringp l) (not (string-empty-p l)) l)))
@@ -374,17 +377,25 @@ and last label."
              (widest (apply #'max 0 widths))
              (x (equal (plist-get axis :channel) "x"))
              (rotated (and x (not (zerop (or (plist-get axis :labelAngle) 0)))))
-             (along (if (or (not x) rotated) (+ size 2) (+ widest 2))))
+             ;; Labels keep 2px apart, two cells in a terminal (centred labels round to cells).
+             (gap (if (eas-layout-text-p metrics) (* 2 (aref (plist-get metrics :cell) 0)) 2))
+             (along (if (or (not x) rotated) (+ size 2) (+ widest gap))))
         (when labels
           (let ((need (if (eq (plist-get axis :discrete) t) (* (length labels) along)
                         (* 2 along))))
             (if x (setq w (max w need)) (setq h (max h need)))))))
     (cons w h)))
 
+(declare-function eas-place-fit-grid "eas-compile-grid")
+
 (defun eas-facet-layout-fit (node width height metrics)
   "Resize facet NODE's plots so its block is WIDTH by HEIGHT; nil when
-NODE is no facet grid or the target is text."
-  (when (and (eas-facet-layout--grid-p node) (not (eas-layout-text-p metrics)))
+NODE is no facet grid.  In a terminal every cell gets one plot size, as
+a repeat grid's do, so the cells' axes share their rows."
+  (cond
+   ((not (eas-facet-layout--grid-p node)) nil)
+   ((eas-layout-text-p metrics) (eas-place-fit-grid node width height metrics) t)
+   (t
     (let* ((meta (eas-facet-layout-meta node))
            (cells (apply #'append (eas-facet-layout--rows node)))
            (size (eas-facet-layout-arrange node 0 0 metrics))
@@ -397,7 +408,7 @@ NODE is no facet grid or the target is text."
         (let ((least (eas-facet-layout-min-plot g metrics)))
           (setq w (max w (car least)) h (max h (cdr least)))))
       (dolist (g cells) (plist-put g :w w) (plist-put g :h h) (plist-put g :fit-height h))
-      t)))
+      t))))
 
 (defun eas-facet-layout-view-marks (group)
   "The trellis header marks GROUP draws (the first cell's), as a list."

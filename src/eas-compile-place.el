@@ -178,7 +178,13 @@ tallest column."
   "Compute GROUP's axis and legend models and its chrome under METRICS."
   (when-let* ((range (eas-bins-size-range group (lambda (ch) (eas-place--local-scale group ch)))))
     (plist-put (plist-get group :scales) :size
-               (eas-compile-set-range (plist-get (plist-get group :scales) :size) range)))
+               (eas-compile-set-range (plist-get (plist-get group :scales) :size) range))
+    ;; A size legend shows the marks' sizes: it reads the re-ranged scale.
+    (plist-put group :legend-specs
+               (mapcar (lambda (ls) (if (eq (plist-get ls :channel) :size)
+                                        (plist-put (copy-sequence ls) :scale (plist-get (plist-get group :scales) :size))
+                                      ls))
+                       (plist-get group :legend-specs))))
   (let* ((scales (plist-get group :scales))
          (defs (plist-get group :axis-defs))
          (axes (delq nil (list (eas-layout-axis :x (plist-get defs :x) (plist-get scales :x)
@@ -225,7 +231,20 @@ tallest column."
       (plist-put group :axis-top (if (and (not (eas-layout-text-p metrics)) (plist-get group :content-y1))
                                      (max 0 (- (plist-get group :content-y1)))
                                    (plist-get chrome :top)))
-      (plist-put chrome :top (+ (plist-get chrome :top) (eas-title-height node metrics))))
+      (plist-put chrome :top (+ (plist-get chrome :top) (eas-title-height node metrics)))
+      ;; and a title wider than its plot widens the cell, as Vega's group bounds do.
+      (unless (eas-layout-text-p metrics)
+        (let* ((size (eas-title--get node metrics :fontSize :chart-title-size))
+               (weight (eas-title--get node metrics :fontWeight :chart-title-weight))
+               (over (- (apply #'max 0 (mapcar (lambda (l) (eas-layout-text-width metrics l size weight))
+                                               (eas-title-lines node)))
+                        (plist-get group :w))))
+          (when (> over 0)
+            (pcase (eas-title-anchor node metrics)
+              ("start" (plist-put chrome :right (max (plist-get chrome :right) over)))
+              ("end" (plist-put chrome :left (max (plist-get chrome :left) over)))
+              (_ (plist-put chrome :left (max (plist-get chrome :left) (/ over 2.0)))
+                 (plist-put chrome :right (max (plist-get chrome :right) (/ over 2.0)))))))))
     (plist-put group :axes-model axes)
     (plist-put group :legends-model legends)
     (plist-put group :chrome chrome)))
@@ -293,8 +312,12 @@ Nested concatenations align their plots with their siblings' too."
     (t
     (if-let* ((g (plist-get node :group)))
         (let ((c (plist-get g :chrome))
-              ;; Never so small that its axis labels collide (the canvas grows instead).
-              (least (if (fboundp 'eas-facet-layout-min-plot) (eas-facet-layout-min-plot g metrics) '(0 . 0))))
+              ;; A composition's cell is never so small that its axis labels
+              ;; collide (the canvas grows instead); a lone view keeps the size
+              ;; it is fitted to and cuts or thins its labels (eas-axis-fit.el).
+              (least (if (and (plist-get g :grid-cell) (fboundp 'eas-facet-layout-min-plot))
+                         (eas-facet-layout-min-plot g metrics)
+                       '(0 . 0))))
           (plist-put g :fit-height height)
           (plist-put g :w (max min-w (car least) (- width (plist-get c :left) (plist-get c :right))))
           (plist-put g :h (max min-h (cdr least) (- height (plist-get c :top) (plist-get c :bottom)))))
@@ -326,20 +349,31 @@ plot sizes (a relayout after marks were measured)."
           band (eas-shared-band tree metrics (plist-get (car groups) :h)))
     (unless (or size sized) (eas-container-fit tree metrics title-h shared))
     (when size
-      ;; Legends taller than the target flow into columns.
+      ;; Legends taller than the target flow into columns, shared ones too.
       (dolist (g groups)
         (plist-put g :legend-limit (- (cdr size) (* 2 pad) title-h))
-        (eas-place-chrome g metrics)))
+        (eas-place-chrome g metrics))
+      (plist-put tree :legend-limit (- (cdr size) (* 2 pad) title-h (car band) (cdr band)))
+      (setq shared (eas-shared-extent tree metrics (plist-get (car groups) :h))))
     (when size
       (dotimes (_ 2)
         (eas-place-fit tree (- (car size) (* 2 pad) shared) (- (cdr size) (* 2 pad) title-h (car band) (cdr band)) metrics)
         (dolist (g groups) (eas-place-chrome g metrics))))
     (let* ((top (+ pad title-h (car band)))
            (block (eas-place-arrange tree pad top metrics)))
+      ;; Shared legends start at the first plot's top: they flow into
+      ;; columns within the height left below it.
+      (when (and size (plist-get tree :legend-limit))
+        (plist-put tree :legend-limit (- (cdr size) pad (plist-get (car groups) :y0)))
+        (setq shared (eas-shared-extent tree metrics (plist-get (car groups) :h))))
       (eas-shared-place tree groups metrics (+ pad (car block)) (plist-get (car groups) :y0)
                         top (+ top (cdr block)))
       ;; A size too small for the chrome grows the canvas rather than clip it.
-      (let ((need (cons (+ (car block) shared (* 2 pad)) (+ (cdr block) title-h (car band) (cdr band) (* 2 pad)))))
+      (let ((need (cons (+ (car block) shared (* 2 pad))
+                        (max (+ (cdr block) title-h (car band) (cdr band) (* 2 pad))
+                             ;; and so do shared legends taller than the block.
+                             (+ pad (apply #'max 0 (mapcar (lambda (p) (+ (nth 2 p) (cdr (eas-shared--size (car p) metrics))))
+                                                           (plist-get (car groups) :shared-legends))))))))
         (if size (cons (max (car size) (car need)) (max (cdr size) (cdr need))) need)))))
 
 (provide 'eas-compile-place)

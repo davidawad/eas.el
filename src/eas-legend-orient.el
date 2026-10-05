@@ -29,6 +29,7 @@
 
 (require 'eas-core)
 (require 'eas-layout)
+(declare-function eas-legend-symbol-type "eas-legend")
 
 (declare-function eas-legend--symbol "eas-legend")
 (declare-function eas-legend--title "eas-legend")
@@ -95,7 +96,7 @@ each entry centred in its row."
                                                                collect (+ pad (let ((v (aref (nth 4 l) (if (eq key #'cdr) 0 1)))) (if (< v 0) (ceiling (- v)) 0)))))))
          (xs (let ((acc 0)) (cl-loop for c below ncol
                                      collect (setq acc (if (zerop c) 0 (+ acc (funcall extent #'cdr (1- c))
-                                                                          (funcall lead #'cdr c eas-legend-orient-column-padding)))))))
+                                                                          (funcall lead #'cdr c (or (plist-get legend :column-padding) eas-legend-orient-column-padding))))))))
          (ys (let ((acc 0)) (cl-loop for r below nrow
                                      collect (setq acc (if (zerop r) 0 (+ acc (funcall extent #'car (1- r))
                                                                           (funcall lead #'car r (plist-get metrics :legend-row-pad))))))))
@@ -118,7 +119,7 @@ each entry centred in its row."
                                                               0 (plist-get metrics :legend-title-weight)))))
     (append (eas--plist-without legend :entries)
             (list :x x :y y :width (if box (ceiling (- (aref box 2) x)) 0) :font-size fs
-                  :symbol-type (plist-get metrics :symbol-type)
+                  :symbol-type (eas-legend-symbol-type legend metrics)
                   :box (if box (vector x y (+ x (ceiling (- (aref box 2) x))) (+ y (ceiling (- (aref box 3) y))))
                          (vector x y x y))
                   :entries (vconcat entries))

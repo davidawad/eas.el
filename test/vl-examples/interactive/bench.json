@@ -8,837 +8,341 @@
       "rows": 406,
       "items": 622,
       "ms": {
-        "compile-svg": {
-          "max": 42.894,
-          "mean": 28.07
-        },
-        "compile-text": {
-          "max": 27.41,
-          "mean": 15.649
-        },
-        "hover": {
-          "max": 1.539,
-          "mean": 0.987
-        },
-        "render-svg": {
-          "max": 45.444,
-          "mean": 36.1
-        },
-        "render-text": {
-          "max": 54.233,
-          "mean": 40.43
-        },
-        "resolve": null
+        "compile-svg": 28.07,
+        "compile-text": 15.649,
+        "hover": 0.987,
+        "render-svg": 36.1,
+        "render-text": 40.43
       }
     },
     "brush_table": {
       "rows": 406,
       "items": 452,
       "ms": {
-        "compile-svg": {
-          "max": 35.583,
-          "mean": 25.736
-        },
-        "compile-text": {
-          "max": 28.995,
-          "mean": 18.785
-        },
-        "hover": {
-          "max": 0.601,
-          "mean": 0.411
-        },
-        "render-svg": {
-          "max": 27.318,
-          "mean": 12.472
-        },
-        "render-text": {
-          "max": 3.983,
-          "mean": 3.782
-        },
-        "resolve": null
+        "compile-svg": 25.736,
+        "compile-text": 18.785,
+        "hover": 0.411,
+        "render-svg": 12.472,
+        "render-text": 3.782
       }
     },
     "dynamic_color_legend": {
       "rows": 1461,
       "items": 1466,
       "ms": {
-        "compile-svg": {
-          "max": 61.658,
-          "mean": 47.812
-        },
-        "compile-text": {
-          "max": 63.718,
-          "mean": 44.941
-        },
-        "hover": {
-          "max": 2.059,
-          "mean": 1.258
-        },
-        "render-svg": {
-          "max": 42.793,
-          "mean": 29.844
-        },
-        "render-text": {
-          "max": 10.337,
-          "mean": 9.447
-        },
-        "resolve": null
+        "compile-svg": 47.812,
+        "compile-text": 44.941,
+        "hover": 1.258,
+        "render-svg": 29.844,
+        "render-text": 9.447
       }
     },
     "interactive_area_brush": {
       "rows": 1708,
       "items": 2,
       "ms": {
-        "compile-svg": {
-          "max": 57.448,
-          "mean": 44.808
-        },
-        "compile-text": {
-          "max": 47.845,
-          "mean": 37.741
-        },
-        "hover": {
-          "max": 0.457,
-          "mean": 0.263
-        },
-        "render-svg": {
-          "max": 1.659,
-          "mean": 1.601
-        },
-        "render-text": {
-          "max": 21.141,
-          "mean": 5.899
-        },
-        "resolve": null
+        "compile-svg": 44.808,
+        "compile-text": 37.741,
+        "hover": 0.263,
+        "render-svg": 1.601,
+        "render-text": 5.899
       }
     },
     "interactive_bar_select_highlight": {
       "rows": 9,
       "items": 9,
       "ms": {
-        "compile-svg": {
-          "max": 1.306,
-          "mean": 1.189
-        },
-        "compile-text": {
-          "max": 0.799,
-          "mean": 0.74
-        },
-        "hover": {
-          "max": 0.215,
-          "mean": 0.12
-        },
-        "render-svg": {
-          "max": 1.608,
-          "mean": 1.407
-        },
-        "render-text": {
-          "max": 0.791,
-          "mean": 0.739
-        },
-        "resolve": null
+        "compile-svg": 1.189,
+        "compile-text": 0.74,
+        "hover": 0.12,
+        "render-svg": 1.407,
+        "render-text": 0.739
       }
     },
     "interactive_bin_extent": {
       "rows": 5000,
       "items": 46,
       "ms": {
-        "compile-svg": {
-          "max": 125.779,
-          "mean": 119.979
-        },
-        "compile-text": {
-          "max": 117.077,
-          "mean": 113.374
-        },
-        "hover": {
-          "max": 0.283,
-          "mean": 0.179
-        },
-        "render-svg": {
-          "max": 3.273,
-          "mean": 3.043
-        },
-        "render-text": {
-          "max": 4.964,
-          "mean": 4.866
-        },
-        "resolve": null
+        "compile-svg": 119.979,
+        "compile-text": 113.374,
+        "hover": 0.179,
+        "render-svg": 3.043,
+        "render-text": 4.866
       }
     },
     "interactive_brush": {
       "rows": 406,
       "items": 393,
       "ms": {
-        "compile-svg": {
-          "max": 32.71,
-          "mean": 16.671
-        },
-        "compile-text": {
-          "max": 29.145,
-          "mean": 14.305
-        },
-        "hover": {
-          "max": 0.553,
-          "mean": 0.389
-        },
-        "render-svg": {
-          "max": 6.648,
-          "mean": 6.315
-        },
-        "render-text": {
-          "max": 2.068,
-          "mean": 1.87
-        },
-        "resolve": null
+        "compile-svg": 16.671,
+        "compile-text": 14.305,
+        "hover": 0.389,
+        "render-svg": 6.315,
+        "render-text": 1.87
       }
     },
     "interactive_concat_layer": {
       "rows": 3201,
       "items": 141,
       "ms": {
-        "compile-svg": {
-          "max": 57.547,
-          "mean": 46.041
-        },
-        "compile-text": {
-          "max": 56.438,
-          "mean": 38.892
-        },
-        "hover": {
-          "max": 0.409,
-          "mean": 0.344
-        },
-        "render-svg": {
-          "max": 3.834,
-          "mean": 3.644
-        },
-        "render-text": {
-          "max": 2.842,
-          "mean": 2.74
-        },
-        "resolve": null
+        "compile-svg": 46.041,
+        "compile-text": 38.892,
+        "hover": 0.344,
+        "render-svg": 3.644,
+        "render-text": 2.74
       }
     },
     "interactive_crossfilter": {
       "rows": 2000,
       "items": 28,
       "ms": {
-        "compile-svg": {
-          "max": 71.544,
-          "mean": 53.948
-        },
-        "compile-text": {
-          "max": 64.095,
-          "mean": 47.88
-        },
-        "hover": {
-          "max": 0.234,
-          "mean": 0.133
-        },
-        "render-svg": {
-          "max": 1.9,
-          "mean": 1.804
-        },
-        "render-text": {
-          "max": 2.056,
-          "mean": 1.936
-        },
-        "resolve": null
+        "compile-svg": 53.948,
+        "compile-text": 47.88,
+        "hover": 0.133,
+        "render-svg": 1.804,
+        "render-text": 1.936
       }
     },
     "interactive_global_development": {
       "rows": 682,
       "items": 125,
       "ms": {
-        "compile-svg": {
-          "max": 60.275,
-          "mean": 44.792
-        },
-        "compile-text": {
-          "max": 54.415,
-          "mean": 43.633
-        },
-        "hover": {
-          "max": 0.617,
-          "mean": 0.58
-        },
-        "render-svg": {
-          "max": 2.121,
-          "mean": 1.985
-        },
-        "render-text": {
-          "max": 7.402,
-          "mean": 6.582
-        },
-        "resolve": null
+        "compile-svg": 44.792,
+        "compile-text": 43.633,
+        "hover": 0.58,
+        "render-svg": 1.985,
+        "render-text": 6.582
       }
     },
     "interactive_histogram_full_height_hover": {
       "rows": 3201,
       "items": 18,
       "ms": {
-        "compile-svg": {
-          "max": 37.057,
-          "mean": 23.359
-        },
-        "compile-text": {
-          "max": 36.211,
-          "mean": 17.349
-        },
-        "hover": {
-          "max": 0.157,
-          "mean": 0.09
-        },
-        "render-svg": {
-          "max": 1.578,
-          "mean": 1.217
-        },
-        "render-text": {
-          "max": 0.947,
-          "mean": 0.891
-        },
-        "resolve": null
+        "compile-svg": 23.359,
+        "compile-text": 17.349,
+        "hover": 0.09,
+        "render-svg": 1.217,
+        "render-text": 0.891
       }
     },
     "interactive_index_chart": {
       "rows": 560,
       "items": 575,
       "ms": {
-        "compile-svg": {
-          "max": 74.918,
-          "mean": 64.04
-        },
-        "compile-text": {
-          "max": 66.029,
-          "mean": 57.715
-        },
-        "hover": {
-          "max": 0.657,
-          "mean": 0.326
-        },
-        "render-svg": {
-          "max": 1.791,
-          "mean": 1.659
-        },
-        "render-text": {
-          "max": 7.075,
-          "mean": 6.192
-        },
-        "resolve": null
+        "compile-svg": 64.04,
+        "compile-text": 57.715,
+        "hover": 0.326,
+        "render-svg": 1.659,
+        "render-text": 6.192
       }
     },
     "interactive_layered_crossfilter": {
       "rows": 2000,
       "items": 56,
       "ms": {
-        "compile-svg": {
-          "max": 94.523,
-          "mean": 87.912
-        },
-        "compile-text": {
-          "max": 97.114,
-          "mean": 91.331
-        },
-        "hover": {
-          "max": 0.394,
-          "mean": 0.279
-        },
-        "render-svg": {
-          "max": 4.131,
-          "mean": 3.839
-        },
-        "render-text": {
-          "max": 4.361,
-          "mean": 4.228
-        },
-        "resolve": null
+        "compile-svg": 87.912,
+        "compile-text": 91.331,
+        "hover": 0.279,
+        "render-svg": 3.839,
+        "render-text": 4.228
       }
     },
     "interactive_legend": {
       "rows": 1708,
       "items": 14,
       "ms": {
-        "compile-svg": {
-          "max": 79.752,
-          "mean": 62.433
-        },
-        "compile-text": {
-          "max": 68.995,
-          "mean": 58.633
-        },
-        "hover": {
-          "max": 1.41,
-          "mean": 0.579
-        },
-        "render-svg": {
-          "max": 6.253,
-          "mean": 5.691
-        },
-        "render-text": {
-          "max": 29.016,
-          "mean": 12.425
-        },
-        "resolve": null
+        "compile-svg": 62.433,
+        "compile-text": 58.633,
+        "hover": 0.579,
+        "render-svg": 5.691,
+        "render-text": 12.425
       }
     },
     "interactive_line_hover": {
       "rows": 560,
       "items": 16,
       "ms": {
-        "compile-svg": {
-          "max": 48.02,
-          "mean": 39.334
-        },
-        "compile-text": {
-          "max": 44.928,
-          "mean": 32.879
-        },
-        "hover": {
-          "max": 0.751,
-          "mean": 0.424
-        },
-        "render-svg": {
-          "max": 3.215,
-          "mean": 2.664
-        },
-        "render-text": {
-          "max": 20.34,
-          "mean": 6.561
-        },
-        "resolve": null
+        "compile-svg": 39.334,
+        "compile-text": 32.879,
+        "hover": 0.424,
+        "render-svg": 2.664,
+        "render-text": 6.561
       }
     },
     "interactive_line_point_hover": {
       "rows": 560,
       "items": 565,
       "ms": {
-        "compile-svg": {
-          "max": 52.989,
-          "mean": 37.498
-        },
-        "compile-text": {
-          "max": 49.136,
-          "mean": 36.323
-        },
-        "hover": {
-          "max": 1.003,
-          "mean": 0.47
-        },
-        "render-svg": {
-          "max": 22.762,
-          "mean": 6.3
-        },
-        "render-text": {
-          "max": 2.878,
-          "mean": 2.528
-        },
-        "resolve": null
+        "compile-svg": 37.498,
+        "compile-text": 36.323,
+        "hover": 0.47,
+        "render-svg": 6.3,
+        "render-text": 2.528
       }
     },
     "interactive_multi_line_label": {
       "rows": 560,
       "items": 565,
       "ms": {
-        "compile-svg": {
-          "max": 29.819,
-          "mean": 16.738
-        },
-        "compile-text": {
-          "max": 36.838,
-          "mean": 23.193
-        },
-        "hover": {
-          "max": 0.788,
-          "mean": 0.407
-        },
-        "render-svg": {
-          "max": 2.113,
-          "mean": 1.975
-        },
-        "render-text": {
-          "max": 5.299,
-          "mean": 4.617
-        },
-        "resolve": null
+        "compile-svg": 16.738,
+        "compile-text": 23.193,
+        "hover": 0.407,
+        "render-svg": 1.975,
+        "render-text": 4.617
       }
     },
     "interactive_multi_line_pivot_tooltip": {
       "rows": 560,
       "items": 128,
       "ms": {
-        "compile-svg": {
-          "max": 29.319,
-          "mean": 15.71
-        },
-        "compile-text": {
-          "max": 28.029,
-          "mean": 14.477
-        },
-        "hover": {
-          "max": 0.625,
-          "mean": 0.301
-        },
-        "render-svg": {
-          "max": 2.054,
-          "mean": 1.95
-        },
-        "render-text": {
-          "max": 25.04,
-          "mean": 8.538
-        },
-        "resolve": null
+        "compile-svg": 15.71,
+        "compile-text": 14.477,
+        "hover": 0.301,
+        "render-svg": 1.95,
+        "render-text": 8.538
       }
     },
     "interactive_multi_line_tooltip": {
       "rows": 1461,
       "items": 1463,
       "ms": {
-        "compile-svg": {
-          "max": 169.855,
-          "mean": 144.932
-        },
-        "compile-text": {
-          "max": 169.464,
-          "mean": 142.453
-        },
-        "hover": {
-          "max": 2.924,
-          "mean": 2.113
-        },
-        "render-svg": {
-          "max": 23.556,
-          "mean": 22.243
-        },
-        "render-text": {
-          "max": 18.226,
-          "mean": 17.782
-        },
-        "resolve": null
+        "compile-svg": 144.932,
+        "compile-text": 142.453,
+        "hover": 2.113,
+        "render-svg": 22.243,
+        "render-text": 17.782
       }
     },
     "interactive_overview_detail": {
       "rows": 123,
       "items": 2,
       "ms": {
-        "compile-svg": {
-          "max": 4.954,
-          "mean": 4.617
-        },
-        "compile-text": {
-          "max": 4.006,
-          "mean": 3.382
-        },
-        "hover": {
-          "max": 0.447,
-          "mean": 0.255
-        },
-        "render-svg": {
-          "max": 2.661,
-          "mean": 2.323
-        },
-        "render-text": {
-          "max": 5.105,
-          "mean": 4.624
-        },
-        "resolve": null
+        "compile-svg": 4.617,
+        "compile-text": 3.382,
+        "hover": 0.255,
+        "render-svg": 2.323,
+        "render-text": 4.624
       }
     },
     "interactive_paintbrush": {
       "rows": 406,
       "items": 392,
       "ms": {
-        "compile-svg": {
-          "max": 3.914,
-          "mean": 3.796
-        },
-        "compile-text": {
-          "max": 2.965,
-          "mean": 2.885
-        },
-        "hover": {
-          "max": 0.544,
-          "mean": 0.372
-        },
-        "render-svg": {
-          "max": 23.326,
-          "mean": 9.393
-        },
-        "render-text": {
-          "max": 1.648,
-          "mean": 1.56
-        },
-        "resolve": null
+        "compile-svg": 3.796,
+        "compile-text": 2.885,
+        "hover": 0.372,
+        "render-svg": 9.393,
+        "render-text": 1.56
       }
     },
     "interactive_query_widgets": {
       "rows": 406,
       "items": 409,
       "ms": {
-        "compile-svg": {
-          "max": 47.181,
-          "mean": 38.885
-        },
-        "compile-text": {
-          "max": 48.72,
-          "mean": 35.744
-        },
-        "hover": {
-          "max": 0.589,
-          "mean": 0.411
-        },
-        "render-svg": {
-          "max": 10.182,
-          "mean": 7.783
-        },
-        "render-text": {
-          "max": 2.115,
-          "mean": 1.809
-        },
-        "resolve": null
+        "compile-svg": 38.885,
+        "compile-text": 35.744,
+        "hover": 0.411,
+        "render-svg": 7.783,
+        "render-text": 1.809
       }
     },
     "interactive_seattle_weather": {
       "rows": 1461,
       "items": 1466,
       "ms": {
-        "compile-svg": {
-          "max": 62.039,
-          "mean": 47.442
-        },
-        "compile-text": {
-          "max": 67.049,
-          "mean": 44.431
-        },
-        "hover": {
-          "max": 3.109,
-          "mean": 1.557
-        },
-        "render-svg": {
-          "max": 42.552,
-          "mean": 25.283
-        },
-        "render-text": {
-          "max": 29.116,
-          "mean": 13.233
-        },
-        "resolve": null
+        "compile-svg": 47.442,
+        "compile-text": 44.431,
+        "hover": 1.557,
+        "render-svg": 25.283,
+        "render-text": 13.233
       }
     },
     "interactive_splom": {
       "rows": 0,
       "items": 3584,
       "ms": {
-        "compile-svg": {
-          "max": 83.275,
-          "mean": 66.632
-        },
-        "compile-text": {
-          "max": 72.083,
-          "mean": 50.216
-        },
-        "hover": {
-          "max": 5.835,
-          "mean": 3.114
-        },
-        "render-svg": {
-          "max": 84.249,
-          "mean": 69.823
-        },
-        "render-text": {
-          "max": 58.978,
-          "mean": 36.859
-        },
-        "resolve": null
+        "compile-svg": 66.632,
+        "compile-text": 50.216,
+        "hover": 3.114,
+        "render-svg": 69.823,
+        "render-text": 36.859
       }
     },
     "isotype_grid": {
       "rows": 100,
       "items": 100,
       "ms": {
-        "compile-svg": {
-          "max": 1.765,
-          "mean": 1.624
-        },
-        "compile-text": {
-          "max": 1.782,
-          "mean": 1.561
-        },
-        "hover": {
-          "max": 0.319,
-          "mean": 0.195
-        },
-        "render-svg": {
-          "max": 2.01,
-          "mean": 1.891
-        },
-        "render-text": {
-          "max": 0.928,
-          "mean": 0.859
-        },
-        "resolve": null
+        "compile-svg": 1.624,
+        "compile-text": 1.561,
+        "hover": 0.195,
+        "render-svg": 1.891,
+        "render-text": 0.859
       }
     },
     "param_search_input": {
       "rows": 406,
       "items": 392,
       "ms": {
-        "compile-svg": {
-          "max": 8.168,
-          "mean": 8.075
-        },
-        "compile-text": {
-          "max": 26.386,
-          "mean": 11.239
-        },
-        "hover": {
-          "max": 0.576,
-          "mean": 0.385
-        },
-        "render-svg": {
-          "max": 23.819,
-          "mean": 9.711
-        },
-        "render-text": {
-          "max": 1.96,
-          "mean": 1.845
-        },
-        "resolve": null
+        "compile-svg": 8.075,
+        "compile-text": 11.239,
+        "hover": 0.385,
+        "render-svg": 9.711,
+        "render-text": 1.845
       }
     },
     "point_href": {
       "rows": 406,
       "items": 392,
       "ms": {
-        "compile-svg": {
-          "max": 6.842,
-          "mean": 6.581
-        },
-        "compile-text": {
-          "max": 22.504,
-          "mean": 9.143
-        },
-        "hover": {
-          "max": 0.607,
-          "mean": 0.408
-        },
-        "render-svg": {
-          "max": 24.753,
-          "mean": 10.133
-        },
-        "render-text": {
-          "max": 2.013,
-          "mean": 1.888
-        },
-        "resolve": null
+        "compile-svg": 6.581,
+        "compile-text": 9.143,
+        "hover": 0.408,
+        "render-svg": 10.133,
+        "render-text": 1.888
       }
     },
     "selection_heatmap": {
       "rows": 9,
       "items": 9,
       "ms": {
-        "compile-svg": {
-          "max": 0.926,
-          "mean": 0.81
-        },
-        "compile-text": {
-          "max": 0.582,
-          "mean": 0.567
-        },
-        "hover": {
-          "max": 0.124,
-          "mean": 0.083
-        },
-        "render-svg": {
-          "max": 0.628,
-          "mean": 0.589
-        },
-        "render-text": {
-          "max": 0.249,
-          "mean": 0.22
-        },
-        "resolve": null
+        "compile-svg": 0.81,
+        "compile-text": 0.567,
+        "hover": 0.083,
+        "render-svg": 0.589,
+        "render-text": 0.22
       }
     },
     "selection_layer_bar_month": {
       "rows": 1461,
       "items": 13,
       "ms": {
-        "compile-svg": {
-          "max": 39.534,
-          "mean": 22.409
-        },
-        "compile-text": {
-          "max": 32.459,
-          "mean": 16.831
-        },
-        "hover": {
-          "max": 0.167,
-          "mean": 0.102
-        },
-        "render-svg": {
-          "max": 1.665,
-          "mean": 1.457
-        },
-        "render-text": {
-          "max": 1.019,
-          "mean": 0.723
-        },
-        "resolve": null
+        "compile-svg": 22.409,
+        "compile-text": 16.831,
+        "hover": 0.102,
+        "render-svg": 1.457,
+        "render-text": 0.723
       }
     },
     "selection_translate_scatterplot_drag": {
       "rows": 406,
       "items": 392,
       "ms": {
-        "compile-svg": {
-          "max": 4.066,
-          "mean": 4.006
-        },
-        "compile-text": {
-          "max": 20.879,
-          "mean": 6.83
-        },
-        "hover": {
-          "max": 0.609,
-          "mean": 0.352
-        },
-        "render-svg": {
-          "max": 27.509,
-          "mean": 11.709
-        },
-        "render-text": {
-          "max": 1.655,
-          "mean": 1.513
-        },
-        "resolve": null
+        "compile-svg": 4.006,
+        "compile-text": 6.83,
+        "hover": 0.352,
+        "render-svg": 11.709,
+        "render-text": 1.513
       }
     },
     "selection_type_point_zorder": {
       "rows": 406,
       "items": 392,
       "ms": {
-        "compile-svg": {
-          "max": 22.521,
-          "mean": 8.451
-        },
-        "compile-text": {
-          "max": 4.107,
-          "mean": 4.043
-        },
-        "hover": {
-          "max": 0.506,
-          "mean": 0.386
-        },
-        "render-svg": {
-          "max": 21.68,
-          "mean": 8.477
-        },
-        "render-text": {
-          "max": 1.693,
-          "mean": 1.567
-        },
-        "resolve": null
+        "compile-svg": 8.451,
+        "compile-text": 4.043,
+        "hover": 0.386,
+        "render-svg": 8.477,
+        "render-text": 1.567
       }
     }
   }

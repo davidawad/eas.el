@@ -27,7 +27,7 @@
 (require 'eas-params)
 (require 'eas-reduce)
 
-(defconst eas-tip-series-marks '("line" "area")
+(defconst eas-tip-series-marks '("line" "area" "trail")
   "Marks drawn as one path per series; they hit-test through the scene index.")
 
 (defun eas-tip--mark (scene view-id mark-id)

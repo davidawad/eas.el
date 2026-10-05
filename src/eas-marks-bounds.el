@@ -33,23 +33,26 @@
   "UNIT's constant look that legend symbols copy.
 A plist (:fill :stroke :stroke-width :opacity :stroked)."
   (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type))
-         (stroked (or (member type '("line" "rule"))
+         (stroked (or (member type '("line" "rule" "trail"))
                       (and (equal type "point") (not (eq (plist-get mark :filled) t)))))
          (enc (plist-get unit :encoding))
          (value (lambda (ch) (let ((d (plist-get enc ch))) (and (eas-object-p d) (plist-get d :value))))))
-    (list :fill (or (funcall value :fill) (plist-get mark :fill) (funcall value :color) (plist-get mark :color))
+    (append
+     (list :fill (or (funcall value :fill) (plist-get mark :fill) (funcall value :color) (plist-get mark :color))
           :stroke (or (funcall value :stroke) (let ((s (plist-get mark :stroke))) (and (stringp s) s)))
           :stroke-width (plist-get mark :strokeWidth)
           :opacity (or (funcall value :opacity) (plist-get mark :opacity)
                        (and (member type '("point" "circle" "square" "tick")) (not (plist-get unit :aggregated)) 0.7))
-          :stroked stroked)))
+          :stroked stroked)
+     ;; Vega-Lite strokes a trail's legends: color as rings, size as ring widths.
+     (when (equal type "trail") (list :trail t)))))
 
 (defun eas-marks-scope-p (unit)
   "Non-nil when UNIT is a line or area split into series by a field."
-  (and (member (plist-get (plist-get unit :mark) :type) '("line" "area"))
+  (and (member (plist-get (plist-get unit :mark) :type) '("line" "area" "trail"))
        (seq-some (lambda (ch) (let ((d (plist-get (plist-get unit :encoding) ch)))
                                 (and (eas-object-p d) (plist-get d :field))))
-                 '(:color :fill :stroke :detail))))
+                 '(:color :fill :stroke :strokeDash :detail))))
 
 (defun eas-marks--grow (box item)
   "BOX widened by ITEM's stroke width when it is stroked."
@@ -82,6 +85,9 @@ Transparent items count too, so hover and selection never move layout."
                                         (plist-get item :baseline)))
       ("arc" (eas-marks--grow (eas-arc-bounds item) item))
       ("line" (eas-marks--grow (eas-marks--points-box (plist-get item :points)) item))
+      ("trail" (let ((b (eas-marks--points-box (plist-get item :points)))
+                     (r (/ (apply #'max 0 (append (plist-get item :widths) nil)) 2.0)))
+                 (and b (vector (- (aref b 0) r) (- (aref b 1) r) (+ (aref b 2) r) (+ (aref b 3) r)))))
       ("area" (eas-layout-union (eas-marks--points-box (plist-get item :points))
                                   (eas-marks--points-box (plist-get item :base))))
       (_ (let ((r (/ (sqrt (or (plist-get item :size) 0)) 2.0)) (x (plist-get item :x)) (y (plist-get item :y)))

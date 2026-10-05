@@ -22,6 +22,7 @@
 (require 'eas-layout)
 (require 'eas-paint)
 (require 'eas-curve)
+(require 'eas-marks-path)
 
 (defconst eas-marks-default-color "#4c78a8" "Vega-Lite's default mark color.")
 
@@ -128,6 +129,12 @@ Returns the plot centre when the channel is absent."
     (cond
      ((null def) (if (eq channel :x) (+ (aref bounds 0) (/ (aref bounds 2) 2.0))
                    (+ (aref bounds 1) (/ (aref bounds 3) 2.0))))
+     ;; Vega-Lite puts every mark but bars and rects mid-bin.
+     ((and (plist-get def :bin-end) (not band-start)
+           (not (member (plist-get (plist-get unit :mark) :type) '("bar" "rect"))))
+      (let ((p (eas-marks--channel unit scales channel row))
+            (q (eas-marks--secondary unit scales channel row)))
+        (and (numberp p) (if (numberp q) (/ (+ p q) 2.0) p))))
      (t (let ((p (eas-marks--channel unit scales channel row)))
           (and (numberp p)
                (cond
@@ -306,7 +313,8 @@ ranged (x2/y2) bar."
          (when (and seg (seq-every-p #'numberp seg))
            (append (list :datum i :x1 (aref seg 0) :y1 (aref seg 1) :x2 (aref seg 2) :y2 (aref seg 3)
                          :strokeWidth (or (plist-get mark :strokeWidth) (plist-get mark :thickness) 1))
-                   (when (plist-get mark :strokeDash) (list :strokeDash (plist-get mark :strokeDash)))
+                   (when-let* ((dash (or (eas-marks--channel unit scales :strokeDash row) (plist-get mark :strokeDash))))
+                     (list :strokeDash dash))
                    (eas-marks--style unit scales row)
                    (eas-marks--extras unit row)))))))
 
@@ -315,7 +323,7 @@ ranged (x2/y2) bar."
   (let ((enc (plist-get unit :encoding)))
     (mapcar (lambda (ch) (let ((d (plist-get enc ch)))
                            (and d (eas-object-p d) (eas-encode-discrete-p d) (eas-encode-raw d row))))
-            '(:color :fill :stroke :detail))))
+            '(:color :fill :stroke :strokeDash :detail))))
 
 (defun eas-marks--step (points mode)
   "Expand POINTS ([x y] lists) for step interpolation MODE."
@@ -328,44 +336,69 @@ ranged (x2/y2) bar."
                         (_ (let ((mid (/ (+ (car a) (car b)) 2.0)))
                              (list a (list mid (cadr a)) (list mid (cadr b))))))))))
 
+(defun eas-marks--series-run (unit scales run mode area max-points sorted)
+  "The item drawing RUN, one unbroken stretch of a series in UNIT.
+RUN holds (X Y I BASE KEY VALID) vertices; LTTB thins them above
+MAX-POINTS when SORTED along x."
+  (let* ((mark (plist-get unit :mark))
+         (pts (vconcat run))
+         (keep (if (and sorted (> (length pts) max-points))
+                   (eas-lttb-indices (vconcat (mapcar #'car pts)) (vconcat (mapcar #'cadr pts)) max-points)
+                 (vconcat (number-sequence 0 (1- (length pts))))))
+         (kept (mapcar (lambda (k) (aref pts k)) keep))
+         (row (aref (plist-get unit :rows) (nth 2 (car kept))))
+         (shape (lambda (n) (let ((ps (mapcar (lambda (p) (list (nth 0 p) (nth n p))) kept)))
+                              (vconcat (mapcar #'vconcat (if (member mode eas-marks-path-curves)
+                                                             (eas-marks-path-curve ps mode)
+                                                           (eas-marks--step ps mode)))))))
+         (dash (or (eas-marks--channel unit scales :strokeDash row) (plist-get mark :strokeDash))))
+    (append (list :datum (vconcat (mapcar (lambda (p) (nth 2 p)) kept))
+                  :points (funcall shape 1))
+            (unless (equal mode "linear")
+              (list :anchors (vconcat (mapcar (lambda (p) (vector (nth 0 p) (nth 1 p))) kept))))
+            (when area (list :base (funcall shape 3)))
+            (list :strokeWidth (or (plist-get mark :strokeWidth) (if area 0 2)))
+            (unless area (list :strokeCap (plist-get mark :strokeCap) :strokeJoin (plist-get mark :strokeJoin)))
+            (when dash (list :strokeDash dash))
+            (when (equal (plist-get mark :type) "trail")
+              ;; A trail's size is its width at each vertex.
+              (list :widths (vconcat (mapcar (lambda (p)
+                                               (let ((w (eas-marks--channel unit scales :size
+                                                                            (aref (plist-get unit :rows) (nth 2 p)))))
+                                                 (if (numberp w) w (or (plist-get mark :size) (plist-get mark :strokeWidth) 2))))
+                                             kept))))
+            (eas-marks--style unit scales row)
+            (when (> (length pts) (length kept)) (list :decimated (length pts))))))
+
 (defun eas-marks--series-items (unit scales bounds max-points)
-  "Items for line and area marks: one item per series, LTTB above MAX-POINTS."
+  "Items for line and area marks: one item per unbroken run of each series.
+Vertices follow `eas-marks-path-sort-key'; invalid positions break the
+path (eas-marks-path.el); LTTB thins x-ordered runs above MAX-POINTS."
   (let* ((mark (plist-get unit :mark)) (area (equal (plist-get mark :type) "area"))
          (mode (or (plist-get mark :interpolate) "linear"))
+         (sort-key (eas-marks-path-sort-key unit))
+         (filter (equal (plist-get mark :invalid) "filter"))
          (groups nil) (order nil) (i -1))
     (unless (member mode (append '("linear" "step" "step-after" "step-before") eas-curve-modes))
       (eas-signal "UNSUPPORTED_FEATURE" (format "interpolate %s is not supported" mode)
                     :feature (concat "interpolate/" mode)))
     (seq-doseq (row (plist-get unit :rows))
       (setq i (1+ i))
-      (let ((x (eas-marks--pos unit scales :x row bounds))
-            (y (eas-marks--pos unit scales :y row bounds))
-            (key (eas-marks--series-key unit row)))
-        (when (and (numberp x) (numberp y))
+      (let* ((x (eas-marks--pos unit scales :x row bounds))
+             (y (eas-marks--pos unit scales :y row bounds))
+             (key (eas-marks--series-key unit row))
+             (sk (cond ((functionp sort-key) (funcall sort-key row)) ((eq sort-key 'y) y))))
+        (when (if (functionp sort-key) t (numberp (if (eq sort-key 'y) y x)))
           (unless (assoc key groups) (push key order) (push (list key) groups))
           (push (list x y i (and area (or (eas-marks--secondary unit scales :y row)
-                                          (eas-marks--zero (plist-get scales :y) bounds :y))))
+                                          (eas-marks--zero (plist-get scales :y) bounds :y)))
+                      sk (and (numberp x) (numberp y)))
                 (cdr (assoc key groups))))))
     (vconcat
-     (mapcar
+     (mapcan
       (lambda (key)
-        (let* ((pts (vconcat (sort (nreverse (cdr (assoc key groups))) (lambda (a b) (< (car a) (car b))))))
-               (keep (if (> (length pts) max-points)
-                         (eas-lttb-indices (vconcat (mapcar #'car pts)) (vconcat (mapcar #'cadr pts)) max-points)
-                       (vconcat (number-sequence 0 (1- (length pts))))))
-               (kept (mapcar (lambda (k) (aref pts k)) keep))
-               (row (aref (plist-get unit :rows) (nth 2 (car kept)))))
-          (append (list :datum (vconcat (mapcar (lambda (p) (nth 2 p)) kept))
-                        :points (vconcat (mapcar #'vconcat (eas-curve-apply (eas-marks--step (mapcar (lambda (p) (list (nth 0 p) (nth 1 p))) kept) mode) mode))))
-                  (unless (equal mode "linear")
-                    (list :anchors (vconcat (mapcar (lambda (p) (vector (nth 0 p) (nth 1 p))) kept))))
-                  (when area
-                    (list :base (vconcat (mapcar #'vconcat (eas-curve-apply (eas-marks--step (mapcar (lambda (p) (list (nth 0 p) (nth 3 p))) kept) mode) mode)))))
-                  (list :strokeWidth (or (plist-get mark :strokeWidth) (if area 0 2)))
-                  (unless area (list :strokeCap (plist-get mark :strokeCap) :strokeJoin (plist-get mark :strokeJoin)))
-                  (when (plist-get mark :strokeDash) (list :strokeDash (plist-get mark :strokeDash)))
-                  (eas-marks--style unit scales row)
-                  (when (> (length pts) max-points) (list :decimated (length pts))))))
+        (mapcar (lambda (run) (eas-marks--series-run unit scales run mode area max-points (null sort-key)))
+                (eas-marks-path-runs (eas-marks-path-sort (nreverse (cdr (assoc key groups)))) filter)))
       (nreverse order)))))
 
 
@@ -396,7 +429,7 @@ Call it inside `eas-marks-with-cache'."
      (eas-polar-items unit scales bounds metrics))
     ((or "point" "circle" "square" "text" "bar" "rect" "rule" "tick")
      (eas-marks--each unit (eas-marks-row-fn unit scales bounds metrics)))
-    ((or "line" "area")
+    ((or "line" "area" "trail")
      (eas-marks--series-items unit scales bounds
                                 (max 3 (round (* (aref bounds 2)
                                                  (if (eas-layout-text-p metrics)

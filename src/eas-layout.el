@@ -23,6 +23,7 @@
 (require 'eas-encode)
 (require 'eas-theme)
 (require 'eas-font)
+(require 'eas-layout-axis-style)
 
 (defun eas-layout-metrics (target &optional cell config)
   "Return layout metrics for TARGET (svg or text); CELL is [W H] in px.
@@ -63,10 +64,29 @@ CONFIG is the Vega config in force (default `eas-theme-default')."
 
 (defun eas-layout-text-width (metrics text size &optional weight)
   "Width of TEXT at font SIZE (and WEIGHT) under METRICS.
-The svg target measures with the oracle's font (`eas-font-text-width')."
+The svg target measures with the oracle's font (`eas-font-text-width').
+Multi-line TEXT (lines split on newlines) is as wide as its widest line."
   (let ((text (or text "")))
-    (if (plist-get metrics :char-w) (* (string-width text) (plist-get metrics :char-w))
-      (eas-font-text-width text size weight))))
+    (if (string-search "\n" text)
+        (apply #'max (mapcar (lambda (line) (eas-layout-text-width metrics line size weight))
+                             (split-string text "\n")))
+      (if (plist-get metrics :char-w) (* (string-width text) (plist-get metrics :char-w))
+        (eas-font-text-width text size weight)))))
+
+(defun eas-layout-line-height (size)
+  "Vega's spacing of multi-line text at font SIZE."
+  (+ size 2))
+
+(defun eas-layout-text-extra-height (metrics text size)
+  "Height multi-line TEXT adds beyond its first line under METRICS."
+  (let ((n (length (split-string (or text "") "\n"))))
+    (* (1- n) (if (plist-get metrics :char-w) size (eas-layout-line-height size)))))
+
+(defun eas-layout-text-lift (baseline extra)
+  "How far multi-line text with EXTRA height moves up for BASELINE.
+Lines grow downward from a top baseline, about the middle for a middle
+one, and upward from bottom and alphabetic baselines."
+  (cond ((zerop extra) 0) ((equal baseline "top") 0) ((equal baseline "middle") (/ extra 2.0)) (t extra)))
 
 ;;; Text bounds, as vega-scenegraph computes them
 
@@ -83,14 +103,16 @@ The svg target measures with the oracle's font (`eas-font-text-width')."
 ALIGN is left/center/right, BASELINE top/middle/bottom/alphabetic and
 ANGLE degrees clockwise."
   (let* ((w (eas-layout-text-width metrics text size weight))
-         (dy (- (eas-layout-baseline-offset baseline size) (eas-layout--round (* 0.8 size))))
+         (extra (eas-layout-text-extra-height metrics text size))
+         (dy (- (eas-layout-baseline-offset baseline size) (eas-layout--round (* 0.8 size))
+                (eas-layout-text-lift baseline extra)))
          (x1 (+ x (pcase align ("center" (- (/ w 2.0))) ("right" (- w)) (_ 0))))
-         (y1 (+ y dy)))
-    (if (or (null angle) (zerop angle)) (vector x1 y1 (+ x1 w) (+ y1 size))
+         (y1 (+ y dy)) (h (+ size extra)))
+    (if (or (null angle) (zerop angle)) (vector x1 y1 (+ x1 w) (+ y1 h))
       (let* ((a (degrees-to-radians angle)) (c (cos a)) (s (sin a))
              (pts (mapcar (lambda (p) (cons (+ x (- (* c (- (car p) x)) (* s (- (cdr p) y))))
                                             (+ y (* s (- (car p) x)) (* c (- (cdr p) y)))))
-                          (list (cons x1 y1) (cons x1 (+ y1 size)) (cons (+ x1 w) y1) (cons (+ x1 w) (+ y1 size))))))
+                          (list (cons x1 y1) (cons x1 (+ y1 h)) (cons (+ x1 w) y1) (cons (+ x1 w) (+ y1 h))))))
         (vector (apply #'min (mapcar #'car pts)) (apply #'min (mapcar #'cdr pts))
                 (apply #'max (mapcar #'car pts)) (apply #'max (mapcar #'cdr pts)))))))
 
@@ -140,14 +162,8 @@ PLOT-SIZE is the plot extent along the axis."
                                       (format "%s" v))))
                     (eas-scale-tick-format scale count (or (plist-get axis :format) (plist-get def :format)))))
              (values (cond ((plist-get axis :values) (append (plist-get axis :values) nil))
-                           ;; Vega: a binned scale ticks at its bin boundaries.
                            ((plist-get scale :bins) (append (plist-get scale :bins) nil))
                            (t (eas-scale-ticks scale count))))
-             (fmt (if (stringp (plist-get axis :labelExpr))
-                      (let ((expr (plist-get axis :labelExpr)) (base fmt))
-                        (lambda (v) (eas-expr--string
-                                     (eas-expr-evaluate expr (list :value v :label (funcall base v))))))
-                    fmt))
              (title (let ((tt (if (plist-member axis :title)
                                   (let ((tt (plist-get axis :title))) (and (stringp tt) tt))
                                 (eas-encode-title def))))
@@ -161,6 +177,7 @@ PLOT-SIZE is the plot extent along the axis."
                          ((equal (plist-get def :derived) "bin") nil)
                          (t (not (eq (eas-theme-axis (plist-get metrics :config) channel :grid) :false))))))
         (append
+         (eas-layout-axis-style-props axis)
          (list :channel (eas-key-name channel)
                :orient (if (eq channel :x) "bottom" "left")
                :title title :discrete (if discrete t :false) :labelAngle angle
@@ -168,7 +185,11 @@ PLOT-SIZE is the plot extent along the axis."
                               ((equal (plist-get scale :type) "log") "greedy")
                               (t "parity"))
                :grid (if grid t :false)
-               :ticks (vconcat (mapcar (lambda (v) (list :value v :label (funcall fmt v))) values)))
+               :ticks (vconcat (mapcar (lambda (v)
+                                         (let ((label (eas-layout-axis-style-label axis v (funcall fmt v))))
+                                           (append (list :value v :label label)
+                                                   (eas-layout-axis-style-tick axis v label))))
+                                       values)))
          ;; Only what the spec turns off or resizes, so other scenes keep their shape.
          (when (eq (plist-get axis :domain) :false) (list :domain :false))
          (when (numberp (plist-get axis :tickSize)) (list :tickSize (plist-get axis :tickSize))))))))
@@ -179,12 +200,17 @@ PLOT-SIZE is the plot extent along the axis."
                                                               (plist-get metrics :label-size)))
                         (plist-get axis :ticks))))
     (if (and (equal (plist-get axis :orient) "bottom") (zerop (plist-get axis :labelAngle)))
-        (plist-get metrics :label-size)
+        (+ (plist-get metrics :label-size)
+           (apply #'max 0 (mapcar (lambda (tk) (eas-layout-text-extra-height metrics (plist-get tk :label)
+                                                                             (plist-get metrics :label-size)))
+                                  (plist-get axis :ticks))))
       (if widths (apply #'max widths) 0))))
 
 (defun eas-layout--tick (axis metrics)
   "Tick length of AXIS under METRICS (one cell in text; axis tickSize in svg)."
-  (or (and (not (eas-layout-text-p metrics)) (numberp (plist-get axis :tickSize)) (plist-get axis :tickSize))
+  (or (and (not (eas-layout-text-p metrics))
+           (or (plist-get axis :tick-size)
+               (and (numberp (plist-get axis :tickSize)) (plist-get axis :tickSize))))
       (plist-get metrics (if (equal (plist-get axis :orient) "bottom") :tick-bottom :tick-left))))
 
 (defun eas-layout-axis-extent (axis metrics)
@@ -292,8 +318,10 @@ labels, title) without the half-pixel translate of the drawn lines."
   (if (eas-layout-text-p metrics)
       (eas-layout-axis-place-text axis scale bounds metrics)
     (let* ((x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3))
-           (tick (eas-layout--tick axis metrics)) (pad (plist-get metrics :label-pad))
+           (tick (eas-layout--tick axis metrics))
+           (pad (or (plist-get axis :label-padding) (plist-get metrics :label-pad)))
            (size (plist-get metrics :label-size))
+           (offset (or (plist-get axis :label-offset) 0))
            (bottom (equal (plist-get axis :orient) "bottom"))
            (flush (and bottom (eq (plist-get axis :discrete) :false)))
            (angle (plist-get axis :labelAngle))
@@ -306,10 +334,11 @@ labels, title) without the half-pixel translate of the drawn lines."
            (label (lambda (tk)
                     (let ((p (plist-get tk :pos)))
                       (if bottom
-                          (list :lx p :ly (+ y0 h tick pad)
-                                :align (eas-layout--bottom-align p x0 w flush angle)
-                                :baseline (if (zerop angle) "top" "middle"))
-                        (list :lx (- x0 tick pad) :ly p :align "right" :baseline "middle")))))
+                          (list :lx (+ p offset) :ly (+ y0 h tick pad)
+                                :align (or (plist-get axis :label-align) (eas-layout--bottom-align p x0 w flush angle))
+                                :baseline (or (plist-get axis :label-baseline) (if (zerop angle) "top" "middle")))
+                        (list :lx (- x0 tick pad) :ly (+ p offset) :align (or (plist-get axis :label-align) "right")
+                              :baseline (or (plist-get axis :label-baseline) "middle"))))))
            (box (lambda (tk) (let ((l (funcall label tk)))
                                (eas-layout-text-bounds metrics (plist-get tk :label) size (plist-get l :lx) (plist-get l :ly)
                                                          (plist-get l :align) (plist-get l :baseline)

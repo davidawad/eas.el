@@ -137,7 +137,7 @@ or line in PAIRS; Vega-Lite does not extend dimension scales to zero."
                      (type (plist-get (plist-get u :mark) :type))
                      (x (plist-get enc :x)) (y (plist-get enc :y))
                      (horizontal (and x y (eas-encode-discrete-p y) (not (eas-encode-discrete-p x)))))
-                (and (member type '("bar" "area" "line"))
+                (and (member type '("bar" "area" "line" "trail"))
                      (eq channel (if horizontal :y :x)))))
             pairs))
 
@@ -168,26 +168,31 @@ ZOOM is a [LO HI] domain from view state, or nil."
   "Return (CHANNEL DEF SCALE) for the first field-mapped color channel.
 Ranges come from CONFIG's range.category, .heatmap and .ramp."
   (cl-loop for channel in '(:color :fill :stroke)
-           for pairs = (seq-filter (lambda (p) (plist-get (cdr p) :field))
+           ;; A nominal datum (a repeat's field name) joins the scale too.
+           for pairs = (seq-filter (lambda (p) (or (plist-get (cdr p) :field)
+                                                   (and (plist-member (cdr p) :datum) (eas-encode-discrete-p (cdr p)))))
                                    (eas-compile--defs units channel))
            when pairs
            return (let* ((def (cdar pairs)) (sp (plist-get def :scale))
                          (values (eas-compile--values pairs channel)))
                     (list channel def
                           (if (eas-encode-discrete-p def)
-                              (append (eas-scale-ordinal (or (and (vectorp (plist-get sp :domain)) (plist-get sp :domain))
-                                                                 (eas-compile--discrete-domain pairs values))
+                              (let ((domain (or (and (vectorp (plist-get sp :domain)) (plist-get sp :domain))
+                                                (eas-compile--discrete-domain pairs values))))
+                                (append (eas-scale-ordinal domain
                                                            (or (and (vectorp (plist-get sp :range)) (plist-get sp :range))
-                                                               (eas-scheme-colors (plist-get sp :scheme))
+                                                               (and (plist-get sp :scheme)
+                                                                    (eas-scheme-discrete-range (plist-get sp :scheme) (length domain)))
                                                                (eas-compile--config-range config :category)
                                                                eas-scale-tableau10))
-                                      (list :field (plist-get def :field)))
+                                        (list :field (plist-get def :field))))
                             (let ((nums (if (equal (plist-get def :type) "temporal")
                                             (delq nil (mapcar #'eas-time-parse values))
                                           (seq-filter #'numberp values))))
                               (list :type "sequential"
                                     :domain (vector (if nums (apply #'min nums) 0) (if nums (apply #'max nums) 1))
                                     :range (or (and (vectorp (plist-get sp :range)) (plist-get sp :range))
+                                               (and (plist-get sp :scheme) (eas-scheme-ramp (plist-get sp :scheme)))
                                                ;; Vega-Lite: config.range.heatmap for rect, ramp otherwise.
                                                (if (seq-some (lambda (p) (equal (plist-get (plist-get (car p) :mark) :type) "rect"))
                                                              pairs)
@@ -196,14 +201,36 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                                                  (or (eas-compile--config-range config :ramp) eas-scale-blues)))
                                     :field (plist-get def :field))))))))
 
+(defconst eas-compile-dash-range [[1 0] [4 2] [2 1] [1 1] [1 2 4 2]]
+  "Vega-Lite's default strokeDash range (config.range.strokeDash).")
+
+(defun eas-compile-dash-scale (units &optional config)
+  "Ordinal scale for UNITS' field-mapped strokeDash channel, or nil.
+Its range is the scale's own, else config.range.strokeDash, else
+`eas-compile-dash-range'."
+  (when-let* ((pairs (seq-filter (lambda (p) (plist-get (cdr p) :field)) (eas-compile--defs units :strokeDash))))
+    (let* ((def (cdar pairs)) (sp (plist-get def :scale))
+           (configured (plist-get (plist-get config :range) :strokeDash)))
+      (append (eas-scale-ordinal (eas-compile--discrete-domain pairs (eas-compile--values pairs :strokeDash))
+                                 (cond ((vectorp (plist-get sp :range)) (plist-get sp :range))
+                                       ((and (vectorp configured) (> (length configured) 0)) configured)
+                                       (t eas-compile-dash-range)))
+              (list :field (plist-get def :field))))))
+
 (defun eas-compile--config-range (config key)
   "CONFIG's range KEY when it is an explicit array of colors."
   (let ((r (plist-get (plist-get config :range) key))) (and (vectorp r) (> (length r) 0) r)))
 
 (defun eas-compile-aux-scale (units channel range)
-  "Linear scale for CHANNEL (size or opacity) onto RANGE, or nil."
+  "Linear scale for CHANNEL (size or opacity) onto RANGE, or nil.
+The scale's own range wins; a trail's size is its width, onto
+Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
   (when-let* ((pairs (seq-filter (lambda (p) (plist-get (cdr p) :field)) (eas-compile--defs units channel))))
-    (let ((nums (seq-filter #'numberp (eas-compile--values pairs channel))))
+    (let* ((nums (seq-filter #'numberp (eas-compile--values pairs channel)))
+           (sp (plist-get (cdar pairs) :scale))
+           (range (cond ((and (vectorp (plist-get sp :range)) (= (length (plist-get sp :range)) 2)) (plist-get sp :range))
+                        ((and (eq channel :size) (equal (plist-get (plist-get (caar pairs) :mark) :type) "trail")) [1 4])
+                        (t range))))
       (eas-scale-continuous "linear" (if (eq channel :size) 0 (if nums (apply #'min nums) 0))
                               (if nums (apply #'max nums) 1) range :field (plist-get (cdar pairs) :field)))))
 

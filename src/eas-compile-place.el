@@ -72,18 +72,40 @@
          (box (apply #'eas-layout-union plot
                      (vector (- (aref over 0)) (- (aref over 1)) (+ w (aref over 2)) (+ h (aref over 3)))
                      (mapcar (lambda (a) (plist-get a :bounds)) placed))))
-    (dolist (legend legends)
-      (if (equal (plist-get legend :orient) "none")
-          (let ((at (cons (plist-get legend :legendX) (plist-get legend :legendY))))
-            (push at offsets)
-            (setq box (eas-layout-union box (plist-get (eas-legend-place legend (car at) (cdr at) metrics) :box))))
-        (let ((b (plist-get (eas-legend-place legend lx ly metrics) :box)))
-          (push (cons lx ly) offsets)
-          (setq box (eas-layout-union box b)
-                ly (+ ly (ceiling (- (aref b 3) (aref b 1))) (plist-get metrics :legend-margin))))))
+    (let ((col-w 0) (limit (plist-get group :legend-limit)))
+      (dolist (legend legends)
+        (if (equal (plist-get legend :orient) "none")
+            (let ((at (cons (plist-get legend :legendX) (plist-get legend :legendY))))
+              (push at offsets)
+              (setq box (eas-layout-union box (plist-get (eas-legend-place legend (car at) (cdr at) metrics) :box))))
+          (let ((b (plist-get (eas-legend-place legend lx ly metrics) :box)))
+            ;; A legend that would end below the target height starts a new column.
+            (when (and limit (> ly 0) (> (+ ly (- (aref b 3) (aref b 1))) limit))
+              (setq lx (+ lx col-w (plist-get metrics :legend-offset)) ly 0 col-w 0
+                    b (plist-get (eas-legend-place legend lx ly metrics) :box)))
+            (push (cons lx ly) offsets)
+            (setq box (eas-layout-union box b)
+                  col-w (max col-w (ceiling (- (aref b 2) (aref b 0))))
+                  ly (+ ly (ceiling (- (aref b 3) (aref b 1))) (plist-get metrics :legend-margin)))))))
     (plist-put group :legend-offsets (nreverse offsets))
+    ;; The exact left edge of the content; Vega's frame-bounds titles start there.
+    (plist-put group :content-x1 (aref box 0))
     (list :left (max 0 (ceiling (- (aref box 0)))) :top (max 0 (ceiling (- (aref box 1))))
           :right (max 0 (ceiling (- (aref box 2) w))) :bottom (max 0 (ceiling (- (aref box 3) h))))))
+
+(defun eas-place--text-legend-flow (sizes limit w metrics)
+  "Text legends of SIZES ((W . H) each) stacked from the plot's top-right.
+A legend that would end below LIMIT (a height, or nil) starts a new
+column to the right.  Return (OFFSETS RIGHT HEIGHT): offsets from the
+plot origin (W is the plot width), the chrome right of the plot and the
+tallest column."
+  (let ((x 0) (y 0) (col-w 0) (tallest 0) offsets)
+    (dolist (s sizes)
+      (when (and limit (> y 0) (> (+ y (cdr s)) limit))
+        (setq x (+ x col-w) y 0 col-w 0))
+      (push (cons (+ w (plist-get metrics :legend-offset) x) y) offsets)
+      (setq y (+ y (cdr s)) col-w (max col-w (car s)) tallest (max tallest y)))
+    (list (nreverse offsets) (+ x col-w) tallest)))
 
 (defun eas-place-chrome (group metrics)
   "Compute GROUP's axis and legend models and its chrome under METRICS."
@@ -113,9 +135,11 @@
         (dolist (side (eas-layout-axis-extent axis metrics))
           (plist-put chrome (car side) (max (plist-get chrome (car side)) (cdr side)))))
       (when legends
-        (let ((sizes (mapcar (lambda (l) (eas-legend-size l metrics)) legends)))
-          (plist-put chrome :right (apply #'max (mapcar #'car sizes)))
-          (plist-put chrome :legend-h (apply #'+ (mapcar #'cdr sizes))))))
+        (let ((flow (eas-place--text-legend-flow (mapcar (lambda (l) (eas-legend-size l metrics)) legends)
+                                                 (plist-get group :legend-limit) (plist-get group :w) metrics)))
+          (plist-put group :legend-offsets (nth 0 flow))
+          (plist-put chrome :right (nth 1 flow))
+          (plist-put chrome :legend-h (nth 2 flow)))))
     ;; A facet cell's header sits outside its axes.
     (when-let* ((header (plist-get group :header)))
       (let ((e (eas-facet-header-extent header metrics)))
@@ -190,6 +214,11 @@ plot sizes (a relayout after marks were measured)."
     (dolist (g groups)
       (unless sized (eas-place-natural-size g metrics))
       (eas-place-chrome g metrics))
+    (when size
+      ;; Legends taller than the target flow into columns.
+      (dolist (g groups)
+        (plist-put g :legend-limit (- (cdr size) (* 2 pad) title-h))
+        (eas-place-chrome g metrics)))
     (when size
       (dotimes (_ 2)
         (eas-place-fit tree (- (car size) (* 2 pad)) (- (cdr size) (* 2 pad) title-h) metrics)

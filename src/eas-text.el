@@ -48,7 +48,15 @@
         (aset (eas-text--grid-prio g) i prio)))))
 
 (defun eas-text--string (g x y text align props prio)
-  "Put TEXT anchored at pixel X Y with ALIGN into grid G."
+  "Put TEXT anchored at pixel X Y with ALIGN into grid G.
+Multi-line TEXT puts each line on the next row down."
+  (if (string-search "\n" text)
+      (seq-do-indexed (lambda (line i) (eas-text--string g x (+ y (* i (eas-text--grid-ch g))) line align props prio))
+                      (split-string text "\n"))
+    (eas-text--string-1 g x y text align props prio)))
+
+(defun eas-text--string-1 (g x y text align props prio)
+  "Put one-line TEXT anchored at pixel X Y with ALIGN into grid G."
   (let* ((len (string-width text))
          (c (round (/ x (float (eas-text--grid-cw g)))))
          (start (pcase align ("left" c) ("right" (- c len)) (_ (round (- (/ x (float (eas-text--grid-cw g))) (/ len 2.0))))))
@@ -70,14 +78,28 @@
                       (aref (aref eas-glyph-braille-dots (mod dy 4)) (mod dx 2))))
         (aset (eas-text--grid-dot-props g) i props)))))
 
-(defun eas-text--dot-line (g x1 y1 x2 y2 props-fn clip)
-  "Braille line from pixel X1 Y1 to X2 Y2; PROPS-FN maps a pixel x to props."
+(defun eas-text--dasher (dash)
+  "Function of no arguments telling whether the next dot of a DASH stroke shows.
+Each dash and gap length counts in dots, so a pattern stays readable."
+  (let* ((runs (vconcat (mapcar (lambda (v) (max 1 (round v))) dash)))
+         (period (apply #'+ (append runs nil))) (n -1))
+    (if (or (< (length runs) 2) (zerop (aref dash 1))) (lambda () t)
+      (lambda ()
+        (setq n (mod (1+ n) period))
+        (let ((k 0) (acc 0))
+          (while (>= n (+ acc (aref runs k))) (setq acc (+ acc (aref runs k)) k (1+ k)))
+          (cl-evenp k))))))
+
+(defun eas-text--dot-line (g x1 y1 x2 y2 props-fn clip &optional show-p)
+  "Braille line from pixel X1 Y1 to X2 Y2; PROPS-FN maps a pixel x to props.
+SHOW-P, when non-nil, is called per dot and skips the dot when it says nil."
   (let* ((sx (/ 2.0 (eas-text--grid-cw g))) (sy (/ 4.0 (eas-text--grid-ch g)))
          (a (floor (* x1 sx))) (b (floor (* y1 sy))) (c (floor (* x2 sx))) (d (floor (* y2 sy)))
          (dx (abs (- c a))) (dy (- (abs (- d b)))) (stepx (if (< a c) 1 -1)) (stepy (if (< b d) 1 -1))
          (err (+ dx dy)) (done nil))
     (while (not done)
-      (eas-text--dot g a b (funcall props-fn (/ (+ a 0.5) sx)) clip)
+      (when (or (null show-p) (funcall show-p))
+        (eas-text--dot g a b (funcall props-fn (/ (+ a 0.5) sx)) clip))
       (if (and (= a c) (= b d)) (setq done t)
         (let ((e2 (* 2 err)))
           (when (>= e2 dy) (setq err (+ err dy) a (+ a stepx)))
@@ -133,9 +155,10 @@
                                   (let ((e (round (* 8 (/ covered ch)))))
                                     (when (> e 0) (eas-text--put g col row (eas-glyph-lower e) (funcall props-fn cx) 1))))
                                  ((>= covered (/ ch 2.0)) (eas-text--put g col row ?█ (funcall props-fn cx) 1)))))
-      (dotimes (k (max 0 (1- (length points))))
-        (let ((p (aref points k)) (q (aref points (1+ k))))
-          (eas-text--dot-line g (aref p 0) (aref p 1) (aref q 0) (aref q 1) props-fn clip)))
+      (let ((show-p (and (plist-get item :strokeDash) (eas-text--dasher (plist-get item :strokeDash)))))
+        (dotimes (k (max 0 (1- (length points))))
+          (let ((p (aref points k)) (q (aref points (1+ k))))
+            (eas-text--dot-line g (aref p 0) (aref p 1) (aref q 0) (aref q 1) props-fn clip show-p))))
       (when (= (length points) 1)
         (let ((p (aref points 0))) (eas-text--dot-line g (aref p 0) (aref p 1) (aref p 0) (aref p 1) props-fn clip))))))
 
@@ -199,7 +222,7 @@
        (lambda (item i)
          (unless (equal (plist-get item :opacity) 0)
            (pcase (plist-get mark :mark)
-             ((or "line" "area") (eas-text--series g view mark item clip))
+             ((or "line" "area" "trail") (eas-text--series g view mark item clip))
              ((or "bar" "rect" "brush") (eas-text--rect g view mark item clip i))
              ("arc" (let ((props (eas-text--item-props view mark item (plist-get item :datum)))
                           ;; Shade cycles so neighbouring wedges stay apart without color.
@@ -256,6 +279,11 @@
     (when (and left bottom)
       (eas-text--put g (eas-text--col g (aref left 0)) (eas-text--row g (aref bottom 1)) ?└ axis-props 4))))
 
+(defun eas-text--dash-glyph (dash)
+  "A box-drawing glyph suggesting stroke DASH (a dash-gap vector)."
+  (let ((on (aref dash 0)) (off (if (> (length dash) 1) (aref dash 1) 0)))
+    (cond ((zerop off) ?━) ((> (length dash) 2) ?┄) ((>= on 4) ?╍) ((>= on 2) ?┅) (t ?┉))))
+
 (defun eas-text--legends (g view)
   "Draw VIEW's legends into G."
   (seq-doseq (legend (plist-get view :legends))
@@ -266,7 +294,8 @@
                          'help-echo (plist-get e :label))))
         (when (plist-get e :color)
           (eas-text--put g (eas-text--col g (plist-get e :sx)) (eas-text--row g (plist-get e :sy))
-                           (pcase (plist-get legend :shape) ("square" ?■) ("stroke" ?━) (_ ?●))
+                           (cond ((plist-get e :dash) (eas-text--dash-glyph (plist-get e :dash)))
+                                 (t (pcase (plist-get legend :shape) ("square" ?■) ("stroke" ?━) (_ ?●))))
                            (append props (list 'face (list :foreground (plist-get e :color)))) 5))
         (eas-text--string g (plist-get e :lx) (plist-get e :ly) (plist-get e :label) "left"
                             (append props (list 'face 'eas-label)) 5)))))

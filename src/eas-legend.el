@@ -24,6 +24,9 @@
 
 (declare-function eas-expr--string "eas-expr")
 
+(defconst eas-legend-default-color "#4c78a8"
+  "Symbol color when the mark has no constant color of its own.")
+
 (defun eas-legend-model (spec _metrics)
   "Legend model for SPEC (:channel :def :scale :shape :style), or nil.
 STYLE is the mark's constant look (:fill :stroke :stroke-width
@@ -44,8 +47,13 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
           ("ordinal"
            (append base (list :type "symbol"
                               :entries (vconcat (seq-map (lambda (v)
-                                                           (list :value v :label (eas-expr--string v)
-                                                                 :color (eas-scale-apply scale v)))
+                                                           (if (eq channel :strokeDash)
+                                                               (list :value v :label (eas-expr--string v)
+                                                                     :dash (eas-scale-apply scale v)
+                                                                     :color (or (plist-get style :stroke) (plist-get style :fill)
+                                                                                eas-legend-default-color))
+                                                             (list :value v :label (eas-expr--string v)
+                                                                   :color (eas-scale-apply scale v))))
                                                          (plist-get scale :domain))))))
           ("sequential"
            (append base (list :type "gradient" :stops (plist-get scale :range) :domain (plist-get scale :domain)
@@ -139,17 +147,25 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
 (defun eas-legend--symbol (legend e metrics)
   "Symbol look of entry E in LEGEND: (:size :fill :stroke :stroke-width :opacity)."
   (let* ((style (plist-get legend :style)) (channel (plist-get legend :channel))
-         (stroked (or (equal channel "stroke") (and (plist-get style :stroked) (member channel '("color")))))
-         (sw (if stroked (or (plist-get style :stroke-width) 2) (plist-get metrics :symbol-stroke-width))))
-    (list :size (or (plist-get e :size) (plist-get metrics :symbol-size))
-          :fill (cond (stroked "transparent")
-                      ((member channel '("color" "fill")) (plist-get e :color))
-                      (t (plist-get style :fill)))
-          :stroke (cond (stroked (plist-get e :color))
-                        ((member channel '("size" "opacity")) "transparent")
-                        (t (plist-get style :stroke)))
-          :stroke-width sw
-          :opacity (or (plist-get e :opacity) (plist-get style :opacity) 1))))
+         (stroked (or (member channel '("stroke" "strokeDash"))
+                      (and (plist-get style :stroked) (member channel '("color")))))
+         (sw (if (and stroked (not (plist-get style :trail))) (or (plist-get style :stroke-width) 2)
+               (plist-get metrics :symbol-stroke-width))))
+    (if (and (plist-get style :trail) (equal channel "size"))
+        (list :size (plist-get metrics :symbol-size) :fill "transparent"
+              :stroke (or (eas-theme-get (plist-get metrics :config) :legend :symbolBaseStrokeColor) "#888")
+              :stroke-width (or (plist-get e :size) sw) :opacity 1)
+      (append
+       (list :size (or (plist-get e :size) (plist-get metrics :symbol-size))
+             :fill (cond (stroked "transparent")
+                         ((member channel '("color" "fill")) (plist-get e :color))
+                         (t (plist-get style :fill)))
+             :stroke (cond (stroked (plist-get e :color))
+                           ((member channel '("size" "opacity")) "transparent")
+                           (t (plist-get style :stroke)))
+             :stroke-width sw
+             :opacity (or (plist-get e :opacity) (plist-get style :opacity) 1))
+       (when (plist-get e :dash) (list :dash (plist-get e :dash)))))))
 
 (defun eas-legend--title (legend x y metrics)
   "LEGEND's title mark at X Y and the y where its body starts, as (MARK . Y)."
@@ -181,7 +197,7 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
              (when prev-y2 (setq ey (+ ey prev-y2 (plist-get metrics :legend-row-pad) (if (< y1 0) (ceiling (- y1)) 0))))
              (setq prev-y2 (ceiling y2)
                    box (eas-layout-union box (vector x (+ ey y1) (+ x x2) (+ ey y2))))
-             (append e s (list :sx (+ x (/ offset 2.0)) :sy (+ ey cy)
+             (append s e (list :sx (+ x (/ offset 2.0)) :sy (+ ey cy)
                                :lx (+ x offset (plist-get metrics :legend-label-offset)) :ly (+ ey cy)
                                :bounds (vector x ey (max offset x2) size)))))))
     (when (car title)

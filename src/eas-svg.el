@@ -99,7 +99,17 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
                                 :transform (unless (zerop angle)
                                              (format "rotate(%s %s %s)" (eas-svg--n angle)
                                                      (eas-svg--n x) (eas-svg--n y))))))
-    (append node (list (eas-svg--escape text)))))
+    (if (not (string-search "\n" text))
+        (append node (list (eas-svg--escape text)))
+      ;; Multi-line text: one tspan per line, raised per the baseline.
+      (let* ((lines (split-string text "\n")) (lh (+ size 2))
+             (lift (pcase baseline ("top" 0) ("middle" (/ (* lh (1- (length lines))) 2.0))
+                     (_ (* lh (1- (length lines)))))))
+        (append node
+                (seq-map-indexed (lambda (line i)
+                                   (append (eas-svg--node 'tspan :x x :dy (eas-svg--n (if (zerop i) (- lift) lh)))
+                                           (list (eas-svg--escape line))))
+                                 lines))))))
 
 (defun eas-svg--line (seg color &optional width opacity dash)
   "A <line> for SEG [x1 y1 x2 y2] in COLOR."
@@ -115,6 +125,28 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
             (concat "L" (mapconcat (lambda (p) (concat (eas-svg--n (aref p 0)) "," (eas-svg--n (aref p 1))))
                                    (reverse base) "L")
                     "Z"))))
+
+(defun eas-svg--trail (points widths)
+  "Path data for a trail through POINTS with full WIDTHS per vertex.
+Each segment is the hull of its end discs, so joints and ends are round."
+  (let ((n #'eas-svg--n) (out nil))
+    (dotimes (i (length points))
+      (let* ((p (aref points i)) (r (/ (aref widths i) 2.0)))
+        (push (format "M%s,%sa%s,%s 0 1 0 %s,0a%s,%s 0 1 0 %s,0Z" (funcall n (- (aref p 0) r)) (funcall n (aref p 1))
+                      (funcall n r) (funcall n r) (funcall n (* 2 r)) (funcall n r) (funcall n r) (funcall n (* -2 r)))
+              out)
+        (when (< (1+ i) (length points))
+          (let* ((q (aref points (1+ i))) (s (/ (aref widths (1+ i)) 2.0))
+                 (dx (- (aref q 0) (aref p 0))) (dy (- (aref q 1) (aref p 1))) (len (sqrt (+ (* dx dx) (* dy dy)))))
+            (when (> len 0)
+              (let ((ux (/ (- dy) len)) (uy (/ dx len)))
+                (push (format "M%s,%sL%s,%sL%s,%sL%s,%sZ"
+                              (funcall n (+ (aref p 0) (* ux r))) (funcall n (+ (aref p 1) (* uy r)))
+                              (funcall n (+ (aref q 0) (* ux s))) (funcall n (+ (aref q 1) (* uy s)))
+                              (funcall n (- (aref q 0) (* ux s))) (funcall n (- (aref q 1) (* uy s)))
+                              (funcall n (- (aref p 0) (* ux r))) (funcall n (- (aref p 1) (* uy r))))
+                      out)))))))
+    (apply #'concat (nreverse out))))
 
 (defun eas-svg--rounded-rect (x y w h corners)
   "Path data for the W x H rect at X Y with CORNERS [TL TR BR BL] radii."
@@ -180,6 +212,8 @@ SHAPE is circle, square, another Vega symbol name or SVG path data."
                      (plist-get item :fontSize)
                      (list :align (plist-get item :align) :baseline (plist-get item :baseline) :fill fill
                            :opacity opacity)))
+      ("trail" (eas-svg--node 'path :d (eas-svg--trail (plist-get item :points) (plist-get item :widths))
+                                :fill (if (equal fill "none") stroke fill) :opacity opacity))
       ((or "line" "area")
        (let ((area (plist-get item :base)))
          (eas-svg--node 'path :d (concat "M" (eas-svg--path (plist-get item :points) area))
@@ -203,13 +237,15 @@ SHAPE is circle, square, another Vega symbol name or SVG path data."
     (seq-doseq (tk (plist-get axis :ticks))
       (when (plist-get tk :grid)
         (push (eas-svg--line (plist-get tk :grid) (funcall get :gridColor) (or (funcall get :gridWidth) 1)
-                               (funcall get :gridOpacity))
+                               (funcall get :gridOpacity) (plist-get tk :grid-dash))
               out)))
     (when-let* ((domain (plist-get axis :domain-line)))
       (push (eas-svg--line domain (funcall get :domainColor) (or (funcall get :domainWidth) 1)) out))
     (seq-doseq (tk (plist-get axis :ticks))
       (unless (equal (plist-get axis :tickSize) 0)
-        (push (eas-svg--line (plist-get tk :tick) (funcall get :tickColor) (or (funcall get :tickWidth) 1)) out))
+        (push (eas-svg--line (plist-get tk :tick) (funcall get :tickColor) (or (funcall get :tickWidth) 1)
+                             nil (plist-get tk :tick-dash))
+              out))
       (unless (string-empty-p (plist-get tk :label))
         (push (eas-svg--text (plist-get tk :label) (plist-get tk :lx) (plist-get tk :ly)
                                (or (funcall get :labelFontSize) 10)
@@ -255,6 +291,7 @@ SHAPE is circle, square, another Vega symbol name or SVG path data."
         (push (eas-svg--symbol (plist-get legend :symbol-type) (plist-get e :sx) (plist-get e :sy) (plist-get e :size)
                                  :fill (plist-get e :fill) :stroke (plist-get e :stroke)
                                  :stroke-width (and (plist-get e :stroke) (plist-get e :stroke-width))
+                                 :stroke-dasharray (and (plist-get e :dash) (mapconcat #'eas-svg--n (plist-get e :dash) ","))
                                  :opacity (let ((o (plist-get e :opacity))) (and o (/= o 1) o)))
               out))
       (push (eas-svg--text (plist-get e :label) (plist-get e :lx) (plist-get e :ly) fs :align "left"

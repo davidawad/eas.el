@@ -86,12 +86,30 @@
         (puthash key (cons row (gethash key table)) table)))
     (mapcar (lambda (key) (cons key (nreverse (gethash key table)))) (nreverse order))))
 
+(defconst eas-agg-arg-ops '("argmin" "argmax")
+  "Aggregate ops whose result is the group's row with the extreme field value.")
+
+(defun eas-agg--arg (op field rows)
+  "The first of ROWS whose FIELD is least (OP argmin) or greatest (argmax).
+The result is `:null' when no row has a value."
+  (let (best best-v)
+    (dolist (r rows)
+      (let ((v (plist-get r field)))
+        (when (and (numberp v) (or (null best-v) (if (equal op "argmin") (< v best-v) (> v best-v))))
+          (setq best r best-v v))))
+    (or best :null)))
+
+(defun eas-agg--value (op field rows)
+  "Aggregate OP over FIELD of the group ROWS."
+  (if (member op eas-agg-arg-ops) (eas-agg--arg op field rows)
+    (eas-agg-apply op (mapcar (lambda (r) (and field (plist-get r field))) rows))))
+
 (defun eas-agg--specs (specs path)
   "Normalize aggregate SPECS into (OP FIELD-KEY AS-KEY) lists."
   (seq-map-indexed
    (lambda (spec i)
      (let ((op (plist-get spec :op)) (field (plist-get spec :field)))
-       (eas-agg-op op (format "%s/%d/op" path i))
+       (unless (member op eas-agg-arg-ops) (eas-agg-op op (format "%s/%d/op" path i)))
        (list op (and field (eas-key field))
              (eas-key (or (plist-get spec :as) (eas-agg-default-as op field))))))
    specs))
@@ -104,9 +122,7 @@
      (mapcar (lambda (group)
                (append (cl-loop for k in groupby for v in (car group) append (list k v))
                        (cl-loop for (op field as) in specs
-                                append (list as (eas-agg-apply
-                                                 op (mapcar (lambda (r) (and field (plist-get r field)))
-                                                            (cdr group)))))))
+                                append (list as (eas-agg--value op field (cdr group))))))
              (eas-agg--groups rows groupby)))))
 
 (defun eas-transform-joinaggregate (tr rows path)
@@ -117,9 +133,7 @@
     (dolist (group (eas-agg--groups rows groupby))
       (puthash (car group)
                (cl-loop for (op field as) in specs
-                        append (list as (eas-agg-apply
-                                         op (mapcar (lambda (r) (and field (plist-get r field)))
-                                                    (cdr group)))))
+                        append (list as (eas-agg--value op field (cdr group))))
                results))
     (seq-map (lambda (row)
                (append row (gethash (mapcar (lambda (k) (plist-get row k)) groupby) results)))

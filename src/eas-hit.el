@@ -41,7 +41,7 @@
   (let ((items (plist-get mark :items)))
     (pcase (plist-get mark :mark)
       ((or "bar" "rect" "brush") (list :kind "rects"))
-      ((or "line" "area" "rule" "tick")
+      ((or "line" "area" "trail" "rule" "tick")
        (let (entries)
          (seq-do-indexed
           (lambda (item i)

@@ -38,7 +38,8 @@
   '("point" "circle" "square" "line" "area" "bar" "rect" "rule" "tick" "text"
     "arc"
     ;; composite marks, expanded by eas-composite.el (fc-qx1.26)
-    "errorbar" "errorband")
+    "errorbar" "errorband"
+    "trail")
   "Mark types chart/v1 recognises.")
 
 (defconst eas-spec--mark-keys
@@ -49,7 +50,8 @@
     :innerRadius :outerRadius :padAngle :radius :radius2 :theta :theta2
     :radiusOffset :thetaOffset
     ;; distributions (fc-qx1.26)
-    :style :cornerRadiusEnd :extent :ticks :rule :median :outliers :box)
+    :style :cornerRadiusEnd :extent :ticks :rule :median :outliers :box
+    :aria :description :strokeCap :strokeJoin)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels
@@ -57,7 +59,8 @@
     :detail :order
     :theta :radius
     ;; distributions (fc-qx1.26)
-    :shape :row)
+    :shape :row
+    :strokeDash)
   "Encoding channels chart/v1 recognises.")
 
 (defconst eas-spec--channel-def-keys
@@ -85,7 +88,8 @@
   '(:filter :calculate :aggregate :window :fold :timeUnit :bin :joinaggregate
     :x-eas:transform
     ;; distributions (fc-qx1.26)
-    :flatten :density)
+    :flatten :density
+    :pivot)
   "Transform keys chart/v1 recognises; the first key present names it.")
 
 (defconst eas-spec--select-keys
@@ -94,20 +98,33 @@
 
 ;;; Parse
 
+(defvar eas-spec-rewrite-functions nil
+  "Functions (SPEC) -> SPEC that `eas-spec-parse' applies in order.
+Each lowers Vega-Lite sugar the native compiler does not read (data
+URLs, repeat, mark overlays) into the subset it does, and must be
+idempotent: parse runs again on its own output.")
+
+(defvar eas-spec-source-directory nil
+  "Directory of the spec file being parsed, for relative data URLs.")
+
 (defun eas-spec-parse (input)
   "Parse chart/v1 INPUT into its normalized internal form.
 INPUT is a JSON string, a file name ending in .json, or an already
 parsed value.  Mark shorthand (\"bar\") becomes (:type \"bar\").
 Signals PARSE_ERROR or INVALID_INPUT."
-  (let ((spec (cond ((and (stringp input) (string-suffix-p ".json" input)
-                          (not (string-prefix-p "{" (string-trim-left input))))
-                     (eas-json-read-file input))
-                    ((stringp input) (eas-json-parse input))
-                    (t input))))
+  (let* ((file (and (stringp input) (string-suffix-p ".json" input)
+                    (not (string-prefix-p "{" (string-trim-left input)))
+                    input))
+         (spec (cond (file (eas-json-read-file input))
+                     ((stringp input) (eas-json-parse input))
+                     (t input))))
     (unless (and (eas-object-p spec) spec)
       (eas-signal "INVALID_INPUT"
                     "A chart/v1 spec must be a JSON object with a mark, layer, vconcat or hconcat"
                     :path ""))
+    (let ((eas-spec-source-directory (if file (file-name-directory (expand-file-name file))
+                                       eas-spec-source-directory)))
+      (dolist (f eas-spec-rewrite-functions) (setq spec (funcall f spec))))
     (eas-spec--normalize spec)))
 
 (defun eas-spec--normalize (spec)
@@ -127,7 +144,8 @@ Signals PARSE_ERROR or INVALID_INPUT."
     (if (stringp mark) mark (plist-get mark :type))))
 
 (defconst eas-spec--transform-params
-  '(:as :field :groupby :sort :frame :ignorePeers :extent :maxbins :param :empty)
+  '(:as :field :groupby :sort :frame :ignorePeers :extent :maxbins :param :empty
+    :value :op :limit)
   "Keys that parameterize a transform rather than name it.")
 
 (defun eas-spec--transform-key (tr)

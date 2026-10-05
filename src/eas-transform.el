@@ -23,6 +23,7 @@
 (require 'eas-transform-agg)
 (require 'eas-transform-domain)
 (require 'eas-transform-dist)
+(require 'eas-transform-pivot)
 
 (defvar eas-transform-param-predicate
   (lambda (_param _row _env empty) empty)
@@ -55,12 +56,30 @@ selections here (eas-params-index.el, fc-qx1.9).")
         (eas-time-unit-floor unit value)
       value)))
 
+(defun eas-transform--unit-value (unit x)
+  "Predicate value X under time UNIT as epoch ms.
+A number under a single-part unit names that part, as Vega-Lite reads
+it: 2006 under year, 1 (January) under month, 3 under date."
+  (let ((parts (eas-time-unit-components unit)))
+    (if (and (numberp x) (= (length parts) 1) (not (equal (car parts) "milliseconds")))
+        (let ((eas-time-zone (unless (string-prefix-p "utc" unit) eas-time-zone)))
+          (pcase (car parts)
+            ("year" (eas-time-ms x 1 1))
+            ("quarter" (eas-time-ms 2012 (1+ (* 3 (1- x))) 1))
+            ("month" (eas-time-ms 2012 x 1))
+            ("date" (eas-time-ms 2012 1 x))
+            ("day" (eas-time-ms 2012 1 (1+ x)))
+            ("hours" (eas-time-ms 2012 1 1 x))
+            ("minutes" (eas-time-ms 2012 1 1 0 x))
+            (_ (eas-time-ms 2012 1 1 0 0 x))))
+      (eas-time-unit-floor unit x))))
+
 (defun eas-transform--pred-value (pred key)
   "PRED's comparison value under KEY, truncated by PRED's timeUnit if any."
   (let ((v (plist-get pred key)) (unit (plist-get pred :timeUnit)))
     (cond ((null unit) v)
-          ((vectorp v) (vconcat (mapcar (lambda (x) (eas-time-unit-floor unit x)) v)))
-          (t (eas-time-unit-floor unit v)))))
+          ((vectorp v) (vconcat (mapcar (lambda (x) (if (memq x '(nil :null)) x (eas-transform--unit-value unit x))) v)))
+          (t (eas-transform--unit-value unit v)))))
 
 (defun eas-transform-predicate (pred row env)
   "Non-nil when ROW satisfies Vega-Lite predicate PRED under ENV."
@@ -83,9 +102,12 @@ selections here (eas-params-index.el, fc-qx1.9).")
        ((plist-member pred :gt) (and (numberp v) (> v (eas-transform--pred-value pred :gt))))
        ((plist-member pred :gte) (and (numberp v) (>= v (eas-transform--pred-value pred :gte))))
        ((plist-member pred :range)
-        (let ((r (plist-get pred :range)))
-          (and (numberp v) (<= (aref r 0) v (aref r 1)))))
-       ((plist-member pred :oneOf) (seq-some (lambda (x) (eas-expr--equal v x)) (plist-get pred :oneOf)))
+        (let ((r (eas-transform--pred-value pred :range)))
+          ;; A null end leaves that side open.
+          (and (numberp v) (or (not (numberp (aref r 0))) (<= (aref r 0) v))
+               (or (not (numberp (aref r 1))) (<= v (aref r 1))))))
+       ((plist-member pred :oneOf) (seq-some (lambda (x) (eas-expr--equal v x))
+                                             (eas-transform--pred-value pred :oneOf)))
        ((plist-member pred :valid)
         (eq (not (memq v '(nil :null))) (eas-true-p (plist-get pred :valid))))
        (t (eas-signal "UNSUPPORTED_FEATURE" "Field predicate needs equal, lt, lte, gt, gte, range, oneOf or valid"
@@ -225,6 +247,7 @@ ENV is a plist of param values; PATH the array's JSON pointer."
                 ((plist-get tr :window) (eas-transform-window tr rows tpath))
                 ((plist-get tr :flatten) (eas-transform-flatten tr rows))
                 ((plist-get tr :density) (eas-transform-density tr rows))
+                ((plist-get tr :pivot) (eas-transform-pivot tr rows tpath))
                 (t (eas-signal "UNSUPPORTED_FEATURE"
                                  (format "Transform %s is not in the native subset"
                                          (if (consp tr) (eas-key-name (car tr)) tr))

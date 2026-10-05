@@ -139,7 +139,7 @@ Must run with selection hooks bound to NEW (`eas-params-with-state')."
                     fresh))
                  ((eas-patch--mentions (plist-get unit :encoding) changed)
                   (if (or (eas-patch--positional-p unit changed)
-                          (member (plist-get (plist-get unit :mark) :type) '("line" "area"))
+                          (member (plist-get (plist-get unit :mark) :type) '("line" "area" "trail"))
                           (null (plist-get unit :items))
                           (seq-some (lambda (c) (plist-get c :test))
                                     (cl-loop for (_ d) on (plist-get unit :encoding) by #'cddr

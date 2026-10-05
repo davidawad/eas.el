@@ -25,6 +25,7 @@
 (require 'eas-transform)
 (require 'eas-lttb)
 (require 'eas-spec)
+(require 'eas-vl-lower)
 (require 'eas-transform-domain)
 (require 'eas-template)
 (require 'eas-resolve)

@@ -30,7 +30,7 @@ around compile with the view's current param state.")
 (defun eas-encode--infer-type (def rows)
   "Return DEF's measurement type, inferring it from DEF and ROWS."
   (or (plist-get def :type)
-      (cond ((plist-get def :aggregate) "quantitative")
+      (cond ((and (plist-get def :aggregate) (not (eas-encode--arg-op (plist-get def :aggregate)))) "quantitative")
             ((eas-true-p (plist-get def :bin)) "quantitative")
             ((plist-get def :timeUnit) "temporal")
             ((plist-get def :field)
@@ -98,18 +98,43 @@ ENV holds param values for expressions."
     (let ((rows (eas-transform-run (vconcat (nreverse transforms)) rows env "/encoding")))
       (eas-encode--aggregate enc rows))))
 
+(defun eas-encode--arg-op (op)
+  "(OP-NAME . FIELD) of an {\"argmin\": FIELD} or {\"argmax\": FIELD} aggregate, or nil."
+  (and (consp op) (keywordp (car op))
+       (cond ((plist-get op :argmin) (cons "argmin" (plist-get op :argmin)))
+             ((plist-get op :argmax) (cons "argmax" (plist-get op :argmax))))))
+
+(defun eas-encode--flatten-args (rows args)
+  "ROWS with each ARGS (AS OBJECT-KEY FIELD-KEY) read out of its arg row."
+  (if (null args) rows
+    (vconcat (seq-map (lambda (row)
+                        (let ((out row))
+                          (pcase-dolist (`(,as ,obj ,field) args)
+                            (setq out (eas-plist-put out as (let ((o (plist-get row obj)))
+                                                              (if (consp o) (plist-get o field) :null)))))
+                          (dolist (obj (delete-dups (mapcar #'cadr args))) (setq out (eas--plist-without out obj)))
+                          out))
+                      rows))))
+
 (defun eas-encode--aggregate (encoding rows)
-  "Apply ENCODING's aggregate channels to ROWS; return (ENCODING . ROWS)."
-  (let (ops groupby (enc encoding))
+  "Apply ENCODING's aggregate channels to ROWS; return (ENCODING . ROWS).
+An argmin or argmax aggregate reads its field from the group's row
+with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
+  (let (ops groupby args (enc encoding))
     (cl-loop for (channel def) on encoding by #'cddr
              for defs = (if (vectorp def) (append def nil) (list def))
              do (dolist (d defs)
                   (when (eas-object-p d)
                     (if-let* ((op (plist-get d :aggregate)))
-                        (let ((as (if (and (equal op "count") (null (plist-get d :field)))
-                                      "__count"
-                                    (format "%s_%s" op (plist-get d :field)))))
-                          (push (list :op op :field (plist-get d :field) :as as) ops)
+                        (let* ((arg (eas-encode--arg-op op))
+                               (as (cond (arg (format "%s_%s_%s" (car arg) (cdr arg) (plist-get d :field)))
+                                         ((and (equal op "count") (null (plist-get d :field))) "__count")
+                                         (t (format "%s_%s" op (plist-get d :field))))))
+                          (if (null arg)
+                              (push (list :op op :field (plist-get d :field) :as as) ops)
+                            (let ((obj (format "%s_%s" (car arg) (cdr arg))))
+                              (push (list :op (car arg) :field (cdr arg) :as obj) ops)
+                              (push (list (eas-key as) (eas-key obj) (eas-key (plist-get d :field))) args)))
                           (unless (vectorp def)
                             (setq enc (eas-plist-put
                                        enc channel (append (list :field as :source (plist-get d :field)
@@ -120,10 +145,12 @@ ENV holds param values for expressions."
                         (when (and f (not (member f groupby))) (push f groupby)))))))
     (if (null ops)
         (cons encoding rows)
-      (cons enc (eas-transform-aggregate
-                 (list :aggregate (vconcat (delete-dups (nreverse ops)))
-                       :groupby (vconcat (nreverse groupby)))
-                 rows "/encoding")))))
+      (cons enc (eas-encode--flatten-args
+                 (eas-transform-aggregate
+                  (list :aggregate (vconcat (delete-dups (nreverse ops)))
+                        :groupby (vconcat (nreverse groupby)))
+                  rows "/encoding")
+                 args)))))
 
 ;;; Evaluation
 
@@ -168,9 +195,10 @@ ENV holds param values for expressions."
      ((equal (plist-get def :derived) "aggregate")
       (if (and (equal (plist-get def :op) "count") (null (plist-get def :source)))
           "Count of Records"
-        ;; Vega-Lite's verbal title: titleCase(op) of field.
-        (let ((op (plist-get def :op)))
-          (format "%s%s of %s" (upcase (substring op 0 1)) (substring op 1) (plist-get def :source)))))
+        ;; Vega-Lite's verbal title: titleCase(op) of field, FIELD for min ARG.
+        (let* ((op (plist-get def :op)) (arg (eas-encode--arg-op op)))
+          (if arg (format "%s for %s %s" (plist-get def :source) (if (equal (car arg) "argmin") "min" "max") (cdr arg))
+            (format "%s%s of %s" (upcase (substring op 0 1)) (substring op 1) (plist-get def :source))))))
      ((equal (plist-get def :derived) "bin") (format "%s (binned)" (plist-get def :source)))
      ((equal (plist-get def :derived) "timeUnit")
       (format "%s (%s)" (plist-get def :source)

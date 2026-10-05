@@ -94,15 +94,25 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
                      :params (plist-get node :params))))
     (eas-polar-stack (eas-marks-stack unit))))
 
+(defun eas-compile--merge-encoding (parent encoding)
+  "ENCODING over a layer's PARENT encoding, as Vega-Lite's mergeEncoding:
+a child field or datum def inherits the parent def's other properties."
+  (let ((enc parent))
+    (cl-loop for (ch d) on encoding by #'cddr
+             for p = (plist-get parent ch)
+             do (setq enc (eas-plist-put
+                           enc ch (if (and (consp d) (keywordp (car d)) (consp p) (keywordp (car p))
+                                           (or (plist-get d :field) (plist-member d :datum)))
+                                      (let ((m p)) (cl-loop for (k v) on d by #'cddr do (setq m (eas-plist-put m k v))) m)
+                                    d))))
+    enc))
+
 (defun eas-compile--child-ctx (node ctx key i rows)
   "Context for child I of NODE's KEY array, inheriting from CTX with ROWS."
   (list :rows rows
         :transforms (append (plist-get ctx :transforms) (append (plist-get node :transform) nil))
         :encoding (if (eq key :layer)
-                      (let ((enc (plist-get ctx :encoding)))
-                        (cl-loop for (ch d) on (plist-get node :encoding) by #'cddr
-                                 do (setq enc (eas-plist-put enc ch d)))
-                        enc)
+                      (eas-compile--merge-encoding (plist-get ctx :encoding) (plist-get node :encoding))
                     nil)
         :path (format "%s/%s/%d" (plist-get ctx :path) (eas-key-name key) i)
         :config (plist-get ctx :config)
@@ -113,10 +123,7 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
   "Walk NODE under CTX; return a layout tree.  GROUP collects layer units."
   (let* ((rows (eas-compile--node-data node ctx override))
          (ctx (plist-put (copy-sequence ctx) :rows rows))
-         (own (let ((enc (plist-get ctx :encoding)))
-                (cl-loop for (ch d) on (plist-get node :encoding) by #'cddr
-                         do (setq enc (eas-plist-put enc ch d)))
-                enc)))
+         (own (eas-compile--merge-encoding (plist-get ctx :encoding) (plist-get node :encoding))))
     (cond
      ((or (plist-get node :vconcat) (plist-get node :hconcat))
       (let ((key (if (plist-get node :vconcat) :vconcat :hconcat)))
@@ -162,14 +169,17 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
          (size (eas-compile-aux-scale units :size [4 361]))
          (opacity (eas-compile-aux-scale units :opacity [0.3 0.8]))
          (shape-scale (eas-bins-shape-scale units))
+         (dash (eas-compile-dash-scale units config))
          (first-def (lambda (ch) (cdar (eas-compile--defs units ch))))
          (unit (car units))
          (shape (let ((type (plist-get (plist-get unit :mark) :type)))
                   (cond ((member type '("bar" "rect" "area" "square")) "square")
-                        ((member type '("line" "rule")) "stroke") (t "circle"))))
-         (style (eas-marks-legend-style unit metrics))
+                        ((member type '("line" "rule" "trail")) "stroke") (t "circle"))))
          (spec (lambda (channel def scale)
-                 (list :channel channel :def def :scale scale :shape shape :style style))))
+                 ;; Symbols copy the look of the layer that encodes the channel.
+                 (let ((owner (or (caar (eas-compile--defs units channel)) unit)))
+                   (list :channel channel :def def :scale scale :shape shape
+                         :style (eas-marks-legend-style owner metrics))))))
     (plist-put group :scales
                (append (cl-loop for ch in '(:x :y)
                                 for s = (eas-compile-position-scale
@@ -179,12 +189,14 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
                        (when color (list (nth 0 color) (nth 2 color)))
                        (when size (list :size size))
                        (when opacity (list :opacity opacity))
-                       (when shape-scale (list :shape shape-scale))))
+                       (when shape-scale (list :shape shape-scale))
+                       (when dash (list :strokeDash dash))))
     (plist-put group :axis-defs (list :x (eas-bins-axis-def units :x) :y (eas-bins-axis-def units :y)))
     (plist-put group :legend-specs
                (delq nil (list (when color (funcall spec (nth 0 color) (nth 1 color) (nth 2 color)))
                                (when size (funcall spec :size (funcall first-def :size) size))
-                               (when opacity (funcall spec :opacity (funcall first-def :opacity) opacity)))))))
+                               (when opacity (funcall spec :opacity (funcall first-def :opacity) opacity))
+                               (when dash (funcall spec :strokeDash (funcall first-def :strokeDash) dash)))))))
 
 (defun eas-compile--ranges (group)
   "Map GROUP's positional scales onto its placed plot."
@@ -253,7 +265,7 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
                                     axis (plist-get scales (eas-key (plist-get axis :channel))) bounds metrics))
                                  (plist-get group :axes-model)))
           :legends (vconcat
-                    (if (eas-layout-text-p metrics)
+                    (if (and (eas-layout-text-p metrics) (null (plist-get group :legend-offsets)))
                         (mapcar (lambda (legend)
                                   (prog1 (eas-legend-place
                                           legend (+ (aref bounds 0) (aref bounds 2) (plist-get metrics :legend-offset))
@@ -266,6 +278,30 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
                                  (plist-get group :legends-model) (plist-get group :legend-offsets))))
           :marks (vconcat (append marks (eas-compile--brushes group state)))
           :params (vconcat (mapcar (lambda (p) (plist-get p :name)) (plist-get group :params))))))
+
+(defun eas-compile--title-frame (spec)
+  "SPEC's title.frame: \"bounds\" or \"group\" (the default)."
+  (let ((title (plist-get spec :title)))
+    (or (and (eas-object-p title) (stringp (plist-get title :frame)) (plist-get title :frame)) "group")))
+
+(defun eas-compile--title-start (groups metrics spec)
+  "Left edge the title anchors to: the plots, or with frame bounds the chart's."
+  (if (equal (eas-compile--title-frame spec) "bounds")
+      (apply #'min (mapcar (lambda (g) (if (plist-get g :content-x1) (+ (plist-get g :x0) (plist-get g :content-x1))
+                                         (plist-get metrics :pad)))
+                           groups))
+    (apply #'min (mapcar (lambda (g) (plist-get g :x0)) groups))))
+
+(defun eas-compile--title-width (total groups metrics spec title)
+  "TOTAL (W . H) widened so a start-anchored TITLE fits, as Vega's autosize pads."
+  (if (or (null title) (eas-layout-text-p metrics)
+          (not (equal (plist-get metrics :chart-title-anchor) "start")))
+      total
+    (let ((need (+ (eas-compile--title-start groups metrics spec)
+                   (eas-layout-text-width metrics title (plist-get metrics :chart-title-size)
+                                          (plist-get metrics :chart-title-weight))
+                   (plist-get metrics :pad))))
+      (if (> need (car total)) (cons (ceiling need) (cdr total)) total))))
 
 (defun eas-compile--title (spec)
   "The chart title text of SPEC, or nil."
@@ -330,6 +366,7 @@ compiling again."
                      (let ((dx (- (plist-get g :x0) (car o))) (dy (- (plist-get g :y0) (cdr o))))
                        (dolist (u (plist-get g :units))
                          (plist-put u :items (eas-marks-translate (plist-get u :items) dx dy)))))))
+        (unless size (setq total (eas-compile--title-width total groups metrics spec title)))
         (list :spec spec :metrics metrics :groups groups :total total :title title :env env)))))
 
 (defun eas-compile--clipped-p (group state)
@@ -380,12 +417,13 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
                          (if (stringp bg) bg (or (eas-theme-get (plist-get metrics :config) :background) "white")))
            :config (plist-get metrics :config))
      (when title
-       (let* ((x1 (apply #'min (mapcar (lambda (g) (plist-get g :x0)) groups)))
+       (let* ((x1 (eas-compile--title-start groups metrics spec))
               (x2 (apply #'max (mapcar (lambda (g) (+ (plist-get g :x0) (plist-get g :w))) groups)))
               (anchor (if (eas-layout-text-p metrics) "middle" (plist-get metrics :chart-title-anchor))))
          (list :title (list :text title
                             ;; Vega-Lite's title frame "bounds": start and end are the chart's edges.
-                            :x (pcase anchor ("start" (if (eas-layout-text-p metrics) x1 (plist-get metrics :pad)))
+                            :x (pcase anchor ("start" (if (or (eas-layout-text-p metrics) (equal (eas-compile--title-frame spec) "bounds"))
+                                          x1 (plist-get metrics :pad)))
                                  ("end" (if (eas-layout-text-p metrics) x2 (- (car total) (plist-get metrics :pad))))
                                  (_ (if (eas-layout-text-p metrics) (/ (car total) 2.0) (/ (+ x1 x2) 2.0))))
                             :y (plist-get metrics :pad)

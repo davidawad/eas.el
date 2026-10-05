@@ -292,6 +292,14 @@
     (let ((ms (eas-time-parse value)))
       (if ms (+ (or offset 0) (plist-get (eas-time-fields ms) key)) :null))))
 
+(defun eas-expr--time-format (value format zone)
+  "VALUE (a date) formatted with d3 time FORMAT in ZONE, or `:null'."
+  (let ((ms (eas-time-parse value)))
+    (if (null ms) :null
+      (let ((system-time-locale "C") (eas-time-zone zone))
+        (eas-time-format ms (replace-regexp-in-string
+                             "%L" "%3N" (replace-regexp-in-string "%-" "%" (eas-expr--string format))))))))
+
 (defun eas-expr--num-fn (fn)
   "Wrap numeric FN so its arguments are coerced to numbers."
   (lambda (&rest args) (apply fn (mapcar #'eas-expr--number args))))
@@ -302,6 +310,15 @@
     ("floor" . ,(eas-expr--num-fn (lambda (x) (float (floor x)))))
     ("round" . ,(eas-expr--num-fn (lambda (x) (float (floor (+ x 0.5))))))
     ("sqrt" . ,(eas-expr--num-fn #'sqrt))
+    ("sin" . ,(eas-expr--num-fn #'sin))
+    ("cos" . ,(eas-expr--num-fn #'cos))
+    ("tan" . ,(eas-expr--num-fn #'tan))
+    ("asin" . ,(eas-expr--num-fn #'asin))
+    ("acos" . ,(eas-expr--num-fn #'acos))
+    ("atan" . ,(eas-expr--num-fn #'atan))
+    ("atan2" . ,(eas-expr--num-fn #'atan))
+    ("timeFormat" . ,(lambda (v fmt) (eas-expr--time-format v fmt eas-time-zone)))
+    ("utcFormat" . ,(lambda (v fmt) (eas-expr--time-format v fmt nil)))
     ("log" . ,(eas-expr--num-fn #'log))
     ("exp" . ,(eas-expr--num-fn #'exp))
     ("pow" . ,(eas-expr--num-fn #'expt))

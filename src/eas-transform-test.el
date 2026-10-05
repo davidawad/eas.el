@@ -66,7 +66,7 @@
                            '("median" "q1" "q3" "min" "max" "variance" "variancep" "distinct" "valid"))
                    (list 2.5 1.75 3.25 1 4 (/ 5.0 3) 1.25 5 4))))
   (eas-test-should-code "UNSUPPORTED_FEATURE"
-    (eas-transform-test--run '(:aggregate [(:op "argmax" :field "v" :as "x")]))))
+    (eas-transform-test--run '(:aggregate [(:op "bogus" :field "v" :as "x")]))))
 
 (ert-deftest eas-transform-joinaggregate-and-window ()
   (should (equal (seq-map (lambda (r) (plist-get r :total))

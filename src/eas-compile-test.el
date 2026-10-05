@@ -110,7 +110,8 @@
                             :path)
                  "/mark"))
   (eas-test-should-code "INVALID_INPUT" (eas-compile '(:data (:name "bars") :mark "bar")))
-  (eas-test-should-code "UNSUPPORTED_FEATURE" (eas-compile '(:data (:url "x.csv") :mark "bar")))
+  (eas-test-should-code "NOT_FOUND" (eas-compile '(:data (:url "no-such-file.csv") :mark "bar")))
+  (eas-test-should-code "UNSUPPORTED_FEATURE" (eas-compile '(:data (:url "https://example.com/x.csv") :mark "bar")))
   (eas-test-should-code "UNSUPPORTED_FEATURE"
     (eas-compile '(:data (:values [(:a 1 :b 2)]) :mark (:type "line" :interpolate "basis")
                      :encoding (:x (:field "a") :y (:field "b"))))))

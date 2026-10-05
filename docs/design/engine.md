@@ -315,7 +315,13 @@ AGENTS.md already sets.
   committed so CI needs only rsvg-convert) and static export. It is
   never a runtime dependency.
 - Text-backend goldens are exact strings. Scene goldens are JSON. Both
-  are reviewed as diffs (`EAS_UPDATE_GOLDEN=1 make test`).
+  are reviewed as diffs (`EAS_UPDATE_GOLDEN=1 make test`; the
+  conformance gallery's goldens and supported.json with
+  `EAS_UPDATE_GOLDEN=1 make test-gallery-conformance`).
+- `make test` stays fast (unit, golden, runtime). ERT tests tagged
+  `:gallery` (the official Vega-Lite gallery and the conformance
+  oracle) run in `make test-gallery`, one Emacs per group, so `-j`
+  parallelizes it (fc-qx1.47).
 - Measured results: engine-spikes.md section 8.
 
 ## 7. Accretion: how the system grows

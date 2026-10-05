@@ -14,11 +14,18 @@
 (require 'eas)
 (require 'eas-vl-gallery)
 
+(defun eas-vl-gallery-test--groups ()
+  "Gallery groups to check: EAS_GALLERY_GROUPS (space-separated), or all.
+`make test-gallery' runs one Emacs per group this way."
+  (let ((only (split-string (or (getenv "EAS_GALLERY_GROUPS") ""))))
+    (seq-filter (lambda (g) (or (null only) (member g only))) (eas-vl-gallery-groups))))
+
 (ert-deftest eas-vl-gallery-groups-hold-their-status ()
   "Every example of every group has a verdict and holds it: renders,
 threshold, no overlap."
-  (should (eas-vl-gallery-groups))
-  (dolist (group (eas-vl-gallery-groups))
+  :tags '(:gallery)
+  (should (eas-vl-gallery-test--groups))
+  (dolist (group (eas-vl-gallery-test--groups))
     (let ((names (eas-vl-gallery-names group))
           (status (eas-vl-gallery-status group)))
       (should (equal (cons group (sort (mapcar #'eas-key-name (eas-plist-keys status)) #'string<))

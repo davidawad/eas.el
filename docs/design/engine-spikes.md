@@ -829,3 +829,27 @@ labels.
 conformance gallery (arc_pie, arc_radial, arc_pie_pyramid) and prove
 `mark/arc`, `encoding/theta`, `encoding/radius`, `encoding/order` and
 `scale/sqrt` in `supported.json`.
+
+## 12. Test suite split (fc-qx1.47)
+
+After the gallery wave `make test` took about 8.4 min. Measured on a
+4-core box, Emacs 30.1, no rsvg-convert (so the image oracle skipped):
+`eas-vl-gallery-groups-hold-their-status` alone took 460 s (it walks
+all 188 official examples) and the conformance oracle 194 s (every
+test touching `eas-conformance-gallery` loads all 190 entries, about
+4 s each time; `supported-json-is-current` reruns the whole gallery,
+87 s).
+
+Those tests are tagged `:gallery` and run in `make test-gallery`
+instead: one Emacs per gallery group (`EAS_GALLERY_GROUPS`) plus one
+for the conformance tests, so `make -j` parallelizes it.
+
+| target                   | tests                    | wall    |
+|--------------------------|--------------------------|---------|
+| `make test` before       | 594 (4 skipped)          | ~8.4 min |
+| `make test` after        | 583 (3 skipped)          | 47 s    |
+| `make -j4 test-gallery`  | 19 = 9 groups + 10 conformance (1 skipped) | 6.5 min |
+
+The gallery's makespan is its two largest groups (240 s and 201 s
+under 4-way contention) and the conformance target (182 s); sharding
+inside a group is the next step if it matters.

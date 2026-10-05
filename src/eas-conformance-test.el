@@ -39,6 +39,7 @@
 
 (ert-deftest eas-conformance-text-goldens ()
   "Every gallery spec compiles natively and matches its exact text golden."
+  :tags '(:gallery)
   (if (getenv "EAS_UPDATE_GOLDEN")
       (eas-conformance-test--write-text-goldens)
     (dolist (entry (eas-conformance-gallery))
@@ -50,6 +51,7 @@
 (ert-deftest eas-conformance-supported-json-is-current ()
   "supported.json lists exactly the features the passing gallery proves.
 Its oracle verdicts are checked too wherever the oracle can run."
+  :tags '(:gallery)
   (when (getenv "EAS_UPDATE_GOLDEN")
     ;; supported.json counts only specs that match their text golden.
     (eas-conformance-test--write-text-goldens)
@@ -102,6 +104,7 @@ Its oracle verdicts are checked too wherever the oracle can run."
   "Native SVG vs bin/chart's image within each spec's threshold and size tolerance.
 The images are the committed references, or fresh builds when bin/chart
 is on PATH; only rsvg-convert is needed."
+  :tags '(:gallery)
   (unless (zlib-available-p) (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
   (unless (eas-conformance-test--rasterizer-p)
     (eas-test-skip (format "%s not on PATH; needed to rasterize native SVG for the image oracle"
@@ -114,6 +117,7 @@ is on PATH; only rsvg-convert is needed."
 
 (ert-deftest eas-conformance-references-match-the-gallery ()
   "Every gallery spec has a reference built from its current text, and no other."
+  :tags '(:gallery)
   (should (equal (mapcar (lambda (e) (list (plist-get e :name) (eas-conformance-ref-problem e)))
                          (seq-filter #'eas-conformance-ref-problem (eas-conformance-gallery)))
                  nil))
@@ -125,6 +129,7 @@ is on PATH; only rsvg-convert is needed."
   (should (stringp (eas-conformance-ref-zone))))
 
 (ert-deftest eas-conformance-usermeta-does-not-stale-a-reference ()
+  :tags '(:gallery)
   (let* ((entry (car (eas-conformance-gallery)))
          (spec (plist-get entry :spec)))
     (should (equal (eas-conformance-spec-hash spec)
@@ -172,6 +177,7 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
        (when ,chart (delete-file eas-chart-program)))))
 
 (ert-deftest eas-conformance-oracle-plumbing ()
+  :tags '(:gallery)
   (let* ((entry (car (eas-conformance-gallery)))
          (native (list :ok t :svg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"))
          (ref (eas-conformance-test--ref entry)))
@@ -186,6 +192,7 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
       (should (equal (plist-get (eas-conformance-oracle entry native) :status) "unverified")))))
 
 (ert-deftest eas-conformance-oracle-fails-stale-references ()
+  :tags '(:gallery)
   (let* ((entry (car (eas-conformance-gallery)))
          (stale (plist-put (copy-sequence entry) :spec
                            (plist-put (copy-sequence (plist-get entry :spec)) :description "edited")))
@@ -199,6 +206,7 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
 
 (ert-deftest eas-conformance-oracle-bounds-the-size-delta ()
   "A canvas size difference beyond the tolerance fails even when pixels agree."
+  :tags '(:gallery)
   (let* ((entries (eas-conformance-gallery))
          (entry (seq-find (lambda (e) (equal (plist-get e :name) "mark-bar")) entries))
          (other (seq-find (lambda (e) (equal (plist-get e :name) "mark-tick")) entries))
@@ -210,6 +218,7 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
 
 (ert-deftest eas-conformance-native-svg-uses-the-reference-zone ()
   "Native SVG is compiled in the references' time zone, the text in UTC."
+  :tags '(:gallery)
   (let* ((entry (seq-find (lambda (e) (equal (plist-get e :name) "encoding-timeunit")) (eas-conformance-gallery)))
          (native (eas-conformance-native entry)))
     (should (equal (eas-conformance-ref-zone) "America/Chicago"))
@@ -244,6 +253,7 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
           (kill-buffer buffer))))))
 
 (ert-deftest eas-conformance-fallback-takes-bin-chart-image ()
+  :tags '(:gallery)
   (eas-conformance-test--with-stubs (eas-conformance-test--ref (car (eas-conformance-gallery))) t
    (let ((eas-views (make-hash-table :test 'equal))
          (eas-static-fallback t))

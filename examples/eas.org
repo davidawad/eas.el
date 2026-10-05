@@ -1,0 +1,40 @@
+#+title: eas in org: one chart block type
+# Load once: (org-babel-do-load-languages 'org-babel-load-languages '((eas . t)))
+# with src/eas on load-path.  C-c C-c on a block runs it.
+
+#+name: tbl
+| time       |  open |  high |   low | close |
+|------------+-------+-------+-------+-------|
+| 2026-03-02 | 100.0 | 104.0 |  99.0 | 103.0 |
+| 2026-03-03 | 103.0 | 105.0 | 101.0 | 101.5 |
+| 2026-03-04 | 101.5 | 106.0 | 101.0 | 105.5 |
+| 2026-03-05 | 105.5 | 108.0 | 104.0 | 107.0 |
+
+Interactive inline: the SVG in GUI frames, the text in terminals.  Hover
+with the mouse (or by moving point), click a candle (RET in terminals)
+to land on its table row, o to open it in its own buffer.  The view is
+live for agents too: (eas-agent-json "inspect" "ohlc:candles").
+
+#+name: candles
+#+begin_src eas :template ohlc :data tbl :title "TSM"
+#+end_src
+
+The same block as files for documents: native SVG, or the resolved pure
+Vega-Lite that bin/chart builds and render's ::: {.chart} takes.
+
+#+begin_src eas :template ohlc :data tbl :results file :file candles.vl.json :exports results
+#+end_src
+
+A whole chart/v1 spec as the body; :data gives its rows.
+
+#+begin_src eas :data tbl :as text :cols 50 :rows 12
+{"mark": "line", "width": 300, "height": 120,
+ "params": [{"name": "grid", "select": "interval", "bind": "scales"}],
+ "encoding": {"x": {"field": "time", "type": "temporal"},
+              "y": {"field": "close", "type": "quantitative", "scale": {"zero": false}}}}
+#+end_src
+
+For ob-vega, ask for Vega-Lite and wrap it:
+
+#+begin_src eas :template ohlc :data tbl :as vl :wrap src vega-lite
+#+end_src

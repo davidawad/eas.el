@@ -1,6 +1,6 @@
 {
   "generator": "bin/chart build SPEC --out ref/NAME.png (chart 0.1.0, vl-convert-rs, Vega-Lite 6.4.1, default theme)",
-  "spec_hash": "easel-conformance-spec-hash: sha256 of the spec's canonical JSON without usermeta",
+  "spec_hash": "eas-conformance-spec-hash: sha256 of the spec's canonical JSON without usermeta",
   "tz": "America/Chicago",
   "refs": {
     "composition-hconcat": {

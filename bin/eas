@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# eas from the shell: the stateless agent verbs, chart/v1 envelope on stdout.
+#   eas describe [verbs|templates|...]    eas example line
+#   eas check|explain|render|export|bench SOURCE [--data B] [options] [--raw]
+#   eas doctor
+# SOURCE is a template name or a chart/v1 spec (file, inline JSON, - for stdin).
+# Exit 0 when ok, 1 otherwise.  Live verbs (views, inspect, dispatch, ...) go
+# through emacsclient --eval '(eas-agent-json "VERB" ...)'.  Set EMACS to pick
+# the binary.  "--" stops Emacs taking options such as --name for itself.
+# See src/eas/eas-agent.el.
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec "${EMACS:-emacs}" -Q --batch -L "$here/src/eas" -l eas-agent-cli \
+  -f eas-agent-cli-main -- "$@"

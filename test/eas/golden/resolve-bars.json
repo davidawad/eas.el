@@ -1,0 +1,25 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {"category": "Mon", "value": 8200},
+      {"category": "Tue", "value": 10400},
+      {"category": "Wed", "value": 6100},
+      {"category": "Thu", "value": 9300},
+      {"category": "Fri", "value": 12050}
+    ]
+  },
+  "description": "One bar per category: a nominal x and a quantitative y.",
+  "encoding": {
+    "tooltip": [
+      {"field": "category", "type": "nominal"},
+      {"field": "value", "type": "quantitative"}
+    ],
+    "x": {"field": "category", "sort": null, "type": "nominal"},
+    "y": {"field": "value", "type": "quantitative"}
+  },
+  "height": 200,
+  "mark": {"type": "bar"},
+  "title": "Steps per day",
+  "width": 300
+}

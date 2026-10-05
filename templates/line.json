@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-  "x-easel": {
+  "x-eas": {
     "template": "line",
     "version": "1.0.0",
     "doc": "One quantitative series over time (or any ordered x), optionally split by a series field.",
@@ -15,8 +15,8 @@
     },
     "example": "examples/line.data.json"
   },
-  "title": {"x-easel:slot": "title"},
-  "description": {"x-easel:slot": "description"},
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
   "width": 400,
   "height": 200,
   "data": {"name": "data"},
@@ -24,51 +24,51 @@
     {
       "mark": {"type": "line"},
       "encoding": {
-        "x": {"field": {"x-easel:slot": "x"}, "type": "temporal"},
-        "y": {"field": {"x-easel:slot": "y"}, "type": "quantitative", "scale": {"zero": false}},
+        "x": {"field": {"x-eas:slot": "x"}, "type": "temporal"},
+        "y": {"field": {"x-eas:slot": "y"}, "type": "quantitative", "scale": {"zero": false}},
         "tooltip": [
-          {"field": {"x-easel:slot": "x"}, "type": "temporal"},
-          {"field": {"x-easel:slot": "y"}, "type": "quantitative"}
+          {"field": {"x-eas:slot": "x"}, "type": "temporal"},
+          {"field": {"x-eas:slot": "y"}, "type": "quantitative"}
         ]
       }
     },
     {
-      "x-easel:when": "points",
+      "x-eas:when": "points",
       "spec": {
         "mark": {"type": "point", "filled": true},
         "encoding": {
-          "x": {"field": {"x-easel:slot": "x"}, "type": "temporal"},
-          "y": {"field": {"x-easel:slot": "y"}, "type": "quantitative"}
+          "x": {"field": {"x-eas:slot": "x"}, "type": "temporal"},
+          "y": {"field": {"x-eas:slot": "y"}, "type": "quantitative"}
         }
       }
     },
     {
-      "x-easel:when": "crosshair",
+      "x-eas:when": "crosshair",
       "spec": {
         "name": "crosshair-hit",
         "params": [{"name": "crosshair", "select": {"type": "point", "on": "pointermove", "nearest": true, "encodings": ["x"]}}],
         "mark": {"type": "rule", "opacity": 0},
-        "encoding": {"x": {"field": {"x-easel:slot": "x"}, "type": "temporal"}}
+        "encoding": {"x": {"field": {"x-eas:slot": "x"}, "type": "temporal"}}
       }
     },
     {
-      "x-easel:when": "crosshair",
+      "x-eas:when": "crosshair",
       "spec": {
         "name": "crosshair-rule",
         "transform": [{"filter": {"param": "crosshair", "empty": false}}],
         "mark": {"type": "rule", "color": "gray"},
-        "encoding": {"x": {"field": {"x-easel:slot": "x"}, "type": "temporal"}}
+        "encoding": {"x": {"field": {"x-eas:slot": "x"}, "type": "temporal"}}
       }
     },
     {
-      "x-easel:when": "crosshair",
+      "x-eas:when": "crosshair",
       "spec": {
         "name": "crosshair-point",
         "transform": [{"filter": {"param": "crosshair", "empty": false}}],
         "mark": {"type": "point", "filled": true},
         "encoding": {
-          "x": {"field": {"x-easel:slot": "x"}, "type": "temporal"},
-          "y": {"field": {"x-easel:slot": "y"}, "type": "quantitative"}
+          "x": {"field": {"x-eas:slot": "x"}, "type": "temporal"},
+          "y": {"field": {"x-eas:slot": "y"}, "type": "quantitative"}
         }
       }
     }

@@ -1,0 +1,211 @@
+{
+  "contract": "eas-supported/v1",
+  "extensions": {
+    "mark/slot": "Template slot placeholders are substituted by resolve (ERT: eas-template-enum-and-array-items).",
+    "transform/x-eas": "Domain transforms are materialized by resolve (ERT: eas-resolve-materializes-domain-transforms)."
+  },
+  "features": {
+    "bind/legend": {
+      "oracle": "verified",
+      "specs": ["param-bind-legend"]
+    },
+    "bind/scales": {
+      "oracle": "verified",
+      "specs": ["param-bind-scales"]
+    },
+    "composition/hconcat": {
+      "oracle": "verified",
+      "specs": ["composition-hconcat"]
+    },
+    "composition/layer": {
+      "oracle": "verified",
+      "specs": ["mark-rule", "scale-band-point"]
+    },
+    "composition/vconcat": {
+      "oracle": "verified",
+      "specs": ["composition-vconcat"]
+    },
+    "encoding/aggregate": {
+      "oracle": "verified",
+      "specs": ["encoding-aggregate", "encoding-bin"]
+    },
+    "encoding/bin": {
+      "oracle": "verified",
+      "specs": ["encoding-bin"]
+    },
+    "encoding/color": {
+      "oracle": "verified",
+      "specs": ["encoding-condition", "mark-area-stacked", "mark-bar-stacked", "mark-line-multi", "mark-rect", "mark-square", "param-bind-legend", "param-point", "scale-ordinal-color", "transform-fold"]
+    },
+    "encoding/condition": {
+      "oracle": "verified",
+      "specs": ["encoding-condition", "param-bind-legend", "param-point"]
+    },
+    "encoding/detail": {
+      "oracle": "verified",
+      "specs": ["encoding-detail"]
+    },
+    "encoding/fill": {
+      "oracle": "verified",
+      "specs": ["encoding-fill-stroke"]
+    },
+    "encoding/href": {
+      "oracle": "verified",
+      "specs": ["encoding-href"]
+    },
+    "encoding/opacity": {
+      "oracle": "verified",
+      "specs": ["encoding-opacity", "param-bind-legend"]
+    },
+    "encoding/size": {
+      "oracle": "verified",
+      "specs": ["mark-circle"]
+    },
+    "encoding/stroke": {
+      "oracle": "verified",
+      "specs": ["encoding-fill-stroke"]
+    },
+    "encoding/text": {
+      "oracle": "verified",
+      "specs": ["mark-text"]
+    },
+    "encoding/timeUnit": {
+      "oracle": "verified",
+      "specs": ["encoding-timeunit"]
+    },
+    "encoding/tooltip": {
+      "oracle": "verified",
+      "specs": ["mark-point"]
+    },
+    "encoding/x": {
+      "oracle": "verified",
+      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-bin", "encoding-condition", "encoding-detail", "encoding-fill-stroke", "encoding-href", "encoding-opacity", "encoding-timeunit", "encoding-x2", "encoding-y2", "mark-area-stacked", "mark-area", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-circle", "mark-line-multi", "mark-line", "mark-point", "mark-rect", "mark-rule", "mark-square", "mark-text", "mark-tick", "param-bind-legend", "param-bind-scales", "param-interval", "param-point", "param-value", "scale-band-point", "scale-band", "scale-linear-domain", "scale-log", "scale-ordinal-color", "scale-point", "scale-time", "scale-utc", "transform-aggregate", "transform-bin", "transform-filter-calculate", "transform-filter-predicates", "transform-fold", "transform-joinaggregate", "transform-timeunit", "transform-window"]
+    },
+    "encoding/x2": {
+      "oracle": "verified",
+      "specs": ["encoding-x2"]
+    },
+    "encoding/y": {
+      "oracle": "verified",
+      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-bin", "encoding-condition", "encoding-detail", "encoding-fill-stroke", "encoding-href", "encoding-opacity", "encoding-timeunit", "encoding-x2", "encoding-y2", "mark-area-stacked", "mark-area", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-circle", "mark-line-multi", "mark-line", "mark-point", "mark-rect", "mark-rule", "mark-square", "mark-text", "mark-tick", "param-bind-legend", "param-bind-scales", "param-interval", "param-point", "param-value", "scale-band-point", "scale-band", "scale-linear-domain", "scale-log", "scale-ordinal-color", "scale-point", "scale-time", "scale-utc", "transform-aggregate", "transform-bin", "transform-filter-calculate", "transform-filter-predicates", "transform-fold", "transform-joinaggregate", "transform-timeunit", "transform-window"]
+    },
+    "encoding/y2": {
+      "oracle": "verified",
+      "specs": ["encoding-y2"]
+    },
+    "mark/area": {
+      "oracle": "verified",
+      "specs": ["mark-area-stacked", "mark-area"]
+    },
+    "mark/bar": {
+      "oracle": "verified",
+      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-bin", "encoding-condition", "encoding-href", "encoding-timeunit", "encoding-x2", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-rule", "param-point", "param-value", "scale-band-point", "scale-band", "transform-aggregate", "transform-filter-calculate", "transform-fold", "transform-joinaggregate"]
+    },
+    "mark/circle": {
+      "oracle": "verified",
+      "specs": ["encoding-opacity", "mark-circle", "param-bind-legend", "scale-ordinal-color"]
+    },
+    "mark/line": {
+      "oracle": "verified",
+      "specs": ["composition-vconcat", "encoding-detail", "mark-line-multi", "mark-line", "param-bind-scales", "scale-band-point", "scale-linear-domain", "scale-log", "scale-point", "scale-time", "transform-window"]
+    },
+    "mark/point": {
+      "oracle": "verified",
+      "specs": ["composition-hconcat", "encoding-fill-stroke", "mark-point", "param-interval", "scale-utc", "transform-filter-predicates", "transform-timeunit"]
+    },
+    "mark/rect": {
+      "oracle": "verified",
+      "specs": ["mark-rect"]
+    },
+    "mark/rule": {
+      "oracle": "verified",
+      "specs": ["encoding-y2", "mark-rule"]
+    },
+    "mark/square": {
+      "oracle": "verified",
+      "specs": ["mark-square"]
+    },
+    "mark/text": {
+      "oracle": "verified",
+      "specs": ["mark-text"]
+    },
+    "mark/tick": {
+      "oracle": "verified",
+      "specs": ["mark-tick", "transform-bin"]
+    },
+    "param/interval": {
+      "oracle": "verified",
+      "specs": ["param-bind-scales", "param-interval"]
+    },
+    "param/point": {
+      "oracle": "verified",
+      "specs": ["param-bind-legend", "param-point"]
+    },
+    "param/value": {
+      "oracle": "verified",
+      "specs": ["param-value"]
+    },
+    "scale/band": {
+      "oracle": "verified",
+      "specs": ["scale-band"]
+    },
+    "scale/linear": {
+      "oracle": "verified",
+      "specs": ["scale-linear-domain"]
+    },
+    "scale/log": {
+      "oracle": "verified",
+      "specs": ["scale-log"]
+    },
+    "scale/ordinal": {
+      "oracle": "verified",
+      "specs": ["scale-ordinal-color"]
+    },
+    "scale/point": {
+      "oracle": "verified",
+      "specs": ["scale-point"]
+    },
+    "scale/time": {
+      "oracle": "verified",
+      "specs": ["scale-time"]
+    },
+    "scale/utc": {
+      "oracle": "verified",
+      "specs": ["scale-utc"]
+    },
+    "transform/aggregate": {
+      "oracle": "verified",
+      "specs": ["transform-aggregate"]
+    },
+    "transform/bin": {
+      "oracle": "verified",
+      "specs": ["transform-bin"]
+    },
+    "transform/calculate": {
+      "oracle": "verified",
+      "specs": ["transform-filter-calculate", "transform-joinaggregate"]
+    },
+    "transform/filter": {
+      "oracle": "verified",
+      "specs": ["param-value", "transform-filter-calculate", "transform-filter-predicates"]
+    },
+    "transform/fold": {
+      "oracle": "verified",
+      "specs": ["transform-fold"]
+    },
+    "transform/joinaggregate": {
+      "oracle": "verified",
+      "specs": ["transform-joinaggregate"]
+    },
+    "transform/timeUnit": {
+      "oracle": "verified",
+      "specs": ["transform-timeunit"]
+    },
+    "transform/window": {
+      "oracle": "verified",
+      "specs": ["transform-window"]
+    }
+  },
+  "gallery": "test/conformance",
+  "vega-lite": "6.4.1"
+}

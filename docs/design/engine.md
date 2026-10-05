@@ -1,6 +1,6 @@
-# easel: an Emacs-native, interactive, agent-drivable chart engine
+# eas: an Emacs-native, interactive, agent-drivable chart engine
 
-Status: design, epic `fc-qx1`. Engine name `easel` (prefix `easel-`) was
+Status: design, epic `fc-qx1`. Engine name `eas` (prefix `eas-`) was
 confirmed free by `fc-qx1.14` (`engine-spikes.md`). Never `chart-`: the built-in
 `chart.el` owns that prefix.
 
@@ -36,7 +36,7 @@ where a wrong pixel came from.
  L5 renderers   scene -> SVG image (+ :map hot spots)  |  scene -> text (+ props)
  L4 compile     resolved spec + rows -> scene/v1 (marks, scales, axes, datum refs)
  L3 resolve     template + bindings + defaults + domain transforms -> pure Vega-Lite
- L2 spec        chart/v1 = Vega-Lite subset + "x-easel" extension namespace
+ L2 spec        chart/v1 = Vega-Lite subset + "x-eas" extension namespace
  L1 transforms  Vega-Lite transforms subset + registered domain transforms
  L0 data        data/v1 tidy rows from adapters (plist, JSON, CSV, org table, bar/v1)
                          |
@@ -59,7 +59,7 @@ are registered once and auto-discovered:
 
 Every adapter validates and fails as data: `{code, index, field, message}`.
 That is the same rule the existing `financial-chart-shapes` validators
-follow. Streaming is part of the contract (`easel-push VIEW ROWS`), so
+follow. Streaming is part of the contract (`eas-push VIEW ROWS`), so
 live data is not a separate code path.
 
 ### L1 transforms
@@ -70,9 +70,9 @@ These are the Vega-Lite transforms the engine implements natively:
 are domain transforms, registered with a schema:
 
 ```json
-{"x-easel:transform": "indicator", "name": "rsi", "field": "close", "period": 14, "as": "rsi"}
-{"x-easel:transform": "reference-band", "marker": "ldl-c", "as": ["lo", "hi"]}
-{"x-easel:transform": "lttb", "x": "t", "y": "close", "pixels": "auto"}
+{"x-eas:transform": "indicator", "name": "rsi", "field": "close", "period": 14, "as": "rsi"}
+{"x-eas:transform": "reference-band", "marker": "ldl-c", "as": ["lo", "hi"]}
+{"x-eas:transform": "lttb", "x": "t", "y": "close", "pixels": "auto"}
 ```
 
 financial-chart's 28 indicators become transforms instead of chart
@@ -82,8 +82,8 @@ to every template.
 ### L2 spec: chart/v1
 
 It is Vega-Lite (pinned to the version `bin/chart` pins, 6.4.1).
-Anything engine-specific lives under the `"x-easel"` key or as an
-`x-easel:` transform, which the L3 resolve step strips out. Interaction
+Anything engine-specific lives under the `"x-eas"` key or as an
+`x-eas:` transform, which the L3 resolve step strips out. Interaction
 is not an invented API. It is Vega-Lite's own `params`/selection
 grammar (section 4).
 
@@ -93,7 +93,7 @@ A template is a chart/v1 spec with declared slots:
 
 ```json
 {
-  "x-easel": {
+  "x-eas": {
     "template": "ohlc",
     "version": "1.0.0",
     "doc": "Candlesticks with optional volume panel and indicator overlays.",
@@ -111,7 +111,7 @@ A template is a chart/v1 spec with declared slots:
 
 `resolve(template, bindings)` does five things: bind data to slots,
 fill defaults, expand domain transforms into materialized columns,
-inline the data, and drop `x-easel`. The output is a complete,
+inline the data, and drop `x-eas`. The output is a complete,
 standalone Vega-Lite spec. That one function is what makes the static
 export path free. Resolve is pure and deterministic, so its output is
 content-hashed (the same hash scheme as `bin/chart describe`).
@@ -159,7 +159,7 @@ LTTB decimation when a series has more points than pixel columns.
   point.
 - Text: scene to a character grid (braille, eighths or block glyphs
   per mark type, which financial-chart-text.el already has) where every
-  cell carries text properties `easel-datum`, `easel-view` and
+  cell carries text properties `eas-datum`, `eas-view` and
   `help-echo`. Moving point over the chart is the terminal's hover.
 - Static: resolved spec to `bin/chart build`. Not part of Emacs, but
   in the conformance loop (section 6).
@@ -215,10 +215,10 @@ The same verbs are available everywhere, and all of them return the
 | `doctor` | eager `(:name :status :detail :remediation)` rows |
 
 Entry points:
-- Lisp: `(easel-agent VERB &rest ARGS)`.
-- Shell: `bin/easel VERB ...`, which runs Emacs in batch for the
+- Lisp: `(eas-agent VERB &rest ARGS)`.
+- Shell: `bin/eas VERB ...`, which runs Emacs in batch for the
   stateless verbs.
-- A running Emacs: `emacsclient --eval '(easel-agent-json "inspect" "tsm-price")'`,
+- A running Emacs: `emacsclient --eval '(eas-agent-json "inspect" "tsm-price")'`,
   for the live verbs `views`, `inspect`, `dispatch`, `log` and
   `selection`.
 
@@ -247,13 +247,13 @@ second language.
 | feature (bead) | Vega-Lite construct | engine mechanism |
 |---|---|---|
 | tooltip (`.1`) | `encoding.tooltip` | item `tooltip` -> help-echo / `:map` / echo area |
-| click target (`.1`, `.5`) | `encoding.href` + `x-easel.actions` | action registry keyed by mark or param; `RET` in text |
+| click target (`.1`, `.5`) | `encoding.href` + `x-eas.actions` | action registry keyed by mark or param; `RET` in text |
 | crosshair (`.2`) | `point` selection, `on: pointermove`, `nearest: true`, plus a rule layer filtered by it | hit-test index -> datum -> state.hover |
 | zoom/pan (`.3`) | `interval` selection with `bind: "scales"` | reducer edits scale domains; wheel, drag, keys |
 | brush (`.4`) | `interval` selection with `encodings: ["x"]` | state.params[name] = range; selection verb |
 | linked views (`.6`) | the same param across `vconcat`/`hconcat`, shared scale binds | one state per spec; cross-buffer views join a named param bus |
 | legend toggle (`.5`) | `point` selection with `bind: "legend"` | legend `:map` areas |
-| live data (`.7`) | `x-easel.stream` | `easel-push`, frame cap, pause while pointer/brush active |
+| live data (`.7`) | `x-eas.stream` | `eas-push`, frame cap, pause while pointer/brush active |
 
 Semantics follow the Vega-Lite docs (Selection, Bind, Parameter,
 Tooltip). The static path renders the initial state, which is what
@@ -268,7 +268,7 @@ Vega itself does with no interaction.
 (a benchmark stage over its regression limit). Codes shared with
 `bin/chart` mean the same thing in both. Every failure carries at least
 one `next` command. In Lisp they map to `define-error` children of
-`easel-error` with data `(MESSAGE :code CODE ...)`, the convention
+`eas-error` with data `(MESSAGE :code CODE ...)`, the convention
 AGENTS.md already sets.
 
 ## 6. Conformance: bin/chart is the oracle
@@ -281,7 +281,7 @@ AGENTS.md already sets.
   `ref/manifest.json` (spec hash without usermeta, PNG hash, and the
   time zone the references were built in), so the oracle needs only
   rsvg-convert. With bin/chart on PATH the references are rebuilt and a
-  stale manifest hash fails; `easel-conformance-update-refs` rewrites
+  stale manifest hash fails; `eas-conformance-update-refs` rewrites
   them.
 - Canvas sizes differ by Vega's few pixels of overhang padding, and
   `bin/chart diff` scores any size mismatch as total, so images are
@@ -301,7 +301,7 @@ AGENTS.md already sets.
   renders in Emacs, and the native subset grows one gallery entry at a
   time.
 - Text-backend goldens are exact strings. Scene goldens are JSON. Both
-  are reviewed as diffs (`EASEL_UPDATE_GOLDEN=1 make test`).
+  are reviewed as diffs (`EAS_UPDATE_GOLDEN=1 make test`).
 - Measured results: engine-spikes.md section 8.
 
 ## 7. Accretion: how the system grows
@@ -309,9 +309,9 @@ AGENTS.md already sets.
 | to add | write | auto-picked-up by |
 |---|---|---|
 | a chart kind | `templates/NAME.json` + `examples/NAME.data.json` | describe, check, golden + conformance suites |
-| a domain transform | one `easel-register-transform` with schema + ERT test | describe, every template |
+| a domain transform | one `eas-register-transform` with schema + ERT test | describe, every template |
 | a data source | one adapter entry with validator | describe, org-babel, CLI |
-| an action | one `easel-register-action` | drill on any mark |
+| an action | one `eas-register-action` | drill on any mark |
 | Vega-Lite coverage | conformance spec + compile support | `supported.json`, check |
 
 A domain package is only a template directory and a transform file.
@@ -328,10 +328,10 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
   renderer stays until then.
 - health-charts.el already proves the "Lisp never draws, fill a
   template" model with Vega-Lite and gnuplot templates. It converges on
-  easel templates (`fc-qx1.20`). The deferred medical presets (`fc-8yx`)
+  eas templates (`fc-qx1.20`). The deferred medical presets (`fc-8yx`)
   are health-charts.el's kinds and are not re-invented here.
 - org (artifact-system "org is the workbench"):
-  `#+begin_src easel :template ohlc :data tbl` shows an interactive
+  `#+begin_src eas :template ohlc :data tbl` shows an interactive
   chart inline. The same block exports through ob-vega or `bin/chart`.
   There is one block type, not two.
 
@@ -359,7 +359,7 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
 
 ## 10. Layout and extraction
 
-The engine lives in `src/easel/` with the `easel-` prefix, its own
+The engine lives in `src/eas/` with the `eas-` prefix, its own
 tests and no reference to financial-chart from the first commit.
 Templates live in `templates/`, conformance specs in `test/conformance/`.
 Extraction (`fc-qx1.11`) is then mechanical: move the directory to its

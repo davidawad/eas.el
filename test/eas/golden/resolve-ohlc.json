@@ -1,0 +1,59 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {"close": 416.0, "high": 417.96, "low": 407.72, "open": 408.6, "time": "2026-08-20", "volume": 10447900},
+      {"close": 418.95, "high": 425.68, "low": 416.7, "open": 423.02, "time": "2026-08-21", "volume": 8947202},
+      {"close": 421.8, "high": 422.4, "low": 414.05, "open": 419.1, "time": "2026-08-24", "volume": 7612300},
+      {"close": 427.1, "high": 428.3, "low": 420.9, "open": 421.5, "time": "2026-08-25", "volume": 9120450},
+      {"close": 420.25, "high": 429.0, "low": 419.6, "open": 427.4, "time": "2026-08-26", "volume": 11034800},
+      {"close": 423.9, "high": 424.75, "low": 417.3, "open": 420.0, "time": "2026-08-27", "volume": 8455100}
+    ]
+  },
+  "description": "Candlesticks from OHLC bars: a low-high wick and an open-close body per bar, up bars green.",
+  "encoding": {
+    "color": {
+      "condition": {"test": "datum.open <= datum.close", "value": "#06982d"},
+      "value": "#ae1325"
+    },
+    "tooltip": [
+      {"field": "time", "title": "date", "type": "temporal"},
+      {"field": "open", "type": "quantitative"},
+      {"field": "high", "type": "quantitative"},
+      {"field": "low", "type": "quantitative"},
+      {"field": "close", "type": "quantitative"}
+    ],
+    "x": {"field": "time", "title": "date", "type": "temporal"}
+  },
+  "height": 200,
+  "layer": [
+    {
+      "encoding": {
+        "y": {
+          "field": "low",
+          "scale": {"zero": false},
+          "title": "price",
+          "type": "quantitative"
+        },
+        "y2": {"field": "high"}
+      },
+      "mark": {"type": "rule"},
+      "name": "wicks"
+    },
+    {
+      "encoding": {
+        "y": {
+          "field": "open",
+          "scale": {"zero": false},
+          "title": "price",
+          "type": "quantitative"
+        },
+        "y2": {"field": "close"}
+      },
+      "mark": {"type": "bar"},
+      "name": "candles"
+    }
+  ],
+  "title": "Daily bars",
+  "width": 400
+}

@@ -1,0 +1,236 @@
+;;; eas-legend.el --- legend models and placement -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2026 David Awad
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;;; Commentary:
+
+;; Part of L4.  A legend explains one scale: an ordinal color scale or a
+;; quantitative size or opacity scale as a symbol legend, a sequential
+;; color scale as a gradient.  The svg target places legends as Vega
+;; does: symbol entries are max(ceil(sqrt(size) + strokeWidth),
+;; labelFontSize) wide, rows are separated by their bounds plus
+;; rowPadding, entries start titlePadding below the title, and gradients
+;; get max(2, 2*floor(length/100)) labels.  Each placed svg legend
+;; carries :box, its Vega bounds.  The text target keeps one row per
+;; entry on the character grid.
+
+;;; Code:
+
+(require 'eas-core)
+(require 'eas-scale)
+(require 'eas-encode)
+(require 'eas-layout)
+
+(declare-function eas-expr--string "eas-expr")
+
+(defun eas-legend-model (spec _metrics)
+  "Legend model for SPEC (:channel :def :scale :shape :style), or nil.
+STYLE is the mark's constant look (:fill :stroke :stroke-width
+:opacity :stroked) that symbols copy."
+  (let* ((channel (plist-get spec :channel)) (def (plist-get spec :def)) (scale (plist-get spec :scale))
+         (legend (plist-get def :legend)) (style (plist-get spec :style)))
+    (unless (or (memq legend '(:null :false)) (null scale))
+      (let ((base (list :channel (eas-key-name channel)
+                        :title (if (plist-member legend :title)
+                                   (let ((tt (plist-get legend :title))) (and (stringp tt) tt))
+                                 (eas-encode-title def))
+                        :shape (plist-get spec :shape) :style style)))
+        (pcase (plist-get scale :type)
+          ("ordinal"
+           (append base (list :type "symbol"
+                              :entries (vconcat (seq-map (lambda (v)
+                                                           (list :value v :label (eas-expr--string v)
+                                                                 :color (eas-scale-apply scale v)))
+                                                         (plist-get scale :domain))))))
+          ("sequential"
+           (append base (list :type "gradient" :stops (plist-get scale :range) :domain (plist-get scale :domain)
+                              :entries [])))
+          (_
+           (let* ((domain (plist-get scale :domain))
+                  (values (eas-scale-linear-ticks (aref domain 0) (aref domain 1) 5))
+                  (fmt (eas-scale-tick-format (list :type "linear" :domain domain) 5))
+                  (values (if (and (eq channel :size) values (zerop (eas-scale-apply scale (car values))))
+                              (cdr values) values)))
+             (append base (list :type "symbol"
+                                :entries (vconcat (mapcar (lambda (v)
+                                                            (append (list :value v :label (funcall fmt v)
+                                                                          :color (plist-get style :fill))
+                                                                    (list (if (eq channel :size) :size :opacity)
+                                                                          (eas-scale-apply scale v))))
+                                                          values)))))))))))
+
+;;; Text target
+
+(defun eas-legend--gradient-length (legend metrics)
+  "Gradient length: one row per label in text, clamp(plot height, 64, 200) in svg."
+  (if (eas-layout-text-p metrics)
+      (* (max 5 (length (plist-get legend :entries))) (plist-get metrics :row))
+    (max 64 (min 200 (or (plist-get legend :plot-h) 200)))))
+
+(defun eas-legend--gradient-entries (legend metrics)
+  "LEGEND's gradient labels: d3 ticks, as many as Vega asks for its length."
+  (let* ((domain (plist-get legend :domain))
+         (glen (eas-legend--gradient-length legend metrics))
+         (count (if (eas-layout-text-p metrics) (max 2 (ceiling (/ glen 40.0)))
+                  (max 2 (* 2 (floor glen 100)))))
+         (fmt (eas-scale-tick-format (list :type "linear" :domain domain) count))
+         (values (eas-scale-linear-ticks (aref domain 0) (aref domain 1) count)))
+    (when (and (not (eas-layout-text-p metrics)) (< (length values) 3) (/= (aref domain 0) (aref domain 1)))
+      (setq values (list (aref domain 0) (aref domain 1))))
+    (vconcat (mapcar (lambda (v) (list :value v :label (funcall fmt v))) values))))
+
+(defun eas-legend-sized (legend metrics)
+  "LEGEND with its gradient entries filled in for its final length."
+  (if (equal (plist-get legend :type) "gradient")
+      (eas-plist-put legend :entries (eas-legend--gradient-entries legend metrics))
+    legend))
+
+(defun eas-legend-size (legend metrics)
+  "Return (WIDTH . HEIGHT) of LEGEND in text, including its offset from the plot."
+  (let* ((size (plist-get metrics :label-size))
+         (labels (mapcar (lambda (e) (eas-layout-text-width metrics (plist-get e :label) size))
+                         (plist-get legend :entries)))
+         (title-w (if (plist-get legend :title)
+                      (eas-layout-text-width metrics (plist-get legend :title) (plist-get metrics :title-size))
+                    0))
+         (sym (plist-get metrics :symbol))
+         (gradient (equal (plist-get legend :type) "gradient"))
+         (body-w (+ (if gradient (* 1.5 sym) sym) (plist-get metrics :char-w) (if labels (apply #'max labels) 0)))
+         (title-h (if (plist-get legend :title) (plist-get metrics :title-size) 0)))
+    (cons (+ (plist-get metrics :legend-offset) (max title-w body-w))
+          (+ title-h (if gradient (eas-legend--gradient-length legend metrics)
+                       (* (length labels) (plist-get metrics :row)))))))
+
+(defun eas-legend--place-text (legend x y metrics)
+  "LEGEND on the character grid with its top-left corner at X Y."
+  (let* ((sym (plist-get metrics :symbol)) (row (plist-get metrics :row))
+         (title-h (if (plist-get legend :title) (plist-get metrics :title-size) 0))
+         (gap (plist-get metrics :char-w))
+         (width (- (car (eas-legend-size legend metrics)) (plist-get metrics :legend-offset)))
+         (gradient (equal (plist-get legend :type) "gradient"))
+         (glen (eas-legend--gradient-length legend metrics)))
+    (append (eas--plist-without legend :entries)
+            (list :x x :y y :width width)
+            (when (plist-get legend :title)
+              (list :title-mark (list :text (plist-get legend :title) :x x :y y :align "left" :baseline "top")))
+            (when gradient (list :bar (vector x (+ y title-h) (* 1.5 sym) glen)))
+            (list :entries
+                  (vconcat
+                   (seq-map-indexed
+                    (lambda (e i)
+                      (let* ((d (plist-get legend :domain))
+                             (top (+ y title-h
+                                     (if gradient
+                                         (* glen (/ (- (aref d 1) (plist-get e :value)) (float (max 1e-9 (- (aref d 1) (aref d 0))))))
+                                       (* i row))))
+                             (cy (if gradient top (+ top (/ row 2.0)))))
+                        (append e (list :sx (+ x (/ sym 2.0)) :sy cy
+                                        :lx (+ x (if gradient (* 1.5 sym) sym) gap) :ly cy
+                                        :bounds (vector x top width row)))))
+                    (plist-get legend :entries)))))))
+
+;;; Svg target
+
+(defun eas-legend--symbol (legend e metrics)
+  "Symbol look of entry E in LEGEND: (:size :fill :stroke :stroke-width :opacity)."
+  (let* ((style (plist-get legend :style)) (channel (plist-get legend :channel))
+         (stroked (or (equal channel "stroke") (and (plist-get style :stroked) (member channel '("color")))))
+         (sw (if stroked (or (plist-get style :stroke-width) 2) (plist-get metrics :symbol-stroke-width))))
+    (list :size (or (plist-get e :size) (plist-get metrics :symbol-size))
+          :fill (cond (stroked "transparent")
+                      ((member channel '("color" "fill")) (plist-get e :color))
+                      (t (plist-get style :fill)))
+          :stroke (cond (stroked (plist-get e :color))
+                        ((member channel '("size" "opacity")) "transparent")
+                        (t (plist-get style :stroke)))
+          :stroke-width sw
+          :opacity (or (plist-get e :opacity) (plist-get style :opacity) 1))))
+
+(defun eas-legend--title (legend x y metrics)
+  "LEGEND's title mark at X Y and the y where its body starts, as (MARK . Y)."
+  (if-let* ((title (plist-get legend :title)))
+      (cons (list :text title :x x :y y :align "left" :baseline "top")
+            (+ y (plist-get metrics :legend-title-size) (plist-get metrics :legend-title-pad)))
+    (cons nil y)))
+
+(defun eas-legend--place-symbols (legend x y metrics)
+  "Symbol LEGEND with its top-left at X Y, laid out as Vega does."
+  (let* ((fs (plist-get metrics :legend-label-size))
+         (title (eas-legend--title legend x y metrics))
+         (looks (mapcar (lambda (e) (eas-legend--symbol legend e metrics)) (plist-get legend :entries)))
+         (sizes (mapcar (lambda (s) (max (ceiling (+ (sqrt (plist-get s :size)) (plist-get s :stroke-width))) fs))
+                        looks))
+         (offset (apply #'max 0 sizes))
+         (ey (cdr title)) (prev-y2 nil) (box nil)
+         (entries
+          (cl-loop
+           for e across (plist-get legend :entries) for s in looks for size in sizes
+           collect
+           (let* ((r (/ (sqrt (plist-get s :size)) 2.0))
+                  (grow (if (plist-get s :stroke) (plist-get s :stroke-width) 0))
+                  (cy (/ size 2.0))
+                  (lbox (eas-layout-text-bounds metrics (plist-get e :label) fs (+ offset (plist-get metrics :legend-label-offset))
+                                                  cy "left" "middle"))
+                  (y1 (min (aref lbox 1) (- cy r grow))) (y2 (max (aref lbox 3) (+ cy r grow)))
+                  (x2 (max (aref lbox 2) (+ (/ offset 2.0) r grow))))
+             (when prev-y2 (setq ey (+ ey prev-y2 (plist-get metrics :legend-row-pad) (if (< y1 0) (ceiling (- y1)) 0))))
+             (setq prev-y2 (ceiling y2)
+                   box (eas-layout-union box (vector x (+ ey y1) (+ x x2) (+ ey y2))))
+             (append e s (list :sx (+ x (/ offset 2.0)) :sy (+ ey cy)
+                               :lx (+ x offset (plist-get metrics :legend-label-offset)) :ly (+ ey cy)
+                               :bounds (vector x ey (max offset x2) size)))))))
+    (when (car title)
+      (setq box (eas-layout-union box (eas-layout-text-bounds metrics (plist-get legend :title)
+                                                                  (plist-get metrics :legend-title-size) x y "left" "top"
+                                                                  0 (plist-get metrics :legend-title-weight)))))
+    (append (eas--plist-without legend :entries)
+            (list :x x :y y :width (if box (ceiling (- (aref box 2) x)) 0) :font-size fs :symbol-type (plist-get metrics :symbol-type)
+                  :box (if box (vector x y (+ x (ceiling (- (aref box 2) x))) (+ y (ceiling (- (aref box 3) y))))
+                         (vector x y x y))
+                  :entries (vconcat entries))
+            (when (car title) (list :title-mark (car title))))))
+
+(defun eas-legend--place-gradient (legend x y metrics)
+  "Gradient LEGEND with its top-left at X Y, laid out as Vega does."
+  (let* ((fs (plist-get metrics :legend-label-size))
+         (title (eas-legend--title legend x y metrics))
+         (by (cdr title)) (thick (plist-get metrics :gradient-thickness))
+         (glen (eas-legend--gradient-length legend metrics))
+         (d (plist-get legend :domain)) (span (max 1e-9 (- (aref d 1) (aref d 0))))
+         (lx (+ x thick 2))
+         (placed (mapcar (lambda (e)
+                           (let* ((perc (/ (- (plist-get e :value) (aref d 0)) (float span)))
+                                  (baseline (cond ((<= perc 0) "bottom") ((>= perc 1) "top") (t "middle")))
+                                  (ly (+ by (* glen (- 1 perc)))))
+                             (append e (list :lx lx :ly ly :baseline baseline :sx x :sy ly
+                                             :box (eas-layout-text-bounds metrics (plist-get e :label) fs lx ly
+                                                                            "left" baseline)
+                                             :bounds (vector x (- ly (/ fs 2.0)) (+ thick 2) fs)))))
+                         (plist-get legend :entries)))
+         (shown (eas-layout--thin placed
+                                    (lambda (a b) (let ((p (plist-get a :box)) (q (plist-get b :box)))
+                                                    (> 0 (max (- (aref q 0) (aref p 2)) (- (aref p 0) (aref q 2))
+                                                              (- (aref q 1) (aref p 3)) (- (aref p 1) (aref q 3))))))
+                                    "parity" t))
+         (box (apply #'eas-layout-union (vector x by (+ x thick) (+ by glen))
+                     (mapcar (lambda (e) (plist-get e :box)) shown))))
+    (when (car title)
+      (setq box (eas-layout-union box (eas-layout-text-bounds metrics (plist-get legend :title)
+                                                                  (plist-get metrics :legend-title-size) x y "left" "top"
+                                                                  0 (plist-get metrics :legend-title-weight)))))
+    (append (eas--plist-without legend :entries)
+            (list :x x :y y :width (ceiling (- (aref box 2) x)) :font-size fs
+                  :bar (vector x by thick glen)
+                  :box (vector x y (+ x (ceiling (- (aref box 2) x))) (+ y (ceiling (- (aref box 3) y))))
+                  :entries (vconcat (mapcar (lambda (e) (eas--plist-without e :box)) shown)))
+            (when (car title) (list :title-mark (car title))))))
+
+(defun eas-legend-place (legend x y metrics)
+  "Return LEGEND with geometry, its top-left corner at X Y."
+  (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
+        ((equal (plist-get legend :type) "gradient") (eas-legend--place-gradient legend x y metrics))
+        (t (eas-legend--place-symbols legend x y metrics))))
+
+(provide 'eas-legend)
+;;; eas-legend.el ends here

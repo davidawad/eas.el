@@ -1,0 +1,291 @@
+{
+  "background": "#fcfcfb",
+  "config": {
+    "arc": {"stroke": "#fcfcfb", "strokeWidth": 2},
+    "area": {"opacity": 0.85},
+    "axis": {
+      "domainColor": "#c3c2b7",
+      "domainWidth": 1,
+      "gridColor": "#e1e0d9",
+      "gridWidth": 1,
+      "labelColor": "#52514e",
+      "labelFontSize": 11,
+      "labelPadding": 4,
+      "tickColor": "#c3c2b7",
+      "tickSize": 4,
+      "titleColor": "#52514e",
+      "titleFontSize": 12,
+      "titleFontWeight": "normal"
+    },
+    "axisX": {"grid": false},
+    "background": "#fcfcfb",
+    "bar": {"cornerRadiusEnd": 4},
+    "circle": {"size": 64},
+    "font": "sans-serif",
+    "legend": {
+      "labelColor": "#52514e",
+      "labelFontSize": 11,
+      "symbolSize": 80,
+      "symbolType": "circle",
+      "titleColor": "#52514e",
+      "titleFontSize": 11,
+      "titleFontWeight": "normal"
+    },
+    "line": {"strokeCap": "round", "strokeJoin": "round", "strokeWidth": 2},
+    "mark": {"color": "#2a78d6"},
+    "point": {"filled": true, "size": 64},
+    "range": {
+      "category": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"],
+      "diverging": ["#256abf", "#6da7ec", "#cde2fb", "#f0efec", "#f6c3bd", "#ee7d78", "#c0392b"],
+      "heatmap": ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"],
+      "ordinal": ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"],
+      "ramp": ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
+    },
+    "rect": {"stroke": "#fcfcfb", "strokeWidth": 1},
+    "rule": {"color": "black"},
+    "square": {"size": 30},
+    "text": {"color": "black", "fontSize": 11},
+    "tick": {"thickness": 1},
+    "title": {
+      "anchor": "start",
+      "color": "#0b0b0b",
+      "fontSize": 16,
+      "fontWeight": 600,
+      "offset": 12,
+      "subtitleColor": "#52514e",
+      "subtitleFontSize": 12
+    },
+    "view": {"continuousHeight": 300, "continuousWidth": 480, "stroke": null}
+  },
+  "contract": "scene/v1",
+  "params": [],
+  "size": {
+    "cell": [7, 14],
+    "h": 224,
+    "w": 420
+  },
+  "target": "text",
+  "title": {
+    "align": "center",
+    "baseline": "top",
+    "fontSize": 14,
+    "fontWeight": {},
+    "text": "Daily value",
+    "x": 210.0,
+    "y": 0
+  },
+  "views": [
+    {
+      "axes": [
+        {
+          "channel": "x",
+          "discrete": false,
+          "domain-line": [28, 189.0, 420, 189.0],
+          "grid": false,
+          "labelAngle": 0,
+          "orient": "bottom",
+          "overlap": "parity",
+          "ticks": [
+            {
+              "align": "center",
+              "baseline": "top",
+              "label": "Tue 03",
+              "lx": 71.556,
+              "ly": 196,
+              "pos": 71.556,
+              "tick": [71.556, 189.0, 71.556, 196],
+              "value": 1772496000000
+            },
+            {
+              "align": "center",
+              "baseline": "top",
+              "label": "Thu 05",
+              "lx": 158.667,
+              "ly": 196,
+              "pos": 158.667,
+              "tick": [158.667, 189.0, 158.667, 196],
+              "value": 1772668800000
+            },
+            {
+              "align": "center",
+              "baseline": "top",
+              "label": "Sat 07",
+              "lx": 245.778,
+              "ly": 196,
+              "pos": 245.778,
+              "tick": [245.778, 189.0, 245.778, 196],
+              "value": 1772841600000
+            },
+            {
+              "align": "center",
+              "baseline": "top",
+              "label": "Mon 09",
+              "lx": 332.889,
+              "ly": 196,
+              "pos": 332.889,
+              "tick": [332.889, 189.0, 332.889, 196],
+              "value": 1773014400000
+            },
+            {
+              "align": "right",
+              "baseline": "top",
+              "label": "Wed 11",
+              "lx": 420.0,
+              "ly": 196,
+              "pos": 420.0,
+              "tick": [420.0, 189.0, 420.0, 196],
+              "value": 1773187200000
+            }
+          ],
+          "title": "date",
+          "title-mark": {"align": "center", "angle": 0, "baseline": "top", "text": "date", "x": 224.0, "y": 210}
+        },
+        {
+          "channel": "y",
+          "discrete": false,
+          "domain-line": [24.5, 28, 24.5, 182],
+          "grid": true,
+          "labelAngle": 0,
+          "orient": "left",
+          "overlap": "parity",
+          "ticks": [
+            {
+              "align": "right",
+              "baseline": "middle",
+              "grid": [28, 43.4, 420, 43.4],
+              "label": "110",
+              "lx": 21,
+              "ly": 43.4,
+              "pos": 43.4,
+              "tick": [21, 43.4, 24.5, 43.4],
+              "value": 110.0
+            },
+            {
+              "align": "right",
+              "baseline": "middle",
+              "grid": [28, 74.2, 420, 74.2],
+              "label": "108",
+              "lx": 21,
+              "ly": 74.2,
+              "pos": 74.2,
+              "tick": [21, 74.2, 24.5, 74.2],
+              "value": 108.0
+            },
+            {
+              "align": "right",
+              "baseline": "middle",
+              "grid": [28, 105.0, 420, 105.0],
+              "label": "106",
+              "lx": 21,
+              "ly": 105.0,
+              "pos": 105.0,
+              "tick": [21, 105.0, 24.5, 105.0],
+              "value": 106.0
+            },
+            {
+              "align": "right",
+              "baseline": "middle",
+              "grid": [28, 135.8, 420, 135.8],
+              "label": "104",
+              "lx": 21,
+              "ly": 135.8,
+              "pos": 135.8,
+              "tick": [21, 135.8, 24.5, 135.8],
+              "value": 104.0
+            },
+            {
+              "align": "right",
+              "baseline": "middle",
+              "grid": [28, 166.6, 420, 166.6],
+              "label": "102",
+              "lx": 21,
+              "ly": 166.6,
+              "pos": 166.6,
+              "tick": [21, 166.6, 24.5, 166.6],
+              "value": 102.0
+            }
+          ],
+          "title": "value",
+          "title-mark": {"align": "left", "angle": 0, "baseline": "top", "text": "value", "x": 0, "y": 14}
+        }
+      ],
+      "bounds": [28, 28, 392, 154],
+      "clip": false,
+      "frame": {},
+      "id": "main",
+      "legends": [],
+      "marks": [
+        {
+          "id": "main/0",
+          "index": {
+            "kind": "x-sorted",
+            "refs": [
+              [0, 0],
+              [0, 1],
+              [0, 2],
+              [0, 3],
+              [0, 4],
+              [0, 5],
+              [0, 6],
+              [0, 7]
+            ],
+            "xs": [28.0, 71.556, 115.111, 158.667, 202.222, 332.889, 376.444, 420.0]
+          },
+          "items": [
+            {
+              "datum": [0, 1, 2, 3, 4, 5, 6, 7],
+              "fill": "none",
+              "opacity": 1,
+              "points": [
+                [28.0, 158.9],
+                [71.556, 134.26],
+                [115.111, 169.68],
+                [158.667, 100.38],
+                [202.222, 60.34],
+                [332.889, 86.52],
+                [376.444, 37.24],
+                [420.0, 58.8]
+              ],
+              "stroke": "#2a78d6",
+              "strokeCap": "round",
+              "strokeJoin": "round",
+              "strokeWidth": 2
+            }
+          ],
+          "mark": "line",
+          "path": "/layer/0",
+          "rows": [
+            {"_eas_row": 0, "date": "2026-03-02", "value": 102.5},
+            {"_eas_row": 1, "date": "2026-03-03", "value": 104.1},
+            {"_eas_row": 2, "date": "2026-03-04", "value": 101.8},
+            {"_eas_row": 3, "date": "2026-03-05", "value": 106.3},
+            {"_eas_row": 4, "date": "2026-03-06", "value": 108.9},
+            {"_eas_row": 5, "date": "2026-03-09", "value": 107.2},
+            {"_eas_row": 6, "date": "2026-03-10", "value": 110.4},
+            {"_eas_row": 7, "date": "2026-03-11", "value": 109.0}
+          ]
+        }
+      ],
+      "params": [],
+      "path": "",
+      "scales": {
+        "x": {
+          "domain": [1772409600000.0, 1773187200000.0],
+          "field": "date",
+          "range": [28, 420],
+          "reverse": false,
+          "type": "time",
+          "utc": false
+        },
+        "y": {
+          "domain": [101.0, 111.0],
+          "field": "value",
+          "range": [182, 28],
+          "reverse": false,
+          "type": "linear",
+          "utc": false
+        }
+      }
+    }
+  ]
+}

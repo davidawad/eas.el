@@ -1,0 +1,71 @@
+{
+  "calibration-ms": 34.669,
+  "compiled": true,
+  "contract": "eas-bench-budget/v1",
+  "floor-ms": 2,
+  "measured": {"date": "2026-10-05", "emacs": "30.1", "gc": "deferred", "system": "gnu/linux"},
+  "note": "Reference box: Linux 6.8, 4 vCPU AMD EPYC-Rome, GNU Emacs 30.1 --without-x, byte-compiled, batch (fc-qx1.9). Regenerate with make bench-budget and review the diff.",
+  "reference": [
+    {
+      "points": 1000,
+      "stages": {
+        "compile-points": 4.55,
+        "compile-svg": 4.335,
+        "compile-text": 3.693,
+        "hit-line": 0.007,
+        "hit-points": 0.033,
+        "hover": 0.271,
+        "hover-first": 1.154,
+        "hover-svg": 4.274,
+        "hover-text": 8.405,
+        "lttb": 0.874,
+        "render-svg": 3.074,
+        "render-text": 8.046
+      }
+    },
+    {
+      "points": 10000,
+      "stages": {
+        "compile-points": 37.401,
+        "compile-svg": 32.606,
+        "compile-text": 31.961,
+        "hit-line": 0.007,
+        "hit-points": 0.094,
+        "hover": 0.252,
+        "hover-first": 7.886,
+        "hover-svg": 3.625,
+        "hover-text": 17.017,
+        "lttb": 3.155,
+        "render-svg": 3.797,
+        "render-text": 15.236
+      }
+    },
+    {
+      "points": 100000,
+      "stages": {
+        "compile-points": 374.307,
+        "compile-svg": 366.722,
+        "compile-text": 359.676,
+        "hit-line": 0.007,
+        "hit-points": 0.882,
+        "hover": 0.268,
+        "hover-first": 75.83,
+        "hover-svg": 3.326,
+        "hover-text": 24.988,
+        "lttb": 26.198,
+        "render-svg": 3.217,
+        "render-text": 23.305
+      }
+    }
+  ],
+  "targets": [
+    {
+      "ms": 50,
+      "points": 10000,
+      "source": "fc-qx1.14 hypothesis: hover feedback under 50 ms at 10k points",
+      "stage": "hover"
+    }
+  ],
+  "tolerance": 2.5
+}
+

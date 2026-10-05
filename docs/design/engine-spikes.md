@@ -1,7 +1,7 @@
-# easel spikes (fc-qx1.14)
+# eas spikes (fc-qx1.14)
 
 Measured numbers, and the decision each one forces. The scripts that
-produced them are in `scripts/easel-spikes/` and can be rerun.
+produced them are in `scripts/eas-spikes/` and can be rerun.
 
 Box: Linux 6.8, 4 vCPU AMD EPYC-Rome, GNU Emacs **30.1** (not 30.2). The
 build is `--without-x`, and `image-type-available-p 'svg` is nil.
@@ -10,12 +10,12 @@ iTerm2/kitty. Every number below that needs one of those is listed
 under **Unmeasured** and has to be taken on a GUI machine before the
 `.2` crosshair redraw strategy is final.
 
-## 1. Name: `easel` is free
+## 1. Name: `eas` is free
 
-`scripts/easel-spikes/name-check.el` read the archive-contents files
+`scripts/eas-spikes/name-check.el` read the archive-contents files
 downloaded on 2026-10-05:
 
-| archive | packages | names containing "easel" |
+| archive | packages | names containing "eas" |
 |---|---|---|
 | MELPA | 6331 | none |
 | MELPA stable | 3488 | none |
@@ -23,16 +23,16 @@ downloaded on 2026-10-05:
 | NonGNU ELPA | 291 | none |
 
 `emacs -Q` 30.1 with chart, svg, image, xt-mouse, org, ox, eww, shr,
-dom and json loaded interns no `easel*` symbol. On GitHub,
-`zonuexe/easel.el` (last push 2016-08-07, 0 stars, not on any archive)
+dom and json loaded interns no `eas*` symbol. On GitHub,
+`zonuexe/eas.el` (last push 2016-08-07, 0 stars, not on any archive)
 is the only prior art.
 
-**Decision:** the name is `easel` with prefix `easel-`. The design doc
+**Decision:** the name is `eas` with prefix `eas-`. The design doc
 drops "provisional".
 
 ## 2. Re-raster latency: the Lisp half, measured
 
-`scripts/easel-spikes/render-cost.el` (mean ms per call, batch):
+`scripts/eas-spikes/render-cost.el` (mean ms per call, batch):
 
 | N marks | svg.el `svg-rectangle` build | direct DOM build | move crosshair + `svg-print` | one `<path>` of N vertices, `svg-print` |
 |---|---|---|---|---|
@@ -76,7 +76,7 @@ Continuous series hit-test by scale inversion.
 
 ## 5. Text frames (tmux, `emacs -nw`)
 
-`scripts/easel-spikes/tty-mouse.sh` runs Emacs inside a detached tmux
+`scripts/eas-spikes/tty-mouse.sh` runs Emacs inside a detached tmux
 session (TERM `tmux-256color`), captures the bytes Emacs writes and
 injects SGR mouse reports:
 
@@ -117,11 +117,11 @@ This box had no GUI build, so the table below was left open. Section 8
 
 ## 6. Runtime hover through the real engine (fc-qx1.19)
 
-`scripts/easel-spikes/run-compiled.sh scripts/easel-spikes/dispatch-cost.el`
+`scripts/eas-spikes/run-compiled.sh scripts/eas-spikes/dispatch-cost.el`
 uses byte-compiled sources, as an installed package runs. Interpreted
 `.el` runs 4–10x slower, and the first measurements below were taken that
 way by mistake. Mean ms in batch at 800x400. "hover" is one
-`easel-dispatch` of a pointermove that moves the crosshair: the reducer,
+`eas-dispatch` of a pointermove that moves the crosshair: the reducer,
 the hit-test, the incremental compile and the inspect it returns.
 
 | spec | N | full compile | hover | SVG serialize | text compile+render 100x30 |
@@ -135,11 +135,11 @@ the hit-test, the incremental compile and the inspect it returns.
 
 How hover got there: a profile showed 35% of the time in GC and the
 rest in per-row generic lookups. The fixes were a memoized
-`easel-key`, precompiled scale functions, per-unit channel accessors,
+`eas-key`, precompiled scale functions, per-unit channel accessors,
 a shared style plist, and a 64 MB `gc-cons-threshold` during compile.
 That took a 10k compile from 139 to 98 ms. The bigger change is that
 selection-only changes no longer recompile the scene:
-`easel-compile-patch` rebuilds only the items whose selection
+`eas-compile-patch` rebuilds only the items whose selection
 membership changed, or the one unit a param filters. A test asserts
 that the patched scene equals a full compile after every event.
 
@@ -161,17 +161,17 @@ gallery passed 0 of 47, because its defaults were not bin/chart's.
 bin/chart is not installed on this box, so the conformance oracle has
 not run, and supported.json marks every feature `"oracle":
 "unverified"`. To catch geometry bugs before it runs,
-`scripts/easel-spikes/vega-standin/run.sh` renders every gallery spec
+`scripts/eas-spikes/vega-standin/run.sh` renders every gallery spec
 with real Vega-Lite 6.4.1 + Vega 6 (node, no canvas). Both SVGs are
 rasterized by resvg with DejaVu Sans and compared with pixelmatch
 (threshold 0.1). This is a stand-in. Its ratios seed each spec's
-`usermeta.easel.threshold` (ratio + 0.02), which must be re-measured
+`usermeta.eas.threshold` (ratio + 0.02), which must be re-measured
 with `bin/chart diff`, whose metric may differ.
 
 Result over 47 specs: median mismatch 0.028; 27 at 3% or less,
 40 at 5% or less. The remaining specs:
 
-| spec | mismatch | easel size | Vega size |
+| spec | mismatch | eas size | Vega size |
 |---|---|---|---|
 | composition-vconcat | 0.092 | 356x254 | 362x258 |
 | scale-log | 0.076 | 380x347 | 384x347 |
@@ -204,10 +204,10 @@ replaced by a measurement:
 
 ## 8. Live data: the cost of one push frame (fc-qx1.7)
 
-`scripts/easel-spikes/run-compiled.sh scripts/easel-spikes/push-cost.el`
+`scripts/eas-spikes/run-compiled.sh scripts/eas-spikes/push-cost.el`
 uses byte-compiled sources. The spec is a line with a pointermove
 crosshair (the filter idiom from section 6) at 800x400, holding N rows
-in a full window. A frame is one `easel-dispatch` of a windowed push of
+in a full window. A frame is one `eas-dispatch` of a windowed push of
 K new rows: append, trim, reduce and a full recompile. The data
 changed, so the selection patch does not apply. Mean ms in batch:
 
@@ -225,7 +225,7 @@ about 13 ms of Lisp in a GUI frame (librsvg not included) and 65 ms in
 a terminal at 1k rows, and 44 ms and 110 ms at 10k.
 
 **Decisions:**
-- `x-easel.stream.max-fps` defaults to **5**. That is a 200 ms
+- `x-eas.stream.max-fps` defaults to **5**. That is a 200 ms
   interval. The worst measured case is a 10k-row terminal chart at
   110 ms, so Emacs stays about 45% idle for input. A 1k-row GUI chart
   stays about 94% idle. At 10 fps the 10k terminal case would use the
@@ -234,7 +234,7 @@ a terminal at 1k rows, and 44 ms and 110 ms at 10k.
   since the last frame, as one windowed push event, so the log replays
   exactly the frames that were drawn.
 - Streams pause while a drag is in progress (brush or pan) and for
-  `easel-stream-hover-hold` (2 s) after the last pointer event. Neither
+  `eas-stream-hover-hold` (2 s) after the last pointer event. Neither
   glue reports the pointer leaving reliably, and in a terminal, point
   is always over the chart, so the hold has to lapse. On pointerleave,
   or once the hold lapses, the queue catches up in one frame.
@@ -247,8 +247,8 @@ a terminal at 1k rows, and 44 ms and 110 ms at 10k.
 **Linux/Xvfb**: Debian trixie, 4 vCPU Intel Xeon (Skylake), Xvfb
 21.1.16 at 1600x1000x24 with no window manager, and GNU Emacs 30.1
 `emacs-lucid` (X11, Lucid, **Cairo**, librsvg 2.60) with DejaVu fonts.
-`scripts/easel-spikes/gui/setup-linux.sh` installs all of this without
-root. `run.sh SPIKE.el OUT` runs one spike against byte-compiled easel.
+`scripts/eas-spikes/gui/setup-linux.sh` installs all of this without
+root. `run.sh SPIKE.el OUT` runs one spike against byte-compiled eas.
 Raw outputs are `raster.el`, `hover.el`, `motion.el` and
 `../tmux-forward.sh`.
 
@@ -292,7 +292,7 @@ distinct images it held 129 MB, after 200 it held 257 MB (152 MB after
 `image-flush` on each step, the cache stays at **2.56 MB** (two images)
 and RSS grows by 0.4 MB over 300 steps.
 
-**Fixed:** `easel-mode-redraw` now calls `image-flush` on the image it
+**Fixed:** `eas-mode-redraw` now calls `image-flush` on the image it
 replaces. Before this, every hover leaked one image until eviction.
 
 ### 8.3 Pointer coordinates and `:scale` (`hover.el`)
@@ -305,13 +305,13 @@ The pointer was warped to known offsets inside the image:
 - The C hit test reads `:map` in **display** pixels: at `:scale 2`, area
   (100,50)-(200,100) was hit at display (150, 75).
 - **Bug, fixed:** when `create-image` is given no `:scale`, it adds
-  `:scale default`. `easel-mode-redraw` passed none, and the glue
+  `:scale default`. `eas-mode-redraw` passed none, and the glue
   computed `(float (or :scale 1))`, which signalled
   `wrong-type-argument` on **every** GUI pointer event, so GUI hover
-  never worked. `easel-svg-image` now pins `:scale` (default 1, because
+  never worked. `eas-svg-image` now pins `:scale` (default 1, because
   the scene is compiled at window pixels), scales `:map` to display
-  pixels and passes `:original-map`. `easel-mode-event-px` divides only
-  by a numeric scale. `easel-glue-test.el` covers all three, and those
+  pixels and passes `:original-map`. `eas-mode-event-px` divides only
+  by a numeric scale. `eas-glue-test.el` covers all three, and those
   tests fail on the old code.
 - **Bug, fixed:** `create-image` given `:map` without `:original-map`
   calls `image-size` twice (`image--compute-original-map`), which
@@ -348,7 +348,7 @@ rasterization `create-image` did before the fix (8.3).
 
 ### 8.5 Real motion through the engine (`motion.el`, xdotool)
 
-This used a real `easel-view-mode` buffer: the shipped keymap, glue and
+This used a real `eas-view-mode` buffer: the shipped keymap, glue and
 reducer, with a crosshair (filter idiom) on an 800x400 line chart.
 xdotool, as a separate X client, sent 150 moves across the plot, either
 at 125 Hz (8 ms apart, a typical mouse) or as a flood. Each redraw was
@@ -436,7 +436,7 @@ pane asks for. Drags again arrived as down/motion/up with no
   ~1k. Series stay single paths, which are nearly free.
 - The glue fixes found here (pinned `:scale`, `:map` in display pixels
   with `:original-map`, `image-flush` of the replaced image) are in
-  `easel-svg.el` and `easel-mode.el`.
+  `eas-svg.el` and `eas-mode.el`.
 
 ### 8.9 Still open (needs macOS/NS or real terminals)
 
@@ -451,16 +451,16 @@ pane asks for. Drags again arrived as down/motion/up with no
 
 ## 9. Terminal parity through a real terminal (fc-qx1.8)
 
-`scripts/easel-spikes/tty-parity.sh` opens a point chart (brush, click
+`scripts/eas-spikes/tty-parity.sh` opens a point chart (brush, click
 selection, legend) in `emacs -nw` inside tmux (TERM `tmux-256color`).
 It injects SGR mouse reports at the cells of real data and then types
 keys. Showing the chart turned on `xterm-mouse-mode` by itself
-(`easel-tty-xterm-mouse`). Motion with no button, a press, motion with
+(`eas-tty-xterm-mouse`). Motion with no button, a press, motion with
 the button held, and a release reached the reducer as pointermove,
 pointerdown, pointermove and pointerup, and the drag brushed. `z`, `[`,
 `n`, RET and a wheel report followed. The recorded log, replayed in
 lockstep on a fresh text view and a fresh SVG view
-(`easel-parity-replay`), gave 9 steps with 0 mismatches, and the fresh
+(`eas-parity-replay`), gave 9 steps with 0 mismatches, and the fresh
 text view's state equalled the live one.
 
 What the run and the parity tests found and fixed in the text glue:
@@ -479,9 +479,9 @@ What the run and the parity tests found and fixed in the text glue:
 
 Pixel logs are geometry-specific, because the text target snaps the
 layout to cells. Parity is therefore defined through data space:
-`easel-parity-translate` maps each event's pixels from one scene to the
+`eas-parity-translate` maps each event's pixels from one scene to the
 other through the scales (legend entries map to the same entry), and
-`easel-parity-state` compares domains, selections, the hovered and
+`eas-parity-state` compares domains, selections, the hovered and
 clicked datum, history depth and drag mode, within a relative 1e-9.
 ## 8. Geometry against bin/chart's references (fc-qx1.21)
 
@@ -490,7 +490,7 @@ PNGs bin/chart built for every gallery spec. Those PNGs are committed
 in test/conformance/ref with a manifest of spec and PNG hashes and the
 zone they were built in, so the oracle runs wherever rsvg-convert does.
 `bin/chart diff` scores any canvas size difference as 1.0, so images
-are compared in Elisp (easel-png.el). Both are padded onto their union
+are compared in Elisp (eas-png.el). Both are padded onto their union
 canvas and aligned by ink profiles, then by a local search. The size
 delta is reported apart from the differing-pixel ratio and bounded at
 8px. A pixel differs at pixelmatch's YIQ threshold 0.1.
@@ -534,7 +534,7 @@ scenegraph via vl-convert and Vega's source):
   0.25/0.125) or 5px; aggregate titles are titleCase(op) of field.
 - The references were built in America/Chicago, and Vega draws "time"
   scales and timeUnits in local time. A UTC date-only string reads as
-  1 March there, not 2 March. `easel-time-zone` (nil = UTC, the
+  1 March there, not 2 March. `eas-time-zone` (nil = UTC, the
   default) gives native compile Vega's local-time semantics. The
   manifest records the zone, and the oracle compiles SVG in it.
 
@@ -567,16 +567,16 @@ adding layers to the same line:
   rule layer (`crosshair-hit`).
 - **Parsing dates was most of the cost.** Each move re-tests every
   row's date string against the selection (the filter, and conditions),
-  and parsed each string every time: 37% of a 10k move. `easel-time-parse`
+  and parsed each string every time: 37% of a 10k move. `eas-time-parse`
   now memoizes strings in a bounded table (200k entries, then cleared).
 
-Terminal redraw (`scripts/easel-spikes/crosshair-cost.el`, 100x30
+Terminal redraw (`scripts/eas-spikes/crosshair-cost.el`, 100x30
 cells, one pointermove one cell to the right plus one redraw, batch
 and so without redisplay):
 
 | rows | redraw | ms/move | cells written/move |
 |---|---|---|---|
-| 1k | patch (`easel-mode-patch-text`) | 29.2 | 51 |
+| 1k | patch (`eas-mode-patch-text`) | 29.2 | 51 |
 | 1k | full rewrite (before) | 23.5 | 2,888 |
 | 10k | patch | 106.7 | 51 |
 | 10k | full rewrite | 94.0 | 2,875 |
@@ -591,7 +591,7 @@ inspect for the header readout 0.7. At 10k: 45.0, 50.5, 5.0 and 7.3.
   for one column.
 - GUI redraws stay idle-coalesced (8.8). The header-line readout
   updates on each move, before the redraw, and lists every field in
-  `encoding.tooltip` (`easel-crosshair-readout`).
+  `encoding.tooltip` (`eas-crosshair-readout`).
 - The 10k text move is now dominated by rendering the whole grid
   (50 ms). Rendering only the units that changed belongs to `fc-qx1.9`.
 
@@ -604,9 +604,9 @@ these are Lisp-side numbers. librsvg and redisplay are not included
 
 ### 10.1 The ladder: `bench` with no SOURCE
 
-`bin/easel bench` (Lisp: `(easel-agent "bench")`, `easel-bench.el`)
+`bin/eas bench` (Lisp: `(eas-agent "bench")`, `eas-bench.el`)
 measures two fixed workloads at 1k, 10k and 100k points and reports
-JSON: `easel-bench/v1` with one rung per size, and each stage as
+JSON: `eas-bench/v1` with one rung per size, and each stage as
 `{mean, max, reps}` in ms. The workloads are an 800x400 line with the
 Vega-Lite crosshair idiom (a rule layer filtered by a nearest
 pointermove point selection), the same chart as text at 100x30, and a
@@ -624,9 +624,9 @@ deferred as the glue runs it (10.4):
 | **hover** (pointermove: reduce, hit-test, patch, inspect) | **0.26** | **0.24** | **0.26** |
 | hover-svg (hover + SVG redraw, before librsvg) | 3.7 | 3.7 | 3.4 |
 | hover-text (hover + text redraw) | 8.5 | 16.0 | 24.9 |
-| hit-line (one easel-hit, x-sorted index) | 0.007 | 0.007 | 0.007 |
+| hit-line (one eas-hit, x-sorted index) | 0.007 | 0.007 | 0.007 |
 | compile-points (scatter scene) | 3.9 | 38 | 379 |
-| hit-points (one easel-hit, grid index) | 0.030 | 0.10 | 0.92 |
+| hit-points (one eas-hit, grid index) | 0.030 | 0.10 | 0.92 |
 | lttb (N points -> 800) | 0.70 | 3.2 | 26.0 |
 
 The hypothesis from fc-qx1.14, hover feedback under 50 ms at 10k
@@ -639,7 +639,7 @@ view, by the first move.
 
 ### 10.2 What made hover flat
 
-Before, measured on this box with `scripts/easel-spikes/dispatch-cost.el`
+Before, measured on this box with `scripts/eas-spikes/dispatch-cost.el`
 (section 6's script), then after:
 
 | spec | N | hover before | hover after |
@@ -651,25 +651,25 @@ A profile of the 100k filter idiom put 77% of a hover in the
 `{"param": "hover"}` filter, which tested every row against the store,
 and 22% in `inspect`, which re-summarised every visible row.
 
-- `easel-params-index.el` answers a bare `{"param": NAME}` filter on a
+- `eas-params-index.el` answers a bare `{"param": NAME}` filter on a
   point selection from a hash of each row's tuple over the store's
   fields. The hash is built once per rows vector and held in a weak
-  table. Keys normalise values the way `easel-params--same` compares
+  table. Keys normalise values the way `eas-params--same` compares
   them (numbers as floats, date strings as epoch ms). The same index
-  bounds which rows `easel-compile-patch` re-tests for conditional
+  bounds which rows `eas-compile-patch` re-tests for conditional
   encodings. Interval stores, and integers past 2^53, fall back to the
   row-by-row test. ERT checks the index against that test over mixed
   numbers, floats, -0.0, dates and strings, and checks that patched
   scenes equal full compiles.
-- `easel-view--visible-summary` caches its summary per mark rows
+- `eas-view--visible-summary` caches its summary per mark rows
   vector and x domain, so a hover reuses it and a zoom recomputes it.
 
 ### 10.3 Hit-testing and LTTB
 
 The grid index for point marks was built at compile time and then
-never read: `easel-hit-mark` scanned every item and allocated a
+never read: `eas-hit-mark` scanned every item and allocated a
 candidate per item. One query cost **1.88 ms at 1k, 13.5 ms at 10k and
-113.6 ms at 100k**. `easel-hit--grid` now searches square rings of
+113.6 ms at 100k**. `eas-hit--grid` now searches square rings of
 cells outwards (columns only for x-only), stopping once no unvisited
 cell can hold anything nearer. It returns exactly what the scan
 returns, ties included (ERT compares the two over 100 pointers in both
@@ -693,12 +693,12 @@ cut render-text from 22.1 to 14.8 ms at 10k and from 40.9 to 22.6 ms at
 Section 8.5 found GC to be the largest single GUI cost at the default
 threshold. Binding the threshold around the handler alone does not
 fix that, because when the binding unwinds the collection simply runs
-right after the handler. `easel-gc.el` therefore works like gcmh. The
+right after the handler. `eas-gc.el` therefore works like gcmh. The
 first chart event raises `gc-cons-threshold` to
-`easel-gc-cons-threshold` (64 MB). After `easel-gc-idle-delay` (1 s)
+`eas-gc-cons-threshold` (64 MB). After `eas-gc-idle-delay` (1 s)
 of idle time it collects once and puts the user's value back. It never
 lowers a larger value and leaves alone a value someone else changed in
-the meantime. Setting `easel-gc-cons-threshold` to nil turns it off.
+the meantime. Setting `eas-gc-cons-threshold` to nil turns it off.
 Batch runs are left alone. The raise lasts only while a chart is in
 use, so the design rule that a permanent global threshold is the
 user's choice still holds.
@@ -709,11 +709,11 @@ default 800 KB (`bench --gc default`). A long-running GUI session
 traces a much larger heap on every collection, which is where section
 8.5 measured 80–97 ms of GC per move. The end-to-end gain in a GUI
 frame is **unmeasured** on this box, which has no display. Re-run
-`scripts/easel-spikes/gui/motion.el` to measure it.
+`scripts/eas-spikes/gui/motion.el` to measure it.
 
 ### 10.5 The regression budget in CI
 
-`src/easel/bench-budget.json` holds this box's reference means, a
+`src/eas/bench-budget.json` holds this box's reference means, a
 `tolerance` (2.5), a `floor-ms` (2) and the machine's calibration time
 (best of five runs of a fixed Lisp workload, 34.7 ms here). A stage
 fails when its mean is above

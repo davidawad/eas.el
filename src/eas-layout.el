@@ -202,7 +202,11 @@ PLOT-SIZE is the plot extent along the axis."
                                       (format "%s" v))))
                     (eas-scale-tick-format scale count (or (plist-get axis :format) (plist-get def :format)
                                                       (and (equal (plist-get def :stack) "normalize") ".0%")))))
-             (values (cond ((plist-get axis :values) (append (plist-get axis :values) nil))
+             (values (cond ((plist-get axis :values)
+                            ;; A time axis's values may be date strings or DateTime objects.
+                            (mapcar (lambda (v) (if (and (not (numberp v)) (member (plist-get scale :type) '("time" "utc")))
+                                                    (or (eas-time-parse v) v) v))
+                                    (plist-get axis :values)))
                            ((plist-get scale :bins) (append (plist-get scale :bins) nil))
                            ((plist-get scale :bin-step)
                             (let ((d (plist-get scale :domain)) (step (plist-get scale :bin-step)))
@@ -451,8 +455,9 @@ labels, title) without the half-pixel translate of the drawn lines."
            (ab (if-let* ((m (plist-get axis :minExtent)))
                    (eas-layout-union ab (if bottom (vector x0 (+ y0 h) x0 (+ y0 h m)) (vector (- x0 m) y0 x0 y0)))
                  ab))
-           (tsize (plist-get metrics :title-size)) (tpad (plist-get metrics :title-pad))
-           (weight (plist-get metrics :title-weight))
+           (tsize (or (plist-get (plist-get axis :style) :titleFontSize) (plist-get metrics :title-size)))
+           (tpad (or (plist-get axis :title-padding) (plist-get metrics :title-pad)))
+           (weight (or (plist-get (plist-get axis :style) :titleFontWeight) (plist-get metrics :title-weight)))
            (tm (when title
                  (if bottom
                      (list :text title :x (+ x0 (/ w 2.0) 0.5) :y (+ (aref ab 3) tpad 0.5)

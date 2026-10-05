@@ -482,8 +482,8 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
      (when title
        (let* ((x1 (eas-compile--title-start groups metrics spec))
               (x2 (apply #'max (mapcar (lambda (g) (+ (plist-get g :x0) (plist-get g :w))) groups)))
-              (anchor (if (eas-layout-text-p metrics) "middle" (plist-get metrics :chart-title-anchor))))
-         (list :title (append (list :text title
+              (anchor (if (eas-layout-text-p metrics) "middle" (eas-title--get spec metrics :anchor :chart-title-anchor))))
+         (list :title (eas-title-extra-apply (append (list :text title
                             ;; Vega-Lite's title frame "bounds": start and end are the chart's edges.
                             :x (pcase anchor ("start" (if (or (eas-layout-text-p metrics) (equal (eas-compile--title-frame spec) "bounds")
                                             ;; An explicit frame "group" anchors to the plots.
@@ -506,7 +506,7 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
                                 :lineHeight (if (eas-layout-text-p metrics) (plist-get metrics :chart-title-size)
                                               (+ (eas-title--get spec metrics :fontSize :chart-title-size) 2)))))
                       (let ((color (plist-get (eas-title--object spec) :color)))
-                        (when (stringp color) (list :color color)))))))
+                        (when (stringp color) (list :color color)))) spec metrics))))
      (list :views (vconcat (mapcar (lambda (g) (eas-compile--view g metrics state)) groups))
            :params (vconcat (apply #'append (mapcar (lambda (g) (plist-get g :params)) groups)))))))
 

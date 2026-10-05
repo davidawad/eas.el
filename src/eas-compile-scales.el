@@ -126,8 +126,15 @@ With KEEP-NULL, null values count too (discrete domains show them)."
                  (and (equal type "linear") (not binned) (not custom)
                       (or (eq channel :size)
                           (and positional (not (eas-compile--dimension-p pairs channel)))))))
+         ;; domainMin/domainMax win over zero, as Vega applies them last,
+         ;; and Vega-Lite does not nice a domain they fix.
+         (fix-lo (and (not custom) (numberp (plist-get sp :domainMin))))
+         (fix-hi (and (not custom) (numberp (plist-get sp :domainMax))))
          (nice (if (plist-member sp :nice) (eq (plist-get sp :nice) t)
-                 (and (member type '("linear" "log")) positional (not binned) (not custom)))))
+                 (and (member type '("linear" "log")) positional (not binned) (not custom) (not fix-lo) (not fix-hi))))
+         (lo (if (and zero fix-hi (not fix-lo)) (min lo 0) lo))
+         (hi (if (and zero fix-lo (not fix-hi)) (max hi 0) hi))
+         (zero (and zero (not fix-lo) (not fix-hi))))
     (append (eas-scale-continuous type lo hi [0 1] :zero zero :nice nice
                                     :field (plist-get def :field)
                                     ;; utc scales tick and label in UTC whatever `eas-time-zone' is.

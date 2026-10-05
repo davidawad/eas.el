@@ -106,7 +106,7 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
            (lo (cond (explicit (aref explicit 0)) (nums (apply #'min nums)) (t 0)))
            (hi (cond (explicit (aref explicit 1)) (nums (apply #'max nums)) (t 1)))
            (zero (if (plist-member sp :zero) (eq (plist-get sp :zero) t) (not explicit)))
-           (range (plist-get sp :range)))
+           (range (plist-get sp :range)) (fitted nil))
       (unless (equal (plist-get def :type) "quantitative")
         (eas-signal "UNSUPPORTED_FEATURE" (format "%s needs a quantitative field natively" (eas-key-name channel))
                     :feature (concat "encoding/" (eas-key-name channel) "/" (or (plist-get def :type) "?"))))
@@ -114,15 +114,24 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
         (eas-signal "UNSUPPORTED_FEATURE" (format "%s scale type %s" (eas-key-name channel) type)
                     :feature (concat "scale/" type)))
       (when zero (setq lo (min lo 0) hi (max hi 0)))
+      (when (numberp (plist-get sp :domainMin)) (setq lo (plist-get sp :domainMin)))
+      (when (numberp (plist-get sp :domainMax)) (setq hi (plist-get sp :domainMax)))
       (when (= lo hi) (setq hi (+ lo 1)))
+      (setq fitted (not (vectorp range))
+            range (if (and (vectorp range) (= (length range) 2) (seq-every-p #'numberp range)) range
+                    (let ((r (copy-sequence default-range)))
+                      ;; Theta's rangeMin/rangeMax set its ends; radius fits them later.
+                      (when (eq channel :theta)
+                        (when (numberp (plist-get sp :rangeMin)) (aset r 0 (plist-get sp :rangeMin)))
+                        (when (numberp (plist-get sp :rangeMax)) (aset r 1 (plist-get sp :rangeMax))))
+                      r)))
       (append (list :type type :domain (vector (float lo) (float hi))
-                    :range (if (and (vectorp range) (= (length range) 2) (seq-every-p #'numberp range))
-                               range default-range)
+                    :range (if (eq (plist-get sp :reverse) t) (vector (aref range 1) (aref range 0)) range)
                     :field (plist-get def :field))
               (when (plist-get sp :exponent) (list :exponent (plist-get sp :exponent)))
               (when (eq channel :radius)
                 (list :rangeMin (plist-get sp :rangeMin) :rangeMax (plist-get sp :rangeMax)
-                      :fitted (not (vectorp range))))))))
+                      :fitted fitted :reversed (eq (plist-get sp :reverse) t)))))))
 
 (defun eas-polar-scales (units)
   "The theta and radius scales UNITS share, as a plist (maybe empty)."
@@ -138,8 +147,9 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
         (plist-put group :scales
                    (plist-put (plist-get group :scales) :radius
                               (plist-put (copy-sequence radius) :range
-                                         (vector (or (plist-get radius :rangeMin) 0)
-                                                 (or (plist-get radius :rangeMax) r)))))))
+                                         (funcall (if (plist-get radius :reversed) #'reverse #'identity)
+                                                  (vector (or (plist-get radius :rangeMin) 0)
+                                                          (or (plist-get radius :rangeMax) r))))))))
     group))
 
 ;;; Items
@@ -175,15 +185,18 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
          (rmax (/ (min (aref bounds 2) (aref bounds 3)) 2.0))
          (num (lambda (k default) (let ((v (plist-get mark k))) (if (numberp v) v default)))))
     (lambda (row i)
-      (let* ((a1 (or (eas-polar--value unit scales :theta row)
+      (let* ((fixed (and (null (plist-get (plist-get unit :encoding) :theta)) (funcall num :theta2 nil)))
+             ;; A mark-level theta2 makes mark theta the start angle, as in Vega-Lite.
+             (a1 (or fixed (eas-polar--value unit scales :theta row)
                      (funcall num :theta nil)
                      (* 2 float-pi)))
-             (a0 (eas-polar--start unit scales row))
+             (a0 (if fixed (funcall num :theta 0) (eas-polar--start unit scales row)))
              (off (funcall num :thetaOffset 0))
              (r1 (+ (or (eas-polar--value unit scales :radius row)
                         (funcall num :outerRadius nil) (funcall num :radius nil) rmax)
                     (funcall num :radiusOffset 0)))
-             (r0 (or (eas-polar--value unit scales :radius2 row) (funcall num :innerRadius 0))))
+             (r0 (or (eas-polar--value unit scales :radius2 row) (funcall num :innerRadius nil)
+                     (funcall num :radius2 0))))
         (when (and (numberp a0) (numberp a1) (numberp r1))
           (let* ((a0 (+ a0 off)) (a1 (+ a1 off)) (am (/ (+ a0 a1) 2.0)) (rm (/ (+ r0 r1) 2.0))
                  (c (eas-arc-point cx cy rm am)))
@@ -191,7 +204,7 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
                           :innerRadius r0 :outerRadius r1 :startAngle a0 :endAngle a1
                           :padAngle (funcall num :padAngle 0)
                           :strokeWidth (funcall num :strokeWidth 1))
-                    (eas-marks--style unit scales row)
+                    (let ((style (eas-marks--style unit scales row))) (append style (eas-mark-style-extras unit style)))
                     (eas-marks--extras unit row))))))))
 
 (defun eas-polar--place (unit scales bounds items)
@@ -208,7 +221,9 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
                        (when (and (numberp a) (numberp r))
                          (let ((p (eas-arc-point cx cy (+ r (funcall num :radiusOffset 0))
                                                  (+ a (funcall num :thetaOffset 0)))))
-                           (plist-put (plist-put (copy-sequence item) :x (car p)) :y (cdr p))))))
+                           ;; The item sat at the plot centre plus its dx/dy and offsets; keep those.
+                           (plist-put (plist-put (copy-sequence item) :x (+ (car p) (- (plist-get item :x) cx)))
+                                      :y (+ (cdr p) (- (plist-get item :y) cy)))))))
                    items)))))
 
 (defun eas-polar-items (unit scales bounds metrics)

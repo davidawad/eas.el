@@ -113,7 +113,7 @@
   (eas-test-should-code "NOT_FOUND" (eas-compile '(:data (:url "no-such-file.csv") :mark "bar")))
   (eas-test-should-code "UNSUPPORTED_FEATURE" (eas-compile '(:data (:url "https://example.com/x.csv") :mark "bar")))
   (eas-test-should-code "UNSUPPORTED_FEATURE"
-    (eas-compile '(:data (:values [(:a 1 :b 2)]) :mark (:type "line" :interpolate "basis")
+    (eas-compile '(:data (:values [(:a 1 :b 2)]) :mark (:type "line" :interpolate "basis-closed")
                      :encoding (:x (:field "a") :y (:field "b"))))))
 
 (ert-deftest eas-compile-rows-override-the-root-data ()

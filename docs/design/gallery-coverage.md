@@ -26,6 +26,14 @@ topojson map examples have no reference and are out of scope).
 
 138 of 188 (73%) pass, 177 of 188 (94%) render natively.
 
+Second passes: area-circular (fc-qx1.42) keeps 13 of 13. Its
+`bench.json` records the bench verb's numbers per example, before and
+after. Its `custom/` specs, one per chart type (area, arc, radial),
+set non-default properties throughout and must pass `check` with no
+warnings. `check` names every property the renderer draws without as
+an ignored `UNSUPPORTED_FEATURE` warning (`eas-spec-props.el`;
+engine-spikes section 12).
+
 ## What is left
 
 - multiview (fc-qx1.32) is the weakest group.  The engine lowers a single

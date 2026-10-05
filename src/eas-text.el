@@ -121,11 +121,16 @@ SHOW-P, when non-nil, is called per dot and skips the dot when it says nil."
             (when-let* ((tip (eas-text--tooltip item))) (list 'help-echo tip))
             (when (and color (not (equal color "none"))) (list 'face (list :foreground color))))))
 
-(defun eas-text--interp (points x)
-  "Linear interpolation of the polyline POINTS ([x y] vector) at X, or nil."
+(defun eas-text--xs (points)
+  "The x of each of POINTS, as a vector `eas-text--interp' bisects."
+  (vconcat (mapcar (lambda (p) (aref p 0)) points)))
+
+(defun eas-text--interp (points x &optional xs)
+  "Linear interpolation of the polyline POINTS ([x y] vector) at X, or nil.
+XS is POINTS' `eas-text--xs', when computed once for many X."
   (let ((n (length points)))
     (when (and (> n 0) (<= (aref (aref points 0) 0) x (aref (aref points (1- n)) 0)))
-      (let ((i (eas-hit--bisect (vconcat (mapcar (lambda (p) (aref p 0)) points)) x)))
+      (let ((i (eas-hit--bisect (or xs (eas-text--xs points)) x)))
         (let* ((p (aref points i))
                (q (aref points (if (and (< (aref p 0) x) (< i (1- n))) (1+ i) (if (> i 0) (1- i) i)))))
           (if (= (aref p 0) (aref q 0)) (aref p 1)
@@ -144,10 +149,11 @@ SHOW-P, when non-nil, is called per dot and skips the dot when it says nil."
                                             memo))))
          (ch (eas-text--grid-ch g)))
     (if-let* ((base (plist-get item :base)))
-        (cl-loop for col from (aref clip 0) below (aref clip 2)
+        (cl-loop with pxs = (eas-text--xs points) with bxs = (eas-text--xs base)
+                 for col from (aref clip 0) below (aref clip 2)
                  for cx = (* (+ col 0.5) (eas-text--grid-cw g))
-                 for top = (eas-text--interp points cx)
-                 for bottom = (eas-text--interp base cx)
+                 for top = (eas-text--interp points cx pxs)
+                 for bottom = (eas-text--interp base cx bxs)
                  when (and top bottom)
                  do (cl-loop for row from (max (aref clip 1) (floor top ch)) below (min (aref clip 3) (ceiling bottom ch))
                              for y0 = (* row ch) for y1 = (* (1+ row) ch)
@@ -340,7 +346,7 @@ SHOW-P, when non-nil, is called per dot and skips the dot when it says nil."
         (eas-text--string g (plist-get h :x) (plist-get h :y) (plist-get h :text) "left" (list 'face 'eas-title) 5))
       (eas-text--marks g view)
       (eas-text--legends g view))
-    (when-let* ((title (plist-get scene :title)))
+    (dolist (title (let ((tt (plist-get scene :title))) (and tt (delq nil (list tt (plist-get tt :subtitle))))))
       (eas-text--string g (plist-get title :x) (plist-get title :y) (plist-get title :text) "center"
                           (list 'face 'eas-title) 5))
     (eas-text--compose g)))

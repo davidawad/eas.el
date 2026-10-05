@@ -34,6 +34,8 @@
 (require 'eas-axis-extra)
 (require 'eas-symbols)
 (require 'eas-marks-image)
+(require 'eas-mark-style)
+(require 'eas-legend-style)
 
 (defun eas-svg--face-color (face attribute)
   "FACE's ATTRIBUTE color as a string, or nil when unspecified."
@@ -68,8 +70,12 @@
 (defun eas-svg--n (v)
   "Format number V compactly for SVG attributes."
   (if (integerp v) (number-to-string v)
+    ;; "%.2f" always has two decimals: drop ".00" or a trailing "0"
+    ;; (a regexp here dominated rendering long paths).
     (let ((s (format "%.2f" v)))
-      (replace-regexp-in-string "\\.?0+\\'" "" s))))
+      (cond ((string-suffix-p ".00" s) (substring s 0 -3))
+            ((eq (aref s (1- (length s))) ?0) (substring s 0 -1))
+            (t s)))))
 
 (defun eas-svg--escape (text)
   "Escape TEXT for XML."
@@ -210,10 +216,12 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
       ((or "rule" "tick")
        (eas-svg--line (vector (plist-get item :x1) (plist-get item :y1) (plist-get item :x2) (plist-get item :y2))
                         stroke (plist-get item :strokeWidth) opacity (plist-get item :strokeDash)))
-      ("arc" (eas-svg--node 'path :d (eas-arc-path item) :fill fill
-                            :stroke (unless (equal stroke "none") stroke)
-                            :stroke-width (unless (equal stroke "none") (plist-get item :strokeWidth))
-                            :opacity opacity))
+      ("arc" (eas-mark-style-svg
+              (eas-svg--node 'path :d (eas-arc-path item) :fill fill
+                             :stroke (unless (equal stroke "none") stroke)
+                             :stroke-width (unless (equal stroke "none") (plist-get item :strokeWidth))
+                             :opacity opacity)
+              item))
       ("text" (apply #'eas-svg--text (plist-get item :text) (plist-get item :x) (plist-get item :y)
                      (plist-get item :fontSize)
                      (list :align (plist-get item :align) :baseline (plist-get item :baseline) :fill fill
@@ -222,14 +230,16 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                                 :fill (if (equal fill "none") stroke fill) :opacity opacity))
       ((or "line" "area")
        (let ((area (plist-get item :base)))
-         (eas-svg--node 'path :d (concat "M" (eas-svg--path (plist-get item :points) area))
-                          :fill (if area fill "none") :stroke (unless (or area (equal stroke "none")) stroke)
-                          :stroke-width (unless area (plist-get item :strokeWidth))
-                          :stroke-linecap (unless area (plist-get item :strokeCap))
-                          :stroke-linejoin (unless area (plist-get item :strokeJoin))
-                          :stroke-dasharray (and (plist-get item :strokeDash)
-                                                 (mapconcat #'eas-svg--n (plist-get item :strokeDash) ","))
-                          :opacity opacity)))
+         (eas-mark-style-svg
+          (eas-svg--node 'path :d (concat "M" (eas-svg--path (plist-get item :points) area))
+                           :fill (if area fill "none") :stroke (unless (or area (equal stroke "none")) stroke)
+                           :stroke-width (unless area (plist-get item :strokeWidth))
+                           :stroke-linecap (unless area (plist-get item :strokeCap))
+                           :stroke-linejoin (unless area (plist-get item :strokeJoin))
+                           :stroke-dasharray (and (plist-get item :strokeDash)
+                                                  (mapconcat #'eas-svg--n (plist-get item :strokeDash) ","))
+                           :opacity opacity)
+          item)))
       (_ (eas-svg--styled
           (eas-svg--symbol (plist-get item :shape) (plist-get item :x) (plist-get item :y) (plist-get item :size)
                            :angle (plist-get item :angle) :fill fill :stroke (unless (equal stroke "none") stroke)
@@ -303,7 +313,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
 
 (defun eas-svg--legend (legend theme)
   "SVG nodes for placed LEGEND under THEME."
-  (let ((get (lambda (key) (eas-theme-get theme :legend key)))
+  (let ((get (lambda (key) (eas-legend-style-paint legend (lambda (k) (eas-theme-get theme :legend k)) key)))
         (fs (or (plist-get legend :font-size) 10)) out)
     (when-let* ((tm (plist-get legend :title-mark)))
       (push (eas-svg--text (plist-get tm :text) (plist-get tm :x) (plist-get tm :y) (or (funcall get :titleFontSize) 11)
@@ -373,7 +383,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
         (seq-doseq (legend (plist-get view :legends))
           (when (plist-get legend :bar) (push (eas-svg--gradient-def legend) defs))
           (setq children (append (reverse (eas-svg--legend legend theme)) children)))))
-    (when-let* ((title (plist-get scene :title)))
+    (dolist (title (let ((tt (plist-get scene :title))) (and tt (list tt (plist-get tt :subtitle)))))
       (seq-do-indexed
        (lambda (line i)
          (push (eas-svg--text line (plist-get title :x) (+ (plist-get title :y) (* i (or (plist-get title :lineHeight) 0)))
@@ -381,7 +391,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                               :weight (or (plist-get title :fontWeight) "bold")
                               :fill (or (plist-get title :color) (plist-get (plist-get theme :title) :color)))
                children))
-       (or (plist-get title :lines) (vector (plist-get title :text)))))
+       (if title (or (plist-get title :lines) (vector (plist-get title :text))) [])))
     (apply #'dom-node 'svg
            `((xmlns . "http://www.w3.org/2000/svg")
              (width . ,(eas-svg--n (plist-get size :w))) (height . ,(eas-svg--n (plist-get size :h)))

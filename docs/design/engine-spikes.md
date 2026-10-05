@@ -853,3 +853,95 @@ for the conformance tests, so `make -j` parallelizes it.
 The gallery's makespan is its two largest groups (240 s and 201 s
 under 4-way contention) and the conformance target (182 s); sharding
 inside a group is the next step if it matters.
+## 12. Area and circular, second pass (fc-qx1.42)
+
+All 13 examples of `test/vl-examples/area-circular/` already passed, and
+they still do with unchanged thresholds. The rasterizer stand-in was
+again resvg-js 2.6 with Liberation Sans; under it, differing pixels
+against the references are 0.0002 (layer_arc_label) to 0.0177
+(area_horizon). The second pass was about cost and customizability.
+
+### 12.1 Render cost
+
+`scripts/eas-gallery-bench.sh area-circular` runs the bench verb on
+every example, byte-compiled, in the references' zone, and writes
+`test/vl-examples/area-circular/bench.json`. That file holds the means
+of 50 reps per stage, `baseline_ms` (the same script run on the parent
+commit) and the calibration of both runs. Profiles found six costs:
+
+| cost | fix | where |
+|---|---|---|
+| timeUnit flooring: a `decode-time` and an `encode-time` in a named zone per row (1708 rows, 123 dates) | memoized per (unit, value, zone) | `eas-transform.el` |
+| the stack sort ranked both rows with `seq-position` on every comparison | ranks computed once per row | `eas-marks-series.el` |
+| series keys: the split defs looked up again and `assoc` per row | defs once per unit, a hash of series | `eas-marks-series.el`, `eas-marks.el` |
+| SVG numbers trimmed with a regexp; text areas rebuilt the polyline's x vector per column | suffix checks; x vector once per item | `eas-svg.el`, `eas-text.el` |
+| time-axis ticks and labels recomputed for every tick count layout tries | memoized per zone | `eas-scale-time.el` |
+| a hash table allocated per expression evaluation (per row in a filter) | made on `random()`'s first call | `eas-expr.el` |
+
+Byte-compiled, America/Chicago, mean of 50 reps, ms (before -> after):
+
+| example | compile-svg | compile-text | render-svg | render-text |
+|---|---:|---:|---:|---:|
+| area (1708 rows) | 108 -> 7.5 | 113 -> 6.5 | 2.6 -> 1.2 | 3.3 -> 2.5 |
+| stacked_area | 133 -> 29 | 136 -> 30 | 16.8 -> 8.7 | 14.7 -> 7.0 |
+| stacked_area_normalize | 138 -> 35 | 152 -> 34 | 16.5 -> 8.5 | 15.3 -> 7.0 |
+| stacked_area_stream | 140 -> 34 | 145 -> 33 | 15.9 -> 8.1 | 14.6 -> 5.4 |
+| area_gradient (560) | 20 -> 5.5 | 5.1 -> 3.8 | 3.3 -> 2.0 | 3.1 -> 2.6 |
+| area_overlay (560) | 22 -> 6.5 | 7.2 -> 5.0 | 4.4 -> 3.1 | 3.3 -> 2.6 |
+| area_horizon (20) | 3.2 -> 3.2 | 2.7 -> 2.6 | 6.4 -> 3.2 | 6.0 -> 2.0 |
+
+The arcs were already under 3 ms per stage and stay there, within the
+noise of a collection. bench.json has every example's numbers. The
+ladder in `bench-budget.json` is unaffected: it has no timeUnit. Compile in UTC was already cheaper (no named zone),
+but stacking and series keys cost the same in every zone.
+
+### 12.2 Properties: honored, or reported
+
+An audit rendered each documented Vega-Lite property of the group's
+marks (area, arc, the text of arc labels) and its axes, legends, title,
+scales and config, once with the property and once without. Anything
+that changed neither the SVG nor the text was either a correct no-op
+(an encoding overriding a mark color, `tension` on a linear area) or a
+gap. The gaps this pass closed:
+
+- area and arc: `fillOpacity`, `strokeOpacity`, `strokeDash`,
+  `strokeDashOffset`, `strokeMiterLimit`, `strokeCap`, `strokeJoin`,
+  `blend`, `href`, `filled: false`, an area's outline (`stroke`), arc
+  `cornerRadius` and `padAngle` as d3.arc draws them (`eas-arc-d3.el`,
+  checked against d3-shape), mark `theta`/`theta2`/`radius2`
+  (`eas-mark-style.el`)
+- `interpolate` basis, basis-open, bundle, cardinal, cardinal-open,
+  catmull-rom and natural, with `tension` (`eas-curve-extra.el`, equal
+  to d3-shape's sampled points)
+- legends: their own label, title and symbol properties over
+  config.legend, plus `values`, `format` and `labelExpr`
+  (`eas-legend-style.el`)
+- titles: `subtitle` and its color, size, weight and padding, `anchor`,
+  `dx`, `dy` (`eas-title-extra.el`)
+- scales: theta/radius `domainMin`, `domainMax`, `reverse`, theta
+  `rangeMin`/`rangeMax`; position `domainMin`/`domainMax` win over
+  `zero` and turn `nice` off, as in Vega-Lite
+- axes: `titlePadding` on bottom and left axes, `values` given as date
+  strings on a time axis (it crashed); polar text keeps `dx`/`dy`
+
+Not honored, and now named by `check` (`eas-spec-props.el`) as
+non-blocking `UNSUPPORTED_FEATURE` warnings with `ignored: true` and
+the JSON path: fonts and font styles, label/title opacity and
+alignment overrides, `zindex`, `aria`, legend layout (`orient` other
+than right/none, `columns` > 1, `direction` on symbol legends,
+`padding`, `fillColor`, `strokeColor`), position-scale `range`,
+`rangeMin`, `rangeMax` and `clamp`, the axis-type config sections, and
+`config.locale`/`numberFormat`/`timeFormat`/`style`. Across the
+gallery, 17 specs set one of these.
+
+`custom/custom_area`, `custom/custom_arc` and `custom/custom_radial`
+set non-default properties of every kind above. Each must pass `check`
+with no warnings, render on both backends without overlap at the three
+sizes, and match its text golden. With bin/chart on PATH,
+`eas-vl-gallery-custom.el` builds `custom/ref/NAME.png` and holds each
+spec to its `usermeta.eas.threshold`. bin/chart was not in this box, so
+no reference is committed yet. A local Vega 6 / Vega-Lite 6.4.1 render
+(node, canvas-free text metrics) differed from the native one by 1.6 to
+2.0% of pixels. That is about what the canvas-free metrics alone
+account for: the same oracle is 0.5 to 17% off bin/chart's own
+references.

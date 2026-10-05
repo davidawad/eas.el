@@ -59,7 +59,9 @@
     ;; calculations (fc-qx1.30)
     :x :y :x2 :y2 :xOffset :x2Offset :yOffset :y2Offset :font :fontStyle :limit
     ;; interactive (fc-qx1.33)
-    :cursor)
+    :cursor
+    ;; area and arc (fc-qx1.42)
+    :strokeDashOffset :strokeMiterLimit :tension :blend :href)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels

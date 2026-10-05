@@ -290,7 +290,8 @@
             (mapcar (lambda (arg) (eas-expr-eval arg datum env)) args)))))
 
 (defvar eas-expr--random-calls nil
-  "Hash of DATUM -> random() calls so far, bound per evaluation.")
+  "Hash of DATUM -> random() calls so far, bound per evaluation (`fresh'
+until the first call).")
 
 (defun eas-expr--random (datum)
   "A uniform number in [0, 1), deterministic for DATUM's source row.
@@ -298,7 +299,10 @@ Vega's random() is Math.random; eas makes it a hash of the row index
 \(:_eas_row) and how many times this evaluation called it, so renders,
 goldens and replays reproduce exactly."
   (let* ((row (let ((r (and (eas-object-p datum) (plist-get datum :_eas_row)))) (if (integerp r) r 0)))
-         (n (if eas-expr--random-calls (cl-incf (gethash row eas-expr--random-calls 0)) 1))
+         (n (if eas-expr--random-calls
+                (progn (when (eq eas-expr--random-calls 'fresh) (setq eas-expr--random-calls (make-hash-table)))
+                       (cl-incf (gethash row eas-expr--random-calls 0)))
+              1))
          (x (logand (+ (* row 2654435761) (* n 40503) 12345) #xFFFFFFFF)))
     (dotimes (_ 3)
       (setq x (logand (logxor x (ash x 13)) #xFFFFFFFF)
@@ -308,7 +312,9 @@ goldens and replays reproduce exactly."
 
 (defun eas-expr-evaluate (string datum &optional env)
   "Parse (cached) and evaluate expression STRING for DATUM with ENV."
-  (let ((eas-expr--random-calls (make-hash-table)))
+  ;; The per-evaluation call counts are made on random()'s first call:
+  ;; a filter evaluates once per row.
+  (let ((eas-expr--random-calls 'fresh))
     (eas-expr-eval (eas-expr-parse string) datum env)))
 
 (defun eas-expr--date-part (key &optional offset)

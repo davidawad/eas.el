@@ -83,8 +83,23 @@
   (let ((inc (eas-scale-tick-increment (/ start 31536000000.0) (/ stop 31536000000.0) count)))
     (if (< inc 0) (/ 1.0 (- inc)) inc)))
 
+(defvar eas-scale-time--memo (make-hash-table :test 'equal)
+  "(FN ARGS ZONE) -> result of the pure tick functions below.  Layout asks
+for a time axis's ticks and labels again for every tick count it tries.")
+
+(defun eas-scale-time--memo (fn args)
+  "FN applied to ARGS, remembered per `eas-time-zone'."
+  (let* ((key (list fn args eas-time-zone)) (hit (gethash key eas-scale-time--memo 'none)))
+    (if (not (eq hit 'none)) (copy-sequence hit)
+      (when (>= (hash-table-count eas-scale-time--memo) 4096) (clrhash eas-scale-time--memo))
+      (let ((v (apply fn args))) (puthash key (copy-sequence v) eas-scale-time--memo) v))))
+
 (defun eas-scale-time-ticks (start stop count)
   "Return tick times (epoch ms) between START and STOP, about COUNT."
+  (eas-scale-time--memo #'eas-scale-time--ticks (list start stop count)))
+
+(defun eas-scale-time--ticks (start stop count)
+  "`eas-scale-time-ticks' of START STOP COUNT, uncached."
   (let* ((reverse (< stop start))
          (lo (min start stop)) (hi (max start stop))
          (interval (eas-scale-time--interval lo hi (max 1 count)))
@@ -100,6 +115,10 @@
 
 (defun eas-scale-time-multi-format (ms)
   "Format epoch MS the way Vega's default time axis does."
+  (eas-scale-time--memo #'eas-scale-time--multi-format (list ms)))
+
+(defun eas-scale-time--multi-format (ms)
+  "`eas-scale-time-multi-format' of MS, uncached."
   (let* ((f (eas-time-fields ms))
          (system-time-locale "C")
          (fmt (cond

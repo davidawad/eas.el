@@ -1,0 +1,102 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "fc-qx1.42: a radial chart exercising theta and radius scale properties and arc offsets.",
+  "usermeta": {
+    "eas": {
+      "threshold": 0.03,
+      "note": "customization spec: every property is honored natively (check reports no warnings)"
+    }
+  },
+  "width": 280,
+  "height": 280,
+  "title": {
+    "text": "Radial counts",
+    "subtitle": "sqrt radius, reversed theta",
+    "color": "#3d405b",
+    "subtitleColor": "#81b29a"
+  },
+  "data": {
+    "values": [
+      {
+        "k": "a",
+        "v": 12
+      },
+      {
+        "k": "b",
+        "v": 23
+      },
+      {
+        "k": "c",
+        "v": 47
+      },
+      {
+        "k": "d",
+        "v": 6
+      },
+      {
+        "k": "e",
+        "v": 52
+      },
+      {
+        "k": "f",
+        "v": 19
+      }
+    ]
+  },
+  "encoding": {
+    "theta": {
+      "field": "v",
+      "type": "quantitative",
+      "stack": true,
+      "scale": {
+        "reverse": true
+      }
+    },
+    "radius": {
+      "field": "v",
+      "type": "quantitative",
+      "scale": {
+        "type": "sqrt",
+        "zero": true,
+        "rangeMin": 20
+      }
+    },
+    "color": {
+      "field": "k",
+      "type": "nominal",
+      "legend": null,
+      "scale": {
+        "scheme": "set1"
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "innerRadius": 20,
+        "stroke": "#fcfcfb",
+        "strokeWidth": 1.5,
+        "strokeDash": [
+          3,
+          1
+        ],
+        "padAngle": 0.02,
+        "opacity": 0.9
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "radiusOffset": 12,
+        "fontSize": 11
+      },
+      "encoding": {
+        "text": {
+          "field": "v",
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+}

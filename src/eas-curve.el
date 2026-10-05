@@ -14,11 +14,12 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-curve-extra)
 
 (defconst eas-curve-samples 12
   "Polyline segments per curve segment.")
 
-(defconst eas-curve-modes '("monotone")
+(defconst eas-curve-modes (cons "monotone" eas-curve-extra-modes)
   "Interpolation modes `eas-curve-apply' draws.")
 
 (defun eas-curve--sign (x) "d3's sign: -1 below zero, else 1." (if (< x 0) -1 1))
@@ -61,7 +62,7 @@
 
 (defun eas-curve-apply (points mode)
   "POINTS ((X Y) ...) drawn with interpolation MODE (others pass through)."
-  (if (equal mode "monotone") (eas-curve-monotone points) points))
+  (if (equal mode "monotone") (eas-curve-monotone points) (eas-curve-extra-apply points mode)))
 
 (provide 'eas-curve)
 ;;; eas-curve.el ends here

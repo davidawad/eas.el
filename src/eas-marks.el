@@ -26,12 +26,14 @@
 (require 'eas-time-band)
 (require 'eas-marks-path)
 (require 'eas-marks-image)
+(require 'eas-marks-series)
+(require 'eas-mark-style)
 
 (defconst eas-marks-default-color "#4c78a8" "Vega-Lite's default mark color.")
 
 (defun eas-marks--stroked-p (type mark)
   "Non-nil when mark TYPE (with MARK def) is drawn by stroke, not fill."
-  (or (member type '("line" "rule" "tick"))
+  (or (member type '("line" "rule" "tick")) (and (eq (plist-get mark :filled) :false) (not (equal type "text")))
       (and (equal type "point") (not (eq (plist-get mark :filled) t)))))
 
 ;;; Channel values
@@ -124,7 +126,7 @@ per unit and shared by every item."
                               (eas-true-p (plist-get (plist-get unit :mark) :tooltip)))))
                       (eas-encode-tooltip (plist-get unit :encoding) (plist-get unit :mark) row)))
         (href (let ((def (plist-get (plist-get unit :encoding) :href)))
-                (and def (eas-encode-raw def row)))))
+                (if def (eas-encode-raw def row) (plist-get (plist-get unit :mark) :href)))))
     (append (when tooltip (list :tooltip tooltip))
             (when (stringp href) (list :href href)))))
 
@@ -419,13 +421,6 @@ ranged (x2/y2) bar."
                    (eas-marks--style unit scales row)
                    (eas-marks--extras unit row)))))))
 
-(defun eas-marks--series-key (unit row)
-  "The series a ROW of a line/area UNIT belongs to."
-  (let ((enc (plist-get unit :encoding)))
-    (mapcar (lambda (ch) (let ((d (eas-encode-data-def (plist-get enc ch))))
-                           (and d (eas-object-p d) (eas-encode-discrete-p d) (eas-encode-raw d row))))
-            '(:color :fill :stroke :strokeDash :detail))))
-
 (defun eas-marks--step (points mode)
   "Expand POINTS ([x y] lists) for step interpolation MODE."
   (if (or (null (cdr points)) (not (member mode '("step" "step-after" "step-before")))) points
@@ -448,7 +443,8 @@ MAX-POINTS when SORTED along x."
                  (vconcat (number-sequence 0 (1- (length pts))))))
          (kept (mapcar (lambda (k) (aref pts k)) keep))
          (row (aref (plist-get unit :rows) (nth 2 (car kept))))
-         (shape (lambda (n) (let ((ps (mapcar (lambda (p) (list (nth 0 p) (nth n p))) kept)))
+         (shape (lambda (n) (let ((ps (mapcar (lambda (p) (list (nth 0 p) (nth n p))) kept))
+                                  (eas-curve-tension (plist-get mark :tension)))
                               (vconcat (mapcar #'vconcat (if (member mode eas-marks-path-curves)
                                                              (eas-marks-path-curve ps mode)
                                                            (eas-marks--step ps mode)))))))
@@ -468,7 +464,7 @@ MAX-POINTS when SORTED along x."
                                                                             (aref (plist-get unit :rows) (nth 2 p)))))
                                                  (if (numberp w) w (or (plist-get mark :size) (plist-get mark :strokeWidth) 2))))
                                              kept))))
-            (eas-marks--style unit scales row)
+            (let ((style (eas-marks--style unit scales row))) (append style (eas-mark-style-extras unit style)))
             (when (> (length pts) (length kept)) (list :decimated (length pts))))))
 
 (defun eas-marks--series-items (unit scales bounds max-points)
@@ -479,7 +475,8 @@ path (eas-marks-path.el); LTTB thins x-ordered runs above MAX-POINTS."
          (mode (or (plist-get mark :interpolate) "linear"))
          (sort-key (eas-marks-path-sort-key unit))
          (filter (equal (plist-get mark :invalid) "filter"))
-         (groups nil) (order nil) (i -1))
+         (defs (eas-marks--series-defs unit))
+         (groups (make-hash-table :test 'equal)) (order nil) (i -1))
     (unless (member mode (append '("linear" "step" "step-after" "step-before") eas-curve-modes))
       (eas-signal "UNSUPPORTED_FEATURE" (format "interpolate %s is not supported" mode)
                     :feature (concat "interpolate/" mode)))
@@ -487,19 +484,19 @@ path (eas-marks-path.el); LTTB thins x-ordered runs above MAX-POINTS."
       (setq i (1+ i))
       (let* ((x (eas-marks--pos unit scales :x row bounds))
              (y (eas-marks--pos unit scales :y row bounds))
-             (key (eas-marks--series-key unit row))
+             (key (eas-marks--series-key unit row defs))
              (sk (cond ((functionp sort-key) (funcall sort-key row)) ((eq sort-key 'y) y))))
         (when (if (functionp sort-key) t (numberp (if (eq sort-key 'y) y x)))
-          (unless (assoc key groups) (push key order) (push (list key) groups))
+          (unless (gethash key groups) (push key order) (puthash key (list key) groups))
           (push (list x y i (and area (or (eas-marks--secondary unit scales :y row)
                                           (eas-marks--zero (plist-get scales :y) bounds :y)))
                       sk (and (numberp x) (numberp y)))
-                (cdr (assoc key groups))))))
+                (cdr (gethash key groups))))))
     (vconcat
      (mapcan
       (lambda (key)
         (mapcar (lambda (run) (eas-marks--series-run unit scales run mode area max-points (null sort-key)))
-                (eas-marks-path-runs (eas-marks-path-sort (nreverse (cdr (assoc key groups)))) filter)))
+                (eas-marks-path-runs (eas-marks-path-sort (nreverse (cdr (gethash key groups)))) filter)))
       (nreverse order)))))
 
 
@@ -581,12 +578,10 @@ Bars and areas with a discrete color/fill/detail field stack by default
                                       (sort vs (lambda (a b) (if (and (numberp a) (numberp b)) (< a b)
                                                                (string< (format "%s" a) (format "%s" b)))))))))
                               by))
-             (rank (lambda (i)
-                     (cl-loop for d in by for dom in domains
-                              collect (or (seq-position dom (eas-encode-raw d (aref rows i))) 0))))
+             (ranks (eas-marks--stack-ranks rows by domains))
              (sorted (sort (number-sequence 0 (1- (length rows)))
                            (lambda (a b)
-                             (let* ((ra (funcall rank a)) (rb (funcall rank b))
+                             (let* ((ra (aref ranks a)) (rb (aref ranks b))
                                     (lt (cl-loop for x in ra for y in rb unless (= x y) return (< x y))))
                                (if (eq measure :x) lt (and (not (equal ra rb)) (not lt)))))))
              (out (copy-sequence rows)))

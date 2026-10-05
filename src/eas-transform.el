@@ -137,9 +137,24 @@ it: 2006 under year, 1 (January) under month, 3 under date."
         (setq rest (substring rest (length part)))))
     (nreverse parts)))
 
+(defvar eas-time-unit--floor-cache (make-hash-table :test 'equal)
+  "(UNIT VALUE ZONE) -> floored epoch ms or `:null'.
+A timeUnit over N rows floors few distinct dates; each miss costs a
+`decode-time' and an `encode-time' in a named zone.")
+
 (defun eas-time-unit-floor (unit value)
   "Truncate date VALUE to time UNIT; return epoch ms or `:null'.
 Absent components take Vega's defaults (year 2012, January, day 1)."
+  (let* ((key (list unit value eas-time-zone))
+         (hit (gethash key eas-time-unit--floor-cache)))
+    (or hit
+        (progn
+          (when (>= (hash-table-count eas-time-unit--floor-cache) eas-time--parse-cache-limit)
+            (clrhash eas-time-unit--floor-cache))
+          (puthash key (eas-time-unit--floor unit value) eas-time-unit--floor-cache)))))
+
+(defun eas-time-unit--floor (unit value)
+  "`eas-time-unit-floor' of VALUE to UNIT, uncached."
   (let* ((ms (eas-time-parse value))
          (parts (eas-time-unit-components unit))
          ;; utc time units floor in UTC; the others in local time.

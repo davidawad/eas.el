@@ -316,8 +316,10 @@ AGENTS.md already sets.
   shows those findings as text and `render --backend svg` fails with
   `UNSUPPORTED_FEATURE`. eas never runs bin/chart to display a chart
   unless `eas-static-fallback` is t; then the view (and svg render)
-  uses bin/chart's image. The native subset grows one gallery entry at
-  a time.
+  uses bin/chart's image. Properties inside the subset that are drawn
+  without (eas-spec-props.el, fc-qx1.42) are `check` warnings with
+  `ignored: true` and do not make a view static. The native subset
+  grows one gallery entry at a time.
 - bin/chart's role is decided (fc-qx1.37): test oracle (dev/CI, refs
   committed so CI needs only rsvg-convert) and static export. It is
   never a runtime dependency.

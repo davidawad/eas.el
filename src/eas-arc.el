@@ -16,6 +16,7 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-arc-d3)
 
 (defconst eas-arc--tau (* 2 float-pi))
 
@@ -39,7 +40,12 @@
   (concat (eas-arc--n (car p)) "," (eas-arc--n (cdr p))))
 
 (defun eas-arc-path (item)
-  "SVG path data of arc ITEM, as d3.arc draws it (without corner radius)."
+  "SVG path data of arc ITEM, as d3.arc draws it.
+Padded or rounded arcs take d3's own geometry (eas-arc-d3.el)."
+  (if (eas-arc-d3-wanted-p item) (eas-arc-d3-path item) (eas-arc--wedge-path item)))
+
+(defun eas-arc--wedge-path (item)
+  "SVG path data of arc ITEM without padding or corners."
   (let* ((cx (plist-get item :cx)) (cy (plist-get item :cy))
          (ri (max 0 (or (plist-get item :innerRadius) 0))) (ro (max 0 (or (plist-get item :outerRadius) 0)))
          (r0 (min ri ro)) (r1 (max ri ro))

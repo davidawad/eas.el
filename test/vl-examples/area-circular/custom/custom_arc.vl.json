@@ -1,0 +1,133 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "fc-qx1.42: a labelled donut exercising non-default arc, text, legend, scale and title properties.",
+  "usermeta": {
+    "eas": {
+      "threshold": 0.03,
+      "note": "customization spec: every property is honored natively (check reports no warnings)"
+    }
+  },
+  "width": 300,
+  "height": 300,
+  "title": {
+    "text": "Market share",
+    "subtitle": "padded, rounded donut",
+    "anchor": "middle",
+    "color": "#2b2d42",
+    "fontSize": 17,
+    "subtitleColor": "#8d99ae",
+    "subtitleFontSize": 12,
+    "offset": 8
+  },
+  "data": {
+    "values": [
+      {
+        "brand": "Acme",
+        "share": 34
+      },
+      {
+        "brand": "Globex",
+        "share": 26
+      },
+      {
+        "brand": "Initech",
+        "share": 18
+      },
+      {
+        "brand": "Umbrella",
+        "share": 13
+      },
+      {
+        "brand": "Hooli",
+        "share": 9
+      }
+    ]
+  },
+  "encoding": {
+    "theta": {
+      "field": "share",
+      "type": "quantitative",
+      "stack": true,
+      "scale": {
+        "rangeMax": 6.0
+      }
+    },
+    "color": {
+      "field": "brand",
+      "type": "nominal",
+      "sort": {
+        "field": "share",
+        "order": "descending"
+      },
+      "scale": {
+        "scheme": "tableau10"
+      },
+      "legend": {
+        "title": "Brand",
+        "symbolType": "diamond",
+        "symbolSize": 120,
+        "labelFontSize": 12,
+        "labelColor": "#2b2d42",
+        "titleFontSize": 12,
+        "titleColor": "#2b2d42",
+        "values": [
+          "Acme",
+          "Globex",
+          "Initech",
+          "Umbrella",
+          "Hooli"
+        ],
+        "labelExpr": "datum.label + ' Inc'",
+        "rowPadding": 4
+      }
+    },
+    "order": {
+      "field": "share",
+      "type": "quantitative",
+      "sort": "descending"
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "innerRadius": 55,
+        "outerRadius": 115,
+        "padAngle": 0.035,
+        "cornerRadius": 7,
+        "thetaOffset": 0.15,
+        "stroke": "#ffffff",
+        "strokeWidth": 2,
+        "strokeJoin": "round",
+        "fillOpacity": 0.9
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "radius": 135,
+        "thetaOffset": 0.15,
+        "fontSize": 12,
+        "fontWeight": "bold",
+        "dy": 2,
+        "fill": "#2b2d42"
+      },
+      "encoding": {
+        "text": {
+          "field": "share",
+          "type": "quantitative",
+          "format": ".0f"
+        },
+        "color": {
+          "value": "#2b2d42"
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#fcfcfb",
+    "arc": {
+      "strokeCap": "round"
+    }
+  }
+}

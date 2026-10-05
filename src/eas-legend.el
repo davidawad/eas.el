@@ -22,16 +22,22 @@
 (require 'eas-encode)
 (require 'eas-layout)
 (require 'eas-legend-extra)
+(require 'eas-legend-style)
 
 (declare-function eas-expr--string "eas-expr")
 
 (defconst eas-legend-default-color "#4c78a8"
   "Symbol color when the mark has no constant color of its own.")
 
-(defun eas-legend-model (spec _metrics)
+(defun eas-legend-model (spec metrics)
   "Legend model for SPEC (:channel :def :scale :shape :style), or nil.
 STYLE is the mark's constant look (:fill :stroke :stroke-width
-:opacity :stroked) that symbols copy."
+:opacity :stroked) that symbols copy.  The def's legend object
+restyles it (eas-legend-style.el)."
+  (eas-legend-style-model (plist-get (plist-get spec :def) :legend) (eas-legend--model spec metrics)))
+
+(defun eas-legend--model (spec _metrics)
+  "`eas-legend-model' of SPEC before the legend object's own properties."
   (let* ((channel (plist-get spec :channel)) (def (plist-get spec :def)) (scale (plist-get spec :scale))
          (legend (plist-get def :legend)) (style (plist-get spec :style)))
     (unless (or (memq legend '(:null :false)) (null scale))
@@ -116,12 +122,13 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
 (defun eas-legend-sized (legend metrics)
   "LEGEND with its gradient entries filled in for its final length."
   (if (equal (plist-get legend :type) "gradient")
-      (eas-plist-put legend :entries (eas-legend--gradient-entries legend metrics))
+      (eas-legend-style-labels (eas-plist-put legend :entries (eas-legend--gradient-entries legend metrics)))
     legend))
 
 (defun eas-legend-size (legend metrics)
   "Return (WIDTH . HEIGHT) of LEGEND in text, including its offset from the plot."
-  (let* ((size (plist-get metrics :label-size))
+  (let* ((metrics (eas-legend-style-metrics legend metrics))
+         (size (plist-get metrics :label-size))
          (labels (mapcar (lambda (e) (eas-layout-text-width metrics (plist-get e :label) size))
                          (plist-get legend :entries)))
          (title-w (if (plist-get legend :title)
@@ -281,10 +288,12 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
 
 (defun eas-legend-place (legend x y metrics)
   "Return LEGEND with geometry, its top-left corner at X Y."
-  (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
-        ((eas-legend-extra-horizontal-p legend metrics) (eas-legend-extra-place-horizontal legend x y metrics))
-        ((equal (plist-get legend :type) "gradient") (eas-legend--place-gradient legend x y metrics))
-        (t (eas-legend--place-symbols legend x y metrics))))
+  (let ((metrics (eas-legend-style-metrics legend metrics)))
+    (eas-legend-style-looks
+     (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
+           ((eas-legend-extra-horizontal-p legend metrics) (eas-legend-extra-place-horizontal legend x y metrics))
+           ((equal (plist-get legend :type) "gradient") (eas-legend--place-gradient legend x y metrics))
+           (t (eas-legend--place-symbols legend x y metrics))))))
 
 (provide 'eas-legend)
 ;;; eas-legend.el ends here

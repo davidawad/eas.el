@@ -6,8 +6,8 @@
 ;;; Commentary:
 
 ;; Part of L4, for eas-layout.el.  An encoding's "axis" object may
-;; override tick and label geometry for that axis alone (tickSize,
-;; labelPadding, labelAlign, labelBaseline, labelOffset), rewrite each
+;; override tick, label and title geometry for that axis alone (tickSize,
+;; labelPadding, labelAlign, labelBaseline, labelOffset, titlePadding), rewrite each
 ;; label with labelExpr (datum.value and datum.label; an array result is
 ;; a multi-line label) and give ticks and grid lines conditional dashes:
 ;;
@@ -27,7 +27,7 @@
 
 (defconst eas-layout-axis-style-geometry
   '((:tickSize . :tick-size) (:labelPadding . :label-padding) (:labelAlign . :label-align)
-    (:labelBaseline . :label-baseline) (:labelOffset . :label-offset))
+    (:labelBaseline . :label-baseline) (:labelOffset . :label-offset) (:titlePadding . :title-padding))
   "Axis properties that override layout, and the model keys they become.")
 
 (defun eas-layout-axis-style-props (axis)

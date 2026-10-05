@@ -16,6 +16,7 @@
 
 (require 'eas-core)
 (require 'eas-layout)
+(require 'eas-title-extra)
 
 (defun eas-title--object (spec)
   "SPEC's title as an object, or nil when it has none."
@@ -47,6 +48,9 @@ on a bottom baseline, round(0.8 size) - round(-0.21 size) above it."
   "Height the title of SPEC takes above the plots, its offset included."
   (let ((lines (eas-title-lines spec)))
     (cond ((null lines) 0)
+          ((eas-title-extra-subtitle-lines spec)
+           (+ (eas-title-height (eas-plist-put spec :title (eas-plist-put (eas-title--object spec) :subtitle :null)) metrics)
+              (eas-title-extra-height spec metrics)))
           ((eas-layout-text-p metrics) (* (length lines) (plist-get metrics :chart-title-size)))
           (t (let ((size (eas-title--get spec metrics :fontSize :chart-title-size)))
                (+ (eas-title--line-height size) (* (1- (length lines)) (+ size 2))

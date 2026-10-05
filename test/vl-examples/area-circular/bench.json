@@ -1,0 +1,107 @@
+{
+  "baseline_calibration_ms": 33.267,
+  "calibration_ms": 34.949,
+  "compiled": true,
+  "emacs": "30.1",
+  "examples": {
+    "arc_donut": {
+      "baseline_ms": {"compile-svg": 0.568, "compile-text": 0.524, "hover": 0.032, "render-svg": 1.003, "render-text": 2.544},
+      "items": 6,
+      "ms": {"compile-svg": 0.602, "compile-text": 0.329, "hover": 0.033, "render-svg": 1.018, "render-text": 2.623},
+      "rows": 6
+    },
+    "arc_pie": {
+      "baseline_ms": {"compile-svg": 0.752, "compile-text": 0.566, "hover": 0.032, "render-svg": 0.686, "render-text": 2.576},
+      "items": 6,
+      "ms": {"compile-svg": 1.044, "compile-text": 0.659, "hover": 0.034, "render-svg": 0.704, "render-text": 2.63},
+      "rows": 6
+    },
+    "arc_pie_normalize_tooltip": {
+      "baseline_ms": {"compile-svg": 1.053, "compile-text": 0.614, "hover": 0.036, "render-svg": 0.715, "render-text": 2.646},
+      "items": 6,
+      "ms": {"compile-svg": 0.878, "compile-text": 0.675, "hover": 0.034, "render-svg": 0.925, "render-text": 2.618},
+      "rows": 6
+    },
+    "arc_pie_pyramid": {
+      "baseline_ms": {"compile-svg": 0.59, "compile-text": 0.494, "hover": 0.029, "render-svg": 0.48, "render-text": 1.889},
+      "items": 3,
+      "ms": {"compile-svg": 0.618, "compile-text": 0.519, "hover": 0.03, "render-svg": 0.239, "render-text": 1.858},
+      "rows": 3
+    },
+    "arc_radial": {
+      "baseline_ms": {"compile-svg": 1.149, "compile-text": 0.806, "hover": 0.045, "render-svg": 0.599, "render-text": 1.974},
+      "items": 12,
+      "ms": {"compile-svg": 1.181, "compile-text": 0.794, "hover": 0.04, "render-svg": 0.627, "render-text": 1.846},
+      "rows": 6
+    },
+    "area": {
+      "baseline_ms": {"compile-svg": 107.676, "compile-text": 112.956, "hover": 0.186, "render-svg": 2.61, "render-text": 3.314},
+      "items": 1,
+      "ms": {"compile-svg": 7.524, "compile-text": 6.543, "hover": 0.167, "render-svg": 1.232, "render-text": 2.531},
+      "rows": 1708
+    },
+    "area_gradient": {
+      "baseline_ms": {"compile-svg": 19.974, "compile-text": 5.08, "hover": 0.197, "render-svg": 3.328, "render-text": 3.108},
+      "items": 2,
+      "ms": {"compile-svg": 5.503, "compile-text": 3.819, "hover": 0.228, "render-svg": 1.952, "render-text": 2.605},
+      "rows": 560
+    },
+    "area_horizon": {
+      "baseline_ms": {"compile-svg": 3.156, "compile-text": 2.659, "hover": 0.094, "render-svg": 6.449, "render-text": 6.016},
+      "items": 2,
+      "ms": {"compile-svg": 3.21, "compile-text": 2.649, "hover": 0.49, "render-svg": 3.17, "render-text": 1.969},
+      "rows": 20
+    },
+    "area_overlay": {
+      "baseline_ms": {"compile-svg": 21.931, "compile-text": 7.152, "hover": 0.305, "render-svg": 4.414, "render-text": 3.3},
+      "items": 70,
+      "ms": {"compile-svg": 6.526, "compile-text": 5.02, "hover": 0.335, "render-svg": 3.094, "render-text": 2.646},
+      "rows": 560
+    },
+    "layer_arc_label": {
+      "baseline_ms": {"compile-svg": 1.026, "compile-text": 0.697, "hover": 0.043, "render-svg": 0.287, "render-text": 2.763},
+      "items": 12,
+      "ms": {"compile-svg": 0.877, "compile-text": 0.774, "hover": 0.046, "render-svg": 0.597, "render-text": 2.932},
+      "rows": 6
+    },
+    "stacked_area": {
+      "baseline_ms": {
+        "compile-svg": 132.618,
+        "compile-text": 135.712,
+        "hover": 0.455,
+        "render-svg": 16.785,
+        "render-text": 14.686
+      },
+      "items": 14,
+      "ms": {"compile-svg": 29.134, "compile-text": 29.654, "hover": 0.481, "render-svg": 8.658, "render-text": 6.965},
+      "rows": 1708
+    },
+    "stacked_area_normalize": {
+      "baseline_ms": {
+        "compile-svg": 138.324,
+        "compile-text": 151.724,
+        "hover": 0.467,
+        "render-svg": 16.549,
+        "render-text": 15.318
+      },
+      "items": 14,
+      "ms": {"compile-svg": 34.802, "compile-text": 34.028, "hover": 0.543, "render-svg": 8.456, "render-text": 7.047},
+      "rows": 1708
+    },
+    "stacked_area_stream": {
+      "baseline_ms": {
+        "compile-svg": 140.464,
+        "compile-text": 145.342,
+        "hover": 0.429,
+        "render-svg": 15.893,
+        "render-text": 14.55
+      },
+      "items": 14,
+      "ms": {"compile-svg": 34.278, "compile-text": 33.279, "hover": 0.806, "render-svg": 8.063, "render-text": 5.356},
+      "rows": 1708
+    }
+  },
+  "reps": 50,
+  "zone": "America/Chicago"
+}
+

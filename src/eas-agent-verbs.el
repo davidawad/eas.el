@@ -22,6 +22,7 @@
 (require 'eas-agent-core)
 (require 'eas-describe)
 (require 'eas-resolve)
+(require 'eas-spec-props)
 (require 'eas-compile)
 (require 'eas-scene)
 (require 'eas-svg)
@@ -51,7 +52,14 @@ W being how next[] commands name the source and its bindings."
                               (eas-agent-source-label source)
                               (string-join (eas-template-names) ", "))
                       :option "data"))
-      (list :spec (eas-resolve-spec (eas-agent-arg-json source)) :template nil
+      (list :spec (let ((eas-spec-source-directory
+                         ;; A spec file's data.url is relative to the file, as bin/chart reads it.
+                         (if (and (stringp source) (not (eas-agent-json-text-p source))
+                                  (not (equal source "-")) (file-readable-p source))
+                             (file-name-directory (expand-file-name source))
+                           eas-spec-source-directory)))
+                    (eas-resolve-spec (eas-agent-arg-json source)))
+            :template nil
             :label (eas-agent-source-label source)
             :words (list (eas-agent-source-label source))))))
 
@@ -149,7 +157,8 @@ non-nil), so they come back as warnings with native false."
          (data (list :template (or (plist-get src :template) :null)
                      :hash (eas-resolve-hash spec)
                      :native (if unsupported :false t)
-                     :warnings (vconcat unsupported))))
+                     ;; Properties drawn without (eas-spec-props.el) warn but stay native.
+                     :warnings (vconcat unsupported (eas-spec-props-findings spec)))))
     (cond
      (errors
       (eas-agent-fail (plist-get (car errors) :code) (car errors)

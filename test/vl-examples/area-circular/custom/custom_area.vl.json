@@ -1,0 +1,309 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "fc-qx1.42: a stacked area exercising non-default mark, axis, legend, scale, title and config properties.",
+  "usermeta": {
+    "eas": {
+      "threshold": 0.03,
+      "note": "customization spec: every property is honored natively (check reports no warnings)"
+    }
+  },
+  "width": 420,
+  "height": 220,
+  "title": {
+    "text": "Regional sales",
+    "subtitle": "stacked, cardinal, outlined",
+    "anchor": "start",
+    "color": "#1d3557",
+    "fontSize": 18,
+    "fontWeight": "bold",
+    "offset": 14,
+    "dx": 2,
+    "subtitleColor": "#6c757d",
+    "subtitleFontSize": 11,
+    "subtitleFontWeight": "normal",
+    "subtitlePadding": 4
+  },
+  "data": {
+    "values": [
+      {
+        "month": "2025-01-01",
+        "region": "North",
+        "sales": 4
+      },
+      {
+        "month": "2025-02-01",
+        "region": "North",
+        "sales": 6
+      },
+      {
+        "month": "2025-03-01",
+        "region": "North",
+        "sales": 7
+      },
+      {
+        "month": "2025-04-01",
+        "region": "North",
+        "sales": 9
+      },
+      {
+        "month": "2025-05-01",
+        "region": "North",
+        "sales": 12
+      },
+      {
+        "month": "2025-06-01",
+        "region": "North",
+        "sales": 14
+      },
+      {
+        "month": "2025-07-01",
+        "region": "North",
+        "sales": 13
+      },
+      {
+        "month": "2025-08-01",
+        "region": "North",
+        "sales": 11
+      },
+      {
+        "month": "2025-09-01",
+        "region": "North",
+        "sales": 9
+      },
+      {
+        "month": "2025-10-01",
+        "region": "North",
+        "sales": 7
+      },
+      {
+        "month": "2025-11-01",
+        "region": "North",
+        "sales": 5
+      },
+      {
+        "month": "2025-12-01",
+        "region": "North",
+        "sales": 4
+      },
+      {
+        "month": "2025-01-01",
+        "region": "South",
+        "sales": 6
+      },
+      {
+        "month": "2025-02-01",
+        "region": "South",
+        "sales": 5
+      },
+      {
+        "month": "2025-03-01",
+        "region": "South",
+        "sales": 6
+      },
+      {
+        "month": "2025-04-01",
+        "region": "South",
+        "sales": 7
+      },
+      {
+        "month": "2025-05-01",
+        "region": "South",
+        "sales": 8
+      },
+      {
+        "month": "2025-06-01",
+        "region": "South",
+        "sales": 10
+      },
+      {
+        "month": "2025-07-01",
+        "region": "South",
+        "sales": 12
+      },
+      {
+        "month": "2025-08-01",
+        "region": "South",
+        "sales": 13
+      },
+      {
+        "month": "2025-09-01",
+        "region": "South",
+        "sales": 11
+      },
+      {
+        "month": "2025-10-01",
+        "region": "South",
+        "sales": 9
+      },
+      {
+        "month": "2025-11-01",
+        "region": "South",
+        "sales": 8
+      },
+      {
+        "month": "2025-12-01",
+        "region": "South",
+        "sales": 7
+      },
+      {
+        "month": "2025-01-01",
+        "region": "West",
+        "sales": 2
+      },
+      {
+        "month": "2025-02-01",
+        "region": "West",
+        "sales": 3
+      },
+      {
+        "month": "2025-03-01",
+        "region": "West",
+        "sales": 5
+      },
+      {
+        "month": "2025-04-01",
+        "region": "West",
+        "sales": 6
+      },
+      {
+        "month": "2025-05-01",
+        "region": "West",
+        "sales": 6
+      },
+      {
+        "month": "2025-06-01",
+        "region": "West",
+        "sales": 7
+      },
+      {
+        "month": "2025-07-01",
+        "region": "West",
+        "sales": 9
+      },
+      {
+        "month": "2025-08-01",
+        "region": "West",
+        "sales": 8
+      },
+      {
+        "month": "2025-09-01",
+        "region": "West",
+        "sales": 7
+      },
+      {
+        "month": "2025-10-01",
+        "region": "West",
+        "sales": 5
+      },
+      {
+        "month": "2025-11-01",
+        "region": "West",
+        "sales": 4
+      },
+      {
+        "month": "2025-12-01",
+        "region": "West",
+        "sales": 3
+      }
+    ]
+  },
+  "mark": {
+    "type": "area",
+    "interpolate": "cardinal",
+    "tension": 0.35,
+    "fillOpacity": 0.75,
+    "opacity": 0.95,
+    "stroke": "#343a40",
+    "strokeWidth": 1.25,
+    "strokeDash": [
+      5,
+      2
+    ],
+    "strokeDashOffset": 1,
+    "strokeCap": "square",
+    "strokeJoin": "bevel",
+    "strokeMiterLimit": 3
+  },
+  "encoding": {
+    "x": {
+      "field": "month",
+      "type": "temporal",
+      "title": "Month",
+      "axis": {
+        "format": "%b",
+        "labelAngle": -30,
+        "labelColor": "#495057",
+        "labelFontSize": 10,
+        "labelPadding": 6,
+        "tickCount": 6,
+        "tickSize": 6,
+        "tickColor": "#868e96",
+        "tickWidth": 1.5,
+        "domainColor": "#495057",
+        "domainWidth": 1.5,
+        "grid": true,
+        "gridColor": "#dee2e6",
+        "gridDash": [
+          2,
+          3
+        ],
+        "gridWidth": 1,
+        "titleColor": "#1d3557",
+        "titleFontSize": 13,
+        "titleFontWeight": "bold",
+        "titlePadding": 10
+      }
+    },
+    "y": {
+      "field": "sales",
+      "type": "quantitative",
+      "title": "Units",
+      "scale": {
+        "domainMax": 40
+      },
+      "axis": {
+        "tickCount": 5,
+        "labelColor": "#495057",
+        "gridOpacity": 0.6,
+        "titleColor": "#1d3557",
+        "labelFontWeight": "bold",
+        "domain": false,
+        "ticks": false,
+        "labelPadding": 8
+      }
+    },
+    "color": {
+      "field": "region",
+      "type": "nominal",
+      "scale": {
+        "scheme": "set2"
+      },
+      "legend": {
+        "title": "Region",
+        "titleColor": "#1d3557",
+        "titleFontSize": 13,
+        "titleFontWeight": "bold",
+        "titlePadding": 8,
+        "labelColor": "#343a40",
+        "labelFontSize": 12,
+        "labelOffset": 6,
+        "rowPadding": 5,
+        "symbolType": "square",
+        "symbolSize": 140,
+        "symbolStrokeColor": "#343a40",
+        "symbolStrokeWidth": 1,
+        "offset": 14,
+        "labelExpr": "upper(datum.label)"
+      }
+    }
+  },
+  "config": {
+    "background": "#fcfcfb",
+    "view": {
+      "stroke": "#ced4da"
+    },
+    "axis": {
+      "labelFontSize": 10
+    }
+  }
+}

@@ -343,6 +343,12 @@ come back as (:invalid MESSAGE :path P)."
 When nil every recognised feature counts as supported.  Conformance
 \(`eas-conformance') sets it to read supported.json.")
 
+(defvar eas-spec-check-functions nil
+  "Functions (PARSED-SPEC) returning extra `eas-spec-check' findings.
+A finding with :degraded t names a property the native renderer does not
+honor and draws without; it does not stop native rendering
+\(`eas-spec-unsupported' leaves it out).")
+
 (defun eas-spec-supported-features ()
   "Return the list of supported feature IDs, or t when unrestricted."
   (if eas-spec-supported-function (funcall eas-spec-supported-function) t))

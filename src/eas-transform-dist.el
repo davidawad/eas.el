@@ -20,6 +20,7 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-memo)
 
 ;;; flatten
 
@@ -44,24 +45,31 @@
 (defconst eas-agg-bootstrap-samples 1000
   "Bootstrap resamples behind ci0 and ci1, as in Vega.")
 
+(defvar eas-agg--bootstrap-memo (eas-memo-table)
+  "Bootstrap intervals by their numbers: ci0 and ci1 share one resampling.")
+
 (defun eas-agg-bootstrap-ci (values)
   "Vega's bootstrap 95% confidence interval of the mean of VALUES, as (LO . HI).
 Vega resamples with Math.random(); a fixed-seed generator keeps native
 charts reproducible.  nil when VALUES holds no numbers."
-  (let* ((nums (vconcat (seq-filter #'numberp values))) (n (length nums))
-         (seed 2463534242) (mu (make-vector eas-agg-bootstrap-samples 0.0)))
-    (when (> n 0)
-      (dotimes (j eas-agg-bootstrap-samples)
-        (let ((a 0.0))
-          (dotimes (_ n)
-            ;; xorshift32
-            (setq seed (logand #xffffffff (logxor seed (ash seed 13)))
-                  seed (logxor seed (ash seed -17))
-                  seed (logand #xffffffff (logxor seed (ash seed 5))))
-            (setq a (+ a (aref nums (% seed n)))))
-          (aset mu j (/ a n))))
-      (let ((sorted (vconcat (sort (append mu nil) #'<))))
-        (cons (eas-density--quantile sorted 0.025) (eas-density--quantile sorted 0.975))))))
+  (let ((nums (vconcat (seq-filter #'numberp values))))
+    (when (> (length nums) 0)
+      (eas-memo eas-agg--bootstrap-memo nums (eas-agg--bootstrap nums)))))
+
+(defun eas-agg--bootstrap (nums)
+  "`eas-agg-bootstrap-ci' of the non-empty vector of numbers NUMS."
+  (let* ((n (length nums)) (seed 2463534242) (mu (make-vector eas-agg-bootstrap-samples 0.0)))
+    (dotimes (j eas-agg-bootstrap-samples)
+      (let ((a 0.0))
+        (dotimes (_ n)
+          ;; xorshift32
+          (setq seed (logand #xffffffff (logxor seed (ash seed 13)))
+                seed (logxor seed (ash seed -17))
+                seed (logand #xffffffff (logxor seed (ash seed 5))))
+          (setq a (+ a (aref nums (% seed n)))))
+        (aset mu j (/ a n))))
+    (let ((sorted (vconcat (sort (append mu nil) #'<))))
+      (cons (eas-density--quantile sorted 0.025) (eas-density--quantile sorted 0.975)))))
 
 (defun eas-agg-stderr (values)
   "Standard error of the mean of the numbers in VALUES, or :null."
@@ -138,10 +146,22 @@ charts reproducible.  nil when VALUES holds no numbers."
                                 (scale (if counts (length values) 1)))
                            (cl-loop for i from 0 to steps
                                     for x = (if (= i steps) hi (+ lo (* (/ (float i) steps) span)))
+                                    for dens across (eas-density--samples values bw lo hi steps cumulative)
                                     collect (append (cl-loop for k in groupby for d in (car g) append (list k d))
-                                                    (list vk x dk (* scale (if cumulative (eas-density--cdf values bw x)
-                                                                                (eas-density--pdf values bw x))))))))
+                                                    (list vk x dk (* scale dens))))))
                        (nreverse groups)))))))
+
+(defvar eas-density--memo (eas-memo-table)
+  "Density samples by their inputs: a recompile does not sum the kernels again.")
+
+(defun eas-density--samples (values bw lo hi steps cumulative)
+  "Vector of the density of VALUES (bandwidth BW) at STEPS+1 points from LO
+to HI, cumulative when CUMULATIVE."
+  (eas-memo eas-density--memo (list values bw lo hi steps cumulative)
+    (let ((span (- hi lo)))
+      (vconcat (cl-loop for i from 0 to steps
+                        for x = (if (= i steps) hi (+ lo (* (/ (float i) steps) span)))
+                        collect (if cumulative (eas-density--cdf values bw x) (eas-density--pdf values bw x)))))))
 
 (provide 'eas-transform-dist)
 ;;; eas-transform-dist.el ends here

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Isotype rows of text glyphs with custom font size, weight, offsets and colors.",
+  "width": 360,
+  "height": 160,
+  "data": {
+    "values": [
+      {
+        "animal": "cattle",
+        "n": 3
+      },
+      {
+        "animal": "cattle",
+        "n": 2
+      },
+      {
+        "animal": "pigs",
+        "n": 4
+      },
+      {
+        "animal": "sheep",
+        "n": 6
+      },
+      {
+        "animal": "sheep",
+        "n": 1
+      },
+      {
+        "animal": "pigs",
+        "n": 1
+      }
+    ]
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "rank",
+          "as": "rank"
+        }
+      ],
+      "groupby": [
+        "animal"
+      ]
+    }
+  ],
+  "mark": {
+    "type": "text",
+    "fontSize": 22,
+    "fontWeight": "bold",
+    "baseline": "middle",
+    "align": "center",
+    "dy": 2
+  },
+  "encoding": {
+    "x": {
+      "field": "rank",
+      "type": "ordinal",
+      "axis": null
+    },
+    "y": {
+      "field": "animal",
+      "type": "nominal",
+      "title": null,
+      "axis": {
+        "labelFontSize": 13,
+        "domain": false,
+        "ticks": false
+      }
+    },
+    "text": {
+      "value": "\u25cf"
+    },
+    "color": {
+      "field": "animal",
+      "type": "nominal",
+      "scale": {
+        "range": [
+          "#e41a1c",
+          "#377eb8",
+          "#4daf4a"
+        ]
+      },
+      "legend": null
+    }
+  },
+  "usermeta": {
+    "eas": {
+      "threshold": 0.03
+    }
+  }
+}

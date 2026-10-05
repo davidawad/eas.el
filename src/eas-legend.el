@@ -85,8 +85,8 @@ restyles it (eas-legend-style.el)."
                                                          (plist-get scale :domain))))))
           ("sequential"
            (append base (list :type "gradient"
-                              :stops (if (plist-get scale :mid)
-                                         ;; Diverging: sample the scale evenly along its domain.
+                              :stops (if (or (plist-get scale :mid) (equal (plist-get scale :interpolate) "hcl"))
+                                         ;; Diverging or HCL: sample the scale evenly along its domain.
                                          (let ((d (plist-get scale :domain)))
                                            (vconcat (cl-loop for i to 32
                                                              collect (eas-scale-apply

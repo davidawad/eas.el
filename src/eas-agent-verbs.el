@@ -167,7 +167,7 @@ non-nil), so they come back as warnings with native false."
                         (append data (list :findings (vconcat errors)))
                         (eas-agent-next "explain" src "--stage" "resolve")
                         (eas-agent-cmd "describe" "supported")))
-     (unsupported
+     ((seq-remove (lambda (f) (plist-get f :property)) unsupported)
       (eas-agent-ok data (eas-agent-next "export" src "--vl")
                       (eas-agent-cmd "describe" "supported")))
      (t

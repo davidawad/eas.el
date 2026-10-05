@@ -1059,3 +1059,61 @@ summed compile-svg mean fell from 976 to about 300 ms.  The other 20
 examples compile in 3-29 ms either way (the new property checks and bar
 hooks add up to about 1 ms on the smallest).  In batch, GC is 35-40%
 of render time; interactive use defers it (`eas-gc.el`, section 10.4).
+
+## 12. Distributions: render cost and the property sweep (fc-qx1.39)
+
+Box: Linux, Emacs 30.1 batch, byte-compiled, calibration 96 ms
+(`eas-bench-calibrate`; the fc-qx1.9 reference machine's is in
+bench-budget.json). rsvg-convert was not installed; librsvg 2.60 from
+Debian's packages (unpacked, no root) with Liberation Sans stood in. It
+scores the committed references 0.003-0.007 higher than the box that
+recorded them (antialiasing only), so ratios recorded here carry that
+bias. A local Vega-Lite 6.4.1 + Vega 6 + node-canvas pipeline
+(`scripts/eas-vega-ref.mjs`) reproduces bin/chart's distributions
+references at 0.0005-0.017 (histogram 0.0030; rect_binned_heatmap 0.14
+and the emoji chart are the exceptions), which made it usable as an oracle for
+references bin/chart gets wrong and for the property sweep.
+
+Mean ms per stage, 20 runs (`scripts/eas-gallery-bench.sh distributions 20`;
+compile before -> after this pass; cold is one svg compile with every memo
+table empty):
+
+| example | cold | compile svg | compile text | render svg | render text | hover |
+|---|---:|---:|---:|---:|---:|---:|
+| area_cumulative_freq | 21.8 | 25.8 → 22.0 | 24.0 → 20.0 | 2.9 | 4.9 | 0.13 |
+| area_density | 322.3 | 280.9 → 17.0 | 272.0 → 17.3 | 4.2 | 6.3 | 0.16 |
+| area_density_stacked | 52.0 | 59.3 → 26.8 | 57.0 → 29.8 | 13.9 | 12.8 | 0.38 |
+| circle_binned | 29.0 | 43.6 → 45.9 | 46.7 → 46.6 | 6.6 | 1.6 | 0.38 |
+| histogram | 21.1 | 28.8 → 30.0 | 26.2 → 27.9 | 1.6 | 2.5 | 0.14 |
+| layer_cumulative_histogram | 33.3 | 50.7 → 45.4 | 49.2 → 49.8 | 3.6 | 2.3 | 0.20 |
+| layer_line_errorband_ci | 312.5 | 718.7 → 17.5 | 700.3 → 9.1 | 4.3 | 2.1 | 0.47 |
+| layer_point_errorbar_ci | 92.7 | 189.5 → 4.1 | 182.8 → 2.3 | 5.3 | 3.9 | 0.17 |
+| rect_binned_heatmap | 61.9 | 84.7 → 73.6 | 82.2 → 71.7 | 25.6 | 4.6 | 3.80 |
+| the other 10 | 1.6-5.9 | ≤ 5.2 | ≤ 4.7 | ≤ 4.5 | ≤ 4.9 | ≤ 0.24 |
+
+Where the time went, measured with elp (rarely-called functions only, so
+instrumentation stays out of the numbers):
+
+- ci0/ci1: 74% of layer_line_errorband_ci's compile. Each op ran the
+  full 1000-resample bootstrap on the same group, and each recompile ran
+  it again. The xorshift loop itself is about 0.6 µs per draw in
+  bytecode; unrolling or integer sums gained at most 25%, so the fix is
+  exact memoization (`eas-memo.el`), not a faster loop.
+- timeUnit floors: the rest of it. `decode-time` and `encode-time` with
+  a zone cost ~60 µs per row; 824 calls cover 24 distinct values.
+- density: one Gaussian per value per sample (3201 x 201 here), ~0.3 µs
+  each with `exp`. Precomputing 1/bw saved 8% and changes results in the
+  last bit, so it was left; the kernel sums are memoized instead.
+- 3201-row charts (histogram, circle_binned, heatmap) spend their time
+  in bin, filter and aggregate at 2-6 µs per row, mostly the row copy
+  each transform makes; no single hot spot.
+
+Property sweep: 1293 cases over mark (9 types), axis, config.axis,
+legend (symbol and gradient), config.legend, scale, title, config.title,
+header, config.header, bin, errorbar, errorband, config.view, top-level
+config and config.<mark>; 2.5 min for Vega, 9 s native, 9 min for the
+image comparisons. Pixel ratios alone missed faint changes (a light
+gray domain line is under pixelmatch's color threshold), so "native
+ignores it" is decided from the SVGs (Vega's changed, native's did not),
+and the ratios only judge correctness. Verdicts and their use:
+gallery-coverage.md.

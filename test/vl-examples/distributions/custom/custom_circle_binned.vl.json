@@ -1,0 +1,52 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Binned circles sized by count, with circle and size-scale settings.",
+  "width": 320,
+  "height": 220,
+  "data": {
+    "url": "../../data/movies.json"
+  },
+  "mark": {
+    "type": "circle",
+    "color": "#66a61e",
+    "opacity": 0.6,
+    "stroke": "#1b5e20",
+    "strokeWidth": 1.5
+  },
+  "encoding": {
+    "x": {
+      "bin": {
+        "maxbins": 8
+      },
+      "field": "IMDB Rating",
+      "axis": {
+        "labelAngle": 0,
+        "tickCount": 8
+      }
+    },
+    "y": {
+      "bin": {
+        "maxbins": 8
+      },
+      "field": "Rotten Tomatoes Rating"
+    },
+    "size": {
+      "aggregate": "count",
+      "type": "quantitative",
+      "scale": {
+        "range": [
+          10,
+          600
+        ]
+      },
+      "legend": {
+        "title": "Movies"
+      }
+    }
+  },
+  "usermeta": {
+    "eas": {
+      "threshold": 0.03
+    }
+  }
+}

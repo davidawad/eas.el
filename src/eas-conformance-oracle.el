@@ -33,6 +33,7 @@
 (require 'eas-chart)
 (require 'eas-png)
 (require 'eas-time)
+(require 'eas-vl-gallery-mask)
 
 (defvar eas-conformance-directory)
 (declare-function eas-conformance-gallery "eas-conformance")
@@ -102,7 +103,9 @@ Gallery-group entries (with :ref) carry their own verdict in :ref-problem."
 
 (defun eas-conformance--judge (entry mine ref source)
   "Compare native PNG MINE with reference PNG REF for ENTRY; SOURCE names REF."
-  (let* ((cmp (eas-png-compare (eas-png-read mine) (eas-png-read ref)))
+  (let* ((mask (plist-get entry :mask))
+         (cmp (eas-png-compare (eas-vl-gallery-mask-image (eas-png-read mine) mask)
+                               (eas-vl-gallery-mask-image (eas-png-read ref) mask)))
          (threshold (plist-get entry :threshold))
          (tolerance (or (eas-conformance--eas-meta entry :size_tolerance) eas-conformance-size-tolerance))
          (delta (plist-get cmp :size-delta))
@@ -134,7 +137,8 @@ Return (:status :detail ...): STATUS is \"pass\", \"fail\" or
     (let ((stale (if (plist-member entry :ref) (plist-get entry :ref-problem)
                    (eas-conformance-ref-problem entry)))
           (mine (make-temp-file "eas-native" nil ".png"))
-          (fresh (and (eas-chart-available-p) (make-temp-file "eas-ref" nil ".png"))))
+          (fresh (and (eas-chart-available-p) (not (plist-get entry :ref-pinned))
+                      (make-temp-file "eas-ref" nil ".png"))))
       (unwind-protect
           (condition-case err
               (progn

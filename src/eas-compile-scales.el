@@ -22,6 +22,7 @@
 (require 'eas-compile-aux)
 (require 'eas-time-band)
 (require 'eas-compile-sort)
+(require 'eas-color-names)
 
 (defun eas-compile--defs (units channel)
   "Return (UNIT . DEF) pairs for CHANNEL across UNITS with a data def."
@@ -271,7 +272,10 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                               (list :type "sequential"
                                     :domain (vector (if nums (apply #'min nums) 0) (if nums (apply #'max nums) 1))
                                     :mid (plist-get sp :domainMid)
-                                    :range (or (and (vectorp (plist-get sp :range)) (plist-get sp :range))
+                                    ;; Vega-Lite interpolates an explicit range in HCL.
+                                    :interpolate (and (vectorp (plist-get sp :range)) "hcl")
+                                    :range (or (and (vectorp (plist-get sp :range))
+                                                    (vconcat (mapcar (lambda (c) (or (eas-color-hex c) c)) (plist-get sp :range))))
                                                (and (plist-get sp :scheme) (eas-scheme-ramp (plist-get sp :scheme)))
                                                (and (plist-get sp :domainMid)
                                                     (or (eas-compile--config-range config :diverging) eas-scale-blueorange-reversed))

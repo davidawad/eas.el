@@ -1,0 +1,78 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Stacked densities with a scheme, interpolation and legend settings.",
+  "width": 360,
+  "height": 180,
+  "data": {
+    "url": "../../data/penguins.json"
+  },
+  "transform": [
+    {
+      "filter": "datum['Flipper Length (mm)'] != null"
+    },
+    {
+      "density": "Flipper Length (mm)",
+      "groupby": [
+        "Species"
+      ],
+      "extent": [
+        165,
+        235
+      ],
+      "steps": 120,
+      "bandwidth": 3
+    }
+  ],
+  "mark": {
+    "type": "area",
+    "interpolate": "monotone",
+    "opacity": 0.75
+  },
+  "encoding": {
+    "x": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "Flipper length (mm)",
+      "scale": {
+        "domain": [
+          165,
+          235
+        ],
+        "zero": false
+      },
+      "axis": {
+        "tickCount": 8
+      }
+    },
+    "y": {
+      "field": "density",
+      "type": "quantitative",
+      "stack": "zero",
+      "axis": {
+        "labels": false,
+        "title": null,
+        "grid": false
+      }
+    },
+    "color": {
+      "field": "Species",
+      "type": "nominal",
+      "scale": {
+        "range": [
+          "#1b9e77",
+          "#d95f02",
+          "#7570b3"
+        ]
+      },
+      "legend": {
+        "title": "Penguin",
+        "labelLimit": 60
+      }
+    }
+  },
+  "usermeta": {
+    "eas": {
+      "threshold": 0.03
+    }
+  }
+}

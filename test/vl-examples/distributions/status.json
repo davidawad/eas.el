@@ -18,10 +18,12 @@
     "threshold": 0.03
   },
   "bar_binned_data": {
-    "note": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0053",
-    "ratio": 0.3067,
-    "reason": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0053; svg and text render natively at 3 sizes; oracle ratio 0.3067 (threshold 0.03)",
-    "status": "partial",
+    "note": "bin/chart's ref/bar_binned_data.png is blank where the bars are: Vega drops a rect with a corner radius when x > x2, and Vega-Lite 6.4.1 emits ranged binned bars as x = end, x2 = start, so bin/chart's theme (config.bar.cornerRadiusEnd 4) loses them; the oracle is ref/bar_binned_data.vega.png, Vega-Lite 6.4.1 and Vega with that theme minus cornerRadiusEnd (ref_build), and native keeps the theme's rounded bar ends",
+    "ratio": 0.0031,
+    "reason": "bin/chart's ref/bar_binned_data.png is blank where the bars are: Vega drops a rect with a corner radius when x > x2, and Vega-Lite 6.4.1 emits ranged binned bars as x = end, x2 = start, so bin/chart's theme (config.bar.cornerRadiusEnd 4) loses them; the oracle is ref/bar_binned_data.vega.png, Vega-Lite 6.4.1 and Vega with that theme minus cornerRadiusEnd (ref_build), and native keeps the theme's rounded bar ends; svg and text render natively at 3 sizes; oracle ratio 0.0031 (threshold 0.03)",
+    "ref": "ref/bar_binned_data.vega.png",
+    "ref_build": "TZ=America/Chicago node scripts/eas-vega-ref.mjs test/vl-examples/distributions/bar_binned_data.vl.json /tmp/bar_binned_data.svg --config '{\"bar\":{\"cornerRadiusEnd\":null}}' && rsvg-convert -o test/vl-examples/distributions/ref/bar_binned_data.vega.png /tmp/bar_binned_data.svg",
+    "status": "pass",
     "threshold": 0.03
   },
   "bar_percent_of_total": {
@@ -69,10 +71,12 @@
     "threshold": 0.04
   },
   "histogram_rel_freq": {
-    "note": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0060",
-    "ratio": 0.2711,
-    "reason": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0060; svg and text render natively at 3 sizes; oracle ratio 0.2711 (threshold 0.03)",
-    "status": "partial",
+    "note": "bin/chart's ref/histogram_rel_freq.png is blank where the bars are: Vega drops a rect with a corner radius when x > x2, and Vega-Lite 6.4.1 emits ranged binned bars as x = end, x2 = start, so bin/chart's theme (config.bar.cornerRadiusEnd 4) loses them; the oracle is ref/histogram_rel_freq.vega.png, Vega-Lite 6.4.1 and Vega with that theme minus cornerRadiusEnd (ref_build), and native keeps the theme's rounded bar ends",
+    "ratio": 0.0032,
+    "reason": "bin/chart's ref/histogram_rel_freq.png is blank where the bars are: Vega drops a rect with a corner radius when x > x2, and Vega-Lite 6.4.1 emits ranged binned bars as x = end, x2 = start, so bin/chart's theme (config.bar.cornerRadiusEnd 4) loses them; the oracle is ref/histogram_rel_freq.vega.png, Vega-Lite 6.4.1 and Vega with that theme minus cornerRadiusEnd (ref_build), and native keeps the theme's rounded bar ends; svg and text render natively at 3 sizes; oracle ratio 0.0032 (threshold 0.03)",
+    "ref": "ref/histogram_rel_freq.vega.png",
+    "ref_build": "TZ=America/Chicago node scripts/eas-vega-ref.mjs test/vl-examples/distributions/histogram_rel_freq.vl.json /tmp/histogram_rel_freq.svg --config '{\"bar\":{\"cornerRadiusEnd\":null}}' && rsvg-convert -o test/vl-examples/distributions/ref/histogram_rel_freq.vega.png /tmp/histogram_rel_freq.svg",
+    "status": "pass",
     "threshold": 0.03
   },
   "isotype_bar_chart": {
@@ -82,17 +86,20 @@
     "threshold": 0.03
   },
   "isotype_bar_chart_emoji": {
-    "note": "the reference's glyphs are Apple Color Emoji (the macOS font bin/chart used); positions, sizes and facet headers match, but emoji pixels depend on the rasterizer's emoji font",
-    "ratio": 0.3226,
-    "reason": "the reference's glyphs are Apple Color Emoji (the macOS font bin/chart used); positions, sizes and facet headers match, but emoji pixels depend on the rasterizer's emoji font; svg and text render natively at 3 sizes; oracle ratio 0.3226 (threshold 0.03)",
-    "status": "partial",
-    "threshold": 0.03
+    "mask": "emoji",
+    "note": "the reference's glyphs are Apple Color Emoji (the macOS font bin/chart used), so the oracle masks each native emoji glyph box in both images (\"mask\": \"emoji\", eas-vl-gallery-mask.el): glyph positions, sizes and the facet headers are compared, glyph pixels are not; threshold 0.005, not 0.03: with the glyphs masked, a glyph displaced 16px from its native box scores 0.006, so the default threshold would not check positions",
+    "ratio": 0.0005,
+    "reason": "the reference's glyphs are Apple Color Emoji (the macOS font bin/chart used), so the oracle masks each native emoji glyph box in both images (\"mask\": \"emoji\", eas-vl-gallery-mask.el): glyph positions, sizes and the facet headers are compared, glyph pixels are not; threshold 0.005, not 0.03: with the glyphs masked, a glyph displaced 16px from its native box scores 0.006, so the default threshold would not check positions; svg and text render natively at 3 sizes; oracle ratio 0.0005 (threshold 0.005)",
+    "status": "pass",
+    "threshold": 0.005
   },
   "layer_cumulative_histogram": {
-    "note": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0055",
-    "ratio": 0.3556,
-    "reason": "bin/chart's reference is blank: Vega-Lite 6.4.1 drops ranged binned bars (bin binned with x2) when config.bar.cornerRadiusEnd is set, as bin/chart's default theme does (layered/wheat_wages loses its bars too); native draws the bars and with marks hidden matches the reference's axes, ticks, labels and titles at ratio 0.0055; svg and text render natively at 3 sizes; oracle ratio 0.3556 (threshold 0.03)",
-    "status": "partial",
+    "note": "bin/chart's ref/layer_cumulative_histogram.png is blank where the bars are: Vega drops a rect with a corner radius when x > x2, and Vega-Lite 6.4.1 emits ranged binned bars as x = end, x2 = start, so bin/chart's theme (config.bar.cornerRadiusEnd 4) loses them; the oracle is ref/layer_cumulative_histogram.vega.png, Vega-Lite 6.4.1 and Vega with that theme minus cornerRadiusEnd (ref_build), and native keeps the theme's rounded bar ends",
+    "ratio": 0.0033,
+    "reason": "bin/chart's ref/layer_cumulative_histogram.png is blank where the bars are: Vega drops a rect with a corner radius when x > x2, and Vega-Lite 6.4.1 emits ranged binned bars as x = end, x2 = start, so bin/chart's theme (config.bar.cornerRadiusEnd 4) loses them; the oracle is ref/layer_cumulative_histogram.vega.png, Vega-Lite 6.4.1 and Vega with that theme minus cornerRadiusEnd (ref_build), and native keeps the theme's rounded bar ends; svg and text render natively at 3 sizes; oracle ratio 0.0033 (threshold 0.03)",
+    "ref": "ref/layer_cumulative_histogram.vega.png",
+    "ref_build": "TZ=America/Chicago node scripts/eas-vega-ref.mjs test/vl-examples/distributions/layer_cumulative_histogram.vl.json /tmp/layer_cumulative_histogram.svg --config '{\"bar\":{\"cornerRadiusEnd\":null}}' && rsvg-convert -o test/vl-examples/distributions/ref/layer_cumulative_histogram.vega.png /tmp/layer_cumulative_histogram.svg",
+    "status": "pass",
     "threshold": 0.03
   },
   "layer_line_errorband_ci": {

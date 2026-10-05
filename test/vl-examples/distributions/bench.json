@@ -1,0 +1,238 @@
+{
+  "emacs": "30.1",
+  "compiled": true,
+  "zone": "America/Chicago",
+  "reps": 20,
+  "calibration_ms": 95.995,
+  "baseline_calibration_ms": 89.62,
+  "examples": {
+    "area_cumulative_freq": {
+      "rows": 3201,
+      "items": 1,
+      "ms": {
+        "compile-cold": 21.784,
+        "compile-svg": 22.01,
+        "compile-text": 19.953,
+        "hover": 0.127,
+        "render-svg": 2.904,
+        "render-text": 4.864
+      }
+    },
+    "area_density": {
+      "rows": 3201,
+      "items": 1,
+      "ms": {
+        "compile-cold": 322.324,
+        "compile-svg": 16.977,
+        "compile-text": 17.331,
+        "hover": 0.156,
+        "render-svg": 4.24,
+        "render-text": 6.261
+      }
+    },
+    "area_density_stacked": {
+      "rows": 344,
+      "items": 3,
+      "ms": {
+        "compile-cold": 51.981,
+        "compile-svg": 26.762,
+        "compile-text": 29.791,
+        "hover": 0.382,
+        "render-svg": 13.852,
+        "render-text": 12.822
+      }
+    },
+    "bar_binned_data": {
+      "rows": 8,
+      "items": 8,
+      "ms": {
+        "compile-cold": 2.125,
+        "compile-svg": 1.875,
+        "compile-text": 2.66,
+        "hover": 0.119,
+        "render-svg": 2.278,
+        "render-text": 1.272
+      }
+    },
+    "bar_percent_of_total": {
+      "rows": 5,
+      "items": 5,
+      "ms": {
+        "compile-cold": 2.648,
+        "compile-svg": 2.2,
+        "compile-text": 2.666,
+        "hover": 0.114,
+        "render-svg": 2.478,
+        "render-text": 0.618
+      }
+    },
+    "boxplot_preaggregated": {
+      "rows": 3,
+      "items": 11,
+      "ms": {
+        "compile-cold": 2.713,
+        "compile-svg": 2.425,
+        "compile-text": 3.184,
+        "hover": 0.187,
+        "render-svg": 1.585,
+        "render-text": 0.682
+      }
+    },
+    "circle_binned": {
+      "rows": 3201,
+      "items": 64,
+      "ms": {
+        "compile-cold": 28.961,
+        "compile-svg": 45.863,
+        "compile-text": 46.594,
+        "hover": 0.377,
+        "render-svg": 6.564,
+        "render-text": 1.621
+      }
+    },
+    "circle_wilkinson_dotplot": {
+      "rows": 21,
+      "items": 21,
+      "ms": {
+        "compile-cold": 1.853,
+        "compile-svg": 1.575,
+        "compile-text": 1.223,
+        "hover": 0.241,
+        "render-svg": 1.302,
+        "render-text": 0.35
+      }
+    },
+    "histogram": {
+      "rows": 3201,
+      "items": 9,
+      "ms": {
+        "compile-cold": 21.129,
+        "compile-svg": 30.017,
+        "compile-text": 27.921,
+        "hover": 0.14,
+        "render-svg": 1.596,
+        "render-text": 2.516
+      }
+    },
+    "histogram_log": {
+      "rows": 11,
+      "items": 6,
+      "ms": {
+        "compile-cold": 2.463,
+        "compile-svg": 1.836,
+        "compile-text": 2.236,
+        "hover": 0.098,
+        "render-svg": 1.819,
+        "render-text": 1.196
+      }
+    },
+    "histogram_nonlinear": {
+      "rows": 8,
+      "items": 8,
+      "ms": {
+        "compile-cold": 1.6,
+        "compile-svg": 1.56,
+        "compile-text": 1.082,
+        "hover": 0.13,
+        "render-svg": 1.699,
+        "render-text": 2.765
+      }
+    },
+    "histogram_rel_freq": {
+      "rows": 406,
+      "items": 10,
+      "ms": {
+        "compile-cold": 4.043,
+        "compile-svg": 5.223,
+        "compile-text": 4.732,
+        "hover": 0.133,
+        "render-svg": 2.157,
+        "render-text": 2.385
+      }
+    },
+    "isotype_bar_chart": {
+      "rows": 37,
+      "items": 37,
+      "ms": {
+        "compile-cold": 2.466,
+        "compile-svg": 2.168,
+        "compile-text": 2.009,
+        "hover": 0.235,
+        "render-svg": 3.36,
+        "render-text": 3.093
+      }
+    },
+    "isotype_bar_chart_emoji": {
+      "rows": 37,
+      "items": 37,
+      "ms": {
+        "compile-cold": 3.547,
+        "compile-svg": 3.675,
+        "compile-text": 3.101,
+        "hover": 0.12,
+        "render-svg": 2.609,
+        "render-text": 4.871
+      }
+    },
+    "layer_cumulative_histogram": {
+      "rows": 3201,
+      "items": 18,
+      "ms": {
+        "compile-cold": 33.315,
+        "compile-svg": 45.42,
+        "compile-text": 49.819,
+        "hover": 0.202,
+        "render-svg": 3.571,
+        "render-text": 2.305
+      }
+    },
+    "layer_line_errorband_ci": {
+      "rows": 406,
+      "items": 2,
+      "ms": {
+        "compile-cold": 312.532,
+        "compile-svg": 17.48,
+        "compile-text": 9.119,
+        "hover": 0.473,
+        "render-svg": 4.318,
+        "render-text": 2.086
+      }
+    },
+    "layer_point_errorbar_ci": {
+      "rows": 120,
+      "items": 20,
+      "ms": {
+        "compile-cold": 92.733,
+        "compile-svg": 4.132,
+        "compile-text": 2.292,
+        "hover": 0.168,
+        "render-svg": 5.34,
+        "render-text": 3.907
+      }
+    },
+    "layer_point_errorbar_stdev": {
+      "rows": 120,
+      "items": 20,
+      "ms": {
+        "compile-cold": 5.87,
+        "compile-svg": 4.078,
+        "compile-text": 2.351,
+        "hover": 0.199,
+        "render-svg": 4.473,
+        "render-text": 3.55
+      }
+    },
+    "rect_binned_heatmap": {
+      "rows": 3201,
+      "items": 378,
+      "ms": {
+        "compile-cold": 61.885,
+        "compile-svg": 73.642,
+        "compile-text": 71.694,
+        "hover": 3.802,
+        "render-svg": 25.644,
+        "render-text": 4.626
+      }
+    }
+  }
+}

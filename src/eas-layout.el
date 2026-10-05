@@ -190,8 +190,12 @@ PLOT-SIZE is the plot extent along the axis."
                           ;; Vega-Lite leaves a log axis's tickCount to Vega's default, 10.
                           (and (equal (plist-get scale :type) "log") 10))
                         (if (eas-layout-text-p metrics) nil
-                          ;; Vega-Lite: ceil(size/40), ceil(width/10) for binned x.
-                          (max 1 (ceiling (/ plot-size (if (or (equal (plist-get def :derived) "bin") (plist-get def :bin-end)) 10.0
+                          ;; Vega-Lite: ceil(size/40), ceil(width/10) for binned x
+                          ;; (binning, not pre-binned "binned" data).
+                          (max 1 (ceiling (/ plot-size (if (or (equal (plist-get def :derived) "bin")
+                                                               (and (plist-get def :bin-end)
+                                                                    (not (equal (plist-get def :derived) "binned"))))
+                                                           10.0
                                                          (float spacing))))))))
              (fmt (if (and (equal (plist-get def :derived) "timeUnit")
                            (or (null (plist-get axis :format)) (stringp (plist-get axis :format))))

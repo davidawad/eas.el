@@ -1,0 +1,61 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Means with standard-deviation error bars, custom bar and point styles.",
+  "width": 300,
+  "height": 200,
+  "data": {
+    "url": "../../data/barley.json"
+  },
+  "encoding": {
+    "y": {
+      "field": "variety",
+      "type": "ordinal",
+      "axis": {
+        "labelColor": "#333",
+        "titleColor": "#333"
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "color": "#7570b3",
+        "size": 60,
+        "shape": "diamond"
+      },
+      "encoding": {
+        "x": {
+          "aggregate": "mean",
+          "field": "yield",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "title": "Barley yield"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "errorbar",
+        "extent": "stdev",
+        "color": "#7570b3",
+        "thickness": 2
+      },
+      "encoding": {
+        "x": {
+          "field": "yield",
+          "type": "quantitative",
+          "title": "Barley yield"
+        }
+      }
+    }
+  ],
+  "usermeta": {
+    "eas": {
+      "threshold": 0.03
+    }
+  }
+}

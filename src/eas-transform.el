@@ -19,6 +19,7 @@
 
 (require 'eas-core)
 (require 'eas-time)
+(require 'eas-memo)
 (require 'eas-expr)
 (require 'eas-transform-agg)
 (require 'eas-transform-domain)

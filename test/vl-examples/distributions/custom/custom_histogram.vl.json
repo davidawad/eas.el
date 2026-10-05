@@ -1,0 +1,80 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Histogram with non-default bar, axis, scale, bin, title and view properties.",
+  "title": {
+    "text": "IMDB ratings",
+    "anchor": "start",
+    "color": "#7a2a00",
+    "fontSize": 16,
+    "fontWeight": "bold"
+  },
+  "width": 360,
+  "height": 200,
+  "data": {
+    "url": "../../data/movies.json"
+  },
+  "mark": {
+    "type": "bar",
+    "color": "#d95f02",
+    "cornerRadiusEnd": 2,
+    "binSpacing": 2,
+    "stroke": "#7a2a00",
+    "opacity": 0.9
+  },
+  "encoding": {
+    "x": {
+      "bin": {
+        "maxbins": 20
+      },
+      "field": "IMDB Rating",
+      "title": "Rating (binned)",
+      "axis": {
+        "labelColor": "#7a2a00",
+        "labelFontSize": 12,
+        "titleColor": "#7a2a00",
+        "titleFontSize": 13,
+        "tickColor": "#7a2a00",
+        "tickSize": 8,
+        "tickWidth": 2,
+        "domainWidth": 2
+      }
+    },
+    "y": {
+      "aggregate": "count",
+      "title": "Movies",
+      "scale": {
+        "domain": [
+          0,
+          600
+        ],
+        "nice": false
+      },
+      "axis": {
+        "grid": true,
+        "gridColor": "#f0c9a8",
+        "gridDash": [
+          3,
+          3
+        ],
+        "gridWidth": 1,
+        "tickCount": 4,
+        "format": "~s",
+        "labelPadding": 8,
+        "titleFontWeight": "bold"
+      }
+    },
+    "strokeWidth": {
+      "value": 1.5
+    }
+  },
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "usermeta": {
+    "eas": {
+      "threshold": 0.03
+    }
+  }
+}

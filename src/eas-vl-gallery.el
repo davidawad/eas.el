@@ -22,6 +22,13 @@
 ;; when bin/chart's reference is known to lack those marks (a Vega-Lite
 ;; defect, R says which): the comparison then leaves them out of the
 ;; native image too, and the example must still draw them natively.
+;; An entry may also name its own reference ("ref", relative to GROUP,
+;; with the command that built it in "ref_build") where bin/chart's is
+;; wrong, and an oracle mask ("mask", eas-vl-gallery-mask.el) for
+;; pixels that depend on the machine that built the reference.
+;;
+;; GROUP/custom/ holds customization specs, checked by
+;; eas-vl-gallery-custom.el (their thresholds live in usermeta.eas).
 
 ;;; Code:
 
@@ -33,6 +40,7 @@
 (require 'eas-text)
 (require 'eas-chart)
 (require 'eas-png)
+(require 'eas-vl-gallery-mask)
 
 (defvar eas-vl-gallery-directory
   (expand-file-name "test/vl-examples" eas-template--root)
@@ -200,8 +208,35 @@ list of strings (nil when clean)."
      (nreverse out))))
 
 (defun eas-vl-gallery-ref-file (group name)
-  "bin/chart's reference PNG of example NAME in GROUP."
-  (expand-file-name (concat "ref/" name ".png") (eas-vl-gallery-group-directory group)))
+  "The reference PNG of example NAME in GROUP: its status.json \"ref\",
+else bin/chart's ref/NAME.png, else its \"interim_ref\"."
+  (let* ((dir (eas-vl-gallery-group-directory group))
+         (bin-chart (expand-file-name (concat "ref/" name ".png") dir))
+         (interim (eas-vl-gallery--entry-field group name :interim_ref)))
+    (cond ((eas-vl-gallery--entry-field group name :ref)
+           (expand-file-name (eas-vl-gallery--entry-field group name :ref) dir))
+          ((or (null interim) (file-exists-p bin-chart)) bin-chart)
+          (t (expand-file-name interim dir)))))
+
+(defun eas-vl-gallery-build-ref (group name)
+  "Build bin/chart's reference ref/NAME.png of NAME in GROUP.
+Signals NOT_FOUND without bin/chart."
+  (let ((file (expand-file-name (concat "ref/" name ".png") (eas-vl-gallery-group-directory group)))
+        (process-environment (cons (concat "TZ=" eas-vl-gallery-zone) process-environment))
+        (coding-system-for-write 'no-conversion))
+    (make-directory (file-name-directory file) t)
+    (let ((png (eas-chart-build (eas-vl-gallery-spec group name) "png")))
+      (with-temp-file file (set-buffer-multibyte nil) (insert png)))
+    file))
+
+(defun eas-vl-gallery--entry-field (group name key)
+  "KEY of NAME's status.json entry in GROUP, or nil."
+  (plist-get (plist-get (eas-vl-gallery-status group) (eas-key name)) key))
+
+(defun eas-vl-gallery-mask (group name spec)
+  "Boxes of SPEC's native scene that NAME's status.json mask hides, or nil."
+  (when-let* ((kind (eas-vl-gallery--entry-field group name :mask)))
+    (eas-vl-gallery-mask-boxes kind (eas-vl-gallery--native (eas-compile spec)))))
 
 (defun eas-vl-gallery-rasterizer-p ()
   "Non-nil when native SVG can be rasterized and PNGs decoded here."
@@ -230,14 +265,17 @@ list of strings (nil when clean)."
                              (plist-get scene :views)))
                  types)))
 
-(defun eas-vl-gallery-compare (group name svg)
+(defun eas-vl-gallery-compare (group name svg &optional mask)
   "Compare native SVG of NAME in GROUP with its reference.
+MASK is boxes painted over in both images (`eas-vl-gallery-mask').
 Return `eas-png-compare's plist, or nil when no rasterizer is available."
   (when (eas-vl-gallery-rasterizer-p)
     (let ((mine (make-temp-file "eas-vl" nil ".png")))
       (unwind-protect
           (progn (eas-chart-rasterize svg mine)
-                 (eas-png-compare (eas-png-read mine) (eas-png-read (eas-vl-gallery-ref-file group name))))
+                 (eas-png-compare (eas-vl-gallery-mask-image (eas-png-read mine) mask)
+                                  (eas-vl-gallery-mask-image
+                                   (eas-png-read (eas-vl-gallery-ref-file group name)) mask)))
         (delete-file mine)))))
 
 ;;; status.json
@@ -263,7 +301,8 @@ is non-nil when both backends rendered."
              (cmp (and compare (eas-vl-gallery-compare
                                 group name (if omit (eas-vl-gallery--native
                                                      (eas-svg-render (eas-vl-gallery-omit-marks (eas-compile spec) omit)))
-                                             svg)))))
+                                             svg)
+                                (eas-vl-gallery-mask group name spec)))))
         (list :name name :ok t :svg svg :text text
               :ratio (plist-get cmp :ratio) :size-delta (plist-get cmp :size-delta)
               :overlaps (append (eas-vl-gallery-resize-problems spec)
@@ -281,6 +320,10 @@ image comparison runs only where a rasterizer is available."
   (let* ((entry (plist-get (eas-vl-gallery-status group) (eas-key name)))
          (status (plist-get entry :status))
          (threshold (or (plist-get entry :threshold) 0.05))
+         (_ (when (and entry (eas-chart-available-p) (not (plist-get entry :ref))
+                       (not (file-exists-p (expand-file-name (concat "ref/" name ".png")
+                                                             (eas-vl-gallery-group-directory group)))))
+              (eas-vl-gallery-build-ref group name)))
          (r (and entry (not (equal status "unsupported"))
                  (eas-vl-gallery-run group name (eas-vl-gallery-rasterizer-p))))
          problems)
@@ -323,8 +366,9 @@ entry records another threshold with a reason.")
 
 (defun eas-vl-gallery-write-status (group &optional names)
   "Judge examples NAMES (default all) of GROUP against the references and
-record them in GROUP/status.json.  An existing entry keeps its threshold and
-reason fields; the verdict, ratio and a generated reason are rewritten unless
+record them in GROUP/status.json.  An existing entry keeps its
+threshold, reason and oracle (ref, interim_ref, ref_build, mask) fields;
+the verdict, ratio and a generated reason are rewritten unless
 the entry has a \"note\" (a written reason, kept).  refOmits is kept too."
   (let ((old (eas-vl-gallery-status group)) (new nil))
     (dolist (name (eas-vl-gallery-names group))
@@ -337,6 +381,10 @@ the entry has a \"note\" (a written reason, kept).  refOmits is kept too."
             (setq new (append new (list (eas-key name)
                                         (append (if note (plist-put v :reason (concat note "; " (plist-get v :reason))) v)
                                                 (when note (list :note note))
+                                                (unless (plist-member v :threshold) (list :threshold threshold))
+                                                ;; The written oracle fields stay too.
+                                                (cl-loop for k in '(:ref :interim_ref :ref_build :mask)
+                                                         when (plist-get prev k) append (list k (plist-get prev k)))
                                                 (when (plist-get prev :refOmits)
                                                   (list :refOmits (plist-get prev :refOmits)))))))))))
     (with-temp-file (eas-vl-gallery-status-file group)
@@ -355,7 +403,10 @@ the entry has a \"note\" (a written reason, kept).  refOmits is kept too."
 (defun eas-vl-gallery-ref-problem (group name)
   "Why NAME's reference in GROUP cannot be trusted, or nil."
   (unless (file-exists-p (eas-vl-gallery-ref-file group name))
-    (format "STALE_REF: %s/ref/%s.png is missing; rebuild with bin/chart" group name)))
+    (if-let* ((build (eas-vl-gallery--entry-field group name :ref_build)))
+        (format "STALE_REF: %s's reference %s is missing; rebuild it: %s"
+                name (eas-vl-gallery--entry-field group name :ref) build)
+      (format "STALE_REF: %s/ref/%s.png is missing; rebuild with bin/chart" group name))))
 
 (defun eas-vl-gallery-conformance-entries ()
   "Conformance gallery entries for every passing example of every group.
@@ -365,14 +416,18 @@ prove goes into supported.json."
   (cl-loop for group in (eas-vl-gallery-groups)
            append (cl-loop for (name . threshold) in (eas-vl-gallery-passing group)
                            for dir = (eas-vl-gallery-group-directory group)
+                           for spec = (eas-vl-gallery-spec group name)
                            collect (list :name (concat group "/" name)
                                          :file (expand-file-name (concat name ".vl.json") dir)
-                                         :spec (eas-vl-gallery-spec group name)
+                                         :spec spec
                                          :threshold threshold
                                          :ref (eas-vl-gallery-ref-file group name)
                                          :ref-problem (eas-vl-gallery-ref-problem group name)
                                          :oracle-scene (let ((omit (eas-vl-gallery-ref-omits group name)))
                                                          (and omit (lambda (scene) (eas-vl-gallery-omit-marks scene omit))))
+                                         ;; A reference of its own is not rebuilt with bin/chart.
+                                         :ref-pinned (and (eas-vl-gallery--entry-field group name :ref) t)
+                                         :mask (eas-vl-gallery-mask group name spec)
                                          :text-file (expand-file-name (concat name ".txt") dir)))))
 
 (defvar eas-conformance-gallery-functions)

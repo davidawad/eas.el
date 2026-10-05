@@ -81,14 +81,15 @@
     (should (equal (seq-map (lambda (r) (list (plist-get r :rn) (plist-get r :cum)
                                               (plist-get r :prev) (plist-get r :rk)))
                             out)
-                   '((3 6 2 3) (1 1 :null 1) (4 9 3 3) (2 3 1 2)))))
+                   ;; Vega widens the frame to sort peers: both 3s sum to 9.
+                   '((3 9 2 3) (1 1 :null 1) (4 9 3 3) (2 3 1 2)))))
   (let ((out (eas-transform-run [(:window [(:op "mean" :field "v" :as "ma")] :frame [-1 1])]
                                   [(:v 1) (:v 2) (:v 6)])))
     (should (equal (seq-map (lambda (r) (plist-get r :ma)) out) (list 1.5 3.0 4.0)))))
 
 (ert-deftest eas-transform-unsupported-names-the-path ()
   (should (equal (plist-get (eas-test-should-code "UNSUPPORTED_FEATURE"
-                              (eas-transform-run [(:filter "true") (:lookup "x")] [] nil "/layer/0/transform"))
+                              (eas-transform-run [(:filter "true") (:sample 5)] [] nil "/layer/0/transform"))
                             :path)
                  "/layer/0/transform/1")))
 

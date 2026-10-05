@@ -1,0 +1,16 @@
+Major Genre
+               null┤▉
+                   │███████████████████████████████████████▌
+          Adventure┤█▉
+                   │██████▏
+             Comedy┤██▌
+                   │█▏
+        Documentary┤█
+             Horror┤██
+                   │▎
+    Romantic Comedy┤▉
+                   │█████████████████████████████████▍
+            Western┤███▏
+                   └┬───────────────┬────────────────┬──────
+                    0          100,000,000      200,000,000
+                       Production Budget for min US Gross

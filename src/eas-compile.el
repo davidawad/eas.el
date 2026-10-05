@@ -109,6 +109,16 @@ a child field or datum def inherits the parent def's other properties."
                                     d))))
     enc))
 
+(defun eas-compile--point-overlay (node)
+  "The point layer Vega-Lite overlays on NODE's line or area (mark.point), or nil."
+  (let* ((mark (plist-get node :mark)) (point (plist-get mark :point)))
+    (when (and (member (plist-get mark :type) '("line" "area"))
+               (or (eq point t) (and (eas-object-p point) point)))
+      (plist-put (copy-sequence node) :mark
+                 (append (list :type "point" :opacity 1 :filled t)
+                         (and (plist-get mark :color) (list :color (plist-get mark :color)))
+                         (and (eas-object-p point) (eas--plist-without point :type)))))))
+
 (defun eas-compile--child-ctx (node ctx key i rows)
   "Context for child I of NODE's KEY array, inheriting from CTX with ROWS."
   (list :rows rows
@@ -157,9 +167,10 @@ a child field or datum def inherits the parent def's other properties."
           (let ((uctx (plist-put (copy-sequence ctx) :encoding own)))
             (plist-put uctx :transforms (append (plist-get ctx :transforms)
                                                 (append (plist-get node :transform) nil)))
-            (plist-put g :units (append (plist-get g :units)
-                                        (list (append (eas-compile--unit node uctx env)
-                                                      (list :node node :ctx uctx)))))))
+            (dolist (n (delq nil (list node (eas-compile--point-overlay node))))
+              (plist-put g :units (append (plist-get g :units)
+                                          (list (append (eas-compile--unit n uctx env)
+                                                        (list :node n :ctx uctx))))))))
         (unless group (list :group g)))))))
 
 (defun eas-compile--scales (group state metrics)

@@ -22,7 +22,7 @@
   (should (equal
            (eas-spec-test--codes
             (eas-spec-check
-             "{\"mark\":\"geoshape\",\"facet\":{},\"transform\":[{\"lookup\":\"k\"}],
+             "{\"mark\":\"geoshape\",\"facet\":{},\"transform\":[{\"sample\":5}],
                \"encoding\":{\"latitude\":{\"field\":\"a\"},
                              \"x\":{\"field\":\"a\",\"type\":\"bogus\"},
                              \"y\":{\"field\":\"b\",\"scale\":{\"type\":\"symlog\"}}}}"))

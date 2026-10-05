@@ -20,6 +20,7 @@
 (require 'eas-scheme)
 (require 'eas-bins)
 (require 'eas-compile-aux)
+(require 'eas-compile-sort)
 
 (defun eas-compile--defs (units channel)
   "Return (UNIT . DEF) pairs for CHANNEL across UNITS with a data def."
@@ -69,8 +70,11 @@ With KEEP-NULL, null values count too (discrete domains show them)."
   (plist-get (plist-get (car pair) :encoding) (if (eq channel :x) :xOffset :yOffset)))
 
 (defun eas-compile--less (a b)
-  "Ascending order for mixed domain values A and B."
-  (if (and (numberp a) (numberp b)) (< a b) (string< (format "%s" a) (format "%s" b))))
+  "Ascending order for mixed domain values A and B; null first, as in Vega."
+  (cond ((eq a :null) (not (eq b :null)))
+        ((eq b :null) nil)
+        ((and (numberp a) (numberp b)) (< a b))
+        (t (string< (format "%s" a) (format "%s" b)))))
 
 (defun eas-compile--discrete-domain (pairs values)
   "Discrete domain from VALUES, ordered per the first def in PAIRS."
@@ -85,6 +89,9 @@ With KEEP-NULL, null values count too (discrete domains show them)."
       ((vectorp sort) (append (seq-filter (lambda (v) (member v unique)) sort)
                               (seq-remove (lambda (v) (seq-contains-p sort v)) unique)))
       ((equal sort "descending") (reverse (sort unique #'eas-compile--less)))
+      ((and (eas-object-p sort) (or (plist-get sort :field) (plist-get sort :op)))
+       (eas-compile-sort-by-field sort def (seq-mapcat (lambda (p) (plist-get (car p) :rows)) pairs 'vector)
+                                  (sort unique #'eas-compile--less)))
       ((and (stringp sort) (string-match "\\`\\(-?\\)\\([xy]\\)\\'" sort))
        (let* ((desc (equal (match-string 1 sort) "-"))
               (other (eas-key (match-string 2 sort)))
@@ -128,7 +135,7 @@ With KEEP-NULL, null values count too (discrete domains show them)."
               (list :bins bins))
             ;; Vega-Lite pads a bar's continuous dimension by continuousBandSize.
             (let ((pad (or (plist-get sp :padding)
-                           (and (not custom) (not binned) (not (plist-get def :derived))
+                           (and (not custom) (not binned) (not (plist-get def :derived)) (not (plist-get def :binned))
                                 (eas-compile--dimension-p
                                  (seq-filter (lambda (p) (equal (plist-get (plist-get (car p) :mark) :type) "bar")) pairs)
                                  channel)
@@ -208,8 +215,11 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                                           (seq-filter #'numberp values))))
                               (list :type "sequential"
                                     :domain (vector (if nums (apply #'min nums) 0) (if nums (apply #'max nums) 1))
+                                    :mid (plist-get sp :domainMid)
                                     :range (or (and (vectorp (plist-get sp :range)) (plist-get sp :range))
                                                (and (plist-get sp :scheme) (eas-scheme-ramp (plist-get sp :scheme)))
+                                               (and (plist-get sp :domainMid)
+                                                    (or (eas-compile--config-range config :diverging) eas-scale-blueorange-reversed))
                                                ;; Vega-Lite: config.range.heatmap for rect, ramp otherwise.
                                                (if (seq-some (lambda (p) (equal (plist-get (plist-get (car p) :mark) :type) "rect"))
                                                              pairs)

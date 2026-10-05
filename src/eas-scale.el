@@ -22,6 +22,7 @@
 (require 'eas-core)
 (require 'eas-format)
 (require 'eas-time)
+(require 'eas-color)
 (require 'eas-scale-time)
 
 (defconst eas-scale--e10 (sqrt 50.0))
@@ -243,6 +244,11 @@ scales return the domain value whose band is nearest PX."
    "#2c9ec0" "#2182b8" "#2163aa" "#23479c" "#1c3185"]
   "Vega's \"yellowgreenblue\" scheme, Vega-Lite's heatmap ramp.")
 
+(defconst eas-scale-blueorange-reversed
+  ["#994a07" "#c5690d" "#e8932f" "#fbbf74" "#fce0ba" "#f2f0eb"
+   "#d2e5ef" "#9dcae1" "#5da2cb" "#2f78b3" "#134b85"]
+  "Vega's \"blueorange\" scheme over extent [1, 0], Vega-Lite's diverging ramp.")
+
 (defconst eas-scale-tableau10
   ["#4c78a8" "#f58518" "#e45756" "#72b7b2" "#54a24b"
    "#eeca3b" "#b279a2" "#ff9da6" "#9d755d" "#bab0ac"]
@@ -255,7 +261,14 @@ scales return the domain value whose band is nearest PX."
         (string-to-number (substring color 5 7) 16)))
 
 (defun eas-scale-color-ramp (scale value)
-  "Interpolate SCALE's :range color stops at numeric VALUE."
+  "Interpolate SCALE's :range color stops at numeric VALUE.
+With a :mid (Vega-Lite's domainMid) the scale is diverging: each half of
+the domain spans half the ramp, interpolated in HCL as Vega does."
+  (if-let* ((mid (and (numberp value) (plist-get scale :mid))))
+      (let* ((domain (plist-get scale :domain)) (lo (aref domain 0)) (hi (aref domain 1))
+             (tt (+ 0.5 (* 0.5 (if (< value mid) (if (= mid lo) 0 (/ (- value mid) (float (- mid lo))))
+                                 (if (= hi mid) 0 (/ (- value mid) (float (- hi mid)))))))))
+        (eas-color-piecewise-hcl (plist-get scale :range) tt))
   (when (numberp value)
     (let* ((domain (plist-get scale :domain)) (stops (plist-get scale :range))
            (lo (aref domain 0)) (hi (aref domain 1))
@@ -265,7 +278,7 @@ scales return the domain value whose band is nearest PX."
            (f (- pos i))
            (a (eas-scale--hex (aref stops i))) (b (eas-scale--hex (aref stops (1+ i)))))
       (apply #'format "#%02x%02x%02x"
-             (cl-mapcar (lambda (x y) (round (+ x (* f (- y x))))) a b)))))
+             (cl-mapcar (lambda (x y) (round (+ x (* f (- y x))))) a b))))))
 
 ;;; Ticks and formats
 

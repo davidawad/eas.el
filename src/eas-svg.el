@@ -215,7 +215,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
       ("text" (apply #'eas-svg--text (plist-get item :text) (plist-get item :x) (plist-get item :y)
                      (plist-get item :fontSize)
                      (list :align (plist-get item :align) :baseline (plist-get item :baseline) :fill fill
-                           :opacity opacity)))
+                           :opacity opacity :weight (plist-get item :fontWeight))))
       ("trail" (eas-svg--node 'path :d (eas-svg--trail (plist-get item :points) (plist-get item :widths))
                                 :fill (if (equal fill "none") stroke fill) :opacity opacity))
       ((or "line" "area")

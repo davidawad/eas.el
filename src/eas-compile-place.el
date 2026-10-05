@@ -86,7 +86,17 @@ Polar units have no position channels and keep the view size."
                      (mapcar (lambda (a) (plist-get a :bounds)) placed))))
     (let ((col-w 0) (limit (plist-get group :legend-limit)))
       (dolist (legend legends)
-        (if (equal (plist-get legend :orient) "none")
+        (let ((corner (member (plist-get legend :orient) '("top-left" "top-right" "bottom-left" "bottom-right"))))
+         (if corner
+            ;; Inside the plot, its box flush with the corner less the offset.
+            (let* ((b (plist-get (eas-legend-place legend 0 0 metrics) :box))
+                   (off (plist-get metrics :legend-offset))
+                   (right (string-suffix-p "right" (car corner)))
+                   (bottom (string-prefix-p "bottom" (car corner))))
+              (push (cons (if right (- w off (aref b 2)) (- off (aref b 0)))
+                          (if bottom (- h off (aref b 3)) (- off (aref b 1))))
+                    offsets))
+         (if (equal (plist-get legend :orient) "none")
             (let ((at (cons (plist-get legend :legendX) (plist-get legend :legendY))))
               (push at offsets)
               (setq box (eas-layout-union box (plist-get (eas-legend-place legend (car at) (cdr at) metrics) :box))))
@@ -98,7 +108,7 @@ Polar units have no position channels and keep the view size."
             (push (cons lx ly) offsets)
             (setq box (eas-layout-union box b)
                   col-w (max col-w (ceiling (- (aref b 2) (aref b 0))))
-                  ly (+ ly (ceiling (- (aref b 3) (aref b 1))) (plist-get metrics :legend-margin)))))))
+                  ly (+ ly (ceiling (- (aref b 3) (aref b 1))) (plist-get metrics :legend-margin)))))))))
     (plist-put group :legend-offsets (nreverse offsets))
     ;; The exact left edge of the content; Vega's frame-bounds titles start there.
     (plist-put group :content-x1 (aref box 0))

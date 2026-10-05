@@ -15,11 +15,11 @@
     },
     "composition/hconcat": {
       "oracle": "verified",
-      "specs": ["composition-hconcat"]
+      "specs": ["composition-hconcat", "calculations/point_quantile_quantile"]
     },
     "composition/layer": {
       "oracle": "verified",
-      "specs": ["encoding-radius", "mark-rule", "scale-band-point", "area-circular/arc_radial", "area-circular/area_horizon", "area-circular/area_overlay", "area-circular/layer_arc_label", "distributions/boxplot_preaggregated", "distributions/layer_line_errorband_ci", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "line/connected_scatterplot", "line/layer_line_co2_concentration", "line/line_bump", "line/line_color_halo", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "line/repeat_layer", "scatter-table/layer_text_heatmap"]
+      "specs": ["encoding-radius", "mark-rule", "scale-band-point", "area-circular/arc_radial", "area-circular/area_horizon", "area-circular/area_overlay", "area-circular/layer_arc_label", "calculations/joinaggregate_mean_difference", "calculations/layer_line_mean_point_raw", "calculations/layer_line_rolling_mean_point_raw", "calculations/layer_point_line_loess", "calculations/layer_point_line_regression", "calculations/waterfall_chart", "calculations/window_impute_null", "distributions/boxplot_preaggregated", "distributions/layer_line_errorband_ci", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "line/connected_scatterplot", "line/layer_line_co2_concentration", "line/line_bump", "line/line_color_halo", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "line/repeat_layer", "scatter-table/layer_text_heatmap"]
     },
     "composition/vconcat": {
       "oracle": "verified",
@@ -27,7 +27,7 @@
     },
     "encoding/aggregate": {
       "oracle": "verified",
-      "specs": ["encoding-aggregate", "encoding-bin", "area-circular/area", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "distributions/circle_binned", "distributions/histogram", "distributions/histogram_log", "distributions/layer_line_errorband_ci", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "line/layer_line_co2_concentration", "line/line_overlay", "line/line_overlay_stroked", "line/line_slope", "line/repeat_layer", "scatter-table/circle_binned", "scatter-table/circle_custom_tick_labels", "scatter-table/circle_github_punchcard", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather"]
+      "specs": ["encoding-aggregate", "encoding-bin", "area-circular/area", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "calculations/bar_argmax", "calculations/joinaggregate_mean_difference", "calculations/layer_line_mean_point_raw", "calculations/lookup", "calculations/window_top_k_others", "distributions/circle_binned", "distributions/histogram", "distributions/histogram_log", "distributions/layer_line_errorband_ci", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "line/layer_line_co2_concentration", "line/line_overlay", "line/line_overlay_stroked", "line/line_slope", "line/repeat_layer", "scatter-table/circle_binned", "scatter-table/circle_custom_tick_labels", "scatter-table/circle_github_punchcard", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather"]
     },
     "encoding/angle": {
       "oracle": "verified",
@@ -39,11 +39,11 @@
     },
     "encoding/color": {
       "oracle": "verified",
-      "specs": ["encoding-condition", "encoding-order", "encoding-radius", "mark-arc", "mark-area-stacked", "mark-bar-stacked", "mark-line-multi", "mark-rect", "mark-square", "param-bind-legend", "param-point", "scale-ordinal-color", "transform-fold", "area-circular/arc_donut", "area-circular/arc_pie", "area-circular/arc_pie_normalize_tooltip", "area-circular/arc_pie_pyramid", "area-circular/arc_radial", "area-circular/layer_arc_label", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "distributions/area_density_stacked", "distributions/boxplot_preaggregated", "distributions/isotype_bar_chart", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "line/layer_line_co2_concentration", "line/line_color", "line/line_overlay", "line/line_overlay_stroked", "line/line_slope", "line/repeat_layer", "line/sequence_line_fold", "line/trail_color", "line/window_rank", "scatter-table/circle_bubble_health_income", "scatter-table/circle_natural_disasters", "scatter-table/layer_text_heatmap", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather", "scatter-table/text_scatterplot_colored"]
+      "specs": ["encoding-condition", "encoding-order", "encoding-radius", "mark-arc", "mark-area-stacked", "mark-bar-stacked", "mark-line-multi", "mark-rect", "mark-square", "param-bind-legend", "param-point", "scale-ordinal-color", "transform-fold", "area-circular/arc_donut", "area-circular/arc_pie", "area-circular/arc_pie_normalize_tooltip", "area-circular/arc_pie_pyramid", "area-circular/arc_radial", "area-circular/layer_arc_label", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "calculations/joinaggregate_residual_graph", "calculations/waterfall_chart", "calculations/window_rank", "distributions/area_density_stacked", "distributions/boxplot_preaggregated", "distributions/isotype_bar_chart", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "line/layer_line_co2_concentration", "line/line_color", "line/line_overlay", "line/line_overlay_stroked", "line/line_slope", "line/repeat_layer", "line/sequence_line_fold", "line/trail_color", "line/window_rank", "scatter-table/circle_bubble_health_income", "scatter-table/circle_natural_disasters", "scatter-table/layer_text_heatmap", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather", "scatter-table/text_scatterplot_colored"]
     },
     "encoding/condition": {
       "oracle": "verified",
-      "specs": ["encoding-condition", "param-bind-legend", "param-point", "scatter-table/layer_text_heatmap", "scatter-table/point_invalid_color"]
+      "specs": ["encoding-condition", "param-bind-legend", "param-point", "calculations/waterfall_chart", "scatter-table/layer_text_heatmap", "scatter-table/point_invalid_color"]
     },
     "encoding/detail": {
       "oracle": "verified",
@@ -91,7 +91,7 @@
     },
     "encoding/text": {
       "oracle": "verified",
-      "specs": ["encoding-radius", "mark-text", "area-circular/arc_radial", "area-circular/layer_arc_label", "line/layer_line_co2_concentration", "scatter-table/layer_text_heatmap", "scatter-table/text_scatterplot_colored"]
+      "specs": ["encoding-radius", "mark-text", "area-circular/arc_radial", "area-circular/layer_arc_label", "calculations/layer_point_line_regression", "calculations/waterfall_chart", "line/layer_line_co2_concentration", "scatter-table/layer_text_heatmap", "scatter-table/text_scatterplot_colored"]
     },
     "encoding/theta": {
       "oracle": "verified",
@@ -99,7 +99,7 @@
     },
     "encoding/timeUnit": {
       "oracle": "verified",
-      "specs": ["encoding-timeunit", "area-circular/area", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "distributions/layer_line_errorband_ci", "line/line_overlay", "line/line_overlay_stroked", "scatter-table/circle_github_punchcard", "scatter-table/rect_heatmap_weather"]
+      "specs": ["encoding-timeunit", "area-circular/area", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "calculations/layer_line_mean_point_raw", "calculations/window_impute_null", "distributions/layer_line_errorband_ci", "line/line_overlay", "line/line_overlay_stroked", "scatter-table/circle_github_punchcard", "scatter-table/rect_heatmap_weather"]
     },
     "encoding/tooltip": {
       "oracle": "verified",
@@ -111,19 +111,19 @@
     },
     "encoding/x": {
       "oracle": "verified",
-      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-angle", "encoding-bin", "encoding-condition", "encoding-detail", "encoding-fill-stroke", "encoding-href", "encoding-offset", "encoding-opacity", "encoding-timeunit", "encoding-x2", "encoding-y2", "mark-area-stacked", "mark-area", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-circle", "mark-line-multi", "mark-line", "mark-point", "mark-rect", "mark-rule", "mark-square", "mark-text", "mark-tick", "param-bind-legend", "param-bind-scales", "param-interval", "param-point", "param-value", "scale-band-point", "scale-band", "scale-linear-domain", "scale-log", "scale-ordinal-color", "scale-point", "scale-time", "scale-utc", "transform-aggregate", "transform-bin", "transform-filter-calculate", "transform-filter-predicates", "transform-fold", "transform-joinaggregate", "transform-timeunit", "transform-window", "area-circular/area", "area-circular/area_gradient", "area-circular/area_horizon", "area-circular/area_overlay", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "distributions/area_cumulative_freq", "distributions/area_density", "distributions/area_density_stacked", "distributions/bar_percent_of_total", "distributions/boxplot_preaggregated", "distributions/circle_binned", "distributions/circle_wilkinson_dotplot", "distributions/histogram", "distributions/histogram_log", "distributions/histogram_nonlinear", "distributions/isotype_bar_chart", "distributions/layer_line_errorband_ci", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "line/connected_scatterplot", "line/layer_line_co2_concentration", "line/line", "line/line_bump", "line/line_color", "line/line_color_halo", "line/line_conditional_axis", "line/line_dashed_part", "line/line_monotone", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "line/line_slope", "line/line_step", "line/line_strokedash", "line/repeat_layer", "line/sequence_line_fold", "line/trail_color", "line/window_rank", "scatter-table/circle", "scatter-table/circle_binned", "scatter-table/circle_bubble_health_income", "scatter-table/circle_custom_tick_labels", "scatter-table/circle_github_punchcard", "scatter-table/circle_natural_disasters", "scatter-table/layer_text_heatmap", "scatter-table/point_2d", "scatter-table/point_bubble", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather", "scatter-table/scatter_image", "scatter-table/text_scatterplot_colored", "scatter-table/tick_dot", "scatter-table/tick_strip"]
+      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-angle", "encoding-bin", "encoding-condition", "encoding-detail", "encoding-fill-stroke", "encoding-href", "encoding-offset", "encoding-opacity", "encoding-timeunit", "encoding-x2", "encoding-y2", "mark-area-stacked", "mark-area", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-circle", "mark-line-multi", "mark-line", "mark-point", "mark-rect", "mark-rule", "mark-square", "mark-text", "mark-tick", "param-bind-legend", "param-bind-scales", "param-interval", "param-point", "param-value", "scale-band-point", "scale-band", "scale-linear-domain", "scale-log", "scale-ordinal-color", "scale-point", "scale-time", "scale-utc", "transform-aggregate", "transform-bin", "transform-filter-calculate", "transform-filter-predicates", "transform-fold", "transform-joinaggregate", "transform-timeunit", "transform-window", "area-circular/area", "area-circular/area_gradient", "area-circular/area_horizon", "area-circular/area_overlay", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "calculations/area_cumulative_freq", "calculations/bar_argmax", "calculations/bar_percent_of_total", "calculations/joinaggregate_mean_difference", "calculations/joinaggregate_residual_graph", "calculations/layer_line_mean_point_raw", "calculations/layer_line_rolling_mean_point_raw", "calculations/layer_point_line_loess", "calculations/layer_point_line_regression", "calculations/lookup", "calculations/point_quantile_quantile", "calculations/waterfall_chart", "calculations/window_impute_null", "calculations/window_rank", "calculations/window_top_k", "calculations/window_top_k_others", "distributions/area_cumulative_freq", "distributions/area_density", "distributions/area_density_stacked", "distributions/bar_percent_of_total", "distributions/boxplot_preaggregated", "distributions/circle_binned", "distributions/circle_wilkinson_dotplot", "distributions/histogram", "distributions/histogram_log", "distributions/histogram_nonlinear", "distributions/isotype_bar_chart", "distributions/layer_line_errorband_ci", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "line/connected_scatterplot", "line/layer_line_co2_concentration", "line/line", "line/line_bump", "line/line_color", "line/line_color_halo", "line/line_conditional_axis", "line/line_dashed_part", "line/line_monotone", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "line/line_slope", "line/line_step", "line/line_strokedash", "line/repeat_layer", "line/sequence_line_fold", "line/trail_color", "line/window_rank", "scatter-table/circle", "scatter-table/circle_binned", "scatter-table/circle_bubble_health_income", "scatter-table/circle_custom_tick_labels", "scatter-table/circle_github_punchcard", "scatter-table/circle_natural_disasters", "scatter-table/layer_text_heatmap", "scatter-table/point_2d", "scatter-table/point_bubble", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather", "scatter-table/scatter_image", "scatter-table/text_scatterplot_colored", "scatter-table/tick_dot", "scatter-table/tick_strip"]
     },
     "encoding/x2": {
       "oracle": "verified",
-      "specs": ["encoding-x2", "distributions/boxplot_preaggregated", "distributions/histogram_log", "distributions/histogram_nonlinear"]
+      "specs": ["encoding-x2", "calculations/waterfall_chart", "distributions/boxplot_preaggregated", "distributions/histogram_log", "distributions/histogram_nonlinear"]
     },
     "encoding/y": {
       "oracle": "verified",
-      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-angle", "encoding-bin", "encoding-condition", "encoding-detail", "encoding-fill-stroke", "encoding-href", "encoding-offset", "encoding-opacity", "encoding-timeunit", "encoding-x2", "encoding-y2", "mark-area-stacked", "mark-area", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-circle", "mark-line-multi", "mark-line", "mark-point", "mark-rect", "mark-rule", "mark-square", "mark-text", "mark-tick", "param-bind-legend", "param-bind-scales", "param-interval", "param-point", "param-value", "scale-band-point", "scale-band", "scale-linear-domain", "scale-log", "scale-ordinal-color", "scale-point", "scale-time", "scale-utc", "transform-aggregate", "transform-bin", "transform-filter-calculate", "transform-filter-predicates", "transform-fold", "transform-joinaggregate", "transform-timeunit", "transform-window", "area-circular/area", "area-circular/area_gradient", "area-circular/area_horizon", "area-circular/area_overlay", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "distributions/area_cumulative_freq", "distributions/area_density", "distributions/area_density_stacked", "distributions/bar_percent_of_total", "distributions/boxplot_preaggregated", "distributions/circle_binned", "distributions/circle_wilkinson_dotplot", "distributions/histogram", "distributions/histogram_log", "distributions/histogram_nonlinear", "distributions/isotype_bar_chart", "distributions/layer_line_errorband_ci", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "line/connected_scatterplot", "line/layer_line_co2_concentration", "line/line", "line/line_bump", "line/line_color", "line/line_color_halo", "line/line_conditional_axis", "line/line_dashed_part", "line/line_monotone", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "line/line_slope", "line/line_step", "line/line_strokedash", "line/repeat_layer", "line/sequence_line_fold", "line/trail_color", "line/window_rank", "scatter-table/circle", "scatter-table/circle_binned", "scatter-table/circle_bubble_health_income", "scatter-table/circle_custom_tick_labels", "scatter-table/circle_github_punchcard", "scatter-table/circle_natural_disasters", "scatter-table/layer_text_heatmap", "scatter-table/point_2d", "scatter-table/point_bubble", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather", "scatter-table/scatter_image", "scatter-table/text_scatterplot_colored", "scatter-table/tick_strip"]
+      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-angle", "encoding-bin", "encoding-condition", "encoding-detail", "encoding-fill-stroke", "encoding-href", "encoding-offset", "encoding-opacity", "encoding-timeunit", "encoding-x2", "encoding-y2", "mark-area-stacked", "mark-area", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-circle", "mark-line-multi", "mark-line", "mark-point", "mark-rect", "mark-rule", "mark-square", "mark-text", "mark-tick", "param-bind-legend", "param-bind-scales", "param-interval", "param-point", "param-value", "scale-band-point", "scale-band", "scale-linear-domain", "scale-log", "scale-ordinal-color", "scale-point", "scale-time", "scale-utc", "transform-aggregate", "transform-bin", "transform-filter-calculate", "transform-filter-predicates", "transform-fold", "transform-joinaggregate", "transform-timeunit", "transform-window", "area-circular/area", "area-circular/area_gradient", "area-circular/area_horizon", "area-circular/area_overlay", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "calculations/area_cumulative_freq", "calculations/bar_argmax", "calculations/bar_percent_of_total", "calculations/joinaggregate_mean_difference", "calculations/joinaggregate_residual_graph", "calculations/layer_line_mean_point_raw", "calculations/layer_line_rolling_mean_point_raw", "calculations/layer_point_line_loess", "calculations/layer_point_line_regression", "calculations/lookup", "calculations/point_quantile_quantile", "calculations/waterfall_chart", "calculations/window_impute_null", "calculations/window_rank", "calculations/window_top_k", "calculations/window_top_k_others", "distributions/area_cumulative_freq", "distributions/area_density", "distributions/area_density_stacked", "distributions/bar_percent_of_total", "distributions/boxplot_preaggregated", "distributions/circle_binned", "distributions/circle_wilkinson_dotplot", "distributions/histogram", "distributions/histogram_log", "distributions/histogram_nonlinear", "distributions/isotype_bar_chart", "distributions/layer_line_errorband_ci", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "line/connected_scatterplot", "line/layer_line_co2_concentration", "line/line", "line/line_bump", "line/line_color", "line/line_color_halo", "line/line_conditional_axis", "line/line_dashed_part", "line/line_monotone", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "line/line_slope", "line/line_step", "line/line_strokedash", "line/repeat_layer", "line/sequence_line_fold", "line/trail_color", "line/window_rank", "scatter-table/circle", "scatter-table/circle_binned", "scatter-table/circle_bubble_health_income", "scatter-table/circle_custom_tick_labels", "scatter-table/circle_github_punchcard", "scatter-table/circle_natural_disasters", "scatter-table/layer_text_heatmap", "scatter-table/point_2d", "scatter-table/point_bubble", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather", "scatter-table/scatter_image", "scatter-table/text_scatterplot_colored", "scatter-table/tick_strip"]
     },
     "encoding/y2": {
       "oracle": "verified",
-      "specs": ["encoding-y2"]
+      "specs": ["encoding-y2", "calculations/waterfall_chart"]
     },
     "encoding/yOffset": {
       "oracle": "verified",
@@ -135,11 +135,11 @@
     },
     "mark/area": {
       "oracle": "verified",
-      "specs": ["mark-area-stacked", "mark-area", "area-circular/area", "area-circular/area_gradient", "area-circular/area_horizon", "area-circular/area_overlay", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "distributions/area_cumulative_freq", "distributions/area_density", "distributions/area_density_stacked"]
+      "specs": ["mark-area-stacked", "mark-area", "area-circular/area", "area-circular/area_gradient", "area-circular/area_horizon", "area-circular/area_overlay", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "calculations/area_cumulative_freq", "distributions/area_cumulative_freq", "distributions/area_density", "distributions/area_density_stacked"]
     },
     "mark/bar": {
       "oracle": "verified",
-      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-bin", "encoding-condition", "encoding-href", "encoding-timeunit", "encoding-x2", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-rule", "param-point", "param-value", "scale-band-point", "scale-band", "transform-aggregate", "transform-filter-calculate", "transform-fold", "transform-joinaggregate", "distributions/bar_percent_of_total", "distributions/boxplot_preaggregated", "distributions/histogram", "distributions/histogram_log", "distributions/histogram_nonlinear"]
+      "specs": ["composition-hconcat", "composition-vconcat", "encoding-aggregate", "encoding-bin", "encoding-condition", "encoding-href", "encoding-timeunit", "encoding-x2", "mark-bar-horizontal", "mark-bar-stacked", "mark-bar", "mark-rule", "param-point", "param-value", "scale-band-point", "scale-band", "transform-aggregate", "transform-filter-calculate", "transform-fold", "transform-joinaggregate", "calculations/bar_argmax", "calculations/bar_percent_of_total", "calculations/joinaggregate_mean_difference", "calculations/lookup", "calculations/waterfall_chart", "calculations/window_top_k", "calculations/window_top_k_others", "distributions/bar_percent_of_total", "distributions/boxplot_preaggregated", "distributions/histogram", "distributions/histogram_log", "distributions/histogram_nonlinear"]
     },
     "mark/circle": {
       "oracle": "verified",
@@ -159,11 +159,11 @@
     },
     "mark/line": {
       "oracle": "verified",
-      "specs": ["composition-vconcat", "encoding-detail", "mark-line-multi", "mark-line", "param-bind-scales", "scale-band-point", "scale-linear-domain", "scale-log", "scale-point", "scale-time", "transform-window", "distributions/layer_line_errorband_ci", "line/connected_scatterplot", "line/layer_line_co2_concentration", "line/line", "line/line_bump", "line/line_color", "line/line_color_halo", "line/line_conditional_axis", "line/line_dashed_part", "line/line_monotone", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "line/line_slope", "line/line_step", "line/line_strokedash", "line/repeat_layer", "line/sequence_line_fold", "line/window_rank"]
+      "specs": ["composition-vconcat", "encoding-detail", "mark-line-multi", "mark-line", "param-bind-scales", "scale-band-point", "scale-linear-domain", "scale-log", "scale-point", "scale-time", "transform-window", "calculations/layer_line_mean_point_raw", "calculations/layer_line_rolling_mean_point_raw", "calculations/layer_point_line_loess", "calculations/layer_point_line_regression", "calculations/window_impute_null", "calculations/window_rank", "distributions/layer_line_errorband_ci", "line/connected_scatterplot", "line/layer_line_co2_concentration", "line/line", "line/line_bump", "line/line_color", "line/line_color_halo", "line/line_conditional_axis", "line/line_dashed_part", "line/line_monotone", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "line/line_slope", "line/line_step", "line/line_strokedash", "line/repeat_layer", "line/sequence_line_fold", "line/window_rank"]
     },
     "mark/point": {
       "oracle": "verified",
-      "specs": ["composition-hconcat", "encoding-angle", "encoding-fill-stroke", "encoding-offset", "mark-point", "param-interval", "scale-utc", "transform-filter-predicates", "transform-timeunit", "area-circular/area_overlay", "distributions/boxplot_preaggregated", "distributions/isotype_bar_chart", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "line/connected_scatterplot", "line/line_bump", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "scatter-table/point_2d", "scatter-table/point_bubble", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color"]
+      "specs": ["composition-hconcat", "encoding-angle", "encoding-fill-stroke", "encoding-offset", "mark-point", "param-interval", "scale-utc", "transform-filter-predicates", "transform-timeunit", "area-circular/area_overlay", "calculations/joinaggregate_residual_graph", "calculations/layer_line_mean_point_raw", "calculations/layer_line_rolling_mean_point_raw", "calculations/layer_point_line_loess", "calculations/layer_point_line_regression", "calculations/point_quantile_quantile", "calculations/window_impute_null", "distributions/boxplot_preaggregated", "distributions/isotype_bar_chart", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "line/connected_scatterplot", "line/line_bump", "line/line_overlay", "line/line_overlay_stroked", "line/line_skip_invalid_mid_overlay", "scatter-table/point_2d", "scatter-table/point_bubble", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color"]
     },
     "mark/rect": {
       "oracle": "verified",
@@ -171,7 +171,7 @@
     },
     "mark/rule": {
       "oracle": "verified",
-      "specs": ["encoding-y2", "mark-rule", "distributions/boxplot_preaggregated"]
+      "specs": ["encoding-y2", "mark-rule", "calculations/joinaggregate_mean_difference", "calculations/waterfall_chart", "distributions/boxplot_preaggregated"]
     },
     "mark/square": {
       "oracle": "verified",
@@ -179,7 +179,7 @@
     },
     "mark/text": {
       "oracle": "verified",
-      "specs": ["encoding-radius", "mark-text", "area-circular/arc_radial", "area-circular/layer_arc_label", "line/layer_line_co2_concentration", "scatter-table/layer_text_heatmap", "scatter-table/text_scatterplot_colored"]
+      "specs": ["encoding-radius", "mark-text", "area-circular/arc_radial", "area-circular/layer_arc_label", "calculations/layer_point_line_regression", "calculations/waterfall_chart", "line/layer_line_co2_concentration", "scatter-table/layer_text_heatmap", "scatter-table/text_scatterplot_colored"]
     },
     "mark/tick": {
       "oracle": "verified",
@@ -235,7 +235,7 @@
     },
     "transform/aggregate": {
       "oracle": "verified",
-      "specs": ["transform-aggregate", "distributions/area_cumulative_freq", "scatter-table/layer_text_heatmap"]
+      "specs": ["transform-aggregate", "calculations/area_cumulative_freq", "calculations/window_top_k_others", "distributions/area_cumulative_freq", "scatter-table/layer_text_heatmap"]
     },
     "transform/bin": {
       "oracle": "verified",
@@ -243,7 +243,7 @@
     },
     "transform/calculate": {
       "oracle": "verified",
-      "specs": ["transform-filter-calculate", "transform-joinaggregate", "area-circular/area_horizon", "distributions/bar_percent_of_total", "distributions/histogram_log", "line/layer_line_co2_concentration", "line/sequence_line_fold", "scatter-table/text_scatterplot_colored"]
+      "specs": ["transform-filter-calculate", "transform-joinaggregate", "area-circular/area_horizon", "calculations/bar_percent_of_total", "calculations/joinaggregate_residual_graph", "calculations/layer_point_line_regression", "calculations/point_quantile_quantile", "calculations/waterfall_chart", "calculations/window_impute_null", "calculations/window_top_k_others", "distributions/bar_percent_of_total", "distributions/histogram_log", "line/layer_line_co2_concentration", "line/sequence_line_fold", "scatter-table/text_scatterplot_colored"]
     },
     "transform/density": {
       "oracle": "verified",
@@ -251,7 +251,7 @@
     },
     "transform/filter": {
       "oracle": "verified",
-      "specs": ["param-value", "transform-filter-calculate", "transform-filter-predicates", "area-circular/area_gradient", "area-circular/area_overlay", "distributions/rect_binned_heatmap", "line/line", "line/line_conditional_axis", "line/line_monotone", "line/line_step", "scatter-table/circle_natural_disasters", "scatter-table/rect_binned_heatmap"]
+      "specs": ["param-value", "transform-filter-calculate", "transform-filter-predicates", "area-circular/area_gradient", "area-circular/area_overlay", "calculations/joinaggregate_mean_difference", "calculations/joinaggregate_residual_graph", "calculations/layer_line_mean_point_raw", "calculations/window_top_k", "distributions/rect_binned_heatmap", "line/line", "line/line_conditional_axis", "line/line_monotone", "line/line_step", "scatter-table/circle_natural_disasters", "scatter-table/rect_binned_heatmap"]
     },
     "transform/flatten": {
       "oracle": "verified",
@@ -263,11 +263,27 @@
     },
     "transform/joinaggregate": {
       "oracle": "verified",
-      "specs": ["transform-joinaggregate", "distributions/bar_percent_of_total"]
+      "specs": ["transform-joinaggregate", "calculations/bar_percent_of_total", "calculations/joinaggregate_mean_difference", "calculations/joinaggregate_residual_graph", "distributions/bar_percent_of_total"]
+    },
+    "transform/loess": {
+      "oracle": "verified",
+      "specs": ["calculations/layer_point_line_loess"]
+    },
+    "transform/lookup": {
+      "oracle": "verified",
+      "specs": ["calculations/lookup"]
     },
     "transform/pivot": {
       "oracle": "verified",
       "specs": ["line/line_color_halo"]
+    },
+    "transform/quantile": {
+      "oracle": "verified",
+      "specs": ["calculations/point_quantile_quantile"]
+    },
+    "transform/regression": {
+      "oracle": "verified",
+      "specs": ["calculations/layer_point_line_regression"]
     },
     "transform/timeUnit": {
       "oracle": "verified",
@@ -275,7 +291,7 @@
     },
     "transform/window": {
       "oracle": "verified",
-      "specs": ["transform-window", "distributions/area_cumulative_freq", "distributions/circle_wilkinson_dotplot", "line/window_rank"]
+      "specs": ["transform-window", "calculations/area_cumulative_freq", "calculations/layer_line_rolling_mean_point_raw", "calculations/waterfall_chart", "calculations/window_impute_null", "calculations/window_rank", "calculations/window_top_k", "calculations/window_top_k_others", "distributions/area_cumulative_freq", "distributions/circle_wilkinson_dotplot", "line/window_rank"]
     }
   },
   "gallery": "test/conformance",

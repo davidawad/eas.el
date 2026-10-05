@@ -26,6 +26,7 @@
 (require 'eas-core)
 (require 'eas-time)
 (require 'eas-format)
+(require 'eas-expr-stats)
 
 (defconst eas-expr--token-regexp
   (concat "[ \t\n]*\\(?:"
@@ -331,7 +332,7 @@ goldens and replays reproduce exactly."
   `(("abs" . ,(eas-expr--num-fn #'abs))
     ("ceil" . ,(eas-expr--num-fn (lambda (x) (float (ceiling x)))))
     ("floor" . ,(eas-expr--num-fn (lambda (x) (float (floor x)))))
-    ("round" . ,(eas-expr--num-fn (lambda (x) (float (floor (+ x 0.5))))))
+    ("round" . ,(eas-expr--num-fn (lambda (x &rest _) (float (floor (+ x 0.5))))))
     ("sqrt" . ,(eas-expr--num-fn #'sqrt))
     ("sin" . ,(eas-expr--num-fn #'sin))
     ("cos" . ,(eas-expr--num-fn #'cos))
@@ -373,6 +374,8 @@ goldens and replays reproduce exactly."
                           (hi (max (aref range 0) (aref range 1))))
                       (if (<= lo (eas-expr--number v) hi) t :false))))
     ("if" . ,(lambda (test a b) (if (eas-expr-truthy test) a b)))
+    ("quantileUniform" . ,(eas-expr--num-fn #'eas-expr-stats-quantile-uniform))
+    ("quantileNormal" . ,(eas-expr--num-fn #'eas-expr-stats-quantile-normal))
     ("format" . ,(lambda (v spec) (eas-format-number (eas-expr--string spec) v)))
     ;; Evaluated per datum by `eas-expr-eval' (`eas-expr--random').
     ("random" . ignore))

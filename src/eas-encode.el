@@ -27,16 +27,21 @@
 EMPTY is the answer for an empty selection.  The runtime binds this
 around compile with the view's current param state.")
 
-(defun eas-encode--infer-type (def rows)
-  "Return DEF's measurement type, inferring it from DEF and ROWS."
+(defun eas-encode--infer-type (def _rows)
+  "Return DEF's measurement type, defaulted as Vega-Lite's defaultType does.
+Vega-Lite never looks at the data: a field with no hint is nominal."
   (or (plist-get def :type)
-      (cond ((and (plist-get def :aggregate) (not (eas-encode--arg-op (plist-get def :aggregate)))) "quantitative")
-            ((eas-true-p (plist-get def :bin)) "quantitative")
-            ((plist-get def :timeUnit) "temporal")
-            ((plist-get def :field)
-             (eas-data-infer-type
-              (seq-map (lambda (r) (plist-get r (eas-key (plist-get def :field)))) rows)))
-            (t "nominal"))))
+      (let ((agg (plist-get def :aggregate))
+            (scale-type (plist-get (plist-get def :scale) :type)))
+        (cond ((vectorp (plist-get def :sort)) "ordinal")
+              ((plist-get def :timeUnit) "temporal")
+              ((or (eas-true-p (plist-get def :bin))
+                   (and agg (not (eas-encode--arg-op agg))))
+               "quantitative")
+              ((member scale-type '("linear" "log" "pow" "sqrt" "symlog" "quantize" "quantile" "threshold"))
+               "quantitative")
+              ((member scale-type '("time" "utc")) "temporal")
+              (t "nominal")))))
 
 (defun eas-encode--def (def rows)
   "Normalize one channel DEF against ROWS."
@@ -138,7 +143,10 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
                           (unless (vectorp def)
                             (setq enc (eas-plist-put
                                        enc channel (append (list :field as :source (plist-get d :field)
-                                                                 :derived "aggregate" :op op)
+                                                                 :derived "aggregate" :op op
+                                                                 :arg (let ((a (plist-get d :aggregate)))
+                                                                        (and (eas-object-p a)
+                                                                             (or (plist-get a :argmax) (plist-get a :argmin)))))
                                                            (eas--plist-without
                                                             (eas--plist-without d :field) :aggregate))))))
                       (dolist (f (list (plist-get d :field) (plist-get d :bin-end)))
@@ -192,6 +200,9 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
     (cond
      ((stringp title) title)
      ((memq title '(:null :false)) nil)
+     ((and (equal (plist-get def :derived) "aggregate") (plist-get def :arg))
+      (format "%s for %s %s" (plist-get def :source) (if (equal (plist-get def :op) "argmax") "max" "min")
+              (plist-get def :arg)))
      ((equal (plist-get def :derived) "aggregate")
       (if (and (equal (plist-get def :op) "count") (null (plist-get def :source)))
           "Count of Records"

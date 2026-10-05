@@ -39,7 +39,8 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
                         :title (if (plist-member legend :title)
                                    (let ((tt (plist-get legend :title))) (and (stringp tt) tt))
                                  (eas-encode-title def))
-                        :shape (plist-get spec :shape) :style style)))
+                        :shape (plist-get spec :shape) :style style
+                        :orient (and (eas-object-p legend) (plist-get legend :orient)))))
         ;; orient "none" places the legend at legendX/legendY in the view.
         (when (equal (plist-get legend :orient) "none")
           (setq base (append base (list :orient "none" :legendX (or (plist-get legend :legendX) 0)
@@ -66,7 +67,15 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
                                                               (list :shape (eas-scale-apply ss v)))))
                                                          (plist-get scale :domain))))))
           ("sequential"
-           (append base (list :type "gradient" :stops (plist-get scale :range) :domain (plist-get scale :domain)
+           (append base (list :type "gradient"
+                              :stops (if (plist-get scale :mid)
+                                         ;; Diverging: sample the scale evenly along its domain.
+                                         (let ((d (plist-get scale :domain)))
+                                           (vconcat (cl-loop for i to 32
+                                                             collect (eas-scale-apply
+                                                                      scale (+ (aref d 0) (* (/ i 32.0) (- (aref d 1) (aref d 0))))))))
+                                       (plist-get scale :range))
+                              :domain (plist-get scale :domain)
                               :entries [])))
           (_
            (let* ((domain (plist-get scale :domain))

@@ -199,6 +199,18 @@ The result is `:null' when no row has a value."
           (let* ((row (aref sorted i))
                  (start (if (numberp lo) (max 0 (+ i lo)) 0))
                  (end (if (numberp hi) (min (1- n) (+ i hi)) (1- n)))
+                 ;; Unless ignorePeers, the frame widens to rows sorting equal at either end.
+                 (peers (and (> (length sort) 0) (not (eq (plist-get tr :ignorePeers) t))))
+                 (start (if peers (let ((k (funcall key-fn (aref sorted start))))
+                                    (while (and (> start 0) (equal k (funcall key-fn (aref sorted (1- start)))))
+                                      (setq start (1- start)))
+                                    start)
+                          start))
+                 (end (if peers (let ((k (funcall key-fn (aref sorted end))))
+                                  (while (and (< end (1- n)) (equal k (funcall key-fn (aref sorted (1+ end)))))
+                                    (setq end (1+ end)))
+                                  end)
+                        end))
                  (additions
                   (cl-loop
                    for spec across (plist-get tr :window)

@@ -53,7 +53,9 @@
     :style :cornerRadiusEnd :extent :ticks :rule :median :outliers :box
     :aria :description :strokeCap :strokeJoin
     ;; scatter and table plots (fc-qx1.27)
-    :shape :angle :url)
+    :shape :angle :url
+    ;; calculations (fc-qx1.30)
+    :x :y :x2 :y2 :xOffset :x2Offset :yOffset :y2Offset :font :fontStyle :limit)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels
@@ -85,7 +87,7 @@
 (defconst eas-spec--scale-keys
   '(:type :domain :range :zero :nice :padding :paddingInner :paddingOuter
     :reverse :scheme :clamp :base :domainMin :domainMax
-    :rangeMin :rangeMax :exponent)
+    :rangeMin :rangeMax :exponent :domainMid)
   "Scale properties chart/v1 recognises.")
 
 (defconst eas-spec--transforms
@@ -94,7 +96,9 @@
     ;; distributions (fc-qx1.26)
     :flatten :density
     :pivot
-    :stack)
+    :stack
+    ;; calculations (fc-qx1.30)
+    :lookup :regression :loess :quantile)
   "Transform keys chart/v1 recognises; the first key present names it.")
 
 (defconst eas-spec--projections nil

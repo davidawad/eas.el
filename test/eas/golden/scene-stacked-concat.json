@@ -258,6 +258,7 @@
             }
           ],
           "font-size": 11,
+          "orient": {},
           "plot-h": 300,
           "shape": "square",
           "style": {"field-color": true, "fill": "#2a78d6", "opacity": {}, "stroke": {}, "stroke-width": {}, "stroked": {}},

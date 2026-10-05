@@ -24,6 +24,7 @@
 (require 'eas-transform-domain)
 (require 'eas-transform-dist)
 (require 'eas-transform-pivot)
+(require 'eas-transform-calc)
 
 (defvar eas-transform-param-predicate
   (lambda (_param _row _env empty) empty)
@@ -248,6 +249,7 @@ ENV is a plist of param values; PATH the array's JSON pointer."
                 ((plist-get tr :flatten) (eas-transform-flatten tr rows))
                 ((plist-get tr :density) (eas-transform-density tr rows))
                 ((plist-get tr :pivot) (eas-transform-pivot tr rows tpath))
+                ((eas-transform-calc-key tr) (eas-transform-calc-apply tr rows tpath))
                 (t (eas-signal "UNSUPPORTED_FEATURE"
                                  (format "Transform %s is not in the native subset"
                                          (if (consp tr) (eas-key-name (car tr)) tr))

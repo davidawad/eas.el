@@ -126,8 +126,16 @@ per unit and shared by every item."
   "Position on CHANNEL (:x or :y) for ROW; band centre unless BAND-START.
 Returns the plot centre when the channel is absent."
   (let* ((def (plist-get (plist-get unit :encoding) channel))
-         (scale (plist-get scales channel)))
+         (scale (plist-get scales channel))
+         (fixed (cond ((and (eas-object-p def) (plist-member def :value) (not (plist-get def :condition)))
+                       (list (plist-get def :value)))
+                      ((null def) (let ((m (plist-member (plist-get unit :mark) channel))) (and m (list (cadr m))))))))
     (cond
+     ;; A value (encoding or mark property) is pixels from the plot's
+     ;; top-left; "width" and "height" are its far edges.
+     (fixed (let ((v (car fixed)) (x (eq channel :x)))
+              (cond ((numberp v) (+ (aref bounds (if x 0 1)) v))
+                    ((member v '("width" "height")) (+ (aref bounds (if x 0 1)) (aref bounds (if x 2 3)))))))
      ((null def) (if (eq channel :x) (+ (aref bounds 0) (/ (aref bounds 2) 2.0))
                    (+ (aref bounds 1) (/ (aref bounds 3) 2.0))))
      ;; Vega-Lite puts every mark but bars and rects mid-bin.
@@ -182,6 +190,13 @@ Returns the plot centre when the channel is absent."
       (when-let* ((item (funcall fn row i))) (push item out)))
     (vconcat (nreverse out))))
 
+(defun eas-marks--mark-value (unit key row)
+  "UNIT's mark property KEY for ROW; an {\"expr\": E} value is evaluated on ROW."
+  (let ((v (plist-get (plist-get unit :mark) key)))
+    (if (and (eas-object-p v) (plist-get v :expr))
+        (eas-expr-evaluate (plist-get v :expr) row (plist-get unit :env))
+      v)))
+
 (defun eas-marks--point-row (unit scales bounds metrics)
   "Row builder (ROW I -> item) for point, circle, square and text marks."
   (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type)))
@@ -189,19 +204,28 @@ Returns the plot centre when the channel is absent."
        (let ((x (eas-marks--pos unit scales :x row bounds))
              (y (eas-marks--pos unit scales :y row bounds)))
          (when (and (numberp x) (numberp y))
-           (append (list :datum i :x x :y y)
+           (append (if (equal type "text")
+                       ;; dx/dy shift the text in pixels (whole cells in a terminal).
+                       (let ((dx (eas-marks--mark-value unit :dx row)) (dy (eas-marks--mark-value unit :dy row))
+                             (cell (and (eas-layout-text-p metrics) (plist-get metrics :cell))))
+                         (list :datum i
+                               :x (+ x (if (numberp dx) (if cell (* (aref cell 0) (round dx (aref cell 0))) dx) 0))
+                               :y (+ y (if (numberp dy) (if cell (* (aref cell 1) (round dy (aref cell 1))) dy) 0))))
+                     (list :datum i :x x :y y))
                    (if (equal type "text")
                        (let ((text (eas-marks--channel unit scales :text row)))
-                         (list :text (eas-expr--string (or text (plist-get mark :text) ""))
+                         (append
+                          (list :text (eas-expr--string (or text (plist-get mark :text) ""))
                                :fontSize (if (eas-layout-text-p metrics) (aref (plist-get metrics :cell) 1)
                                            ;; Vega-Lite: size sets a text mark's font size.
                                            (or (eas-marks--channel unit scales :size row)
                                                (plist-get mark :fontSize) 11))
                                :align (or (plist-get mark :align) "center")
-                               :baseline (or (plist-get mark :baseline) "middle")
+                               :baseline (or (eas-marks--mark-value unit :baseline row) "middle")
                                :fill (or (eas-marks--channel unit scales :color row)
                                          (plist-get mark :color) "black")
-                               :opacity (or (plist-get mark :opacity) 1)))
+                               :opacity (or (plist-get mark :opacity) 1))
+                          (when (plist-get mark :fontWeight) (list :fontWeight (plist-get mark :fontWeight)))))
                      (append (list :size (or (eas-marks--channel unit scales :size row)
                                              (plist-get mark :size) 30)
                                    :shape (or (eas-marks--channel unit scales :shape row) (plist-get mark :shape)
@@ -271,7 +295,7 @@ ranged (x2/y2) bar."
                        (let ((c (+ p (/ (plist-get scale :bandwidth) 2.0))) (half (/ (plist-get mark :size) 2.0)))
                          (cons (- c half) (+ c half))))
                       (band (cons p (+ p (plist-get scale :bandwidth))))
-                      (q (if (and (plist-get (plist-get (plist-get unit :encoding) channel) :bin-end)
+                      (q (if (and (let ((d (plist-get (plist-get unit :encoding) channel))) (or (plist-get d :bin-end) (plist-get d :binned)))
                                   (not other-band))
                              ;; Vega-Lite's binSpacing (1 for bars, 0 for rects) between
                              ;; adjacent bins, both edges moved by the half-pixel translate.
@@ -298,11 +322,18 @@ ranged (x2/y2) bar."
          (tick (equal (plist-get mark :type) "tick"))
          (x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3)))
     (lambda (row i)
-       (let* ((x (and (plist-get enc :x) (eas-marks--pos unit scales :x row bounds)))
-              (y (and (plist-get enc :y) (eas-marks--pos unit scales :y row bounds)))
-              (x2 (and (plist-get enc :x2) (eas-marks--secondary unit scales :x row)))
-              (y2 (and (plist-get enc :y2) (eas-marks--secondary unit scales :y row)))
-              (ys (plist-get scales :y)) (xs (plist-get scales :x))
+       (let* ((ys (plist-get scales :y)) (xs (plist-get scales :x))
+              ;; Band centres, as for x/y; xOffset/x2Offset/yOffset/y2Offset shift in pixels.
+              (shift (lambda (v scale key)
+                       (and (numberp v)
+                            (+ v (if (equal (plist-get scale :type) "band") (/ (plist-get scale :bandwidth) 2.0) 0)
+                               (let ((o (plist-get mark key))) (if (numberp o) o 0))))))
+              (x (and (plist-get enc :x) (let ((v (eas-marks--pos unit scales :x row bounds)))
+                                           (and (numberp v) (+ v (let ((o (plist-get mark :xOffset))) (if (numberp o) o 0)))))))
+              (y (and (plist-get enc :y) (let ((v (eas-marks--pos unit scales :y row bounds)))
+                                           (and (numberp v) (+ v (let ((o (plist-get mark :yOffset))) (if (numberp o) o 0)))))))
+              (x2 (and (plist-get enc :x2) (funcall shift (eas-marks--secondary unit scales :x row) xs :x2Offset)))
+              (y2 (and (plist-get enc :y2) (funcall shift (eas-marks--secondary unit scales :y row) ys :y2Offset)))
               (xdisc (member (plist-get xs :type) '("band" "point")))
               (half (/ (or (plist-get mark :size)
                            (let ((s (if xdisc xs ys)))

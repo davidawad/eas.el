@@ -129,6 +129,17 @@ ANGLE degrees clockwise."
 
 ;;; Axes
 
+(defun eas-layout-truncate (metrics text size limit)
+  "TEXT cut to fit LIMIT px at font SIZE with a trailing ellipsis.
+This is how Vega truncates labels past labelLimit."
+  (if (or (not (numberp limit)) (<= limit 0) (<= (eas-layout-text-width metrics text size) limit)) text
+    (let ((room (- limit (eas-layout-text-width metrics "\u2026" size))) (lo 0) (hi (length text)))
+      (while (< lo hi)
+        (let ((mid (+ lo (ash (1+ (- hi lo)) -1))))
+          (if (< (eas-layout-text-width metrics (substring text 0 mid) size) room) (setq lo mid)
+            (setq hi (1- mid)))))
+      (concat (substring text 0 lo) "\u2026"))))
+
 (defun eas-layout-time-unit-format (field)
   "Vega-Lite's label format for a timeUnit-derived FIELD (UNIT_SOURCE)."
   (let ((unit (car (split-string field "_"))))
@@ -141,17 +152,27 @@ ANGLE degrees clockwise."
           ((equal unit "year") "%Y")
           (t "%b %d, %Y"))))
 
+(defun eas-layout--axis-config (config channel key)
+  "(VALUE) when CONFIG's axisX/axisY or axis sets KEY for CHANNEL, else nil.
+VALUE may be null."
+  (or (let ((m (plist-member (eas-theme-get config (if (eq channel :x) :axisX :axisY)) key))) (and m (list (cadr m))))
+      (let ((m (plist-member (eas-theme-get config :axis) key))) (and m (list (cadr m))))))
+
 (defun eas-layout-axis (channel def scale plot-size metrics)
   "Return the axis model for CHANNEL's DEF and SCALE, or nil when disabled.
 PLOT-SIZE is the plot extent along the axis."
-  (let ((axis (plist-get def :axis)))
-    (unless (or (memq axis '(:null :false)) (null scale) (null def))
+  (let ((axis (plist-get def :axis)) (config (plist-get metrics :config)))
+    (unless (or (memq axis '(:null :false)) (null scale) (null def)
+                (eq (car (eas-layout--axis-config config channel :disable)) t))
       (let* ((discrete (member (plist-get scale :type) '("band" "point")))
              (spacing (plist-get metrics (if (eq channel :x) :x-tick-spacing :y-tick-spacing)))
              (count (or (plist-get axis :tickCount)
                         ;; Vega-Lite leaves log axes at Vega's default count.
                         (and (equal (plist-get scale :type) "log") (not (eas-layout-text-p metrics)) 10)
                         (if (eas-layout-text-p metrics) (max 2 (ceiling (/ plot-size (float spacing))))
+                          ;; Vega-Lite leaves a log axis's tickCount to Vega's default, 10.
+                          (and (equal (plist-get scale :type) "log") 10))
+                        (if (eas-layout-text-p metrics) nil
                           ;; Vega-Lite: ceil(size/40), ceil(width/10) for binned x.
                           (max 1 (ceiling (/ plot-size (if (or (equal (plist-get def :derived) "bin") (plist-get def :bin-end)) 10.0
                                                          (float spacing))))))))
@@ -169,14 +190,20 @@ PLOT-SIZE is the plot extent along the axis."
              (values (cond ((plist-get axis :values) (append (plist-get axis :values) nil))
                            ((plist-get scale :bins) (append (plist-get scale :bins) nil))
                            (t (eas-scale-ticks scale count))))
-             (title (let ((tt (if (plist-member axis :title)
-                                  (let ((tt (plist-get axis :title))) (and (stringp tt) tt))
-                                (eas-encode-title def))))
+             (title (let ((tt (cond ((plist-member axis :title)
+                                     (let ((tt (plist-get axis :title))) (and (stringp tt) tt)))
+                                    ((and (not (plist-member def :title)) (eas-layout--axis-config config channel :title))
+                                     (let ((tt (car (eas-layout--axis-config config channel :title)))) (and (stringp tt) tt)))
+                                    (t (eas-encode-title def)))))
                       (and (stringp tt) (not (string-empty-p tt)) tt)))
              (angle (cond ((plist-get axis :labelAngle))
+                          ((and (not (eas-layout-text-p metrics))
+                                (numberp (car (eas-layout--axis-config config channel :labelAngle))))
+                           (car (eas-layout--axis-config config channel :labelAngle)))
                           ((eas-layout-text-p metrics) 0)
                           ((and (eq channel :x) discrete (not (equal (plist-get def :derived) "timeUnit"))) 270)
                           (t 0)))
+             (limit (or (plist-get axis :labelLimit) (eas-theme-axis (plist-get metrics :config) channel :labelLimit) 180))
              (grid (cond ((plist-member axis :grid) (eq (plist-get axis :grid) t))
                          (discrete nil)
                          ((equal (plist-get def :derived) "bin") nil)
@@ -184,6 +211,10 @@ PLOT-SIZE is the plot extent along the axis."
         (eas-axis-extra-apply
          (append
           (eas-layout-axis-style-props axis)
+          (when (memq (if (plist-member axis :domain) (plist-get axis :domain)
+                        (car (eas-layout--axis-config config channel :domain)))
+                      '(:false :null))
+            (list :domain :false))
           (list :channel (eas-key-name channel)
                 :orient (if (eq channel :x) "bottom" "left")
                 :title title :discrete (if discrete t :false) :labelAngle angle
@@ -192,12 +223,12 @@ PLOT-SIZE is the plot extent along the axis."
                                (t "parity"))
                 :grid (if grid t :false)
                 :ticks (vconcat (mapcar (lambda (v)
-                                          (let ((label (eas-layout-axis-style-label axis v (funcall fmt v))))
+                                          (let ((label (eas-layout-axis-style-label
+                                                        axis v (eas-layout-truncate metrics (funcall fmt v)
+                                                                                    (plist-get metrics :label-size) limit))))
                                             (append (list :value v :label label)
                                                     (eas-layout-axis-style-tick axis v label))))
                                         values)))
-          ;; Only what the spec turns off or resizes, so other scenes keep their shape.
-          (when (eq (plist-get axis :domain) :false) (list :domain :false))
           (when (numberp (plist-get axis :tickSize)) (list :tickSize (plist-get axis :tickSize))))
          def channel (plist-get metrics :config))))))
 

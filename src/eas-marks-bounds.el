@@ -25,9 +25,13 @@
   "MARK (a string or definition) with CONFIG's mark defaults filled in."
   (let* ((def (if (stringp mark) (list :type mark) mark))
          (type (eas-key (plist-get def :type))))
-    (eas-theme-merge (eas--plist-without (eas-theme-get config :mark) :type)
-                       (eas-theme-get config type)
-                       def)))
+    (apply #'eas-theme-merge
+           (append (list (eas--plist-without (eas-theme-get config :mark) :type)
+                         (eas-theme-get config type))
+                   ;; Named styles (mark.style) sit between config and the mark.
+                   (mapcar (lambda (name) (eas-theme-get config :style (eas-key name)))
+                           (let ((st (plist-get def :style))) (if (stringp st) (list st) (append st nil))))
+                   (list def)))))
 
 (defun eas-marks-legend-style (unit _metrics)
   "UNIT's constant look that legend symbols copy.

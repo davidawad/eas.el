@@ -1,0 +1,16 @@
+                              series
+                         ▁▁▁  ■ Agriculture
+                         ███  ■ Business services
+     ▁▁▁▁▁▁▁▁▁        ▁▁▁▇██  ■ Construction
+▁▁▁▁▁▄██▅▁████▁▁▁▁▄▆▅▄█▅█▄█▇  ■ Education and Health
+▂▃▄▂▃▄▄▄▄█▄▄▅▄▄▄▃▄▄▃▄▃▄▅█▄▄▄  ■ Finance
+▄▂▂▃▃▂▄▃▃▄▃▃▃▂▃▃▃▃▃▂▂▃▂▃▃▄▃▄  ■ Government
+▂▁▁▁▆▄▅▅█▅▅▅▄▅▅▅▅▁▁▅▄▅██████  ■ Information
+▁▁▁▁▁▁▂▂▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁███  ■ Leisure and hospitality
+    █▂██▂▆███████  █  █▇▂▃▃▁  ■ Manufacturing
+                        █▅▄▃  ■ Mining and Extraction
+                         ███  ■ Other
+                              ■ Self-employed
+┬────────────┬─────────────┬  ■ Transportation and Utilities
+2000        2005          2010■ Wholesale and Retail Trade
+      date (year-month)

@@ -151,14 +151,18 @@ PLOT-SIZE is the plot extent along the axis."
              (grid (cond ((plist-member axis :grid) (eq (plist-get axis :grid) t))
                          (discrete nil)
                          (t (not (eq (eas-theme-axis (plist-get metrics :config) channel :grid) :false))))))
-        (list :channel (eas-key-name channel)
-              :orient (if (eq channel :x) "bottom" "left")
-              :title title :discrete (if discrete t :false) :labelAngle angle
-              :overlap (cond ((and discrete (equal (plist-get def :type) "nominal")) nil)
-                             ((equal (plist-get scale :type) "log") "greedy")
-                             (t "parity"))
-              :grid (if grid t :false)
-              :ticks (vconcat (mapcar (lambda (v) (list :value v :label (funcall fmt v))) values)))))))
+        (append
+         (list :channel (eas-key-name channel)
+               :orient (if (eq channel :x) "bottom" "left")
+               :title title :discrete (if discrete t :false) :labelAngle angle
+               :overlap (cond ((and discrete (equal (plist-get def :type) "nominal")) nil)
+                              ((equal (plist-get scale :type) "log") "greedy")
+                              (t "parity"))
+               :grid (if grid t :false)
+               :ticks (vconcat (mapcar (lambda (v) (list :value v :label (funcall fmt v))) values)))
+         ;; Only what the spec turns off or resizes, so other scenes keep their shape.
+         (when (eq (plist-get axis :domain) :false) (list :domain :false))
+         (when (numberp (plist-get axis :tickSize)) (list :tickSize (plist-get axis :tickSize))))))))
 
 (defun eas-layout-axis-label-extent (axis metrics)
   "Thickness of AXIS's labels across the axis (text target)."
@@ -170,8 +174,9 @@ PLOT-SIZE is the plot extent along the axis."
       (if widths (apply #'max widths) 0))))
 
 (defun eas-layout--tick (axis metrics)
-  "Tick length of AXIS under METRICS (one cell in text)."
-  (plist-get metrics (if (equal (plist-get axis :orient) "bottom") :tick-bottom :tick-left)))
+  "Tick length of AXIS under METRICS (one cell in text; axis tickSize in svg)."
+  (or (and (not (eas-layout-text-p metrics)) (numberp (plist-get axis :tickSize)) (plist-get axis :tickSize))
+      (plist-get metrics (if (equal (plist-get axis :orient) "bottom") :tick-bottom :tick-left))))
 
 (defun eas-layout-axis-extent (axis metrics)
   "Space AXIS needs outside the plot in text: (SIDE . CELLS*PX) pairs."
@@ -346,8 +351,9 @@ labels, title) without the half-pixel translate of the drawn lines."
                                                                   (plist-get tm :baseline) (plist-get tm :angle) weight))))
       (append (eas--plist-without axis :ticks)
               (list :ticks placed
-                    :domain-line (if bottom (vector (+ x0 0.5) (+ y0 h 0.5) (+ x0 w 0.5) (+ y0 h 0.5))
-                                   (vector (+ x0 0.5) (+ y0 0.5) (+ x0 0.5) (+ y0 h 0.5)))
+                    :domain-line (cond ((eq (plist-get axis :domain) :false) nil)
+                                       (bottom (vector (+ x0 0.5) (+ y0 h 0.5) (+ x0 w 0.5) (+ y0 h 0.5)))
+                                       (t (vector (+ x0 0.5) (+ y0 0.5) (+ x0 0.5) (+ y0 h 0.5))))
                     :bounds ab)
               (when tm (list :title-mark tm))))))
 

@@ -106,13 +106,13 @@
 
 (ert-deftest eas-compile-unsupported-and-unresolved-fail-as-data ()
   (should (equal (plist-get (eas-test-should-code "UNSUPPORTED_FEATURE"
-                              (eas-compile '(:data (:values []) :mark "arc")))
+                              (eas-compile '(:data (:values []) :mark "geoshape")))
                             :path)
                  "/mark"))
   (eas-test-should-code "INVALID_INPUT" (eas-compile '(:data (:name "bars") :mark "bar")))
   (eas-test-should-code "UNSUPPORTED_FEATURE" (eas-compile '(:data (:url "x.csv") :mark "bar")))
   (eas-test-should-code "UNSUPPORTED_FEATURE"
-    (eas-compile '(:data (:values [(:a 1 :b 2)]) :mark (:type "line" :interpolate "monotone")
+    (eas-compile '(:data (:values [(:a 1 :b 2)]) :mark (:type "line" :interpolate "basis")
                      :encoding (:x (:field "a") :y (:field "b"))))))
 
 (ert-deftest eas-compile-rows-override-the-root-data ()

@@ -17,7 +17,7 @@
   "Points with an x brush, as JSON (what an agent sends).")
 
 (defconst eas-agent-test--unsupported-spec
-  "{\"mark\":\"arc\",\"data\":{\"values\":[{\"a\":1}]},\"encoding\":{\"theta\":{\"field\":\"a\",\"type\":\"quantitative\"}}}"
+  "{\"mark\":\"geoshape\",\"data\":{\"values\":[{\"a\":1}]},\"encoding\":{\"latitude\":{\"field\":\"a\",\"type\":\"quantitative\"}}}"
   "A spec outside the native subset.")
 
 (defun eas-agent-test--bindings ()

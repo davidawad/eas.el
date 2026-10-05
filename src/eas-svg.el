@@ -29,6 +29,8 @@
 (require 'svg)
 (require 'eas-core)
 (require 'eas-theme)
+(require 'eas-paint)
+(require 'eas-arc)
 
 (defun eas-svg--face-color (face attribute)
   "FACE's ATTRIBUTE color as a string, or nil when unspecified."
@@ -140,7 +142,7 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
 
 (defun eas-svg--item (mark item)
   "SVG node for ITEM of MARK."
-  (let ((fill (plist-get item :fill)) (stroke (plist-get item :stroke))
+  (let ((fill (eas-paint-svg-fill item)) (stroke (plist-get item :stroke))
         (opacity (let ((o (plist-get item :opacity))) (and o (/= o 1) o))))
     (pcase (plist-get mark :mark)
       ((or "bar" "rect" "brush")
@@ -154,6 +156,10 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
       ((or "rule" "tick")
        (eas-svg--line (vector (plist-get item :x1) (plist-get item :y1) (plist-get item :x2) (plist-get item :y2))
                         stroke (plist-get item :strokeWidth) opacity (plist-get item :strokeDash)))
+      ("arc" (eas-svg--node 'path :d (eas-arc-path item) :fill fill
+                            :stroke (unless (equal stroke "none") stroke)
+                            :stroke-width (unless (equal stroke "none") (plist-get item :strokeWidth))
+                            :opacity opacity))
       ("text" (apply #'eas-svg--text (plist-get item :text) (plist-get item :x) (plist-get item :y)
                      (plist-get item :fontSize)
                      (list :align (plist-get item :align) :baseline (plist-get item :baseline) :fill fill
@@ -183,9 +189,11 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
         (push (eas-svg--line (plist-get tk :grid) (funcall get :gridColor) (or (funcall get :gridWidth) 1)
                                (funcall get :gridOpacity))
               out)))
-    (push (eas-svg--line (plist-get axis :domain-line) (funcall get :domainColor) (or (funcall get :domainWidth) 1)) out)
+    (when-let* ((domain (plist-get axis :domain-line)))
+      (push (eas-svg--line domain (funcall get :domainColor) (or (funcall get :domainWidth) 1)) out))
     (seq-doseq (tk (plist-get axis :ticks))
-      (push (eas-svg--line (plist-get tk :tick) (funcall get :tickColor) (or (funcall get :tickWidth) 1)) out)
+      (unless (equal (plist-get axis :tickSize) 0)
+        (push (eas-svg--line (plist-get tk :tick) (funcall get :tickColor) (or (funcall get :tickWidth) 1)) out))
       (unless (string-empty-p (plist-get tk :label))
         (push (eas-svg--text (plist-get tk :label) (plist-get tk :lx) (plist-get tk :ly)
                                (or (funcall get :labelFontSize) 10)
@@ -242,6 +250,7 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
   "Return the SVG DOM for SCENE under THEME (a Vega config plist)."
   (let* ((theme (eas-svg--theme theme scene))
          (size (plist-get scene :size))
+         (eas-paint--svg-defs nil)
          (children nil) (defs nil))
     (push (eas-svg--node 'rect :width "100%" :height "100%"
                            :fill (or (plist-get theme :background) "white"))
@@ -283,7 +292,7 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
              (width . ,(eas-svg--n (plist-get size :w))) (height . ,(eas-svg--n (plist-get size :h)))
              (viewBox . ,(format "0 0 %s %s" (eas-svg--n (plist-get size :w)) (eas-svg--n (plist-get size :h))))
              (font-family . ,(eas-svg--escape (eas-svg--font (plist-get theme :font)))))
-           (cons (apply #'dom-node 'defs nil (nreverse defs)) (nreverse children)))))
+           (cons (apply #'dom-node 'defs nil (append (nreverse defs) eas-paint--svg-defs)) (nreverse children)))))
 
 (defun eas-svg-render (scene &optional theme)
   "Return SCENE drawn as an SVG string under THEME."
@@ -303,18 +312,20 @@ Each area id is a symbol eas:VIEW|MARK|ITEM (or eas-legend:VIEW|CHANNEL|I)."
   (let (areas)
     (seq-doseq (view (plist-get scene :views))
       (seq-doseq (mark (plist-get view :marks))
-        (when (member (plist-get mark :mark) '("bar" "rect" "point" "circle" "square" "text"))
+        (when (member (plist-get mark :mark) '("bar" "rect" "point" "circle" "square" "text" "arc"))
           (seq-do-indexed
            (lambda (item i)
              (let ((id (intern (format "eas:%s|%s|%d" (plist-get view :id) (plist-get mark :id) i)))
                    (props (list 'help-echo (and (plist-get item :tooltip) (eas-svg--tooltip-text (plist-get item :tooltip)))
                                 'pointer (if (plist-get item :href) 'hand 'arrow))))
-               (push (list (if (plist-member item :w)
+               (push (list (cond
+                            ((plist-member item :startAngle) (cons 'poly (eas-arc-polygon item)))
+                            ((plist-member item :w)
                                (cons 'rect (cons (cons (round (plist-get item :x)) (round (plist-get item :y)))
                                                  (cons (round (+ (plist-get item :x) (max 1 (plist-get item :w))))
-                                                       (round (+ (plist-get item :y) (max 1 (plist-get item :h)))))))
-                             (cons 'circle (cons (cons (round (plist-get item :x)) (round (plist-get item :y)))
-                                                 (max 3 (round (/ (sqrt (or (plist-get item :size) 30)) 2))))))
+                                                       (round (+ (plist-get item :y) (max 1 (plist-get item :h))))))))
+                            (t (cons 'circle (cons (cons (round (plist-get item :x)) (round (plist-get item :y)))
+                                                   (max 3 (round (/ (sqrt (or (plist-get item :size) 30)) 2)))))))
                            id props)
                      areas)))
            (plist-get mark :items))))

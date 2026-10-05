@@ -1,0 +1,30 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [12, 23, 47, 6, 52, 19]
+  },
+  "description": "A simple radial chart with embedded data.",
+  "encoding": {
+    "color": {"field": "data", "legend": null, "type": "nominal"},
+    "radius": {
+      "field": "data",
+      "scale": {"rangeMin": 20, "type": "sqrt", "zero": true}
+    },
+    "theta": {"field": "data", "stack": true, "type": "quantitative"}
+  },
+  "layer": [
+    {
+      "mark": {"innerRadius": 20, "stroke": "#fff", "type": "arc"}
+    },
+    {
+      "encoding": {
+        "text": {"field": "data", "type": "quantitative"}
+      },
+      "mark": {"radiusOffset": 10, "type": "text"}
+    }
+  ],
+  "usermeta": {
+    "eas": {"source": "test/vl-examples/area-circular/arc_radial.vl.json", "threshold": 0.02}
+  }
+}
+

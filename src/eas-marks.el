@@ -20,6 +20,8 @@
 (require 'eas-encode)
 (require 'eas-lttb)
 (require 'eas-layout)
+(require 'eas-paint)
+(require 'eas-curve)
 
 (defconst eas-marks-default-color "#4c78a8" "Vega-Lite's default mark color.")
 
@@ -104,7 +106,7 @@ per unit and shared by every item."
                       (if (and (member type '("point" "circle" "square" "tick"))
                                (not (plist-get unit :aggregated)))
                           0.7 1))))
-    (list :fill fill :stroke stroke :opacity opacity)))
+    (eas-paint-style (list :fill fill :stroke stroke :opacity opacity))))
 
 (defun eas-marks--extras (unit row)
   "Tooltip and href for ROW in UNIT, as a plist (omitting absent ones)."
@@ -313,7 +315,7 @@ ranged (x2/y2) bar."
   (let* ((mark (plist-get unit :mark)) (area (equal (plist-get mark :type) "area"))
          (mode (or (plist-get mark :interpolate) "linear"))
          (groups nil) (order nil) (i -1))
-    (unless (member mode '("linear" "step" "step-after" "step-before"))
+    (unless (member mode (append '("linear" "step" "step-after" "step-before") eas-curve-modes))
       (eas-signal "UNSUPPORTED_FEATURE" (format "interpolate %s is not supported" mode)
                     :feature (concat "interpolate/" mode)))
     (seq-doseq (row (plist-get unit :rows))
@@ -336,11 +338,11 @@ ranged (x2/y2) bar."
                (kept (mapcar (lambda (k) (aref pts k)) keep))
                (row (aref (plist-get unit :rows) (nth 2 (car kept)))))
           (append (list :datum (vconcat (mapcar (lambda (p) (nth 2 p)) kept))
-                        :points (vconcat (mapcar #'vconcat (eas-marks--step (mapcar (lambda (p) (list (nth 0 p) (nth 1 p))) kept) mode))))
+                        :points (vconcat (mapcar #'vconcat (eas-curve-apply (eas-marks--step (mapcar (lambda (p) (list (nth 0 p) (nth 1 p))) kept) mode) mode))))
                   (unless (equal mode "linear")
                     (list :anchors (vconcat (mapcar (lambda (p) (vector (nth 0 p) (nth 1 p))) kept))))
                   (when area
-                    (list :base (vconcat (mapcar #'vconcat (eas-marks--step (mapcar (lambda (p) (list (nth 0 p) (nth 3 p))) kept) mode)))))
+                    (list :base (vconcat (mapcar #'vconcat (eas-curve-apply (eas-marks--step (mapcar (lambda (p) (list (nth 0 p) (nth 3 p))) kept) mode) mode)))))
                   (list :strokeWidth (or (plist-get mark :strokeWidth) (if area 0 2)))
                   (unless area (list :strokeCap (plist-get mark :strokeCap) :strokeJoin (plist-get mark :strokeJoin)))
                   (when (plist-get mark :strokeDash) (list :strokeDash (plist-get mark :strokeDash)))
@@ -366,9 +368,14 @@ Call it inside `eas-marks-with-cache'."
   "Run BODY with a fresh per-unit accessor cache."
   `(let ((eas-marks--cache (make-hash-table :test 'equal))) ,@body))
 
+(declare-function eas-polar-unit-p "eas-polar")
+(declare-function eas-polar-items "eas-polar")
+
 (defun eas-marks--items (unit scales bounds metrics)
   "Dispatch UNIT's mark type to its item builder."
   (pcase (plist-get (plist-get unit :mark) :type)
+    ((guard (and (fboundp 'eas-polar-unit-p) (eas-polar-unit-p unit)))
+     (eas-polar-items unit scales bounds metrics))
     ((or "point" "circle" "square" "text" "bar" "rect" "rule" "tick")
      (eas-marks--each unit (eas-marks-row-fn unit scales bounds metrics)))
     ((or "line" "area")
@@ -420,6 +427,15 @@ Bars and areas with a discrete color/fill/detail field stack by default
               (let ((base (if (>= v 0) (car acc) (cdr acc))))
                 (aset out i (append row (list (eas-key start) base (eas-key end) (+ base v))))
                 (puthash g (if (>= v 0) (cons (+ base v) (cdr acc)) (cons (car acc) (+ base v))) groups)))))
+        (when (equal offset "center")
+          ;; Vega's center offset: each stack starts at (max total - its total) / 2.
+          (let ((top (apply #'max 0 (mapcar (lambda (acc) (- (car acc) (cdr acc))) (hash-table-values groups)))))
+            (dotimes (i (length out))
+              (let* ((row (aref out i)) (acc (gethash (and dim (eas-encode-raw dim row)) groups))
+                     (shift (and acc (plist-get row (eas-key end)) (/ (- top (- (car acc) (cdr acc))) 2.0))))
+                (when shift
+                  (aset out i (eas-plist-put (eas-plist-put row (eas-key start) (+ shift (plist-get row (eas-key start))))
+                                             (eas-key end) (+ shift (plist-get row (eas-key end))))))))))
         (when normalize
           (dotimes (i (length out))
             (let* ((row (aref out i)) (g (and dim (eas-encode-raw dim row)))

@@ -190,11 +190,14 @@ The tooltip is a vector of (:title TITLE :value FORMATTED) in order."
                      ((and tip (eas-object-p tip) (plist-get tip :field)) (list tip))
                      ((eas-true-p (plist-get mark :tooltip))
                       (cl-loop for (ch d) on encoding by #'cddr
-                               when (and (memq ch '(:x :y :x2 :y2 :color :fill :stroke :size :text))
+                               when (and (memq ch '(:x :y :x2 :y2 :color :fill :stroke :size :text :theta :radius))
                                          (eas-object-p d) (plist-get d :field))
                                collect d)))))
     (when defs
       (vconcat (mapcar (lambda (d)
+                         ;; A stacked channel shows its own value, not the stack's end.
+                         (when (plist-get d :stack-field)
+                           (setq d (plist-put (copy-sequence d) :field (plist-get d :stack-field))))
                          (list :title (or (eas-encode-title d) (plist-get d :field))
                                :value (eas-encode-format-value d (eas-encode-raw d row))))
                        defs)))))

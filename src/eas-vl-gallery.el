@@ -1,0 +1,255 @@
+;;; eas-vl-gallery.el --- the official Vega-Lite example gallery, natively -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2026 David Awad
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;;; Commentary:
+
+;; test/vl-examples/GROUP/NAME.vl.json are the official Vega-Lite
+;; examples, unmodified; their data lives in test/vl-examples/data/ and
+;; bin/chart's PNG of each in GROUP/ref/NAME.png.  For one example this
+;; file loads the spec with its url data inlined (Vega's loader: JSON
+;; arrays as they are, CSV/TSV with numbers inferred), renders it
+;; natively for both backends, checks its layout at several sizes, and
+;; compares the native SVG with the reference via `eas-png-compare'.
+;;
+;; GROUP/status.json records the verdict per example:
+;;   {"NAME": {"status": "pass"|"partial"|"unsupported",
+;;             "reason": "...", "threshold": T}}
+;; "threshold" is the differing-pixel ratio the example must stay
+;; within; `eas-vl-gallery-check' re-runs an example against it.
+
+;;; Code:
+
+(require 'eas-core)
+(require 'eas-adapters)
+(require 'eas-template)
+(require 'eas-compile)
+(require 'eas-svg)
+(require 'eas-text)
+(require 'eas-chart)
+(require 'eas-png)
+
+(defvar eas-vl-gallery-directory
+  (expand-file-name "test/vl-examples" eas-template--root)
+  "Directory holding the official Vega-Lite examples, one subdirectory per group.")
+
+(defvar eas-vl-gallery-zone "America/Chicago"
+  "Time zone the committed references were built in (bin/chart draws local time).")
+
+(defconst eas-vl-gallery-sizes '((320 . 200) (480 . 300) (900 . 560))
+  "Pixel sizes a passing example must lay out at without overlap.")
+
+(defconst eas-vl-gallery-text-sizes '((:cols 50 :rows 14) (:cols 80 :rows 24) (:cols 120 :rows 36))
+  "Text sizes a passing example must lay out at without overlap.")
+
+(defun eas-vl-gallery-group-directory (group)
+  "Directory of example GROUP."
+  (expand-file-name group eas-vl-gallery-directory))
+
+(defun eas-vl-gallery-names (group)
+  "Example names in GROUP, sorted."
+  (mapcar (lambda (f) (string-remove-suffix ".vl.json" f))
+          (directory-files (eas-vl-gallery-group-directory group) nil "\\.vl\\.json\\'")))
+
+;;; Loading
+
+(defun eas-vl-gallery--read-url (url dir format)
+  "Rows of data URL (relative to DIR) parsed per FORMAT (data.format)."
+  (let* ((file (expand-file-name url dir))
+         (type (or (plist-get format :type) (file-name-extension file))))
+    (unless (file-readable-p file)
+      (eas-signal "NOT_FOUND" (format "No data file %s" file) :path url))
+    (pcase type
+      ("json" (let ((v (eas-json-read-file file)))
+                (if (vectorp v) v
+                  (eas-signal "UNSUPPORTED_FEATURE" (format "%s is not an array of rows" url)
+                              :feature "data/format"))))
+      ("csv" (plist-get (eas-data-from "csv" (list :file file)) :rows))
+      ("tsv" (plist-get (eas-data-from "tsv" (list :file file)) :rows))
+      (_ (eas-signal "UNSUPPORTED_FEATURE" (format "data format %s" type)
+                     :feature (concat "data/format/" type))))))
+
+(defun eas-vl-gallery-inline (spec dir)
+  "SPEC with every data.url (relative to DIR) replaced by inline values."
+  (cond
+   ((vectorp spec) (vconcat (mapcar (lambda (s) (eas-vl-gallery-inline s dir)) spec)))
+   ((eas-object-p spec)
+    (cl-loop for (k v) on spec by #'cddr
+             append (list k (if (and (eq k :data) (eas-object-p v) (stringp (plist-get v :url)))
+                                (list :values (eas-vl-gallery--read-url
+                                               (plist-get v :url) dir (plist-get v :format)))
+                              (eas-vl-gallery-inline v dir)))))
+   (t spec)))
+
+(defun eas-vl-gallery-spec (group name)
+  "Example NAME of GROUP with its data inlined."
+  (let ((dir (eas-vl-gallery-group-directory group)))
+    (eas-vl-gallery-inline (eas-json-read-file (expand-file-name (concat name ".vl.json") dir)) dir)))
+
+;;; Rendering and checking
+
+(defmacro eas-vl-gallery--native (&rest body)
+  "Run BODY in the references' zone, unrestricted by supported.json."
+  `(let ((eas-time-zone eas-vl-gallery-zone) (eas-spec-supported-function nil)) ,@body))
+
+(defun eas-vl-gallery-svg (spec &optional size)
+  "Native SVG of SPEC (at SIZE, a (W . H) pixel cons)."
+  (eas-vl-gallery--native (eas-svg-render (eas-compile spec :size size))))
+
+(defun eas-vl-gallery-text (spec &optional size)
+  "Text rendering of SPEC at SIZE (:cols C :rows R), without properties."
+  (eas-vl-gallery--native
+   (substring-no-properties
+    (eas-text-render (eas-compile spec :target 'text :size (or size '(:cols 60 :rows 16)))))))
+
+(defun eas-vl-gallery--intersects-p (a b)
+  "Non-nil when boxes A and B ([X Y W H]) overlap by more than a pixel."
+  (and (< (+ (aref a 0) 1) (+ (aref b 0) (aref b 2))) (< (+ (aref b 0) 1) (+ (aref a 0) (aref a 2)))
+       (< (+ (aref a 1) 1) (+ (aref b 1) (aref b 3))) (< (+ (aref b 1) 1) (+ (aref a 1) (aref a 3)))))
+
+(defun eas-vl-gallery--legend-box (legend)
+  "Placed LEGEND's extent as [X Y W H]: its svg :box, else the text
+legend's column from its title to its last entry."
+  (if-let* ((b (plist-get legend :box)))
+      (vector (aref b 0) (aref b 1) (- (aref b 2) (aref b 0)) (- (aref b 3) (aref b 1)))
+    (let ((bottom (cl-loop for e across (plist-get legend :entries)
+                           for eb = (plist-get e :bounds)
+                           when (vectorp eb) maximize (+ (aref eb 1) (aref eb 3)))))
+      (when (and (numberp (plist-get legend :x)) bottom)
+        (vector (plist-get legend :x) (plist-get legend :y) (plist-get legend :width)
+                (- bottom (plist-get legend :y)))))))
+
+(defun eas-vl-gallery--label-collisions (scene)
+  "Axes of SCENE whose shown tick labels collide, as problem strings."
+  (let* ((metrics (and (plist-get scene :target)
+                       (eas-layout-metrics (intern (plist-get scene :target)) (plist-get (plist-get scene :size) :cell)
+                                           (plist-get scene :config))))
+         (size (plist-get metrics :label-size)) out)
+    (seq-doseq (view (plist-get scene :views))
+      (seq-doseq (axis (plist-get view :axes))
+        (let ((boxes (cl-loop for tk across (plist-get axis :ticks)
+                              unless (string-empty-p (plist-get tk :label))
+                              collect (eas-layout-text-bounds
+                                       metrics (plist-get tk :label) size (plist-get tk :lx) (plist-get tk :ly)
+                                       (plist-get tk :align) (plist-get tk :baseline)
+                                       (and (equal (plist-get axis :orient) "bottom") (plist-get axis :labelAngle))))))
+          (when (cl-loop for (a b) on boxes while b
+                         thereis (and (< (+ (aref a 0) 1) (aref b 2)) (< (+ (aref b 0) 1) (aref a 2))
+                                      (< (+ (aref a 1) 1) (aref b 3)) (< (+ (aref b 1) 1) (aref a 3))))
+            (push (format "%s axis labels of view %s collide" (plist-get axis :channel) (plist-get view :id)) out)))))
+    (nreverse out)))
+
+(defun eas-vl-gallery-overlaps (scene)
+  "Layout problems in SCENE: views overlapping each other or a legend,
+views or legends leaving the canvas, axis labels colliding.  Return a
+list of strings (nil when clean)."
+  (let* ((size (plist-get scene :size)) (w (plist-get size :w)) (h (plist-get size :h))
+         (views (append (plist-get scene :views) nil))
+         (boxes (mapcar (lambda (v) (cons (plist-get v :id) (plist-get v :bounds))) views))
+         (legends (apply #'append
+                         (mapcar (lambda (v)
+                                   ;; Legends placed with orient "none" sit in the plot on purpose.
+                                   (delq nil (mapcar (lambda (l) (let ((b (eas-vl-gallery--legend-box l)))
+                                                                   (and (vectorp b) (not (equal (plist-get l :orient) "none"))
+                                                                        (cons (plist-get v :id) b))))
+                                                     (plist-get v :legends))))
+                                 views)))
+         (outside (lambda (r) (or (< (aref r 0) -0.5) (< (aref r 1) -0.5)
+                                  (> (+ (aref r 0) (aref r 2)) (+ w 0.5)) (> (+ (aref r 1) (aref r 3)) (+ h 0.5)))))
+         problems)
+    (dolist (l legends)
+      (when (funcall outside (cdr l))
+        (push (format "a legend of view %s leaves the %sx%s canvas" (car l) w h) problems)))
+    (dolist (b boxes)
+      (let ((r (cdr b)))
+        (when (funcall outside r)
+          (push (format "view %s leaves the %sx%s canvas" (car b) w h) problems))
+        (dolist (o boxes)
+          (when (and (string< (car b) (car o)) (eas-vl-gallery--intersects-p r (cdr o)))
+            (push (format "views %s and %s overlap" (car b) (car o)) problems)))
+        (dolist (l legends)
+          (when (eas-vl-gallery--intersects-p r (cdr l))
+            (push (format "a legend overlaps view %s" (car b)) problems)))))
+    (append (nreverse problems) (eas-vl-gallery--label-collisions scene))))
+
+(defun eas-vl-gallery-resize-problems (spec)
+  "Overlap problems of SPEC at every size in `eas-vl-gallery-sizes' and
+`eas-vl-gallery-text-sizes', each prefixed with the size."
+  (eas-vl-gallery--native
+   (let (out)
+     (dolist (size eas-vl-gallery-sizes)
+       (dolist (p (eas-vl-gallery-overlaps (eas-compile spec :size size)))
+         (push (format "%dx%d: %s" (car size) (cdr size) p) out)))
+     (dolist (size eas-vl-gallery-text-sizes)
+       (dolist (p (eas-vl-gallery-overlaps (eas-compile spec :target 'text :size size)))
+         (push (format "%dx%d cells: %s" (plist-get size :cols) (plist-get size :rows) p) out)))
+     (nreverse out))))
+
+(defun eas-vl-gallery-ref-file (group name)
+  "bin/chart's reference PNG of example NAME in GROUP."
+  (expand-file-name (concat "ref/" name ".png") (eas-vl-gallery-group-directory group)))
+
+(defun eas-vl-gallery-rasterizer-p ()
+  "Non-nil when native SVG can be rasterized and PNGs decoded here."
+  (and (executable-find eas-chart-rsvg-program) (zlib-available-p)))
+
+(defun eas-vl-gallery-compare (group name svg)
+  "Compare native SVG of NAME in GROUP with its reference.
+Return `eas-png-compare's plist, or nil when no rasterizer is available."
+  (when (eas-vl-gallery-rasterizer-p)
+    (let ((mine (make-temp-file "eas-vl" nil ".png")))
+      (unwind-protect
+          (progn (eas-chart-rasterize svg mine)
+                 (eas-png-compare (eas-png-read mine) (eas-png-read (eas-vl-gallery-ref-file group name))))
+        (delete-file mine)))))
+
+;;; status.json
+
+(defun eas-vl-gallery-status-file (group)
+  "GROUP's status.json."
+  (expand-file-name "status.json" (eas-vl-gallery-group-directory group)))
+
+(defun eas-vl-gallery-status (group)
+  "Parsed status.json of GROUP, or nil."
+  (let ((file (eas-vl-gallery-status-file group)))
+    (and (file-exists-p file) (eas-json-read-file file))))
+
+(defun eas-vl-gallery-run (group name &optional compare)
+  "Render example NAME of GROUP; with COMPARE, judge it against its reference.
+Return (:name :ok :error :svg :text :ratio :size-delta :overlaps).  :ok
+is non-nil when both backends rendered."
+  (condition-case err
+      (let* ((spec (eas-vl-gallery-spec group name))
+             (svg (eas-vl-gallery-svg spec))
+             (text (eas-vl-gallery-text spec))
+             (cmp (and compare (eas-vl-gallery-compare group name svg))))
+        (list :name name :ok t :svg svg :text text
+              :ratio (plist-get cmp :ratio) :size-delta (plist-get cmp :size-delta)
+              :overlaps (eas-vl-gallery-resize-problems spec)))
+    (eas-error (list :name name :ok nil :error (eas-error-plist err)))))
+
+(defun eas-vl-gallery-check (group name)
+  "Re-run NAME of GROUP against its status.json entry.
+Return a list of failure strings (nil when it holds its status).  The
+image comparison runs only where a rasterizer is available."
+  (let* ((entry (plist-get (eas-vl-gallery-status group) (eas-key name)))
+         (status (plist-get entry :status))
+         (threshold (plist-get entry :threshold))
+         (r (and entry (not (equal status "unsupported"))
+                 (eas-vl-gallery-run group name (eas-vl-gallery-rasterizer-p))))
+         problems)
+    (cond
+     ((null entry) (push (format "%s has no status.json entry" name) problems))
+     ((null r) nil)
+     ((not (plist-get r :ok))
+      (push (format "%s: %s" name (plist-get (plist-get r :error) :message)) problems))
+     (t
+      (when (and threshold (plist-get r :ratio) (> (plist-get r :ratio) threshold))
+        (push (format "%s: ratio %.4f > %s" name (plist-get r :ratio) threshold) problems))
+      (when (and (equal status "pass") (plist-get r :overlaps))
+        (push (format "%s: %s" name (string-join (plist-get r :overlaps) "; ")) problems))))
+    problems))
+
+(provide 'eas-vl-gallery)
+;;; eas-vl-gallery.el ends here

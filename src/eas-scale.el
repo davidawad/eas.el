@@ -168,6 +168,11 @@ in compile's per-row loops."
       ("log" (and (numberp value) (> value 0)
                   (eas-scale--lerp (log (aref domain 0)) (log (aref domain 1))
                                      (plist-get scale :range) (log value))))
+      ((or "sqrt" "pow")
+       (and (numberp value)
+            (let ((e (eas-scale--exponent scale)))
+              (eas-scale--lerp (eas-scale--pow (aref domain 0) e) (eas-scale--pow (aref domain 1) e)
+                               (plist-get scale :range) (eas-scale--pow value e)))))
       ((or "time" "utc")
        (let ((ms (eas-time-parse value)))
          (and ms (eas-scale--lerp (aref domain 0) (aref domain 1) (plist-get scale :range) ms))))
@@ -192,11 +197,25 @@ scales return the domain value whose band is nearest PX."
        (eas-scale--lerp (aref range 0) (aref range 1) domain px))
       ("log" (exp (eas-scale--lerp (aref range 0) (aref range 1)
                                      (vector (log (aref domain 0)) (log (aref domain 1))) px)))
+      ((or "sqrt" "pow")
+       (let ((e (eas-scale--exponent scale)))
+         (eas-scale--pow (eas-scale--lerp (aref range 0) (aref range 1)
+                                          (vector (eas-scale--pow (aref domain 0) e) (eas-scale--pow (aref domain 1) e))
+                                          px)
+                         (/ 1.0 e))))
       ((or "band" "point")
        (when (> (length domain) 0)
          (let ((half (/ (plist-get scale :bandwidth) 2.0)))
            (eas--min-by (lambda (v) (abs (- px (+ half (eas-scale-apply scale v)))))
                            domain)))))))
+
+(defun eas-scale--exponent (scale)
+  "The exponent of a sqrt or pow SCALE."
+  (if (equal (plist-get scale :type) "sqrt") 0.5 (or (plist-get scale :exponent) 1)))
+
+(defun eas-scale--pow (v e)
+  "Sign-preserving V to the power E, as d3's pow scale computes it."
+  (if (< v 0) (- (expt (- (float v)) e)) (expt (float v) e)))
 
 (defun eas--min-by (fn seq)
   "Return the element of SEQ minimizing FN (first on ties)."
@@ -253,7 +272,7 @@ scales return the domain value whose band is nearest PX."
   "Return about COUNT tick values for SCALE (the domain for discrete)."
   (let ((domain (plist-get scale :domain)))
     (pcase (plist-get scale :type)
-      ("linear" (eas-scale-linear-ticks (aref domain 0) (aref domain 1) count))
+      ((or "linear" "sqrt" "pow") (eas-scale-linear-ticks (aref domain 0) (aref domain 1) count))
       ("log" (eas-scale-log-ticks (aref domain 0) (aref domain 1) count))
       ((or "time" "utc") (let ((eas-time-zone (eas-scale--zone scale)))
                            (eas-scale-time-ticks (aref domain 0) (aref domain 1) count)))

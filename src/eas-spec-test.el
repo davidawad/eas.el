@@ -22,13 +22,13 @@
   (should (equal
            (eas-spec-test--codes
             (eas-spec-check
-             "{\"mark\":\"arc\",\"facet\":{},\"transform\":[{\"lookup\":\"k\"}],
-               \"encoding\":{\"theta\":{\"field\":\"a\"},
+             "{\"mark\":\"geoshape\",\"facet\":{},\"transform\":[{\"lookup\":\"k\"}],
+               \"encoding\":{\"latitude\":{\"field\":\"a\"},
                              \"x\":{\"field\":\"a\",\"type\":\"bogus\"},
-                             \"y\":{\"field\":\"b\",\"scale\":{\"type\":\"sqrt\"}}}}"))
+                             \"y\":{\"field\":\"b\",\"scale\":{\"type\":\"symlog\"}}}}"))
            '(("UNSUPPORTED_FEATURE" . "/facet")
              ("UNSUPPORTED_FEATURE" . "/mark")
-             ("UNSUPPORTED_FEATURE" . "/encoding/theta")
+             ("UNSUPPORTED_FEATURE" . "/encoding/latitude")
              ("INVALID_INPUT" . "/encoding/x/type")
              ("UNSUPPORTED_FEATURE" . "/encoding/y/scale/type")
              ("UNSUPPORTED_FEATURE" . "/transform/0")))))

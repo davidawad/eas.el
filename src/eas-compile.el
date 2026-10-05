@@ -32,6 +32,8 @@
 (require 'eas-theme)
 (require 'eas-legend)
 (require 'eas-link-scale)
+(require 'eas-overlay)
+(require 'eas-polar)
 
 (defvar eas-compile-gc-threshold (* 64 1024 1024)
   "GC threshold compile runs under; compile allocates many small plists.")
@@ -40,10 +42,12 @@
   "Key tagging each source row with its index in the input data.")
 
 (defun eas-compile--tag (rows)
-  "Return ROWS (a vector or list of plists) tagged with their indices."
+  "Return ROWS (a vector or list of plists) tagged with their indices.
+A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
   (let ((i -1))
     (vconcat (seq-map (lambda (row) (setq i (1+ i))
-                        (append row (list eas-compile-row-key i)))
+                        (append (if (or (null row) (eas-object-p row)) row (list :data row))
+                                (list eas-compile-row-key i)))
                       rows))))
 
 (defun eas-compile--view-id (node path)
@@ -82,7 +86,7 @@
                      :aggregated (seq-some (lambda (d) (and (eas-object-p d) (plist-get d :aggregate)))
                                            (cl-loop for (_ d) on (plist-get ctx :encoding) by #'cddr collect d))
                      :params (plist-get node :params))))
-    (eas-marks-stack unit)))
+    (eas-polar-stack (eas-marks-stack unit))))
 
 (defun eas-compile--child-ctx (node ctx key i rows)
   "Context for child I of NODE's KEY array, inheriting from CTX with ROWS."
@@ -163,6 +167,7 @@
                                 for s = (eas-compile-position-scale
                                          units ch (or (plist-get zoom ch) (eas-link-param-domain units ch state)))
                                 when s append (list ch s))
+                       (eas-polar-scales units)
                        (when color (list (nth 0 color) (nth 2 color)))
                        (when size (list :size size))
                        (when opacity (list :opacity opacity))))
@@ -182,7 +187,8 @@
       (setq scales (plist-put scales :y (eas-compile-set-range
                                          y (if (member (plist-get y :type) '("band" "point"))
                                                (vector y0 (+ y0 h)) (vector (+ y0 h) y0))))))
-    (plist-put group :scales scales)))
+    (plist-put group :scales scales)
+    (eas-polar-ranges group)))
 
 (defun eas-compile--brushes (group state)
   "Brush marks for GROUP's interval params that hold a value in STATE."
@@ -276,7 +282,7 @@ Arguments as in `eas-compile'.  The runtime keeps the plan so that a
 selection change can patch it (`eas-compile-patch') instead of
 compiling again."
   (let* ((gc-cons-threshold (max gc-cons-threshold eas-compile-gc-threshold))
-         (spec (eas-spec-validate spec))
+         (spec (eas-overlay-expand (eas-spec-validate spec)))
          (unsupported (car (eas-spec-unsupported spec))))
     (when unsupported
       (eas-signal "UNSUPPORTED_FEATURE" (plist-get unsupported :message)

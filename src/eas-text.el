@@ -18,6 +18,7 @@
 (require 'eas-core)
 (require 'eas-glyph)
 (require 'eas-hit)
+(require 'eas-arc)
 
 (defface eas-axis '((t :inherit shadow)) "Face for eas axis lines and grid." :group 'faces)
 (defface eas-label '((t :inherit default)) "Face for eas tick labels." :group 'faces)
@@ -200,6 +201,11 @@
            (pcase (plist-get mark :mark)
              ((or "line" "area") (eas-text--series g view mark item clip))
              ((or "bar" "rect" "brush") (eas-text--rect g view mark item clip i))
+             ("arc" (let ((props (eas-text--item-props view mark item (plist-get item :datum)))
+                          ;; Shade cycles so neighbouring wedges stay apart without color.
+                          (glyph (aref "█▓▒░" (mod i 4))))
+                      (eas-arc-cells item (eas-text--grid-cw g) (eas-text--grid-ch g) clip
+                                     (lambda (col row) (eas-text--put g col row glyph props 1)))))
              ((or "rule" "tick")
               ;; A rule on the plot's right edge (the last datum's crosshair)
               ;; belongs to the last column, not the clipped one past it.

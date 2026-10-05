@@ -36,6 +36,10 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
                                    (let ((tt (plist-get legend :title))) (and (stringp tt) tt))
                                  (eas-encode-title def))
                         :shape (plist-get spec :shape) :style style)))
+        ;; orient "none" places the legend at legendX/legendY in the view.
+        (when (equal (plist-get legend :orient) "none")
+          (setq base (append base (list :orient "none" :legendX (or (plist-get legend :legendX) 0)
+                                        :legendY (or (plist-get legend :legendY) 0)))))
         (pcase (plist-get scale :type)
           ("ordinal"
            (append base (list :type "symbol"

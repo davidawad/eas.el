@@ -779,3 +779,53 @@ receiver's nearest datum (one hit-test). `make bench` stays within
   with independent scales keep Vega-Lite's per-view padding. Pixel
   conformance of the gallery's linked examples could not be run in the
   fc-qx1.6 box (no `rsvg-convert`); they are tested as behaviour.
+## 11. Vega-Lite gallery: area and circular (fc-qx1.29)
+
+The 13 official examples of the "Area Charts & Streamgraphs" and
+"Circular Plots" sections (`test/vl-examples/area-circular/`) render
+natively, SVG and text, from the unmodified specs. `eas-vl-gallery.el`
+inlines their url data (JSON as is, CSV/TSV with numbers inferred),
+compiles them in the references' zone (America/Chicago), compares the
+SVG with the committed bin/chart PNG through `eas-png-compare`, and
+checks the layout at 320x200, 480x300 and 900x560 px and 50x14, 80x24
+and 120x36 cells: no view overlapping another or a legend, nothing off
+the canvas, no colliding axis labels. `status.json` holds the verdict
+and threshold per example; `eas-vl-gallery-area-circular-holds-its-status`
+re-runs them and the text renderings are goldens
+(`test/eas/golden/vl-area-circular/`).
+
+All 13 pass. Differing pixels against the references, at identical
+canvas sizes, were 0.0002 to 0.0177 (area_horizon). rsvg-convert was
+not installed in this box. The native SVG was rasterized with
+resvg-js 2.6 (the renderer vl-convert itself uses) and Liberation Sans
+(Arial metrics), through an `rsvg-convert` stand-in on PATH. The
+existing gallery scored as before under the stand-in (all 47 pass).
+Thresholds leave room for librsvg's antialiasing: max(0.02, 2.5 x
+measured).
+
+What the examples needed, all shared code:
+
+| feature | where |
+|---|---|
+| arc mark; theta (stacked by default, in order/color order, normalize) and radius channels; sqrt/pow scales; polar text at mid-angle; wedge hit-testing through the centroid, `:map` polygons, shaded wedges in text | `eas-polar.el`, `eas-arc.el`, `eas-scale.el` |
+| `mark.line` / `mark.point` overlays, as Vega-Lite's pathoverlay normalizer | `eas-overlay.el` |
+| gradient fills (`mark.color` gradient) | `eas-paint.el` |
+| `interpolate: monotone` (d3 curveMonotoneX, sampled) | `eas-curve.el` |
+| `stack: center` | `eas-marks.el` |
+| named categorical schemes (`category20b` ...) | `eas-scheme.el` |
+| explicit discrete color `scale.domain`; `legend.orient: none` at legendX/legendY; `axis.domain: false`, `axis.tickSize` | compile, legend, layout |
+| primitive data values as `{"data": v}`; `"Mon D YYYY"` dates; timeUnit titles read coarse to fine ("year-month") | compile, `eas-time.el`, `eas-transform.el` |
+
+Fitted to a window, a symbol legend now keeps the entries that fit
+beside its plot and says so in its title ("series, 9 of 14";
+`eas-legend-fit.el`). Before, a 14-entry legend at 240x160 ran off the
+canvas and squeezed the plot to a sliver. At its own size the canvas
+still grows to hold the whole legend, as Vega's does. Still below
+320x200 (or 50x14 cells): stacked_area's 14 long legend labels leave the
+plot about 40 px. Its two x labels then collide, as Vega's do with two
+labels.
+
+`mark-arc`, `encoding-radius` and `encoding-order` joined the
+conformance gallery (arc_pie, arc_radial, arc_pie_pyramid) and prove
+`mark/arc`, `encoding/theta`, `encoding/radius`, `encoding/order` and
+`scale/sqrt` in `supported.json`.

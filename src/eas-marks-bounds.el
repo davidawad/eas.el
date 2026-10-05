@@ -19,6 +19,7 @@
 (require 'eas-core)
 (require 'eas-theme)
 (require 'eas-layout)
+(require 'eas-arc)
 
 (defun eas-marks-resolve-mark (mark config)
   "MARK (a string or definition) with CONFIG's mark defaults filled in."
@@ -79,6 +80,7 @@ Transparent items count too, so hover and selection never move layout."
       ("text" (eas-layout-text-bounds metrics (plist-get item :text) (plist-get item :fontSize)
                                         (plist-get item :x) (plist-get item :y) (plist-get item :align)
                                         (plist-get item :baseline)))
+      ("arc" (eas-marks--grow (eas-arc-bounds item) item))
       ("line" (eas-marks--grow (eas-marks--points-box (plist-get item :points)) item))
       ("area" (eas-layout-union (eas-marks--points-box (plist-get item :points))
                                   (eas-marks--points-box (plist-get item :base))))
@@ -102,8 +104,8 @@ Transparent items count too, so hover and selection never move layout."
     (vconcat
      (mapcar (lambda (item)
                (let ((out (copy-sequence item)))
-                 (dolist (k '(:x :x1 :x2)) (when (numberp (plist-get out k)) (setq out (plist-put out k (+ (plist-get out k) dx)))))
-                 (dolist (k '(:y :y1 :y2)) (when (numberp (plist-get out k)) (setq out (plist-put out k (+ (plist-get out k) dy)))))
+                 (dolist (k '(:x :x1 :x2 :cx)) (when (numberp (plist-get out k)) (setq out (plist-put out k (+ (plist-get out k) dx)))))
+                 (dolist (k '(:y :y1 :y2 :cy)) (when (numberp (plist-get out k)) (setq out (plist-put out k (+ (plist-get out k) dy)))))
                  (dolist (k '(:points :base :anchors))
                    (when (vectorp (plist-get out k))
                      (setq out (plist-put out k (eas-marks--shift-points (plist-get out k) dx dy)))))

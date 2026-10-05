@@ -109,7 +109,7 @@ selections here (eas-params-index.el, fc-qx1.9).")
                         :feature (concat "timeUnit/" unit)))
         (push part parts)
         (setq rest (substring rest (length part)))))
-    parts))
+    (nreverse parts)))
 
 (defun eas-time-unit-floor (unit value)
   "Truncate date VALUE to time UNIT; return epoch ms or `:null'.

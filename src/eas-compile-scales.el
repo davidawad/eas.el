@@ -17,6 +17,7 @@
 (require 'eas-core)
 (require 'eas-scale)
 (require 'eas-encode)
+(require 'eas-scheme)
 
 (defun eas-compile--defs (units channel)
   "Return (UNIT . DEF) pairs for CHANNEL across UNITS with a data def."
@@ -165,8 +166,10 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                          (values (eas-compile--values pairs channel)))
                     (list channel def
                           (if (eas-encode-discrete-p def)
-                              (append (eas-scale-ordinal (eas-compile--discrete-domain pairs values)
+                              (append (eas-scale-ordinal (or (and (vectorp (plist-get sp :domain)) (plist-get sp :domain))
+                                                                 (eas-compile--discrete-domain pairs values))
                                                            (or (and (vectorp (plist-get sp :range)) (plist-get sp :range))
+                                                               (eas-scheme-colors (plist-get sp :scheme))
                                                                (eas-compile--config-range config :category)
                                                                eas-scale-tableau10))
                                       (list :field (plist-get def :field)))

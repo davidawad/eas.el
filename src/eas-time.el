@@ -30,6 +30,11 @@ A `decode-time' ZONE such as \"America/Chicago\".")
           "\\(Z\\|[+-][0-9]\\{2\\}:?[0-9]\\{2\\}\\)?\\)?\\)?\\)?\\'")
   "ISO-8601-ish date or date-time: YYYY[-MM[-DD[THH:MM[:SS[.fff]][zone]]]].")
 
+(defconst eas-time--month-day-regexp
+  (concat "\\`\\(Jan\\|Feb\\|Mar\\|Apr\\|May\\|Jun\\|Jul\\|Aug\\|Sep\\|Oct\\|Nov\\|Dec\\)[a-z]*\\.?"
+          " +\\([0-9]\\{1,2\\}\\),? +\\([0-9]\\{4\\}\\)\\'")
+  "JavaScript's \"Mon D YYYY\" date (stocks.csv), local midnight like Date.parse.")
+
 (defun eas-time-days-from-civil (year month day)
   "Days since 1970-01-01 for the proleptic Gregorian YEAR MONTH DAY."
   (let* ((y (if (<= month 2) (1- year) year))
@@ -55,8 +60,9 @@ A `decode-time' ZONE such as \"America/Chicago\".")
 
 (defun eas-time-string-p (value)
   "Non-nil when VALUE is a string `eas-time-parse' reads as a date."
-  (and (stringp value) (string-match-p eas-time--iso-regexp value)
-       (> (length value) 4)))
+  (and (stringp value)
+       (or (and (string-match-p eas-time--iso-regexp value) (> (length value) 4))
+           (string-match-p eas-time--month-day-regexp value))))
 
 (defvar eas-time--parse-cache (make-hash-table :test 'equal)
   "Date string -> epoch ms (or :none).  A crosshair tests every row's
@@ -83,6 +89,10 @@ Numbers are already epoch milliseconds."
 (defun eas-time--parse-string (value)
   "Parse string VALUE as `eas-time-parse' does, uncached."
   (cond
+   ((string-match eas-time--month-day-regexp value)
+    (eas-time-ms (string-to-number (match-string 3 value))
+                 (1+ (/ (string-search (match-string 1 value) "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec") 4))
+                 (string-to-number (match-string 2 value))))
    ((string-match eas-time--iso-regexp value)
     (let* ((num (lambda (n default)
                   (if (match-string n value) (string-to-number (match-string n value)) default)))

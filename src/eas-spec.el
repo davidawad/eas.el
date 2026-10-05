@@ -35,19 +35,23 @@
   "Keys a chart/v1 view or composition may carry.")
 
 (defconst eas-spec--marks
-  '("point" "circle" "square" "line" "area" "bar" "rect" "rule" "tick" "text")
+  '("point" "circle" "square" "line" "area" "bar" "rect" "rule" "tick" "text"
+    "arc")
   "Mark types chart/v1 recognises.")
 
 (defconst eas-spec--mark-keys
   '(:type :color :fill :stroke :opacity :fillOpacity :strokeOpacity
     :strokeWidth :strokeDash :size :filled :interpolate :point :line :tooltip
     :clip :orient :width :height :cornerRadius :align :baseline :dx :dy
-    :fontSize :fontWeight :text :thickness :binSpacing :invalid)
+    :fontSize :fontWeight :text :thickness :binSpacing :invalid
+    :innerRadius :outerRadius :padAngle :radius :radius2 :theta :theta2
+    :radiusOffset :thetaOffset)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels
   '(:x :y :x2 :y2 :color :fill :stroke :opacity :size :tooltip :href :text
-    :detail :order)
+    :detail :order
+    :theta :radius)
   "Encoding channels chart/v1 recognises.")
 
 (defconst eas-spec--channel-def-keys
@@ -59,12 +63,14 @@
   "Vega-Lite measurement types.")
 
 (defconst eas-spec--scale-types
-  '("linear" "log" "time" "utc" "band" "point" "ordinal")
+  '("linear" "log" "time" "utc" "band" "point" "ordinal"
+    "sqrt")
   "Scale types chart/v1 recognises.")
 
 (defconst eas-spec--scale-keys
   '(:type :domain :range :zero :nice :padding :paddingInner :paddingOuter
-    :reverse :scheme :clamp :base :domainMin :domainMax)
+    :reverse :scheme :clamp :base :domainMin :domainMax
+    :rangeMin :rangeMax :exponent)
   "Scale properties chart/v1 recognises.")
 
 (defconst eas-spec--transforms

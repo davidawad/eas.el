@@ -39,6 +39,14 @@
       "png_sha256": "01178d17da7d100aee7785c3517c20ac2be29f30d6b3033b750955e0f37e4330",
       "spec_sha256": "dd3134748c78bbf4816b410f9084bd044d419fb81403a683dc6720719f6f9d6f"
     },
+    "encoding-order": {
+      "png_sha256": "dd14ccc16ac527e979c3c1e3570036b476028a06eb00a073d3e815644ece6647",
+      "spec_sha256": "342397761ba1b77564794e77bbfd2ff2c15ca31e18311741a04ea65a0b34a544"
+    },
+    "encoding-radius": {
+      "png_sha256": "d86a37d2fc089e03b113d0dd5c04d94d2a94b5ceb1b7b10d3e4c553ff5686c73",
+      "spec_sha256": "58d1fe8ccf55ac8725e32f42bc9415efed29811ed62814542ceb5709d8ec2807"
+    },
     "encoding-timeunit": {
       "png_sha256": "988e57588810028e8ef9f6d4b2b2aa10851a6a54cb00c94be7fed1eb9465d246",
       "spec_sha256": "4897d9ed19fbcc746816b4f74337354b5d1e617e06fd737036ce1ecff3738e2e"
@@ -50,6 +58,10 @@
     "encoding-y2": {
       "png_sha256": "220fc20c437ac4448d86b552fb8ffa2072d40965e2902cbf9927faf4a9cb7700",
       "spec_sha256": "f8cd58d64f563e1ec59cbf9c3e43f3200e0593c5064f8fa313eb361e49f5c6cb"
+    },
+    "mark-arc": {
+      "png_sha256": "7c4f0604e923d2ea6378e4c1401aebbbc3f1f96b32a1d76053210edf3330d8ea",
+      "spec_sha256": "f5a9b31a8d3131893bb8903af57b403285af3d78a629e1c214b058ae1ab68f2b"
     },
     "mark-area": {
       "png_sha256": "3d48ee41d3ce8646e4966900fb8fd9403094d93f446337897b9e7c87c2f46c04",

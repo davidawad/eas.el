@@ -31,6 +31,7 @@
 (require 'eas-bins)
 (require 'eas-facet)
 (require 'eas-title)
+(require 'eas-offset)
 (require 'eas-polar)
 (require 'eas-compile-shared)
 (require 'eas-compile-grid)
@@ -48,6 +49,9 @@
                          (t (plist-get metrics :step)))))
         (plist-put group (car dim)
                    (cond ((numberp spec) spec)
+                         ;; Vega-Lite: an offset band takes the step; the parent's holds it.
+                         ((and n (eas-offset-step (plist-get group :scales) (nth 2 dim) step))
+                          (* n (eas-offset-step (plist-get group :scales) (nth 2 dim) step)))
                          ;; Vega-Lite: step times the scale's band space.
                          (n (* step (max 1 (eas-bins-band-space scale n))))
                          ;; Vega-Lite: an unencoded position gets one discrete step.

@@ -366,6 +366,18 @@ and strftime-style time formats are honored."
         ((and format (string-match "\\.\\([0-9]+\\)f" format))
          (let ((d (string-to-number (match-string 1 format))))
            (lambda (v) (eas-scale-format-number v d))))
+        ;; d3 tickFormat: an SI prefix format ("s") without a precision takes the
+        ;; precision that shows the ticks' step (d3.precisionPrefix).
+        ((and format (string-match "\\`\\([^.]*\\)s\\'" format) (equal (plist-get scale :type) "linear"))
+         (let* ((d (plist-get scale :domain)) (ticks (eas-scale-ticks scale count))
+                (step (if (cdr ticks) (abs (- (cadr ticks) (car ticks))) 1))
+                (top (max (abs (aref d 0)) (abs (aref d 1))))
+                (exp (lambda (x) (if (zerop x) 0 (floor (+ 1e-12 (log (abs x) 10))))))
+                (k (max -8 (min 8 (floor (/ (funcall exp top) 3.0)))))
+                (prec (max 0 (- (* 3 k) (funcall exp step))))
+                (prefix (aref ["y" "z" "a" "f" "p" "n" "µ" "m" "" "k" "M" "G" "T" "P" "E" "Z" "Y"] (+ k 8))))
+           ;; d3's formatPrefix: every tick at the prefix of the largest value, PREC decimals.
+           (lambda (v) (concat (eas-scale-format-number (/ v (expt 10.0 (* 3 k))) prec) prefix))))
         (format (lambda (v) (eas-format-number format v)))
         ((equal (plist-get scale :type) "log")
          (let ((ticks (eas-scale-ticks scale count)))

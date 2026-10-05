@@ -22,6 +22,8 @@
 (require 'eas-layout)
 (require 'eas-paint)
 (require 'eas-curve)
+(require 'eas-offset)
+(require 'eas-time-band)
 (require 'eas-marks-path)
 (require 'eas-marks-image)
 
@@ -153,7 +155,12 @@ Returns the plot centre when the channel is absent."
                         (eas-marks--channel unit scales (if (eq channel :x) :xOffset :yOffset) row))))
           (and (numberp p)
                (cond
-                ((and (numberp off) scale (equal (plist-get scale :type) "band"))
+                ((and (numberp off) scale (not band-start) (equal (plist-get scale :type) "band")
+                      (equal (plist-get (plist-get scales (if (eq channel :x) :xOffset :yOffset)) :type) "band"))
+                 ;; A discrete offset: the middle of its nested band.
+                 (+ p off (/ (plist-get (plist-get scales (if (eq channel :x) :xOffset :yOffset)) :bandwidth) 2.0)))
+                ((and (numberp off) scale (equal (plist-get scale :type) "band")
+                      (not (equal (plist-get (plist-get scales (if (eq channel :x) :xOffset :yOffset)) :type) "band")))
                  ;; A nested offset places the mark within its band.
                  (+ p (* off (plist-get scale :bandwidth))))
                 ((and scale (not band-start) (member (plist-get scale :type) '("band")))
@@ -228,7 +235,7 @@ Returns the plot centre when the channel is absent."
                                            ;; Vega-Lite: size sets a text mark's font size.
                                            (or (eas-marks--channel unit scales :size row)
                                                (plist-get mark :fontSize) 11))
-                               :align (or (plist-get mark :align) "center")
+                               :align (let ((a (eas-marks--mark-value unit :align row))) (if (stringp a) a "center"))
                                :baseline (or (eas-marks--mark-value unit :baseline row) "middle")
                                :fill (or (eas-marks--channel unit scales :color row)
                                          (plist-get mark :color) "black")
@@ -255,6 +262,9 @@ Returns the plot centre when the channel is absent."
     (cond ((and ms (equal (plist-get def :derived) "timeUnit"))
            (let ((system-time-locale "C")) (eas-time-format ms (eas-layout-time-unit-format (plist-get def :field)))))
           (ms (eas-encode-format-value def v))
+          ;; Quantitative text is d3-formatted (true minus sign), default or def.format.
+          ((and (numberp v) (equal (plist-get def :type) "quantitative"))
+           (eas-format-number (or (plist-get def :format) "") v))
           (t (eas-expr--string v)))))
 
 (defun eas-marks--stack-ends (unit measure dim)
@@ -275,6 +285,12 @@ ranged (x2/y2) bar."
   (let* ((mark (plist-get unit :mark)) (enc (plist-get unit :encoding))
          (r (or (plist-get mark :cornerRadiusEnd) 0)) (all (or (plist-get mark :cornerRadius) 0)))
     (cond
+     ;; Per-corner radii: every bar gets them, each defaulting to cornerRadius.
+     ((seq-some (lambda (k) (plist-get mark k))
+                '(:cornerRadiusTopLeft :cornerRadiusTopRight :cornerRadiusBottomRight :cornerRadiusBottomLeft))
+      (let ((c (vector (or (plist-get mark :cornerRadiusTopLeft) all) (or (plist-get mark :cornerRadiusTopRight) all)
+                       (or (plist-get mark :cornerRadiusBottomRight) all) (or (plist-get mark :cornerRadiusBottomLeft) all))))
+        (lambda (_) c)))
      ((and (zerop r) (zerop all)) nil)
      ((plist-get enc (if horizontal :x2 :y2))
       (let ((c (max r all))) (lambda (_) (vector c c c c))))
@@ -308,6 +324,20 @@ ranged (x2/y2) bar."
                           (q (eas-marks--secondary unit scales channel row)))
                      (cond
                       ((null p) nil)
+                      ;; A bar on a timeUnit spans the unit: its start to the next unit's start.
+                      ((and (not band) (not q) (eas-time-band-p unit (plist-get enc channel)))
+                       (let* ((span (eas-time-band-span (plist-get enc channel)
+                                                        (eas-encode-raw (plist-get enc channel) row)))
+                              (sfn (eas-marks--sfn scales channel))
+                              (a (and span sfn (funcall sfn (car span)))) (b (and span sfn (funcall sfn (cdr span)))))
+                         (when (and a b)
+                           (let ((w (abs (- b a))) (lo (min a b)) (hi (max a b)))
+                             (if (< w 0.25) (cons (- (+ lo 0.5) (* 0.5 (- 0.25 w))) (+ hi 0.5 (* 0.5 (- 0.25 w))))
+                               (cons (+ lo 1) hi))))))
+                      ;; A discrete offset band: the bar fills its nested band.
+                      ((and band (eas-offset-shift unit scales channel row))
+                       (let ((sh (eas-offset-shift unit scales channel row)))
+                         (cons (+ p (car sh)) (+ p (car sh) (cdr sh)))))
                       ;; No channel: the bar spans the plot (Vega-Lite's
                       ;; full-range default), or mark.size about its middle.
                       ((null (plist-get enc channel))
@@ -530,6 +560,8 @@ Bars and areas with a discrete color/fill/detail field stack by default
                          (mapcar (lambda (ch) (eas-encode-data-def (plist-get enc ch))) '(:color :fill :detail))))
          (offset (and mdef (plist-get mdef :stack))))
     (if (or (null measure) (memq offset '(:null :false))
+            ;; Vega-Lite does not stack marks grouped by an offset channel.
+            (and (null offset) (or (plist-get enc :xOffset) (plist-get enc :yOffset)))
             (and (null offset) (or (null by) (not (member type '("bar" "area")))))
             (plist-get enc (if (eq measure :y) :y2 :x2)))
         unit
@@ -539,11 +571,24 @@ Bars and areas with a discrete color/fill/detail field stack by default
              (groups (make-hash-table :test 'equal))
              (normalize (equal offset "normalize"))
              (rows (plist-get unit :rows))
+             ;; Vega-Lite stacks by the color scale's domain order: the first
+             ;; value ends at the top of a vertical stack and at the left of a
+             ;; horizontal one, so the last value is the base of a vertical stack.
+             (domains (mapcar (lambda (d)
+                                (let ((explicit (plist-get (plist-get d :scale) :domain)))
+                                  (if (vectorp explicit) (append explicit nil)
+                                    (let ((vs (delete-dups (seq-map (lambda (r) (eas-encode-raw d r)) rows))))
+                                      (sort vs (lambda (a b) (if (and (numberp a) (numberp b)) (< a b)
+                                                               (string< (format "%s" a) (format "%s" b)))))))))
+                              by))
+             (rank (lambda (i)
+                     (cl-loop for d in by for dom in domains
+                              collect (or (seq-position dom (eas-encode-raw d (aref rows i))) 0))))
              (sorted (sort (number-sequence 0 (1- (length rows)))
                            (lambda (a b)
-                             (let ((ka (format "%s" (mapcar (lambda (d) (eas-encode-raw d (aref rows a))) by)))
-                                   (kb (format "%s" (mapcar (lambda (d) (eas-encode-raw d (aref rows b))) by))))
-                               (string< kb ka)))))
+                             (let* ((ra (funcall rank a)) (rb (funcall rank b))
+                                    (lt (cl-loop for x in ra for y in rb unless (= x y) return (< x y))))
+                               (if (eq measure :x) lt (and (not (equal ra rb)) (not lt)))))))
              (out (copy-sequence rows)))
         (dolist (i sorted)
           (let* ((row (aref rows i)) (v (plist-get row field))

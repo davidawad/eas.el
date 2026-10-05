@@ -103,9 +103,11 @@
     "threshold": 0.03
   },
   "rect_mosaic_labelled_with_offset": {
-    "note": "needs the stack transform (integrated with fc-qx1.25's)",
-    "reason": "needs the stack transform (integrated with fc-qx1.25's); Transform stack is not in the native subset",
-    "status": "unsupported"
+    "note": "the stack and window transforms now run and the mosaic's geometry matches; the colors differ (the top text layer and the rect layer take different Origin domains, so the shared color scale is assigned in another order) and the y axis is titled with its calculated fields rather than Cylinders",
+    "ratio": 0.6344,
+    "reason": "the stack and window transforms now run and the mosaic's geometry matches; the colors differ (the top text layer and the rect layer take different Origin domains, so the shared color scale is assigned in another order) and the y axis is titled with its calculated fields rather than Cylinders; svg and text render natively at 3 sizes; oracle ratio 0.6344 (threshold 0.03), size delta [5 11] px",
+    "status": "partial",
+    "threshold": 0.03
   },
   "scatter_image": {
     "ratio": 0.0256,

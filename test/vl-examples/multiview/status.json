@@ -1,0 +1,108 @@
+{
+  "area_density_facet": {
+    "ratio": 0.1984,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.1984 (threshold 0.03), size delta [-30 68] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "concat_bar_scales_discretize": {
+    "reason": "scale/quantize is not in the native subset; the chart falls back to a static image",
+    "status": "unsupported"
+  },
+  "concat_marginal_histograms": {
+    "reason": "key/bounds is not in the native subset; the chart falls back to a static image",
+    "status": "unsupported"
+  },
+  "concat_population_pyramid": {
+    "ratio": 0.1799,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.1799 (threshold 0.03)",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "facet_grid_bar": {
+    "reason": "encoding/column is not in the native subset; the chart falls back to a static image",
+    "status": "unsupported"
+  },
+  "geo_choropleth": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_circle": {
+    "reason": "projection/albersUsa is not in the native subset; the chart falls back to a static image",
+    "status": "unsupported"
+  },
+  "geo_layer": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_layer_line_london": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_line": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_params_projections": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_repeat": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_rule": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_text": {"reason": "data format topojson", "status": "unsupported"},
+  "geo_trellis": {"reason": "data format topojson", "status": "unsupported"},
+  "interactive_geo_earthquakes": {"reason": "data format topojson", "status": "unsupported"},
+  "interactive_geo_facet_species": {"reason": "data format topojson", "status": "unsupported"},
+  "interactive_splom": {
+    "ratio": 0.0465,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0465 (threshold 0.03), size delta [0 -6] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "nested_concat_align": {
+    "ratio": 0.1135,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.1135 (threshold 0.03), size delta [13 -12] px; overlaps: 320x200: x axis labels of view vconcat_1_hconcat_1 collide",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "repeat_histogram": {
+    "reason": "key/columns is not in the native subset; the chart falls back to a static image",
+    "status": "unsupported"
+  },
+  "repeat_layer": {
+    "ratio": 0.0021,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0021 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "trellis_anscombe": {
+    "ratio": 0.0263,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0263 (threshold 0.03), size delta [101 -25] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "trellis_area": {
+    "ratio": 0.1704,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.1704 (threshold 0.03), size delta [-30 102] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "trellis_area_seattle": {"reason": "A view needs a mark, or a layer, vconcat or hconcat", "status": "unsupported"},
+  "trellis_bar": {
+    "ratio": 0.3273,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.3273 (threshold 0.03), size delta [-319 42] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "trellis_bar_histogram": {
+    "ratio": 0.2391,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.2391 (threshold 0.03), size delta [-30 74] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "trellis_barley": {
+    "reason": "encoding/facet is not in the native subset; the chart falls back to a static image",
+    "status": "unsupported"
+  },
+  "trellis_scatter": {
+    "reason": "encoding/facet is not in the native subset; the chart falls back to a static image",
+    "status": "unsupported"
+  },
+  "trellis_stacked_bar": {
+    "ratio": 0.502,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.5020 (threshold 0.03), size delta [112 -30] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "vconcat_weather": {
+    "ratio": 0.0074,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0074 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  }
+}

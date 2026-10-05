@@ -241,5 +241,46 @@ threshold, no overlap."
     (should (= (length (plist-get spec :vconcat)) 2))
     (should (eql (plist-get (plist-get (plist-get (aref (plist-get spec :vconcat) 0) :x-eas) :header) :angle) 0))))
 
+;;; Bars: stack transform, discrete offsets, time-unit bars, SI axis labels, corners
+
+(ert-deftest eas-vl-gallery-stack-transform ()
+  (let* ((rows [(:g "a" :v 1) (:g "a" :v 3) (:g "b" :v 2)])
+         (out (eas-transform-run [(:stack "v" :groupby ["g"] :as ["lo" "hi"] :offset "normalize")] rows))
+         (ends (seq-map (lambda (r) (list (plist-get r :lo) (plist-get r :hi))) out)))
+    (should (equal ends '((0.0 0.25) (0.25 1.0) (0.0 1.0))))))
+
+(ert-deftest eas-vl-gallery-discrete-offsets-nest-bands ()
+  (let* ((spec '(:data (:values [(:c "A" :g "x" :v 1) (:c "A" :g "y" :v 2) (:c "B" :g "x" :v 3) (:c "B" :g "y" :v 4)])
+                 :mark "bar"
+                 :encoding (:x (:field "c" :type "nominal") :xOffset (:field "g" :type "nominal")
+                            :y (:field "v" :type "quantitative"))))
+         (items (plist-get (aref (plist-get (eas-vl-gallery-test--view spec) :marks) 0) :items)))
+    ;; Side by side inside the band, not stacked.
+    (should (< (plist-get (aref items 0) :x) (plist-get (aref items 1) :x)))
+    (should (< (abs (- (plist-get (aref items 0) :w) (plist-get (aref items 1) :w))) 1e-6))
+    (should (> (plist-get (aref items 1) :h) (plist-get (aref items 0) :h)))))
+
+(ert-deftest eas-vl-gallery-time-unit-bars-span-their-unit ()
+  (let* ((eas-time-zone "UTC")
+         (spec '(:data (:values [(:d "2020-01-15" :v 1) (:d "2020-02-15" :v 2) (:d "2020-03-15" :v 3)])
+                 :mark "bar"
+                 :encoding (:x (:field "d" :type "temporal" :timeUnit "month") :y (:field "v" :type "quantitative"))))
+         (items (plist-get (aref (plist-get (eas-vl-gallery-test--view spec) :marks) 0) :items)))
+    (should (> (plist-get (aref items 0) :w) 30))
+    ;; Adjacent months touch, less the binSpacing pixel.
+    (should (< (abs (- (+ (plist-get (aref items 0) :x) (plist-get (aref items 0) :w))
+                       (plist-get (aref items 1) :x))) 3))))
+
+(ert-deftest eas-vl-gallery-si-axis-format-uses-one-prefix ()
+  (let* ((scale (eas-scale-continuous "linear" -12e6 12e6 [0 1]))
+         (fmt (eas-scale-tick-format scale 6 "s")))
+    (should (equal (mapcar fmt '(-12e6 0 4e6)) '("−12M" "0M" "4M")))))
+
+(ert-deftest eas-vl-gallery-per-corner-radii ()
+  (let* ((spec '(:data (:values [(:c "A" :v 1)]) :mark (:type "bar" :cornerRadiusTopLeft 3 :cornerRadius 1)
+                 :encoding (:x (:field "c" :type "nominal") :y (:field "v" :type "quantitative"))))
+         (item (aref (plist-get (aref (plist-get (eas-vl-gallery-test--view spec) :marks) 0) :items) 0)))
+    (should (equal (plist-get item :corners) [3 1 1 1]))))
+
 (provide 'eas-vl-gallery-test)
 ;;; eas-vl-gallery-test.el ends here

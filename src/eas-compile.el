@@ -255,7 +255,7 @@ a child field or datum def inherits the parent def's other properties."
       (setq scales (plist-put scales :y (eas-compile-set-range
                                          y (if (member (plist-get y :type) '("band" "point"))
                                                (vector y0 (+ y0 h)) (vector (+ y0 h) y0))))))
-    (plist-put group :scales scales)
+    (plist-put group :scales (eas-offset-set-ranges scales))
     (eas-polar-ranges group)
     (eas-independent-ranges group)))
 

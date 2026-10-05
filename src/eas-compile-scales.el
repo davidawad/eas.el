@@ -20,6 +20,7 @@
 (require 'eas-scheme)
 (require 'eas-bins)
 (require 'eas-compile-aux)
+(require 'eas-time-band)
 (require 'eas-compile-sort)
 
 (defun eas-compile--defs (units channel)
@@ -46,7 +47,9 @@ With KEEP-NULL, null values count too (discrete domains show them)."
             (when (or (memq channel '(:x :y)) (eas-bins-valid-p u row))
               (dolist (k keys)
                 (let ((v (plist-get row k)))
-                  (unless (or (null v) (and (eq v :null) (not keep-null))) (push v out)))))))))
+                  (unless (or (null v) (and (eq v :null) (not keep-null))) (push v out))))))
+          ;; Bars spanning their time unit reach the next unit's start.
+          (dolist (v (eas-time-band-values u d (plist-get u :rows))) (push v out)))))
     (nreverse out)))
 
 (defun eas-compile--scale-type (pairs channel)
@@ -225,8 +228,10 @@ ZOOM is a [LO HI] domain from view state, or nil."
 Ranges come from CONFIG's range.category, .heatmap and .ramp."
   (cl-loop for channel in '(:color :fill :stroke)
            ;; A nominal datum (a repeat's field name) joins the scale too.
-           for pairs = (seq-filter (lambda (p) (or (plist-get (cdr p) :field)
-                                                   (and (plist-member (cdr p) :datum) (eas-encode-discrete-p (cdr p)))))
+           ;; scale: null uses the field's values as the colors themselves.
+           for pairs = (seq-filter (lambda (p) (and (not (eq (plist-get (cdr p) :scale) :null))
+                                                    (or (plist-get (cdr p) :field)
+                                                        (and (plist-member (cdr p) :datum) (eas-encode-discrete-p (cdr p))))))
                                    (eas-compile--defs units channel))
            when pairs
            return (let* ((def (cdar pairs)) (sp (plist-get def :scale))

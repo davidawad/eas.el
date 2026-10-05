@@ -22,6 +22,7 @@
 (require 'eas-encode)
 (require 'eas-compile-scales)
 (require 'eas-symbols)
+(require 'eas-offset)
 
 (defun eas-compile-channels--field-pairs (units channel)
   "(UNIT . DEF) pairs of UNITS whose CHANNEL maps a field."
@@ -30,9 +31,14 @@
 (defun eas-compile-channels-scales (units)
   "Plist of the angle and offset scales UNITS need."
   (append
+   ;; A discrete offset is a band scale nested in its parent band.
    (cl-loop for ch in '(:xOffset :yOffset)
             for pairs = (eas-compile-channels--field-pairs units ch)
-            when pairs
+            when (and pairs (eas-encode-discrete-p (cdar pairs)))
+            append (list ch (plist-get (eas-offset-scales units) ch)))
+   (cl-loop for ch in '(:xOffset :yOffset)
+            for pairs = (eas-compile-channels--field-pairs units ch)
+            when (and pairs (not (eas-encode-discrete-p (cdar pairs))))
             append (let ((nums (seq-filter #'numberp (eas-compile--values pairs ch))))
                      ;; Fractions of the band; marks scale them by its bandwidth.
                      (list ch (eas-scale-continuous "linear" (if nums (apply #'min nums) 0)

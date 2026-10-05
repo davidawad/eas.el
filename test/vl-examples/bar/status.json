@@ -1,0 +1,155 @@
+{
+  "bar": {
+    "ratio": 0.0022,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0022 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_aggregate": {
+    "note": "labelOverlap false on a nominal axis keeps all 11 labels, which collide at the 320x200 gallery size as Vega's would; the image matches exactly (0.0000)",
+    "ratio": 0.0,
+    "reason": "labelOverlap false on a nominal axis keeps all 11 labels, which collide at the 320x200 gallery size as Vega's would; the image matches exactly (0.0000); svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03); overlaps: 320x200: y axis labels of view main collide",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "bar_aggregate_sort_by_encoding": {
+    "ratio": 0.0,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_axis_space_saving": {
+    "note": "uses axis titleX/titleY/titleAngle/labelOffset/bandPosition placement of labels inside the plot, which is not implemented: native draws the default axis, so the canvas is 21x18 px off",
+    "ratio": 0.2634,
+    "reason": "uses axis titleX/titleY/titleAngle/labelOffset/bandPosition placement of labels inside the plot, which is not implemented: native draws the default axis, so the canvas is 21x18 px off; svg and text render natively at 3 sizes; oracle ratio 0.2634 (threshold 0.03), size delta [21 -18] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "bar_color_disabled_scale": {
+    "ratio": 0.0025,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0025 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_diverging_stack_population_pyramid": {
+    "note": "legend orient top (a horizontal legend above the plot, titled null) is not implemented: native draws a right-hand legend with duplicate entries, so the canvas is 69px wider and 29px shorter than bin/chart's; the bars and the SI axis labels (-12M..12M) match",
+    "ratio": 0.1647,
+    "reason": "legend orient top (a horizontal legend above the plot, titled null) is not implemented: native draws a right-hand legend with duplicate entries, so the canvas is 69px wider and 29px shorter than bin/chart's; the bars and the SI axis labels (-12M..12M) match; svg and text render natively at 3 sizes; oracle ratio 0.1647 (threshold 0.03), size delta [69 -29] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "bar_diverging_stack_transform": {
+    "ratio": 0.0005,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0005 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_gantt": {
+    "ratio": 0.0,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0000 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_grouped": {
+    "ratio": 0.0036,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0036 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_grouped_repeated": {
+    "note": "repeat with a columns count: the native grid is 513px narrower than bin/chart's; the grouped bars within each cell match bar_grouped",
+    "ratio": 0.1499,
+    "reason": "repeat with a columns count: the native grid is 513px narrower than bin/chart's; the grouped bars within each cell match bar_grouped; svg and text render natively at 3 sizes; oracle ratio 0.1499 (threshold 0.03), size delta [-513 0] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "bar_heatlane": {
+    "note": "the y/y2 quantitative range bars are drawn with a fixed rounded height: the bin-count lane heights of the second layer and the lighttealblue ordinal color scheme are not matched",
+    "ratio": 0.1844,
+    "reason": "the y/y2 quantitative range bars are drawn with a fixed rounded height: the bin-count lane heights of the second layer and the lighttealblue ordinal color scheme are not matched; svg and text render natively at 3 sizes; oracle ratio 0.1844 (threshold 0.03)",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "bar_layered_transparent": {
+    "ratio": 0.0022,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0022 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_month_temporal_band_center": {
+    "ratio": 0.0027,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0027 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_month_temporal_initial": {
+    "ratio": 0.0026,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0026 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_negative": {
+    "ratio": 0.0094,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0094 (threshold 0.03), size delta [0 4] px",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "bar_negative_horizontal_label": {
+    "note": "residual 0.055 is text placement of the value labels beside the bars and anti-aliasing; positions match to a pixel",
+    "ratio": 0.0551,
+    "reason": "residual 0.055 is text placement of the value labels beside the bars and anti-aliasing; positions match to a pixel; svg and text render natively at 3 sizes; oracle ratio 0.0551 (threshold 0.03), size delta [3 0] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "bar_size_responsive": {
+    "note": "width: container has no meaning outside a browser; bin/chart sizes the chart at the container default (366px wider than native's 300px step layout)",
+    "ratio": 0.3452,
+    "reason": "width: container has no meaning outside a browser; bin/chart sizes the chart at the container default (366px wider than native's 300px step layout); svg and text render natively at 3 sizes; oracle ratio 0.3452 (threshold 0.03), size delta [-366 0] px",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "layer_bar_labels": {
+    "ratio": 0.0001,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0001 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "layer_bar_labels_grey": {
+    "ratio": 0.0012,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0012 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "stacked_bar_count_corner_radius_mark": {
+    "ratio": 0.0049,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0049 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "stacked_bar_h": {
+    "ratio": 0.0004,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0004 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  },
+  "stacked_bar_h_normalized_labeled": {
+    "note": "image ratio 0.0552 (above 0.03): the stacked text labels at bandPosition 0.5 are placed within a pixel; at 320x200 the nominal y labels collide",
+    "ratio": 0.0552,
+    "reason": "image ratio 0.0552 (above 0.03): the stacked text labels at bandPosition 0.5 are placed within a pixel; at 320x200 the nominal y labels collide; svg and text render natively at 3 sizes; oracle ratio 0.0552 (threshold 0.03); overlaps: 320x200: y axis labels of view main collide",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "stacked_bar_normalize": {
+    "note": "labelOverlap keeps every x label, which collide at 320x200; the image matches (0.0021)",
+    "ratio": 0.0021,
+    "reason": "labelOverlap keeps every x label, which collide at 320x200; the image matches (0.0021); svg and text render natively at 3 sizes; oracle ratio 0.0021 (threshold 0.03); overlaps: 320x200: x axis labels of view main collide",
+    "status": "partial",
+    "threshold": 0.03
+  },
+  "stacked_bar_weather": {
+    "ratio": 0.002,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0020 (threshold 0.03)",
+    "status": "pass",
+    "threshold": 0.03
+  }
+}

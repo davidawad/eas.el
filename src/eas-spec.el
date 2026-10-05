@@ -53,6 +53,7 @@
     ;; distributions (fc-qx1.26)
     :style :cornerRadiusEnd :extent :ticks :rule :median :outliers :box
     :aria :description :strokeCap :strokeJoin
+    :cornerRadiusTopLeft :cornerRadiusTopRight :cornerRadiusBottomLeft :cornerRadiusBottomRight
     ;; scatter and table plots (fc-qx1.27)
     :shape :angle :url
     ;; calculations (fc-qx1.30)
@@ -69,14 +70,14 @@
     :shape :row
     :strokeDash
     ;; scatter and table plots (fc-qx1.27)
-    :angle :yOffset :url :longitude :latitude
+    :angle :xOffset :yOffset :url :longitude :latitude
     ;; interactive (fc-qx1.33)
     :fillOpacity :strokeOpacity :strokeWidth)
   "Encoding channels chart/v1 recognises.")
 
 (defconst eas-spec--channel-def-keys
   '(:field :type :aggregate :bin :timeUnit :title :scale :axis :legend :sort
-    :stack :format :value :datum :condition :param :empty
+    :stack :format :value :datum :condition :param :empty :bandPosition
     ;; distributions (fc-qx1.26)
     :header)
   "Field/value definition keys chart/v1 recognises.")

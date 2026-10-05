@@ -58,7 +58,7 @@
     (tickExtra t (tickBand "extent")) (tickMinStep 5) (tickOffset 4) (tickOpacity 0.3) (tickRound :false)
     (tickSize 12) (tickWidth 4) (ticks :false) (title "Probe") (titleAlign "right") (titleAnchor "end")
     (titleAngle 30) (titleBaseline "top") (titleColor "#d62728") (titleFont "Courier New") (titleFontSize 18)
-    (titleFontStyle "italic") (titleFontWeight "bold") (titleLimit 10) (titleLineHeight 30)
+    (titleFontStyle "italic") (titleFontWeight "bold") (titleLimit 10 (title "A rather long axis title for the probe")) (titleLineHeight 30)
     (titleOpacity 0.3) (titlePadding 20) (titleX 20) (titleY 20) (translate 3) (values [1 2]) (zindex 1))
   "Vega-Lite axis properties.")
 
@@ -101,7 +101,8 @@
   "Vega-Lite title properties.")
 
 (defconst eas-spec-props--view
-  '((stroke "#d62728") (strokeWidth 4) (strokeDash [4 2]) (strokeOpacity 0.3) (fill "#eeeeee")
+  '((stroke "#d62728") (strokeWidth 4 (stroke "#d62728")) (strokeDash [4 2] (stroke "#d62728"))
+    (strokeOpacity 0.3 (stroke "#d62728")) (fill "#eeeeee")
     (fillOpacity 0.5 (fill "#eeeeee")) (cornerRadius 8) (opacity 0.4) (cursor "pointer") (clip t)
     (continuousWidth 100) (continuousHeight 100) (discreteWidth 100) (discreteHeight 100) (step 40))
   "config.view properties.")

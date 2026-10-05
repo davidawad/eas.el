@@ -1,0 +1,21 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: grouped bars from a repeat layer with a top legend, a custom scheme, offset padding and a capped domain.",
+  "data": {"values": [
+    {"city": "Lyon", "y2023": 12, "y2024": 15}, {"city": "Nice", "y2023": 9, "y2024": 7},
+    {"city": "Lille", "y2023": 14, "y2024": 18}, {"city": "Nantes", "y2023": 6, "y2024": 11}
+  ]},
+  "repeat": {"layer": ["y2023", "y2024"]},
+  "spec": {
+    "mark": {"type": "bar", "cornerRadiusTopLeft": 4, "cornerRadiusTopRight": 4},
+    "encoding": {
+      "x": {"field": "city", "type": "nominal", "axis": {"labelAngle": 0, "title": null}},
+      "y": {"field": {"repeat": "layer"}, "type": "quantitative", "title": "Visitors (k)",
+            "scale": {"domainMax": 20}, "axis": {"tickCount": 4, "titlePadding": 8}},
+      "color": {"datum": {"repeat": "layer"}, "scale": {"range": ["#e07a5f", "#3d405b"]},
+                "legend": {"orient": "top", "title": null, "direction": "horizontal"}},
+      "xOffset": {"datum": {"repeat": "layer"}, "scale": {"paddingInner": 0.15}}
+    }
+  },
+  "config": {"view": {"stroke": null}, "axis": {"grid": false}, "scale": {"barBandPaddingInner": 0.25}}
+}

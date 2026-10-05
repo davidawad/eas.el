@@ -23,6 +23,7 @@
 (require 'eas-layout)
 (require 'eas-legend-extra)
 (require 'eas-legend-style)
+(require 'eas-legend-orient)
 
 (declare-function eas-expr--string "eas-expr")
 
@@ -36,27 +37,35 @@ STYLE is the mark's constant look (:fill :stroke :stroke-width
 restyles it (eas-legend-style.el)."
   (eas-legend-style-model (plist-get (plist-get spec :def) :legend) (eas-legend--model spec metrics)))
 
-(defun eas-legend--model (spec _metrics)
+(defun eas-legend--model (spec metrics)
   "`eas-legend-model' of SPEC before the legend object's own properties."
   (let* ((channel (plist-get spec :channel)) (def (plist-get spec :def)) (scale (plist-get spec :scale))
-         (legend (plist-get def :legend)) (style (plist-get spec :style)))
+         (legend (plist-get def :legend)) (style (plist-get spec :style))
+         ;; config.legend's orient and direction apply where the legend sets none.
+         (config (plist-get metrics :config)))
     (unless (or (memq legend '(:null :false)) (null scale))
       (let ((base (list :channel (eas-key-name channel)
                         :title (if (plist-member legend :title)
                                    (let ((tt (plist-get legend :title))) (and (stringp tt) tt))
-                                 (eas-encode-title def))
+                                 (eas-encode-title def (plist-get metrics :config)))
                         :shape (plist-get spec :shape) :style style
-                        :orient (and (eas-object-p legend) (plist-get legend :orient)))))
+                        :orient (or (and (eas-object-p legend) (plist-get legend :orient))
+                                    (let ((o (eas-theme-get config :legend :orient))) (and (stringp o) o))))))
         ;; orient "none" places the legend at legendX/legendY in the view.
         (when (equal (plist-get legend :orient) "none")
           (setq base (append base (list :orient "none" :legendX (or (plist-get legend :legendX) 0)
                                         :legendY (or (plist-get legend :legendY) 0)))))
-        (when (stringp (plist-get legend :direction))
-          (setq base (append base (list :direction (plist-get legend :direction)))))
+        (when-let* ((dir (eas-legend-orient-direction
+                          (list :orient (plist-get base :orient)
+                                :direction (or (plist-get legend :direction)
+                                               (let ((d (eas-theme-get config :legend :direction))) (and (stringp d) d)))))))
+          (setq base (append base (list :direction dir))))
         (when (numberp (plist-get legend :clipHeight))
           (setq base (append base (list :clip-height (plist-get legend :clipHeight)))))
         (when (numberp (plist-get legend :gradientLength))
           (setq base (append base (list :gradient-length (plist-get legend :gradientLength)))))
+        (when (numberp (plist-get legend :columns))
+          (setq base (append base (list :columns (plist-get legend :columns)))))
         (when (numberp (plist-get legend :offset))
           (setq base (append base (list :offset (plist-get legend :offset)))))
         (pcase (plist-get scale :type)
@@ -83,11 +92,13 @@ restyles it (eas-legend-style.el)."
                                                              collect (eas-scale-apply
                                                                       scale (+ (aref d 0) (* (/ i 32.0) (- (aref d 1) (aref d 0))))))))
                                        (plist-get scale :range))
-                              :domain (plist-get scale :domain)
+                              :domain (plist-get scale :domain) :values (and (eas-object-p legend) (plist-get legend :values))
                               :entries [])))
           (_
            (let* ((domain (plist-get scale :domain))
-                  (values (eas-scale-linear-ticks (aref domain 0) (aref domain 1) 5))
+                  (lv (and (eas-object-p legend) (vectorp (plist-get legend :values)) (plist-get legend :values)))
+                  ;; legend.values on a continuous scale are the entries themselves.
+                  (values (if lv (append lv nil) (eas-scale-linear-ticks (aref domain 0) (aref domain 1) 5)))
                   (fmt (eas-scale-tick-format (list :type "linear" :domain domain) 5))
                   (values (if (and (eq channel :size) values (zerop (eas-scale-apply scale (car values))))
                               (cdr values) values)))
@@ -114,7 +125,8 @@ restyles it (eas-legend-style.el)."
          (count (if (eas-layout-text-p metrics) (max 2 (ceiling (/ glen 40.0)))
                   (max 2 (* 2 (floor glen 100)))))
          (fmt (eas-scale-tick-format (list :type "linear" :domain domain) count))
-         (values (eas-scale-linear-ticks (aref domain 0) (aref domain 1) count)))
+         (values (if (vectorp (plist-get legend :values)) (append (plist-get legend :values) nil)
+                   (eas-scale-linear-ticks (aref domain 0) (aref domain 1) count))))
     (when (and (not (eas-layout-text-p metrics)) (< (length values) 3) (/= (aref domain 0) (aref domain 1)))
       (setq values (list (aref domain 0) (aref domain 1))))
     (vconcat (mapcar (lambda (v) (list :value v :label (funcall fmt v))) values))))
@@ -292,6 +304,7 @@ restyles it (eas-legend-style.el)."
     (eas-legend-style-looks
      (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
            ((eas-legend-extra-horizontal-p legend metrics) (eas-legend-extra-place-horizontal legend x y metrics))
+           ((eas-legend-orient-row-p legend metrics) (eas-legend-orient-place-row legend x y metrics))
            ((equal (plist-get legend :type) "gradient") (eas-legend--place-gradient legend x y metrics))
            (t (eas-legend--place-symbols legend x y metrics))))))
 

@@ -38,6 +38,19 @@
                            eas-axis-fit-gap)
                         step))))
 
+(defun eas-axis-fit-overlap (before after fitted)
+  "AFTER, the axes `eas-axis-fit-labels' made of BEFORE, with default label
+overlap thinned when FITTED.  An axis it left alone (a continuous or
+vertical axis cannot cut labels to a step) whose spec leaves labelOverlap
+unset (:overlap-set is nil) thins its labels with Vega's \"parity\"
+strategy, as continuous axes already do (fc-qx1.38)."
+  (if (not fitted) after
+    (cl-mapcar (lambda (old axis)
+                 (if (or (not (eq old axis)) (plist-get axis :overlap) (plist-get axis :overlap-set))
+                     axis
+                   (plist-put (copy-sequence axis) :overlap "parity")))
+               before after)))
+
 (defun eas-axis-fit-labels (axes group metrics)
   "AXES of fitted GROUP with crowded discrete x labels cut to their step."
   (if (or (eas-layout-text-p metrics) (null (plist-get group :fit-height))) axes

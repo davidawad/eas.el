@@ -28,6 +28,9 @@
 
 (declare-function eas-axis-extras "eas-axis")
 (declare-function eas-axis-place "eas-axis")
+(declare-function eas-axis-pos-place "eas-axis-pos")
+(declare-function eas-axis-pos-x-align "eas-axis-pos")
+(declare-function eas-axis-pos-x-baseline "eas-axis-pos")
 
 (defun eas-layout-metrics (target &optional cell config)
   "Return layout metrics for TARGET (svg or text); CELL is [W H] in px.
@@ -217,8 +220,10 @@ PLOT-SIZE is the plot extent along the axis."
                                      (let ((tt (plist-get axis :title))) (and (stringp tt) tt)))
                                     ((and (not (plist-member def :title)) (eas-layout--axis-config config channel :title))
                                      (let ((tt (car (eas-layout--axis-config config channel :title)))) (and (stringp tt) tt)))
-                                    (t (eas-encode-title def)))))
-                      (and (stringp tt) (not (string-empty-p tt)) tt)))
+                                    (t (eas-encode-title def config)))))
+                      (and (stringp tt) (not (string-empty-p tt))
+                           (eas-layout-truncate metrics tt (plist-get metrics :title-size)
+                                                (or (plist-get axis :titleLimit) (eas-theme-axis config channel :titleLimit))))))
              (angle (cond ((plist-get axis :labelAngle))
                           ((and (not (eas-layout-text-p metrics))
                                 (numberp (car (eas-layout--axis-config config channel :labelAngle))))
@@ -284,7 +289,8 @@ PLOT-SIZE is the plot extent along the axis."
       (if widths (apply #'max widths) 0))))
 
 (defun eas-layout--tick (axis metrics)
-  "Tick length of AXIS under METRICS (one cell in text; axis tickSize in svg)."
+  "Tick length of AXIS under METRICS (one cell in text; axis tickSize in svg).
+In svg an axis with ticks false has none: Vega puts its labels at labelPadding."
   (or (and (not (eas-layout-text-p metrics))
            (or (and (plist-get axis :ticks-off) 0)   ; axis.ticks false: labels sit at labelPadding alone
                (plist-get axis :tick-size)
@@ -325,7 +331,7 @@ labels survive without the last one, the last replaces the last kept."
 
 (defun eas-layout--bottom-align (p x0 w flush angle)
   "Label alignment of a bottom tick at P (Vega-Lite labelFlush when FLUSH)."
-  (cond ((not (zerop angle)) "right")
+  (cond ((eas-axis-pos-x-align angle nil))
         ((and flush (< (abs (- p x0)) 0.5)) "left")
         ((and flush (< (abs (- p (+ x0 w))) 0.5)) "right")
         (t "center")))
@@ -394,10 +400,13 @@ Overlapping labels drop their ticks too; lines sit at cell centres."
   "Return AXIS with geometry for SCALE inside plot BOUNDS [x0 y0 w h].
 The svg result carries :bounds, Vega's axis bounds (ticks, visible
 labels, title) without the half-pixel translate of the drawn lines."
-  (let ((eas-font-family (eas-layout--label-font axis metrics)))
-    (if (or (member (plist-get axis :orient) '("top" "right")) (plist-get axis :offset))
-        (eas-axis-place axis scale bounds metrics)
-      (eas-axis-extra-place (eas-layout--axis-place axis scale bounds metrics) scale metrics))))
+  (eas-axis-pos-place
+   axis scale bounds metrics
+   (lambda (axis)
+     (let ((eas-font-family (eas-layout--label-font axis metrics)))
+       (if (or (member (plist-get axis :orient) '("top" "right")) (plist-get axis :offset))
+           (eas-axis-place axis scale bounds metrics)
+         (eas-axis-extra-place (eas-layout--axis-place axis scale bounds metrics) scale metrics))))))
 
 (defun eas-layout--axis-place (axis scale bounds metrics)
   "`eas-layout-axis-place' before the axis extras."
@@ -406,7 +415,7 @@ labels, title) without the half-pixel translate of the drawn lines."
     (let* ((x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3))
            (tick (eas-layout--tick axis metrics))
            (pad (or (plist-get axis :label-padding) (plist-get metrics :label-pad)))
-           (size (plist-get metrics :label-size))
+           (size (or (plist-get (plist-get axis :style) :labelFontSize) (plist-get metrics :label-size)))
            (offset (or (plist-get axis :label-offset) 0))
            (bottom (equal (plist-get axis :orient) "bottom"))
            (flush (and bottom (eq (plist-get axis :discrete) :false) (not (eq (plist-get axis :label-flush) :false))))
@@ -422,7 +431,7 @@ labels, title) without the half-pixel translate of the drawn lines."
                       (if bottom
                           (list :lx (+ p offset) :ly (+ y0 h tick pad)
                                 :align (or (plist-get axis :label-align) (eas-layout--bottom-align p x0 w flush angle))
-                                :baseline (or (plist-get axis :label-baseline) (if (zerop angle) "top" "middle")))
+                                :baseline (or (plist-get axis :label-baseline) (eas-axis-pos-x-baseline angle nil)))
                         (list :lx (- x0 tick pad) :ly (+ p offset) :align (or (plist-get axis :label-align) "right")
                               :baseline (or (plist-get axis :label-baseline) "middle"))))))
            (box (lambda (tk) (let ((l (funcall label tk)))

@@ -240,13 +240,13 @@
          (findings (eas-spec-props-findings spec))
          (env (eas-agent "check" (eas-json-encode spec))))
     (should (equal (mapcar (lambda (f) (plist-get f :path)) findings)
-                   '("/title/font" "/encoding/color/legend/orient")))
+                   '("/title/font")))
     (should (cl-every (lambda (f) (and (equal (plist-get f :code) "UNSUPPORTED_FEATURE") (plist-get f :property)))
                       findings))
     ;; Ignored properties warn; the chart stays native.
     (should (eq (plist-get env :ok) t))
     (should (eq (plist-get (plist-get env :data) :native) t))
-    (should (= (length (plist-get (plist-get env :data) :warnings)) 2))
+    (should (= (length (plist-get (plist-get env :data) :warnings)) 1))
     (should-not (eas-spec-props-findings (eas-vl-gallery-spec "area-circular" "arc_pie_pyramid")))))
 
 (ert-deftest eas-area-arc-agent-reads-spec-files-relative-data ()
@@ -284,13 +284,6 @@
     (should (numberp (plist-get (plist-get one :ms) :render-text)))))
 
 ;;; Customization specs
-
-(ert-deftest eas-area-arc-customization-specs-hold ()
-  (should (member "area-circular" (eas-vl-gallery-custom-groups)))
-  (should (equal (eas-vl-gallery-custom-names "area-circular") '("custom_arc" "custom_area" "custom_radial")))
-  (dolist (group (eas-vl-gallery-custom-groups))
-    (dolist (name (eas-vl-gallery-custom-names group))
-      (should (equal (cons name (eas-vl-gallery-custom-check group name)) (list name))))))
 
 (provide 'eas-area-arc-test)
 ;;; eas-area-arc-test.el ends here

@@ -36,7 +36,7 @@ With KEEP-NULL, null values count too (discrete domains show them)."
   (let (out)
     (dolist (pair pairs)
       (let* ((u (car pair)) (d (cdr pair)) (enc (plist-get u :encoding))
-             (partner (plist-get enc (if (eq channel :x) :x2 :y2)))
+             (partner (and (memq channel '(:x :y)) (plist-get enc (if (eq channel :x) :x2 :y2))))
              (keys (delq nil (list (eas-encode-field d)
                                    (and partner (eas-encode-field partner))
                                    (and (plist-get d :stack-start) (eas-key (plist-get d :stack-start)))
@@ -87,7 +87,8 @@ With KEEP-NULL, null values count too (discrete domains show them)."
      (cond
       ;; An explicit scale domain is the domain.
       ((vectorp (plist-get (plist-get def :scale) :domain)) (plist-get (plist-get def :scale) :domain))
-      ((eq sort :null) unique)
+      ;; Vega-Lite leaves a domain of datums (a repeat's fields) in layer order.
+      ((or (eq sort :null) (seq-every-p (lambda (p) (plist-member (cdr p) :datum)) pairs)) unique)
       ((and (vectorp sort) (eas-compile-aux-timeunit-sort def sort (sort unique #'eas-compile--less))))
       ((vectorp sort) (append (seq-filter (lambda (v) (member v unique)) sort)
                               (seq-remove (lambda (v) (seq-contains-p sort v)) unique)))
@@ -155,8 +156,12 @@ With KEEP-NULL, null values count too (discrete domains show them)."
                                  channel)
                                 5))))
               (when pad (append (list :padding pad)
-                                ;; Vega nices a padded log or linear domain again.
-                                (when (and nice (member type '("log" "linear"))) (list :renice t))))))))
+                                ;; Vega nices a padded log domain again.
+                                (when (and nice (equal type "log")) (list :renice t))
+                                ;; Vega pads a linear domain after zero, before nice.
+                                (when (and (equal type "linear") (not custom) nice)
+                                  (list :raw-domain (vector (if zero (min lo 0) lo) (if zero (max hi 0) hi))
+                                        :renice t))))))))
 
 (defun eas-compile--bin-step (pairs)
   "The bin width of the binned def in PAIRS, read off its rows."
@@ -211,20 +216,24 @@ ZOOM is a [LO HI] domain from view state, or nil."
           (let* ((only (lambda (type) (seq-every-p (lambda (p) (equal (plist-get (plist-get (car p) :mark) :type) type))
                                                    pairs)))
                  ;; A layer takes its band paddings from its first band mark.
-                 (rect (equal (seq-some (lambda (p) (car (member (plist-get (plist-get (car p) :mark) :type)
-                                                                 '("bar" "rect" "tick"))))
-                                        pairs)
-                              "rect"))
+                 (first (seq-some (lambda (p) (car (member (plist-get (plist-get (car p) :mark) :type)
+                                                           '("bar" "rect" "tick"))))
+                                  pairs))
+                 (rect (equal first "rect"))
                  ;; Vega-Lite: rect bands touch; tick bands pad 0.25 inside, 0.125 outside.
                  (tick (and (equal type "band") (funcall only "tick")))
                  ;; and bands holding a nested offset pad 0.2 both ways.
                  (nested (and (equal type "band") (seq-some (lambda (p) (eas-compile--offset-p p channel)) pairs)))
                  (cfg (and (equal type "band") (plist-get (plist-get (plist-get (car (car pairs)) :ctx) :config) :scale)))
                  (inner (or (plist-get sp :paddingInner) (plist-get sp :padding)
-                            (plist-get cfg (if rect :rectBandPaddingInner :bandPaddingInner))
+                            (and nested 0.2)
+                            ;; Vega-Lite: bandPaddingInner, else the first band mark's own.
+                            (plist-get cfg :bandPaddingInner)
+                            (plist-get cfg (pcase first ("rect" :rectBandPaddingInner) ("bar" :barBandPaddingInner)
+                                             ("tick" :tickBandPaddingInner)))
                             (cond (rect 0) (tick 0.25) (nested 0.2))))
                  (outer (or (plist-get sp :paddingOuter) (plist-get sp :padding)
-                            (and (not rect) (plist-get cfg :bandPaddingOuter))
+                            (and nested 0.2) (and (not rect) (plist-get cfg :bandPaddingOuter))
                             (cond (rect 0) (tick 0.125) (nested 0.2)))))
             (append (eas-scale-band type (eas-compile--discrete-domain pairs values) [0 1] inner outer)
                     (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)))
@@ -330,13 +339,14 @@ the data spans the range less P on each side, like Vega's padDomain."
             (pad (plist-get scale :padding))
             (span (abs (- (aref range 1) (aref range 0)))))
         (when (and pad (> span (* 2 pad)) (member (plist-get scale :type) '("linear" "time" "utc")))
-          (let* ((d (plist-get scale :domain)) (c (/ (+ (aref d 0) (aref d 1)) 2.0))
+          (let* ((d (or (plist-get scale :raw-domain) (plist-get scale :domain))) (c (/ (+ (aref d 0) (aref d 1)) 2.0))
                  (frac (/ span (- span (* 2.0 pad)))))
             (setq out (plist-put out :domain (vector (+ c (* frac (- (aref d 0) c))) (+ c (* frac (- (aref d 1) c))))))
-            ;; Vega nices the padded domain again (d3's nice, ten ticks).
-            (when (and (plist-get scale :renice) (equal (plist-get scale :type) "linear"))
-              (let ((n (eas-scale-nice-linear (aref (plist-get out :domain) 0) (aref (plist-get out :domain) 1) 10)))
-                (setq out (plist-put out :domain (vector (car n) (cdr n))))))
+            (when (plist-get scale :raw-domain)
+              (let ((d (plist-get out :domain)))
+                (setq out (plist-put out :domain (plist-get (eas-scale-continuous "linear" (aref d 0) (aref d 1) range
+                                                                                  :nice t)
+                                                            :domain)))))
             (setq out (plist-put out :padding nil))))
         (when (and pad (> span (* 2 pad)) (equal (plist-get scale :type) "log"))
           (setq out (plist-put out :domain (eas-bins-pad-log (plist-get scale :domain) (/ span (- span (* 2.0 pad)))

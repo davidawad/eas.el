@@ -34,6 +34,7 @@
 
 (require 'eas-transform)
 (require 'eas-scale)
+(require 'eas-axis-pos)
 (declare-function eas-layout-text-p "eas-layout")
 (declare-function eas-layout-text-bounds "eas-layout")
 (declare-function eas-layout-union "eas-layout")
@@ -86,11 +87,13 @@ CONFIG is the Vega config in force; ENV holds param values."
     (when labels-off (setq ticks (mapcar (lambda (tk) (plist-put tk :label "")) ticks)))
     (setq model (plist-put (copy-sequence model) :ticks (vconcat ticks)))
     (unless (eq overlap :none)
+      (setq model (plist-put model :overlap-set t))
       (setq model (plist-put model :overlap (pcase overlap
                                               (:false nil) ("greedy" "greedy")
                                               (_ "parity")))))
     (let ((min (eas-axis-extra--prop axis config channel :minExtent)))
       (when (numberp min) (setq model (plist-put model :min-extent min))))
+    (setq model (append model (eas-axis-pos-props (lambda (k) (eas-axis-extra--prop axis config channel k)))))
     (when (eq (eas-axis-extra--prop axis config channel :labelFlush) :false)
       (setq model (plist-put model :label-flush :false)))
     (when (equal (eas-axis-extra--prop axis config channel :tickBand) "extent")

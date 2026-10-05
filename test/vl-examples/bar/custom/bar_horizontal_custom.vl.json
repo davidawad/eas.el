@@ -1,0 +1,21 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: a horizontal bar chart with labels inside the plot, a top x axis drawn over the bars and thinner offset bars.",
+  "height": {"step": 40},
+  "width": 320,
+  "data": {"values": [
+    {"team": "Atlas", "points": 72}, {"team": "Borealis", "points": 64}, {"team": "Cygnus", "points": 81},
+    {"team": "Draco", "points": 39}
+  ]},
+  "mark": {"type": "bar", "height": {"band": 0.45}, "yOffset": 6, "cornerRadiusEnd": 5, "fill": "#8a4fd8"},
+  "encoding": {
+    "y": {"field": "team", "type": "nominal", "sort": "-x", "scale": {"padding": 0},
+          "axis": {"bandPosition": 0, "grid": true, "gridColor": "#d9cdf0", "domain": false, "ticks": false,
+                   "labelAlign": "left", "labelBaseline": "middle", "labelPadding": -6, "labelOffset": -11,
+                   "labelColor": "#4b2a7a", "titleX": 6, "titleY": -8, "titleAngle": 0, "titleAlign": "left",
+                   "titleBaseline": "bottom", "title": "Team"}},
+    "x": {"field": "points", "type": "quantitative", "scale": {"padding": 10},
+          "axis": {"orient": "top", "grid": true, "zindex": 1, "gridColor": "#ffffff", "tickCount": 4,
+                   "title": "Points", "titleColor": "#4b2a7a", "labelFlush": false}}
+  }
+}

@@ -36,6 +36,8 @@
 (require 'eas-compile-shared)
 (require 'eas-compile-grid)
 (require 'eas-axis-fit)
+(require 'eas-container)
+(require 'eas-legend-orient)
 
 (defun eas-place-natural-size (group metrics)
   "Set GROUP's natural :w and :h from its spec and scales under METRICS."
@@ -90,6 +92,7 @@ Polar units have no position channels and keep the view size."
                               (aref (apply #'eas-layout-union plot (mapcar (lambda (a) (plist-get a :bounds)) yaxes)) 2)))
                 (plist-get metrics :legend-offset)))
          (ly 0) (offsets nil)
+         (sides (eas-legend-orient-offsets legends placed w h metrics))
          (box (apply #'eas-layout-union plot
                      (vector (- (aref over 0)) (- (aref over 1)) (+ w (aref over 2)) (+ h (aref over 3)))
                      (mapcar (lambda (a) (plist-get a :bounds)) placed))))
@@ -105,8 +108,8 @@ Polar units have no position channels and keep the view size."
               (push (cons (if right (- w off (aref b 2)) (- off (aref b 0)))
                           (if bottom (- h off (aref b 3)) (- off (aref b 1))))
                     offsets))
-         (if (equal (plist-get legend :orient) "none")
-            (let ((at (cons (plist-get legend :legendX) (plist-get legend :legendY))))
+         (if (or (equal (plist-get legend :orient) "none") (assq legend sides))
+            (let ((at (or (cdr (assq legend sides)) (cons (plist-get legend :legendX) (plist-get legend :legendY)))))
               (push at offsets)
               (setq box (eas-layout-union box (plist-get (eas-legend-place legend (car at) (cdr at) metrics) :box))))
           (let* ((lx (+ lx (- (or (plist-get legend :offset) (plist-get metrics :legend-offset))
@@ -160,7 +163,7 @@ tallest column."
                                                                  (plist-get group (if (string-prefix-p ":x" (symbol-name (car pair))) :w :h))
                                                                  metrics))
                                               (plist-get group :extra-axes)))))
-         (axes (eas-axis-fit-labels axes group metrics))
+         (axes (eas-axis-fit-overlap axes (eas-axis-fit-labels axes group metrics) (plist-get group :fit-height)))
          (legends (delq nil (mapcar (lambda (spec)
                                       (let ((l (eas-legend-model spec metrics)))
                                         (and l (eas-legend-fit
@@ -277,6 +280,7 @@ plot sizes (a relayout after marks were measured)."
       (eas-place-chrome g metrics))
     ;; Legends shared across concat views sit right of the whole block.
     (setq shared (eas-shared-extent tree metrics (plist-get (car groups) :h)))
+    (unless (or size sized) (eas-container-fit tree metrics title-h shared))
     (when size
       ;; Legends taller than the target flow into columns.
       (dolist (g groups)

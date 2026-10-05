@@ -982,3 +982,80 @@ it took:
 Loess remains Vega's O(n * bandwidth) fit over three robustness
 iterations, about 8M kernel evaluations here; inlining the kernel did not
 measurably help, so it was left as it is.
+
+## 12. Vega-Lite gallery: bar, second pass (fc-qx1.38)
+
+All 24 bar examples pass (before: 15 pass, 9 partial).  What the nine
+partials needed, all in shared code:
+
+| example | what was missing | where |
+|---|---|---|
+| bar_aggregate, stacked_bar_normalize | fitted to 320x200, nominal labels collided | `eas-axis-fit.el`: a fitted chart thins default (unset labelOverlap) nominal labels by parity |
+| stacked_bar_h_normalized_labeled | stacked text at `bandPosition` 0.5 sat at the segment end; same collisions | `eas-stack-band.el` |
+| bar_negative_horizontal_label | Vega pads a continuous domain after zero and before nice; native padded the niced domain | `eas-compile-scales.el` (`:raw-domain`) |
+| bar_size_responsive | `width: "container"` | `eas-container.el` (480 px without a size, bin/chart's) |
+| bar_grouped_repeated | untyped datums (a repeat's fields) were neither nominal colors nor xOffset bands; datum domains keep layer order | `eas-encode.el`, `eas-compile-channels.el` |
+| bar_heatlane | y/y2 on a band scale span band centre to centre; a non-position channel took y2's values into its domain; bar offsets | `eas-marks.el`, `eas-compile-scales.el`, `eas-bar-extra.el` |
+| bar_axis_space_saving | titleX/titleY/titleAngle/titleAlign, axis bandPosition, ticks false dropping tickSize from the label offset, mark height `{band}` and yOffset | `eas-axis-pos.el`, `eas-layout.el`, `eas-bar-extra.el` |
+| bar_diverging_stack_population_pyramid | legend orient top (horizontal, one row) | `eas-legend-orient.el` |
+
+The pyramid passes at a recorded threshold of 0.05: Vega-Lite's own
+SVG of it, rasterized here, scores 0.0357 against the reference and
+native scores 0.0031 against that SVG, so the 0.036 residual is
+anti-aliasing of its 38 band edges 1.05 px apart, not geometry.
+
+**How it was measured without bin/chart or rsvg-convert.**  This box
+had neither.  `scripts/eas-spikes/vega-oracle` stands in for both:
+Vega-Lite 6.4.1 + Vega 6 with bin/chart's vendored theme and text
+measured as Arial (Liberation Sans, via node-canvas), and an
+`rsvg-convert` that rasterizes through the librsvg node-canvas
+bundles.  Calibration: its SVG of 7 bar examples scores 0.0031-0.0079
+against the committed references at identical canvas sizes.  Its
+rasterizer is stricter than CI's on native SVG: unchanged SVGs score
+1-2.5x their recorded ratios (bar 0.0022 -> 0.0054), so the new
+verdicts are conservative.  Five examples of other groups whose SVG is
+byte-identical before and after this work exceed their thresholds under
+it (boxplot_preaggregated 0.0315, histogram_nonlinear 0.0406,
+layer_likert 0.0359, layer_text_heatmap 0.0385, rect_heatmap 0.0312);
+that is the rasterizer, not a regression.  Native against the oracle's
+SVG through the same rasterizer is at most 0.0098 for all 24 bar
+examples, with identical canvas sizes.
+
+Shared fixes changed five more examples outside the group, none for
+the worse except nested_concat_align (partial before and after):
+angled x labels now take Vega-Lite's default align and baseline
+(layer_candlestick 0.017 -> 0.006, interactive_concat_layer 0.024 ->
+0.011), rect_mosaic_labelled_with_offset 0.634 -> 0.015;
+nested_concat_align now draws countTitle "Count" and truncates at
+axisX.titleLimit as Vega does, which scores worse (0.113 -> 0.196)
+only because its concat section titles are still missing (multiview).
+
+**Customizability.**  `check` names every axis, legend, title, view
+and config property (`eas-spec-props.el`); the unhonored ones are
+`UNSUPPORTED_FEATURE` with their path.  To keep the gallery and
+templates clean, these were implemented: axis titleX/titleY/
+titleAngle/titleAlign/titleBaseline/titlePadding/titleLimit/
+bandPosition/zindex/domainDash, label and title font sizes in layout,
+legend orient top/bottom/left, columns, values and format,
+config.legend orient/direction, config.view fill/strokeWidth/
+strokeDash/opacity, config.countTitle, config.scale
+barBandPaddingInner (and bandWithNestedOffsetPaddingInner's
+precedence), bar width/height, xOffset/x2Offset/yOffset/y2Offset,
+strokeDash/strokeCap/strokeJoin and orient.  The six customization
+specs (`test/vl-examples/bar/custom/`) score against the oracle:
+bar_custom 0.0319, bar_horizontal_custom 0.0000, stacked_bar_custom
+0.0106, bar_grouped_custom 0.0000, bar_ranged_custom 0.0222,
+bar_labels_custom 0.0232.
+
+**Latency** (`scripts/eas-bench-gallery.sh bar 20`, the bench verb on
+byte-compiled eas, means over 20 runs, `test/vl-examples/bar/bench.json`).
+The four examples over seattle-weather's 1,461 rows spent 85% of
+compile in `decode-time`/`encode-time` through a named zone, once per
+row per timeUnit.  Zone conversions are now memoized
+(`eas-time--zone-cache`, the pattern of the existing parse cache), time
+unit strings parse once, and aggregation groups with one hash lookup:
+those four compile in 21-30 ms instead of 194-207 ms, and the group's
+summed compile-svg mean fell from 976 to about 300 ms.  The other 20
+examples compile in 3-29 ms either way (the new property checks and bar
+hooks add up to about 1 ms on the smallest).  In batch, GC is 35-40%
+of render time; interactive use defers it (`eas-gc.el`, section 10.4).

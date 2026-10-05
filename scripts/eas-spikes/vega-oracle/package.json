@@ -1,0 +1,11 @@
+{
+  "name": "eas-vega-oracle",
+  "private": true,
+  "description": "bin/chart stand-in for boxes without it: Vega-Lite 6.4.1 + Vega 6 with bin/chart's default theme and Arial (Liberation Sans) text metrics, and librsvg from node-canvas as rsvg-convert. Development only; references in the repo come from bin/chart.",
+  "type": "module",
+  "dependencies": {
+    "canvas": "^3.0.0",
+    "vega": "^6.0.0",
+    "vega-lite": "6.4.1"
+  }
+}

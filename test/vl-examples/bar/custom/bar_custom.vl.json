@@ -1,0 +1,27 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: a vertical bar chart with non-default mark, axis, scale, title and view properties.",
+  "title": {"text": "Sales by region", "anchor": "start", "color": "#7a3b00", "fontSize": 16, "offset": 14},
+  "width": 300,
+  "height": 180,
+  "data": {"values": [
+    {"region": "North", "sales": 28}, {"region": "South", "sales": 55}, {"region": "East", "sales": 43},
+    {"region": "West", "sales": 91}, {"region": "Central", "sales": 81}
+  ]},
+  "mark": {"type": "bar", "color": "#2f8f5b", "cornerRadius": 3, "stroke": "#14532d", "strokeWidth": 1.5,
+           "strokeDash": [4, 2], "opacity": 0.85, "width": {"band": 0.6}},
+  "encoding": {
+    "x": {"field": "region", "type": "nominal", "sort": null,
+          "scale": {"paddingInner": 0.3, "paddingOuter": 0.2},
+          "axis": {"labelAngle": -30, "labelColor": "#7a3b00", "labelFontSize": 12, "labelPadding": 6,
+                   "tickColor": "#7a3b00", "tickSize": 7, "tickWidth": 2, "domainColor": "#7a3b00",
+                   "domainWidth": 2, "domainDash": [6, 3], "title": "Region", "titleColor": "#7a3b00",
+                   "titleFontSize": 13, "titleFontWeight": "bold", "titlePadding": 10}},
+    "y": {"field": "sales", "type": "quantitative",
+          "scale": {"domain": [0, 100], "nice": false},
+          "axis": {"tickCount": 5, "grid": true, "gridColor": "#b7d7c4", "gridDash": [2, 2], "gridWidth": 1,
+                   "gridOpacity": 0.9, "format": ".0f", "labelFontWeight": "bold", "title": "Sales (units)",
+                   "titleAngle": -90, "titleAlign": "center", "orient": "left", "offset": 4}}
+  },
+  "config": {"view": {"stroke": "#999999", "strokeWidth": 2, "fill": "#f4f8f2"}}
+}

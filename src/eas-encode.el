@@ -49,6 +49,12 @@ Vega-Lite never looks at the data: a field with no hint is nominal."
     (let ((out def))
       (when (or (plist-get def :field) (plist-get def :aggregate))
         (setq out (eas-plist-put out :type (eas-encode--infer-type def rows))))
+      ;; Vega-Lite types an untyped datum by its value.
+      (when (and (plist-member def :datum) (not (plist-get def :type)))
+        (let ((d (plist-get def :datum)))
+          (cond ((numberp d) (setq out (eas-plist-put out :type "quantitative")))
+                ((stringp d) (setq out (eas-plist-put out :type "nominal")))
+                ((eas-object-p d) (setq out (eas-plist-put out :type "temporal"))))))
       (when-let* ((c (plist-get def :condition)))
         (setq out (eas-plist-put out :condition
                                    (if (vectorp c) (vconcat (mapcar (lambda (d) (eas-encode--def d rows)) c))
@@ -201,8 +207,9 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
 
 ;;; Titles and tooltips
 
-(defun eas-encode-title (def)
-  "Vega-Lite's default title for DEF, or DEF's explicit :title."
+(defun eas-encode-title (def &optional config)
+  "Vega-Lite's default title for DEF, or DEF's explicit :title.
+CONFIG's countTitle names a count of records."
   (let ((title (plist-get def :title)))
     (cond
      ((stringp title) title)
@@ -212,7 +219,7 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
               (plist-get def :arg)))
      ((equal (plist-get def :derived) "aggregate")
       (if (and (equal (plist-get def :op) "count") (null (plist-get def :source)))
-          "Count of Records"
+          (let ((c (plist-get config :countTitle))) (if (stringp c) c "Count of Records"))
         ;; Vega-Lite's verbal title: titleCase(op) of field, FIELD for min ARG.
         (let* ((op (plist-get def :op)) (arg (eas-encode--arg-op op)))
           (if arg (format "%s for %s %s" (plist-get def :source) (if (equal (car arg) "argmin") "min" "max") (cdr arg))

@@ -28,12 +28,17 @@
   "(UNIT . DEF) pairs of UNITS whose CHANNEL maps a field."
   (seq-filter (lambda (p) (plist-get (cdr p) :field)) (eas-compile--defs units channel)))
 
+(defun eas-compile-channels--offset-pairs (units channel)
+  "(UNIT . DEF) pairs of UNITS whose offset CHANNEL maps a field or datum."
+  (seq-filter (lambda (p) (or (plist-get (cdr p) :field) (plist-member (cdr p) :datum)))
+              (eas-compile--defs units channel)))
+
 (defun eas-compile-channels-scales (units)
   "Plist of the angle and offset scales UNITS need."
   (append
    ;; A discrete offset is a band scale nested in its parent band.
    (cl-loop for ch in '(:xOffset :yOffset)
-            for pairs = (eas-compile-channels--field-pairs units ch)
+            for pairs = (eas-compile-channels--offset-pairs units ch)
             when (and pairs (eas-encode-discrete-p (cdar pairs)))
             append (list ch (plist-get (eas-offset-scales units) ch)))
    (cl-loop for ch in '(:xOffset :yOffset)

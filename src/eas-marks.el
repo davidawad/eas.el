@@ -29,6 +29,8 @@
 (require 'eas-marks-series)
 (require 'eas-mark-style)
 (require 'eas-marks-props)
+(require 'eas-stack-band)
+(require 'eas-bar-extra)
 
 (defconst eas-marks-default-color "#4c78a8" "Vega-Lite's default mark color.")
 
@@ -153,7 +155,7 @@ Returns the plot centre when the channel is absent."
       (let ((p (eas-marks--channel unit scales channel row))
             (q (eas-marks--secondary unit scales channel row)))
         (and (numberp p) (if (numberp q) (/ (+ p q) 2.0) p))))
-     (t (let ((p (eas-marks--channel unit scales channel row))
+     (t (let ((p (eas-stack-band-pos unit scales channel row (eas-marks--channel unit scales channel row)))
               (off (and (plist-get (plist-get unit :encoding) (if (eq channel :x) :xOffset :yOffset))
                         (eas-marks--channel unit scales (if (eq channel :x) :xOffset :yOffset) row))))
           (and (numberp p)
@@ -316,8 +318,8 @@ ranged (x2/y2) bar."
          (xband (member (plist-get xs :type) '("band" "point")))
          (yband (member (plist-get ys :type) '("band" "point")))
          (enc (plist-get unit :encoding))
-         (horizontal (or (and yband (not xband))
-                         (and (null (plist-get enc :y)) (plist-get enc :x) (not xband))))
+         (horizontal (pcase (plist-get mark :orient) ("horizontal" t) ("vertical" nil)
+                       (_ (or (and yband (not xband)) (and (null (plist-get enc :y)) (plist-get enc :x) (not xband))))))
          (size (let ((s (plist-get mark :size))) (and (numberp s) s)))
          (text (eas-layout-text-p metrics))
          (corners (and (not text) (equal (plist-get mark :type) "bar") (eas-marks--corners unit horizontal)))
@@ -348,8 +350,8 @@ ranged (x2/y2) bar."
                        (let ((lo (aref bounds (if (eq channel :x) 0 1)))
                              (ext (aref bounds (if (eq channel :x) 2 3))))
                          (if size (cons (- p (/ size 2.0)) (+ p (/ size 2.0))) (cons lo (+ lo ext)))))
-                      ;; Ranged bars on a point scale span from point to point.
-                      ((and band q (equal (plist-get scale :type) "point")) (cons (min p q) (max p q)))
+                      ;; Ranged bars on a band or point scale span from band centre to centre.
+                      ((and band q) (let ((h (/ (plist-get scale :bandwidth) 2.0))) (cons (+ (min p q) h) (+ (max p q) h))))
                       ;; A bar's size is its thickness, centred in the band.
                       ((and band (numberp (plist-get mark :size)) (not text))
                        (let ((c (+ p (/ (plist-get scale :bandwidth) 2.0))) (half (/ (plist-get mark :size) 2.0)))
@@ -366,7 +368,8 @@ ranged (x2/y2) bar."
                       ((and (eq channel (if horizontal :x :y)) (not (equal (plist-get mark :type) "rect")))
                        (let ((z (eas-marks--zero scale bounds channel))) (cons (min p z) (max p z))))
                       (t (cons (- p (/ thin 2.0)) (+ p (/ thin 2.0))))))))
-         (let ((x (span :x xs xband yband)) (y (span :y ys yband xband)))
+         (let ((x (eas-bar-extra-span unit scales :x (span :x xs xband yband) row text))
+               (y (eas-bar-extra-span unit scales :y (span :y ys yband xband) row text)))
            (when (and x y)
              (append (list :datum i :x (car x) :y (car y) :w (- (cdr x) (car x)) :h (- (cdr y) (car y))
                            ;; Which edge grows with the value; text partial blocks use it.
@@ -374,7 +377,7 @@ ranged (x2/y2) bar."
                                          (horizontal "horizontal") (t "vertical")))
                      (when-let* ((c (and corners (funcall corners row)))) (list :corners c))
                      (eas-marks--style unit scales row)
-                     (eas-marks-props-bar unit)
+                     (eas-marks-props-bar unit) (eas-bar-extra-stroke mark)
                      (eas-marks--extras unit row))))))))
 
 (defun eas-marks--rule-row (unit scales bounds)

@@ -310,6 +310,12 @@ AGENTS.md already sets.
   machine-readable answer to "can the native engine draw this?", and
   `check` and `describe` read it. A feature is supported only if a
   conformance spec proves it.
+- Styling properties are checked too (fc-qx1.38): every key of an
+  axis, legend, title, view or config object is either one the engine
+  draws (the lists in `eas-spec-props.el`) or an `UNSUPPORTED_FEATURE`
+  finding with its path, so no chart is drawn silently differently
+  from Vega-Lite.  Each gallery group's `custom/` specs exercise its
+  chart types' non-default properties.
 - Specs that use unsupported features still open (fc-qx1.37): a
   static view with `:interactive false` in `inspect` and an
   `UNSUPPORTED_FEATURE` warning naming each path. By default the view

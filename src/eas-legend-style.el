@@ -31,6 +31,7 @@
 (require 'eas-scale)
 (require 'eas-layout)
 (require 'eas-layout-axis-style)
+(require 'eas-format)
 
 (defconst eas-legend-style-metric-keys
   '((:labelFontSize . :legend-label-size) (:titleFontSize . :legend-title-size)
@@ -66,7 +67,7 @@
   "LABEL of entry VALUE after overrides O's format and labelExpr."
   (let* ((fmt (plist-get o :format))
          (label (if (and (stringp fmt) (numberp value))
-                    (funcall (eas-scale-tick-format (list :type "linear" :domain (vector value value)) 5 fmt) value)
+                    (eas-format-number fmt value)
                   label)))
     (eas-layout-axis-style-label o value label)))
 

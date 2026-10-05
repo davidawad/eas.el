@@ -87,9 +87,10 @@
   "Group ROWS by GROUPBY keys: list of (KEY-VALUES . ROWS) in first-seen order."
   (let ((table (make-hash-table :test 'equal)) order)
     (seq-doseq (row rows)
-      (let ((key (mapcar (lambda (k) (plist-get row k)) groupby)))
-        (unless (gethash key table) (push key order))
-        (puthash key (cons row (gethash key table)) table)))
+      (let* ((key (mapcar (lambda (k) (plist-get row k)) groupby))
+             (group (gethash key table :none)))
+        (when (eq group :none) (push key order) (setq group nil))
+        (puthash key (cons row group) table)))
     (mapcar (lambda (key) (cons key (nreverse (gethash key table)))) (nreverse order))))
 
 (defconst eas-agg-arg-ops '("argmin" "argmax")

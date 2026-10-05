@@ -1,0 +1,27 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: a normalized stacked bar chart with a two-column legend below, stacked labels and a percent axis.",
+  "width": 260,
+  "height": 200,
+  "data": {"values": [
+    {"q": "Q1", "kind": "Hardware", "v": 30}, {"q": "Q1", "kind": "Software", "v": 50}, {"q": "Q1", "kind": "Services", "v": 20},
+    {"q": "Q2", "kind": "Hardware", "v": 25}, {"q": "Q2", "kind": "Software", "v": 45}, {"q": "Q2", "kind": "Services", "v": 30},
+    {"q": "Q3", "kind": "Hardware", "v": 20}, {"q": "Q3", "kind": "Software", "v": 55}, {"q": "Q3", "kind": "Services", "v": 25}
+  ]},
+  "encoding": {
+    "x": {"field": "q", "type": "ordinal", "title": null, "axis": {"labelAngle": 0, "domainColor": "#333333"}},
+    "y": {"field": "v", "type": "quantitative", "stack": "normalize",
+          "axis": {"format": ".0%", "values": [0, 0.25, 0.5, 0.75, 1], "title": "Share", "tickDash": [2, 2]}}
+  },
+  "layer": [
+    {"mark": {"type": "bar", "cornerRadiusEnd": 0, "strokeWidth": 1, "stroke": "white"},
+     "encoding": {"color": {"field": "kind", "type": "nominal", "scale": {"scheme": "set2"},
+                            "legend": {"orient": "bottom", "columns": 2, "title": "Segment", "offset": 12}}}},
+    {"mark": {"type": "text", "color": "#222222", "fontSize": 10},
+     "encoding": {"y": {"field": "v", "type": "quantitative", "stack": "normalize", "bandPosition": 0.5},
+                  "detail": {"field": "kind"},
+                  "text": {"field": "v", "type": "quantitative"}}}
+  ],
+  "config": {"legend": {"symbolType": "square", "labelFontSize": 11, "titleFontSize": 12, "rowPadding": 4},
+             "axis": {"labelColor": "#333333", "titleColor": "#333333"}}
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: bars with value labels, a diverging zero line and labels placed by expression.",
+  "width": 280,
+  "data": {"values": [
+    {"m": "Jan", "d": -12}, {"m": "Feb", "d": 8}, {"m": "Mar", "d": 21}, {"m": "Apr", "d": -5}, {"m": "May", "d": 14}
+  ]},
+  "encoding": {
+    "y": {"field": "m", "type": "ordinal", "sort": null, "axis": {"domain": false, "ticks": false, "labelPadding": 6, "title": null}},
+    "x": {"field": "d", "type": "quantitative", "title": "Change (%)",
+          "scale": {"padding": 16},
+          "axis": {"gridColor": {"condition": {"test": "datum.value === 0", "value": "#333333"}, "value": "#e5e5e5"},
+                   "tickCount": 6, "titleFontSize": 12}}
+  },
+  "layer": [
+    {"mark": {"type": "bar", "cornerRadiusEnd": 3},
+     "encoding": {"color": {"condition": {"test": "datum.d < 0", "value": "#c0392b"}, "value": "#27ae60"}}},
+    {"mark": {"type": "text", "fontSize": 11, "fontWeight": "bold",
+              "align": {"expr": "datum.d < 0 ? 'right' : 'left'"}, "dx": {"expr": "datum.d < 0 ? -4 : 4"}},
+     "encoding": {"text": {"field": "d", "type": "quantitative", "format": "+d"}}}
+  ],
+  "title": {"text": "Monthly change", "fontSize": 14, "anchor": "middle", "frame": "bounds"}
+}

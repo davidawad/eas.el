@@ -38,6 +38,8 @@
 (defconst eas-agent--source-options '(:data :backend :width :height :cols :rows)
   "Options shared by the verbs that take a SOURCE.")
 
+(defvar eas-data-url-directory)
+
 (defun eas-agent-resolve-source (verb pos opts)
   "Resolve VERB's SOURCE (first of POS) with OPTS's bindings.
 Return (:spec RESOLVED :template NAME-or-nil :label LABEL :words W),

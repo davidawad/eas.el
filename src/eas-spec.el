@@ -131,6 +131,11 @@ Each lowers Vega-Lite sugar the native compiler does not read (data
 URLs, repeat, mark overlays) into the subset it does, and must be
 idempotent: parse runs again on its own output.")
 
+(defvar eas-spec-feature-functions nil
+  "Functions (SPEC) -> more `eas-spec-features' plists for parsed SPEC.
+Each walks one more part of the vocabulary (eas-spec-props.el: axis,
+legend, title and config properties).")
+
 (defvar eas-spec-source-directory nil
   "Directory of the spec file being parsed, for relative data URLs.")
 
@@ -329,7 +334,7 @@ come back as (:invalid MESSAGE :path P)."
                     (add "bind/input" (concat ppath "/bind")))
                    (t (add "bind/other" (concat ppath "/bind") :unknown t))))))
       (walk-view spec ""))
-    (nreverse found)))
+    (append (nreverse found) (apply #'append (mapcar (lambda (f) (funcall f spec)) eas-spec-feature-functions)))))
 
 ;;; Check
 

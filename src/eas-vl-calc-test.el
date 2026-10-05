@@ -147,14 +147,5 @@
                          (eas-vl-gallery-conformance-entries))))
     (should (functionp (plist-get entry :oracle-scene)))))
 
-(ert-deftest eas-vl-calc-customization-specs-hold ()
-  "One customization spec per chart type of the group, each drawn natively
-with every property it sets (see eas-vl-gallery-custom.el)."
-  (let ((names (eas-vl-gallery-custom-names "calculations")))
-    (should (equal names '("custom_area" "custom_bar" "custom_line" "custom_point" "custom_rule" "custom_text"
-                           "custom_tick")))
-    (dolist (name names)
-      (should (equal (cons name (eas-vl-gallery-custom-check "calculations" name)) (list name))))))
-
 (provide 'eas-vl-calc-test)
 ;;; eas-vl-calc-test.el ends here

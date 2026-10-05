@@ -1,0 +1,22 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customization: a ranged (Gantt) bar chart with x/x2 pixel offsets, a left legend, an outline and a bold, tick-free y axis.",
+  "width": 300,
+  "data": {"values": [
+    {"task": "Design", "start": 1, "end": 4, "team": "UX"}, {"task": "Build", "start": 3, "end": 9, "team": "Eng"},
+    {"task": "Test", "start": 7, "end": 11, "team": "QA"}, {"task": "Launch", "start": 10, "end": 12, "team": "Eng"}
+  ]},
+  "mark": {"type": "bar", "xOffset": 1, "x2Offset": -1, "cornerRadius": 6, "stroke": "#333333", "strokeWidth": 1,
+           "strokeJoin": "round"},
+  "encoding": {
+    "y": {"field": "task", "type": "ordinal", "sort": null,
+          "axis": {"ticks": false, "domain": false, "labelFontWeight": "bold", "labelFontSize": 12, "labelPadding": 8,
+                   "title": null}},
+    "x": {"field": "start", "type": "quantitative", "title": "Week",
+          "scale": {"domain": [0, 12], "nice": false}, "axis": {"values": [0, 3, 6, 9, 12], "grid": true}},
+    "x2": {"field": "end"},
+    "color": {"field": "team", "type": "nominal", "scale": {"range": ["#4e79a7", "#f28e2b", "#59a14f"]},
+              "legend": {"orient": "left", "title": "Team", "offset": 10}}
+  },
+  "config": {"legend": {"titleFontWeight": "bold", "symbolSize": 120}}
+}

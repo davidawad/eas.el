@@ -123,8 +123,16 @@ it: 2006 under year, 1 (January) under month, 3 under date."
   '("year" "quarter" "month" "date" "day" "hours" "minutes" "seconds" "milliseconds")
   "Vega-Lite time unit components eas supports (week is not supported).")
 
+(defvar eas-time-unit--components (make-hash-table :test 'equal)
+  "Time unit -> its component list; time units are parsed once, not per row.")
+
 (defun eas-time-unit-components (unit)
   "Return the component list of time UNIT such as \"yearmonthdate\"."
+  (or (gethash unit eas-time-unit--components)
+      (puthash unit (eas-time-unit--parse unit) eas-time-unit--components)))
+
+(defun eas-time-unit--parse (unit)
+  "The component list of time UNIT, parsed."
   (let ((rest (string-remove-prefix "utc" unit)) parts)
     (while (not (string-empty-p rest))
       (let ((part (seq-find (lambda (p) (string-prefix-p p rest))

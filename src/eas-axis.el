@@ -26,6 +26,7 @@
 (require 'eas-theme)
 (require 'eas-layout)
 (require 'eas-transform)
+(require 'eas-axis-pos)
 
 (defconst eas-axis--style-keys
   '(:domainColor :domainWidth :domainDash :tickColor :tickWidth :gridColor :gridWidth :gridOpacity
@@ -130,8 +131,8 @@ outward direction (+1 or -1)."
                     (let ((p (plist-get tk :pos)))
                       (if horiz
                           (list :lx p :ly out
-                                :align (eas-layout--bottom-align p x0 w flush angle)
-                                :baseline (cond ((not (zerop angle)) "middle") ((> dir 0) "top") (t "bottom")))
+                                :align (or (eas-axis-pos-x-align angle (< dir 0)) (eas-layout--bottom-align p x0 w flush 0))
+                                :baseline (eas-axis-pos-x-baseline angle (< dir 0)))
                         (list :lx out :ly p :align (if (> dir 0) "left" "right") :baseline "middle")))))
            (box (lambda (tk) (let ((l (funcall label tk)))
                                (eas-layout-text-bounds metrics (plist-get tk :label) size (plist-get l :lx) (plist-get l :ly)

@@ -1,0 +1,440 @@
+{
+  "emacs": "30.1",
+  "compiled": true,
+  "zone": "America/Chicago",
+  "reps": 20,
+  "examples": {
+    "bar": {
+      "rows": 9,
+      "items": 9,
+      "ms": {
+        "compile-svg": 3.796,
+        "compile-text": 2.875,
+        "hover": 0.178,
+        "render-svg": 5.08,
+        "render-text": 2.894
+      },
+      "baseline_ms": {
+        "compile-svg": 3.9,
+        "compile-text": 2.58,
+        "hover": 0.149,
+        "render-svg": 4.846,
+        "render-text": 1.346
+      }
+    },
+    "bar_aggregate": {
+      "rows": 570,
+      "items": 19,
+      "ms": {
+        "compile-svg": 8.774,
+        "compile-text": 6.519,
+        "hover": 0.208,
+        "render-svg": 7.551,
+        "render-text": 4.388
+      },
+      "baseline_ms": {
+        "compile-svg": 9.099,
+        "compile-text": 7.672,
+        "hover": 0.212,
+        "render-svg": 5.557,
+        "render-text": 2.806
+      }
+    },
+    "bar_aggregate_sort_by_encoding": {
+      "rows": 570,
+      "items": 19,
+      "ms": {
+        "compile-svg": 8.382,
+        "compile-text": 6.826,
+        "hover": 0.206,
+        "render-svg": 5.083,
+        "render-text": 2.117
+      },
+      "baseline_ms": {
+        "compile-svg": 9.108,
+        "compile-text": 6.276,
+        "hover": 0.231,
+        "render-svg": 6.775,
+        "render-text": 4.274
+      }
+    },
+    "bar_axis_space_saving": {
+      "rows": 406,
+      "items": 3,
+      "ms": {
+        "compile-svg": 6.798,
+        "compile-text": 4.102,
+        "hover": 0.12,
+        "render-svg": 2.355,
+        "render-text": 2.898
+      },
+      "baseline_ms": {
+        "compile-svg": 4.877,
+        "compile-text": 3.722,
+        "hover": 0.12,
+        "render-svg": 3.668,
+        "render-text": 2.075
+      }
+    },
+    "bar_color_disabled_scale": {
+      "rows": 3,
+      "items": 3,
+      "ms": {
+        "compile-svg": 3.712,
+        "compile-text": 1.311,
+        "hover": 0.135,
+        "render-svg": 3.652,
+        "render-text": 2.097
+      },
+      "baseline_ms": {
+        "compile-svg": 2.31,
+        "compile-text": 2.585,
+        "hover": 0.124,
+        "render-svg": 3.949,
+        "render-text": 0.727
+      }
+    },
+    "bar_diverging_stack_population_pyramid": {
+      "rows": 570,
+      "items": 38,
+      "ms": {
+        "compile-svg": 9.354,
+        "compile-text": 8.614,
+        "hover": 0.321,
+        "render-svg": 4.92,
+        "render-text": 1.792
+      },
+      "baseline_ms": {
+        "compile-svg": 9.685,
+        "compile-text": 8.785,
+        "hover": 0.331,
+        "render-svg": 5.189,
+        "render-text": 3.604
+      }
+    },
+    "bar_diverging_stack_transform": {
+      "rows": 40,
+      "items": 40,
+      "ms": {
+        "compile-svg": 11.774,
+        "compile-text": 8.63,
+        "hover": 0.452,
+        "render-svg": 9.245,
+        "render-text": 5.138
+      },
+      "baseline_ms": {
+        "compile-svg": 10.587,
+        "compile-text": 6.851,
+        "hover": 0.359,
+        "render-svg": 7.987,
+        "render-text": 3.675
+      }
+    },
+    "bar_gantt": {
+      "rows": 3,
+      "items": 3,
+      "ms": {
+        "compile-svg": 3.589,
+        "compile-text": 2.552,
+        "hover": 0.12,
+        "render-svg": 1.942,
+        "render-text": 0.845
+      },
+      "baseline_ms": {
+        "compile-svg": 2.778,
+        "compile-text": 2.062,
+        "hover": 0.093,
+        "render-svg": 1.431,
+        "render-text": 0.602
+      }
+    },
+    "bar_grouped": {
+      "rows": 9,
+      "items": 9,
+      "ms": {
+        "compile-svg": 4.771,
+        "compile-text": 1.898,
+        "hover": 0.154,
+        "render-svg": 6.624,
+        "render-text": 3.296
+      },
+      "baseline_ms": {
+        "compile-svg": 3.272,
+        "compile-text": 1.121,
+        "hover": 0.128,
+        "render-svg": 3.486,
+        "render-text": 2.618
+      }
+    },
+    "bar_grouped_repeated": {
+      "rows": 3201,
+      "items": 26,
+      "ms": {
+        "compile-svg": 31.327,
+        "compile-text": 30.456,
+        "hover": 0.257,
+        "render-svg": 7.093,
+        "render-text": 6.285
+      },
+      "baseline_ms": {
+        "compile-svg": 26.845,
+        "compile-text": 24.692,
+        "hover": 0.26,
+        "render-svg": 5.583,
+        "render-text": 3.303
+      }
+    },
+    "bar_heatlane": {
+      "rows": 406,
+      "items": 20,
+      "ms": {
+        "compile-svg": 10.582,
+        "compile-text": 11.363,
+        "hover": 2.375,
+        "render-svg": 3.469,
+        "render-text": 1.851
+      },
+      "baseline_ms": {
+        "compile-svg": 9.476,
+        "compile-text": 10.038,
+        "hover": 0.281,
+        "render-svg": 5.473,
+        "render-text": 2.455
+      }
+    },
+    "bar_layered_transparent": {
+      "rows": 570,
+      "items": 38,
+      "ms": {
+        "compile-svg": 10.802,
+        "compile-text": 6.417,
+        "hover": 0.384,
+        "render-svg": 7.689,
+        "render-text": 6.726
+      },
+      "baseline_ms": {
+        "compile-svg": 12.185,
+        "compile-text": 7.958,
+        "hover": 0.284,
+        "render-svg": 5.69,
+        "render-text": 6.258
+      }
+    },
+    "bar_month_temporal_band_center": {
+      "rows": 1461,
+      "items": 12,
+      "ms": {
+        "compile-svg": 22.828,
+        "compile-text": 21.936,
+        "hover": 0.441,
+        "render-svg": 5.416,
+        "render-text": 2.497
+      },
+      "baseline_ms": {
+        "compile-svg": 206.51,
+        "compile-text": 205.77,
+        "hover": 0.377,
+        "render-svg": 3.533,
+        "render-text": 2.014
+      }
+    },
+    "bar_month_temporal_initial": {
+      "rows": 1461,
+      "items": 12,
+      "ms": {
+        "compile-svg": 23.406,
+        "compile-text": 21.24,
+        "hover": 0.447,
+        "render-svg": 5.927,
+        "render-text": 2.004
+      },
+      "baseline_ms": {
+        "compile-svg": 204.205,
+        "compile-text": 197.757,
+        "hover": 0.412,
+        "render-svg": 5.724,
+        "render-text": 1.958
+      }
+    },
+    "bar_negative": {
+      "rows": 9,
+      "items": 9,
+      "ms": {
+        "compile-svg": 4.067,
+        "compile-text": 1.208,
+        "hover": 0.147,
+        "render-svg": 2.266,
+        "render-text": 0.821
+      },
+      "baseline_ms": {
+        "compile-svg": 1.766,
+        "compile-text": 1.027,
+        "hover": 0.141,
+        "render-svg": 2.096,
+        "render-text": 0.841
+      }
+    },
+    "bar_negative_horizontal_label": {
+      "rows": 9,
+      "items": 18,
+      "ms": {
+        "compile-svg": 5.622,
+        "compile-text": 2.209,
+        "hover": 0.166,
+        "render-svg": 2.851,
+        "render-text": 3.223
+      },
+      "baseline_ms": {
+        "compile-svg": 3.148,
+        "compile-text": 3.493,
+        "hover": 0.154,
+        "render-svg": 2.726,
+        "render-text": 1.417
+      }
+    },
+    "bar_size_responsive": {
+      "rows": 406,
+      "items": 3,
+      "ms": {
+        "compile-svg": 5.563,
+        "compile-text": 3.131,
+        "hover": 0.104,
+        "render-svg": 1.658,
+        "render-text": 6.143
+      },
+      "baseline_ms": {
+        "compile-svg": 4.231,
+        "compile-text": 1.86,
+        "hover": 0.112,
+        "render-svg": 1.517,
+        "render-text": 2.506
+      }
+    },
+    "layer_bar_labels": {
+      "rows": 3,
+      "items": 6,
+      "ms": {
+        "compile-svg": 2.753,
+        "compile-text": 4.01,
+        "hover": 0.14,
+        "render-svg": 1.924,
+        "render-text": 1.208
+      },
+      "baseline_ms": {
+        "compile-svg": 2.398,
+        "compile-text": 3.012,
+        "hover": 0.127,
+        "render-svg": 1.916,
+        "render-text": 0.769
+      }
+    },
+    "layer_bar_labels_grey": {
+      "rows": 3201,
+      "items": 26,
+      "ms": {
+        "compile-svg": 28.278,
+        "compile-text": 24.579,
+        "hover": 0.208,
+        "render-svg": 1.924,
+        "render-text": 1.516
+      },
+      "baseline_ms": {
+        "compile-svg": 25.804,
+        "compile-text": 26.105,
+        "hover": 0.209,
+        "render-svg": 2.168,
+        "render-text": 1.51
+      }
+    },
+    "stacked_bar_count_corner_radius_mark": {
+      "rows": 1461,
+      "items": 54,
+      "ms": {
+        "compile-svg": 28.697,
+        "compile-text": 24.385,
+        "hover": 0.432,
+        "render-svg": 5.138,
+        "render-text": 2.372
+      },
+      "baseline_ms": {
+        "compile-svg": 197.299,
+        "compile-text": 194.295,
+        "hover": 0.359,
+        "render-svg": 6.382,
+        "render-text": 3.751
+      }
+    },
+    "stacked_bar_h": {
+      "rows": 120,
+      "items": 60,
+      "ms": {
+        "compile-svg": 8.258,
+        "compile-text": 8.95,
+        "hover": 0.616,
+        "render-svg": 8.244,
+        "render-text": 5.299
+      },
+      "baseline_ms": {
+        "compile-svg": 7.667,
+        "compile-text": 6.354,
+        "hover": 0.497,
+        "render-svg": 6.387,
+        "render-text": 3.567
+      }
+    },
+    "stacked_bar_h_normalized_labeled": {
+      "rows": 570,
+      "items": 76,
+      "ms": {
+        "compile-svg": 19.937,
+        "compile-text": 13.003,
+        "hover": 0.375,
+        "render-svg": 8.544,
+        "render-text": 5.389
+      },
+      "baseline_ms": {
+        "compile-svg": 14.373,
+        "compile-text": 12.129,
+        "hover": 0.373,
+        "render-svg": 7.949,
+        "render-text": 6.521
+      }
+    },
+    "stacked_bar_normalize": {
+      "rows": 570,
+      "items": 38,
+      "ms": {
+        "compile-svg": 9.676,
+        "compile-text": 5.674,
+        "hover": 1.405,
+        "render-svg": 6.912,
+        "render-text": 7.072
+      },
+      "baseline_ms": {
+        "compile-svg": 10.277,
+        "compile-text": 9.09,
+        "hover": 0.275,
+        "render-svg": 7.722,
+        "render-text": 4.785
+      }
+    },
+    "stacked_bar_weather": {
+      "rows": 1461,
+      "items": 54,
+      "ms": {
+        "compile-svg": 28.531,
+        "compile-text": 26.359,
+        "hover": 0.523,
+        "render-svg": 8.172,
+        "render-text": 3.133
+      },
+      "baseline_ms": {
+        "compile-svg": 193.838,
+        "compile-text": 193.253,
+        "hover": 0.389,
+        "render-svg": 6.583,
+        "render-text": 2.875
+      }
+    }
+  }
+}

@@ -89,6 +89,11 @@
       "png_sha256": "561909741effe1ae4013b71d24f56ef719de44accf87ce46b1e2c914123d2f8c",
       "spec_sha256": "ebcd5350648aa6143b049c003beda9215dc30e30981e01a490a53ef12b76284a"
     },
+    "mark-boxplot": {
+      "generator": "INTERIM (fc-qx1.50): vl-convert-python 1.9.0 (bin/chart's engine, vl-convert-rs 1.9.0, Vega-Lite 6.4.1) with bin-chart-default-theme.json merged, TZ America/Chicago; bin/chart was not in the box. Its glyphs differ from bin/chart's fonts (0.2-2.2% of pixels on existing refs); rebuild with bin/chart: M-x eas-conformance-update-refs",
+      "png_sha256": "9af141eef1317a9f201a05365796095d5940f0338947a68ed503f1d68a00ed9e",
+      "spec_sha256": "53d96769957fb48a25b2f03dfbb6e79d1f7a44556ffc0e24980ebdcba3979190"
+    },
     "mark-circle": {
       "png_sha256": "d21c64c9442bb7b62e452dbce7f0d05198df8cde286618cea677468575d0eaa8",
       "spec_sha256": "a35eb0c07a25b87322355be9b0102e0ee2a0b89a1764205afa9e6c634a0dea6f"

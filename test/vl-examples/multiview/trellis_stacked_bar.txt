@@ -1,17 +1,16 @@
                  1931
-variety                    1932
-         Glabron┤█▊▌▏▎▋   ██▏▋▍█▍█▌█▊       site
-       Manchuria┤█▊▋▎█▏   ██▌▊████▌█▌       ■ Crookston
-         No. 457┤█▏▉▌▋█▏  ██▌▉███▌███▍      ■ Duluth
-         No. 462┤██▋▍▎▉   ██▌▉███▌███▍      ■ Grand Rapids
-         No. 475┤█▏▌▋▉    ██▍▋▊██▌███▌      ■ Morris
-                │         ██▍█▉██▍█▏█▌      ■ University Farm
-        Peatland┤█▊▊▌▍▌   ███▉█▍█▉█▌█▌      ■ Waseca
-        Svansota┤█▋▍▏█▏   █▊█████▋█▊
-           Trebi┤█▏▊▉▉█▌  ████▊▉██▋█▎██▏
-          Velvet┤█▋▎██▎   ████▊▉██▋█▎██▏
-Wisconsin No. 38┤█▎▉▋▋█▏  ██▍▊█▌█▊█▍█▌
-                └┬────┬─  ██▋█▍▌██▎█▍██▊
-                 0   200  ┬─────┬─────┬───
-              Sum of yield 0   100   200
-                            Sum of yield
+variety                       1932
+         Glabron┤█▌▋▊▉█▌█▋    ██▌▉█▍▊     site
+       Manchuria┤█▌▋▉███▉     █▎▏█▎▍▋     ■ Crookston
+         No. 457┤█▊██▎▍███▎   █▍▎█▋▋█▎    ■ Duluth
+         No. 462┤█▉█▉█▏▌██▏   █▏▊█▋▋█▍    ■ Grand Rapids
+         No. 475┤█▊█▊▋▌█▍     █▎██▋▊█▍    ■ Morris
+                │                         ■ University Farm
+        Peatland┤█▋▉█▏▍▋█▌    ██▏▎▉██▍    ■ Waseca
+        Svansota┤█▌▌▋▋██▉     ▊▋▎▋▊█▏
+           Trebi┤█▊█▏▎██▍█▊   █▋▊▋█▍▌█▍
+          Velvet┤█▋▋▌▌███     █▎▏▍▉▉█▎
+Wisconsin No. 38┤█▉█▏▌▋█▏█▍   █▍▌▎█▏▋█▉
+                └┬──────┬──   ┬──────┬──
+                 0     200    0     200
+                Sum of yield Sum of yield

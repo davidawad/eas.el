@@ -11,7 +11,7 @@
     "area_overlay": {"status": "pass"},
     "layer_arc_label": {"status": "pass"},
     "stacked_area": {"status": "pass"},
-    "stacked_area_normalize": {"reason": "60x16: item: area main/0 item 12 of view main draws no cell (the top normalized slice is under half of every 16-row cell it touches and the slice beneath outvotes it; it shows at 100x30 and 160x45)", "status": "partial"},
+    "stacked_area_normalize": {"status": "pass"},
     "stacked_area_stream": {"status": "pass"}
   },
   "bar": {
@@ -220,6 +220,7 @@
     "payoff": {"status": "pass"},
     "payoff-curves": {"status": "pass"},
     "series-line": {"status": "pass"},
-    "sparkline": {"status": "pass"}
+    "sparkline": {"status": "pass"},
+    "volume-profile": {"status": "pass"}
   }
 }

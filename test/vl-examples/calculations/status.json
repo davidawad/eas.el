@@ -100,8 +100,8 @@
     "threshold": 0.03
   },
   "ternary": {
-    "ratio": 0.0085,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0085 (threshold 0.03), size delta [0 1] px",
+    "ratio": 0.0131,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0131 (threshold 0.03), size delta [0 1] px",
     "status": "pass",
     "threshold": 0.03
   },

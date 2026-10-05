@@ -31,8 +31,8 @@
     "threshold": 0.03
   },
   "layer_bar_fruit": {
-    "ratio": 0.0124,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0124 (threshold 0.03)",
+    "ratio": 0.0135,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0135 (threshold 0.03)",
     "status": "pass",
     "threshold": 0.03
   },

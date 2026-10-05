@@ -12,8 +12,8 @@
     "threshold": 0.03
   },
   "concat_marginal_histograms": {
-    "ratio": 0.0182,
-    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0182 (threshold 0.03), size delta [-1 0] px",
+    "ratio": 0.004,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0040 (threshold 0.03), size delta [-1 0] px",
     "status": "pass",
     "threshold": 0.03
   },

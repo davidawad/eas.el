@@ -318,6 +318,11 @@ ranged (x2/y2) bar."
                   ('(nil t) (vector r r all all)) ('(nil nil) (vector all all r r))
                   ('(t t) (vector all r r all)) (_ (vector r all all r)))))))))))
 
+(defun eas-marks--binned-p (def)
+  "Non-nil when channel definition DEF is binned (lowered or pre-binned)."
+  (and def (or (plist-get def :bin-end) (plist-get def :binned)
+               (let ((b (plist-get def :bin))) (and b (not (eq b :false)))))))
+
 (defun eas-marks--bar-row (unit scales bounds metrics)
   "Row builder (ROW I -> item) for bar and rect marks."
   (let* ((mark (plist-get unit :mark))
@@ -326,7 +331,9 @@ ranged (x2/y2) bar."
          (yband (member (plist-get ys :type) '("band" "point")))
          (enc (plist-get unit :encoding))
          (horizontal (pcase (plist-get mark :orient) ("horizontal" t) ("vertical" nil)
-                       (_ (or (and yband (not xband)) (and (null (plist-get enc :y)) (plist-get enc :x) (not xband))))))
+                       (_ (or (and yband (not xband)) (and (null (plist-get enc :y)) (plist-get enc :x) (not xband))
+                              ;; Binned y against an unbinned x (a marginal histogram on its side).
+                              (and (not xband) (eas-marks--binned-p (plist-get enc :y)) (not (eas-marks--binned-p (plist-get enc :x))))))))
          (size (let ((s (plist-get mark :size))) (and (numberp s) s)))
          (text (eas-layout-text-p metrics))
          (corners (and (not text)

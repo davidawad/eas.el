@@ -219,7 +219,11 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
                                  ;; marks its place.
                                  ((and (> covered 0) (>= top y0) (<= bottom y1)
                                        (< (aref (eas-text--grid-prio g) (+ col (* row (eas-text--grid-cols g)))) prio))
-                                  (eas-text--put g col row (if (>= covered (* 0.375 ch)) ?▀ ?▔) (funcall props-fn cx) prio)))))
+                                  (eas-text--put g col row (if (>= covered (* 0.375 ch)) ?▀ ?▔) (funcall props-fn cx) prio))
+                                 ;; Above the slice beneath's eighth block, the
+                                 ;; sliver colors the block's empty top.
+                                 ((and (> covered 0) (>= top y0) (<= bottom y1))
+                                  (eas-text--under g col row (funcall props-fn cx) prio)))))
       (let ((show-p (and (plist-get item :strokeDash) (eas-text--dasher (plist-get item :strokeDash))))
             (eas-text--dot-prio prio))
         (dotimes (k (max 0 (1- (length points))))
@@ -228,6 +232,20 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
       (when (= (length points) 1)
         (let ((p (aref points 0)) (eas-text--dot-prio prio))
           (eas-text--dot-line g (aref p 0) (aref p 1) (aref p 0) (aref p 1) props-fn clip))))))
+
+(defun eas-text--under (g col row props prio)
+  "Give the lower eighth block at COL ROW of grid G, drawn at PRIO, the
+color of PROPS as its background: the slice stacked on it shows in the
+block's empty top.  Nothing when the cell holds anything else."
+  (let* ((i (+ col (* row (eas-text--grid-cols g))))
+         (old (aref (eas-text--grid-props g) i))
+         (face (plist-get old 'face))
+         (color (plist-get (plist-get props 'face) :foreground)))
+    (when (and color (= (aref (eas-text--grid-prio g) i) prio)
+               (memq (aref (eas-text--grid-chars g) i) (cdr (butlast (append eas-glyph-blocks nil)))))
+      (when (and eas-text-trace eas-text-trace-item) (funcall eas-text-trace col row))
+      (aset (eas-text--grid-props g) i
+            (plist-put (copy-sequence old) 'face (append (list :background color) face))))))
 
 (defun eas-text--vglyph (a b)
   "Glyph for a fill covering A..B (fractions of a cell from its top)."
@@ -297,8 +315,10 @@ shaded, a rising one solid; color tells them apart too."
          (zero (and (or vertical horizontal) (not (plist-get item :rise))
                     (eas-text--zero view (if vertical :y :x))))
          (lo (if vertical y x)) (hi (+ lo (if vertical h w)))
-         (snap-lo (and zero (< (abs (- zero lo)) 0.5)))
-         (snap-hi (and zero (< (abs (- zero hi)) 0.5)))
+         ;; Only the end nearer zero snaps: a bar under half a pixel tall
+         ;; has both ends near it, and is no full cell.
+         (snap-lo (and zero (< (abs (- zero lo)) 0.5) (< (abs (- zero lo)) (abs (- zero hi)))))
+         (snap-hi (and zero (< (abs (- zero hi)) 0.5) (<= (abs (- zero hi)) (abs (- zero lo)))))
          (cols (if horizontal (cons (floor x cw) (ceiling (- (+ x w) 0.001) cw)) (eas-text--cells x w cw)))
          (rows (if vertical (cons (floor y ch) (ceiling (- (+ y h) 0.001) ch)) (eas-text--cells y h ch)))
          (c0 (car cols)) (c1 (max (1+ c0) (cdr cols)))

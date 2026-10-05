@@ -1,4 +1,4 @@
-Miles_per_Gallon                       HorsepowerMPG   Origi
+Miles_per_Gallon                       HorsepowerMPG  Origin
 50┤┈┈┈┈┈┈●┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Cylinders   130     18    USA
   │     ● ●                   ● 3         150     18    USA
 40┤┈┈┈┈┈┈●●●●┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ ● 4         150     16    USA
@@ -7,7 +7,7 @@ Miles_per_Gallon                       HorsepowerMPG   Origi
   │    ●●●●●●●●●              ● 8         215     14    USA
   │     ●●●●●●●●●                         225     14    USA
 20┤┈┈┈┈┈┈┈┈●●●●●●●●●●┈┈┈┈┈┈┈┈             190     15    USA
-  │       ●  ●●●●●●●●●●● ●●●              115    null  Europ
+  │       ●  ●●●●●●●●●●● ●●●              115    null Europe
 10┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈●●●┈●●●●●┈┈             153    null   USA
   │                                       175    null   USA
   │                                       175    null   USA

@@ -95,7 +95,8 @@
 
 (defun eas-svg--text (text x y size &rest props)
   "A <text> node for TEXT at X Y with font SIZE.
-PROPS: :align :baseline :angle :fill :weight :opacity."
+PROPS: :align :baseline :angle :fill :weight :opacity, and :font,
+:style (font style) and :line-height."
   (let* ((baseline (plist-get props :baseline))
          (dy (floor (+ 0.5 (* size (pcase baseline ("top" 0.79) ("middle" 0.30) ("bottom" -0.21) (_ 0))))))
          (angle (or (plist-get props :angle) 0))
@@ -103,6 +104,7 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
                                 :dy (unless (zerop angle) (eas-svg--n dy))
                                 :font-size size :fill (plist-get props :fill)
                                 :font-weight (let ((w (plist-get props :weight))) (and w (format "%s" w)))
+                                :font-family (plist-get props :font) :font-style (plist-get props :style)
                                 :opacity (plist-get props :opacity)
                                 :text-anchor (eas-svg--anchor (plist-get props :align))
                                 :transform (unless (zerop angle)
@@ -111,7 +113,7 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
     (if (not (string-search "\n" text))
         (append node (list (eas-svg--escape text)))
       ;; Multi-line text: one tspan per line, raised per the baseline.
-      (let* ((lines (split-string text "\n")) (lh (+ size 2))
+      (let* ((lines (split-string text "\n")) (lh (or (plist-get props :line-height) (+ size 2)))
              (lift (pcase baseline ("top" 0) ("middle" (/ (* lh (1- (length lines))) 2.0))
                      (_ (* lh (1- (length lines)))))))
         (append node
@@ -120,11 +122,12 @@ PROPS: :align :baseline :angle :fill :weight :opacity."
                                            (list (eas-svg--escape line))))
                                  lines))))))
 
-(defun eas-svg--line (seg color &optional width opacity dash)
-  "A <line> for SEG [x1 y1 x2 y2] in COLOR."
+(defun eas-svg--line (seg color &optional width opacity dash cap)
+  "A <line> for SEG [x1 y1 x2 y2] in COLOR (CAP its stroke-linecap)."
   (eas-svg--node 'line :x1 (aref seg 0) :y1 (aref seg 1) :x2 (aref seg 2) :y2 (aref seg 3)
                    :stroke color :stroke-width (or width 1) :stroke-opacity opacity
-                   :stroke-dasharray (and dash (mapconcat #'eas-svg--n dash ","))))
+                   :stroke-dasharray (and dash (mapconcat #'eas-svg--n dash ","))
+                   :stroke-linecap cap))
 
 (defun eas-svg--path (points &optional base)
   "SVG path data through POINTS, closing along BASE reversed when given."
@@ -215,7 +218,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                       :href (eas-marks-image-href (plist-get item :url)) :opacity opacity))
       ((or "rule" "tick")
        (eas-svg--line (vector (plist-get item :x1) (plist-get item :y1) (plist-get item :x2) (plist-get item :y2))
-                        stroke (plist-get item :strokeWidth) opacity (plist-get item :strokeDash)))
+                        stroke (plist-get item :strokeWidth) opacity (plist-get item :strokeDash) (plist-get item :strokeCap)))
       ("arc" (eas-mark-style-svg
               (eas-svg--node 'path :d (eas-arc-path item) :fill fill
                              :stroke (unless (equal stroke "none") stroke)
@@ -225,14 +228,16 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
       ("text" (apply #'eas-svg--text (plist-get item :text) (plist-get item :x) (plist-get item :y)
                      (plist-get item :fontSize)
                      (list :align (plist-get item :align) :baseline (plist-get item :baseline) :fill fill
-                           :opacity opacity :weight (plist-get item :fontWeight))))
+                           :opacity opacity :weight (plist-get item :fontWeight) :angle (plist-get item :angle)
+                           :font (plist-get item :font) :style (plist-get item :fontStyle)
+                           :line-height (plist-get item :lineHeight))))
       ("trail" (eas-svg--node 'path :d (eas-svg--trail (plist-get item :points) (plist-get item :widths))
                                 :fill (if (equal fill "none") stroke fill) :opacity opacity))
       ((or "line" "area")
        (let ((area (plist-get item :base)))
          (eas-mark-style-svg
           (eas-svg--node 'path :d (concat "M" (eas-svg--path (plist-get item :points) area))
-                           :fill (if area fill "none") :stroke (unless (or area (equal stroke "none")) stroke)
+                           :fill (if area fill (or fill "none")) :stroke (unless (or area (equal stroke "none")) stroke)
                            :stroke-width (unless area (plist-get item :strokeWidth))
                            :stroke-linecap (unless area (plist-get item :strokeCap))
                            :stroke-linejoin (unless area (plist-get item :strokeJoin))
@@ -248,12 +253,23 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
           item)))))
 
 (defun eas-svg--styled (node item &optional width)
-  "NODE with ITEM's fillOpacity and strokeOpacity (and strokeWidth when WIDTH)."
-  (let ((extra (cl-loop for (key attr) in (append '((:fillOpacity fill-opacity) (:strokeOpacity stroke-opacity))
-                                                  (when width '((:strokeWidth stroke-width))))
-                        for v = (plist-get item key)
-                        when (numberp v) collect (cons attr (eas-svg--n v)))))
+  "NODE with ITEM's fillOpacity and strokeOpacity (and strokeWidth and
+strokeDash when WIDTH)."
+  (let ((extra (append (cl-loop for (key attr) in (append '((:fillOpacity fill-opacity) (:strokeOpacity stroke-opacity))
+                                                          (when width '((:strokeWidth stroke-width))))
+                                for v = (plist-get item key)
+                                when (numberp v) collect (cons attr (eas-svg--n v)))
+                       (when (and width (vectorp (plist-get item :strokeDash)))
+                         (list (cons 'stroke-dasharray (mapconcat #'eas-svg--n (plist-get item :strokeDash) ",")))))))
     (if extra (cl-list* (car node) (append (cadr node) extra) (cddr node)) node)))
+
+(defun eas-svg--dash (dash)
+  "DASH (a config dash array) when it is one, else nil."
+  (and (vectorp dash) (> (length dash) 0) dash))
+
+(defun eas-svg--font-name (font)
+  "SVG font-family for an axis or legend FONT property, or nil."
+  (and (stringp font) (eas-svg--font font)))
 
 (defun eas-svg--axis (axis theme)
   "SVG nodes for placed AXIS under THEME."
@@ -266,16 +282,18 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
     (seq-doseq (tk (plist-get axis :ticks))
       (when (plist-get tk :grid)
         (push (eas-svg--line (plist-get tk :grid) (funcall get :gridColor) (or (funcall get :gridWidth) 1)
-                               (funcall get :gridOpacity) (plist-get tk :grid-dash))
+                               (funcall get :gridOpacity) (or (plist-get tk :grid-dash) (eas-svg--dash (funcall get :gridDash))))
               out)))
     (when-let* ((domain (plist-get axis :domain-line)))
       (unless (or (plist-get axis :domain-off) (plist-get axis :no-domain))
-        (push (eas-svg--line domain (funcall get :domainColor) (or (funcall get :domainWidth) 1)) out)))
+        (push (eas-svg--line domain (funcall get :domainColor) (or (funcall get :domainWidth) 1)
+                             (funcall get :domainOpacity) (eas-svg--dash (funcall get :domainDash)))
+              out)))
     (seq-doseq (tk (plist-get axis :ticks))
       (unless (or (equal (plist-get axis :tickSize) 0) (null (plist-get tk :tick)))
         (when-let* ((color (eas-axis-extra-tick-color axis tk (funcall get :tickColor))))
           (push (eas-svg--line (plist-get tk :tick) color (or (funcall get :tickWidth) 1)
-                               nil (plist-get tk :tick-dash))
+                               (funcall get :tickOpacity) (or (plist-get tk :tick-dash) (eas-svg--dash (funcall get :tickDash))))
                 out)))
       (unless (string-empty-p (plist-get tk :label))
         (push (eas-svg--text (plist-get tk :label) (plist-get tk :lx) (plist-get tk :ly)
@@ -283,12 +301,16 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                                :align (plist-get tk :align) :baseline (plist-get tk :baseline)
                                :angle (if horizontal (plist-get axis :labelAngle) 0)
                                :weight (funcall get :labelFontWeight)
+                               :font (eas-svg--font-name (funcall get :labelFont)) :style (funcall get :labelFontStyle)
+                               :opacity (funcall get :labelOpacity)
                                :fill (or (plist-get tk :label-color) (funcall get :labelColor)))
               out)))
     (when-let* ((tm (plist-get axis :title-mark)))
       (push (eas-svg--text (plist-get tm :text) (plist-get tm :x) (plist-get tm :y) (or (funcall get :titleFontSize) 11)
                              :align (plist-get tm :align) :baseline (plist-get tm :baseline)
                              :angle (plist-get tm :angle) :weight (or (funcall get :titleFontWeight) "bold")
+                             :font (eas-svg--font-name (funcall get :titleFont)) :style (funcall get :titleFontStyle)
+                             :opacity (funcall get :titleOpacity)
                              :fill (funcall get :titleColor))
             out))
     (nreverse out)))
@@ -318,7 +340,8 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
     (when-let* ((tm (plist-get legend :title-mark)))
       (push (eas-svg--text (plist-get tm :text) (plist-get tm :x) (plist-get tm :y) (or (funcall get :titleFontSize) 11)
                              :align "left" :baseline "top" :weight (or (funcall get :titleFontWeight) "bold")
-                             :fill (funcall get :titleColor))
+                             :font (eas-svg--font-name (funcall get :titleFont)) :style (funcall get :titleFontStyle)
+                             :opacity (funcall get :titleOpacity) :fill (funcall get :titleColor))
             out))
     (when-let* ((bar (plist-get legend :bar)))
       (push (eas-svg--node 'rect :x (aref bar 0) :y (aref bar 1) :width (aref bar 2) :height (aref bar 3)
@@ -339,7 +362,9 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                                  :opacity (let ((o (plist-get e :opacity))) (and o (/= o 1) o)))
               out))
       (push (eas-svg--text (plist-get e :label) (plist-get e :lx) (plist-get e :ly) fs :align (or (plist-get e :align) "left")
-                             :baseline (or (plist-get e :baseline) "middle") :fill (funcall get :labelColor))
+                             :baseline (or (plist-get e :baseline) "middle") :fill (funcall get :labelColor)
+                             :weight (funcall get :labelFontWeight) :font (eas-svg--font-name (funcall get :labelFont))
+                             :style (funcall get :labelFontStyle) :opacity (funcall get :labelOpacity))
             out))
     (nreverse out)))
 

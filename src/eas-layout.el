@@ -263,9 +263,17 @@ PLOT-SIZE is the plot extent along the axis."
           (when (numberp (plist-get axis :tickSize)) (list :tickSize (plist-get axis :tickSize))))
          def channel (plist-get metrics :config))))))
 
+(defun eas-layout--label-font (axis metrics)
+  "The label font family of AXIS: its own, else the config's."
+  (let ((style (plist-get axis :style)))
+    (if (plist-member style :labelFont) (plist-get style :labelFont)
+      (eas-theme-axis (plist-get metrics :config)
+                      (if (member (plist-get axis :orient) '("bottom" "top")) :x :y) :labelFont))))
+
 (defun eas-layout-axis-label-extent (axis metrics)
   "Thickness of AXIS's labels across the axis (text target)."
-  (let ((widths (mapcar (lambda (tk) (eas-layout-text-width metrics (plist-get tk :label)
+  (let* ((eas-font-family (eas-layout--label-font axis metrics))
+         (widths (mapcar (lambda (tk) (eas-layout-text-width metrics (plist-get tk :label)
                                                               (plist-get metrics :label-size)))
                         (plist-get axis :ticks))))
     (if (and (equal (plist-get axis :orient) "bottom") (zerop (plist-get axis :labelAngle)))
@@ -278,7 +286,8 @@ PLOT-SIZE is the plot extent along the axis."
 (defun eas-layout--tick (axis metrics)
   "Tick length of AXIS under METRICS (one cell in text; axis tickSize in svg)."
   (or (and (not (eas-layout-text-p metrics))
-           (or (plist-get axis :tick-size)
+           (or (and (plist-get axis :ticks-off) 0)   ; axis.ticks false: labels sit at labelPadding alone
+               (plist-get axis :tick-size)
                (and (numberp (plist-get axis :tickSize)) (plist-get axis :tickSize))))
       (plist-get metrics (if (equal (plist-get axis :orient) "bottom") :tick-bottom :tick-left))))
 
@@ -385,9 +394,10 @@ Overlapping labels drop their ticks too; lines sit at cell centres."
   "Return AXIS with geometry for SCALE inside plot BOUNDS [x0 y0 w h].
 The svg result carries :bounds, Vega's axis bounds (ticks, visible
 labels, title) without the half-pixel translate of the drawn lines."
-  (if (or (member (plist-get axis :orient) '("top" "right")) (plist-get axis :offset))
-      (eas-axis-place axis scale bounds metrics)
-    (eas-axis-extra-place (eas-layout--axis-place axis scale bounds metrics) scale metrics)))
+  (let ((eas-font-family (eas-layout--label-font axis metrics)))
+    (if (or (member (plist-get axis :orient) '("top" "right")) (plist-get axis :offset))
+        (eas-axis-place axis scale bounds metrics)
+      (eas-axis-extra-place (eas-layout--axis-place axis scale bounds metrics) scale metrics))))
 
 (defun eas-layout--axis-place (axis scale bounds metrics)
   "`eas-layout-axis-place' before the axis extras."

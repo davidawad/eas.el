@@ -65,8 +65,7 @@
 (defun eas-vl-gallery-custom--findings (spec)
   "Check findings and ignored properties of SPEC, as problem strings."
   (mapcar (lambda (f) (format "%s at %s: %s" (plist-get f :code) (plist-get f :path) (plist-get f :message)))
-          (append (let ((eas-spec-supported-function nil)) (eas-spec-check spec))
-                  (eas-spec-props-findings spec))))
+          (let ((eas-spec-supported-function nil)) (eas-spec-check spec))))
 
 (defun eas-vl-gallery-custom-image (group name spec svg)
   "Judge native SVG of customization SPEC NAME in GROUP against bin/chart.

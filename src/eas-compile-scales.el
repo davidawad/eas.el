@@ -155,8 +155,8 @@ With KEEP-NULL, null values count too (discrete domains show them)."
                                  channel)
                                 5))))
               (when pad (append (list :padding pad)
-                                ;; Vega nices a padded log domain again.
-                                (when (and nice (equal type "log")) (list :renice t))))))))
+                                ;; Vega nices a padded log or linear domain again.
+                                (when (and nice (member type '("log" "linear"))) (list :renice t))))))))
 
 (defun eas-compile--bin-step (pairs)
   "The bin width of the binned def in PAIRS, read off its rows."
@@ -333,6 +333,10 @@ the data spans the range less P on each side, like Vega's padDomain."
           (let* ((d (plist-get scale :domain)) (c (/ (+ (aref d 0) (aref d 1)) 2.0))
                  (frac (/ span (- span (* 2.0 pad)))))
             (setq out (plist-put out :domain (vector (+ c (* frac (- (aref d 0) c))) (+ c (* frac (- (aref d 1) c))))))
+            ;; Vega nices the padded domain again (d3's nice, ten ticks).
+            (when (and (plist-get scale :renice) (equal (plist-get scale :type) "linear"))
+              (let ((n (eas-scale-nice-linear (aref (plist-get out :domain) 0) (aref (plist-get out :domain) 1) 10)))
+                (setq out (plist-put out :domain (vector (car n) (cdr n))))))
             (setq out (plist-put out :padding nil))))
         (when (and pad (> span (* 2 pad)) (equal (plist-get scale :type) "log"))
           (setq out (plist-put out :domain (eas-bins-pad-log (plist-get scale :domain) (/ span (- span (* 2.0 pad)))

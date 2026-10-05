@@ -17,7 +17,11 @@
 ;;   {"NAME": {"status": "pass"|"partial"|"unsupported",
 ;;             "reason": "...", "threshold": T}}
 ;; "threshold" is the differing-pixel ratio the example must stay
-;; within; `eas-vl-gallery-check' re-runs an example against it.
+;; within; `eas-vl-gallery-check' re-runs an example against it.  An
+;; entry may also carry "refOmits": {"marks": [TYPE ...], "reason": R}
+;; when bin/chart's reference is known to lack those marks (a Vega-Lite
+;; defect, R says which): the comparison then leaves them out of the
+;; native image too, and the example must still draw them natively.
 
 ;;; Code:
 
@@ -146,6 +150,9 @@ legend's column from its title to its last entry."
             (push (format "%s axis labels of view %s collide" (plist-get axis :channel) (plist-get view :id)) out)))))
     (nreverse out)))
 
+(defconst eas-vl-gallery--inner-orients '("none" "top-left" "top-right" "bottom-left" "bottom-right")
+  "Legend orients that place a legend inside the plot.")
+
 (defun eas-vl-gallery-overlaps (scene)
   "Layout problems in SCENE: views overlapping each other or a legend,
 views or legends leaving the canvas, axis labels colliding.  Return a
@@ -155,9 +162,9 @@ list of strings (nil when clean)."
          (boxes (mapcar (lambda (v) (cons (plist-get v :id) (plist-get v :bounds))) views))
          (legends (apply #'append
                          (mapcar (lambda (v)
-                                   ;; Legends placed with orient "none" sit in the plot on purpose.
+                                   ;; Legends placed with orient "none" or in a corner sit in the plot on purpose.
                                    (delq nil (mapcar (lambda (l) (let ((b (eas-vl-gallery--legend-box l)))
-                                                                   (and (vectorp b) (not (equal (plist-get l :orient) "none"))
+                                                                   (and (vectorp b) (not (member (plist-get l :orient) eas-vl-gallery--inner-orients))
                                                                         (cons (plist-get v :id) b))))
                                                      (plist-get v :legends))))
                                  views)))
@@ -200,6 +207,29 @@ list of strings (nil when clean)."
   "Non-nil when native SVG can be rasterized and PNGs decoded here."
   (and (executable-find eas-chart-rsvg-program) (zlib-available-p)))
 
+(defun eas-vl-gallery-omit-marks (scene types)
+  "SCENE without its marks of TYPES (mark type strings)."
+  (if (null types) scene
+    (plist-put (copy-sequence scene) :views
+               (vconcat (mapcar (lambda (v) (plist-put (copy-sequence v) :marks
+                                                        (vconcat (seq-remove (lambda (m) (member (plist-get m :mark) types))
+                                                                             (plist-get v :marks)))))
+                                (plist-get scene :views))))))
+
+(defun eas-vl-gallery-ref-omits (group name)
+  "Mark types NAME's reference in GROUP lacks (status.json refOmits), or nil."
+  (append (plist-get (plist-get (plist-get (eas-vl-gallery-status group) (eas-key name)) :refOmits) :marks) nil))
+
+(defun eas-vl-gallery--omitted-drawn-p (spec types)
+  "Non-nil when SPEC natively draws items of every mark type in TYPES."
+  (let ((scene (eas-vl-gallery--native (eas-compile spec))))
+    (seq-every-p (lambda (type)
+                   (seq-some (lambda (v) (seq-some (lambda (m) (and (equal (plist-get m :mark) type)
+                                                                    (> (length (plist-get m :items)) 0)))
+                                                   (plist-get v :marks)))
+                             (plist-get scene :views)))
+                 types)))
+
 (defun eas-vl-gallery-compare (group name svg)
   "Compare native SVG of NAME in GROUP with its reference.
 Return `eas-png-compare's plist, or nil when no rasterizer is available."
@@ -227,12 +257,19 @@ Return (:name :ok :error :svg :text :ratio :size-delta :overlaps).  :ok
 is non-nil when both backends rendered."
   (condition-case err
       (let* ((spec (eas-vl-gallery-spec group name))
+             (omit (eas-vl-gallery-ref-omits group name))
              (svg (eas-vl-gallery-svg spec))
              (text (eas-vl-gallery-text spec))
-             (cmp (and compare (eas-vl-gallery-compare group name svg))))
+             (cmp (and compare (eas-vl-gallery-compare
+                                group name (if omit (eas-vl-gallery--native
+                                                     (eas-svg-render (eas-vl-gallery-omit-marks (eas-compile spec) omit)))
+                                             svg)))))
         (list :name name :ok t :svg svg :text text
               :ratio (plist-get cmp :ratio) :size-delta (plist-get cmp :size-delta)
-              :overlaps (eas-vl-gallery-resize-problems spec)))
+              :overlaps (append (eas-vl-gallery-resize-problems spec)
+                                (when (and omit (not (eas-vl-gallery--omitted-drawn-p spec omit)))
+                                  (list (format "native draws no %s, which the reference omits"
+                                                (string-join omit ", ")))))))
     (eas-error (list :name name :ok nil :error (eas-error-plist err)))
     ;; Anything else the engine cannot yet do is an unsupported example too.
     (error (list :name name :ok nil :error (list :message (error-message-string err))))))
@@ -288,7 +325,7 @@ entry records another threshold with a reason.")
   "Judge examples NAMES (default all) of GROUP against the references and
 record them in GROUP/status.json.  An existing entry keeps its threshold and
 reason fields; the verdict, ratio and a generated reason are rewritten unless
-the entry has a \"note\" (a written reason, kept)."
+the entry has a \"note\" (a written reason, kept).  refOmits is kept too."
   (let ((old (eas-vl-gallery-status group)) (new nil))
     (dolist (name (eas-vl-gallery-names group))
       (let* ((prev (plist-get old (eas-key name))))
@@ -299,7 +336,9 @@ the entry has a \"note\" (a written reason, kept)."
                  (note (plist-get prev :note)))
             (setq new (append new (list (eas-key name)
                                         (append (if note (plist-put v :reason (concat note "; " (plist-get v :reason))) v)
-                                                (when note (list :note note))))))))))
+                                                (when note (list :note note))
+                                                (when (plist-get prev :refOmits)
+                                                  (list :refOmits (plist-get prev :refOmits)))))))))))
     (with-temp-file (eas-vl-gallery-status-file group)
       (set-buffer-file-coding-system 'utf-8-unix)
       (insert (eas-json-pretty new)))
@@ -332,6 +371,8 @@ prove goes into supported.json."
                                          :threshold threshold
                                          :ref (eas-vl-gallery-ref-file group name)
                                          :ref-problem (eas-vl-gallery-ref-problem group name)
+                                         :oracle-scene (let ((omit (eas-vl-gallery-ref-omits group name)))
+                                                         (and omit (lambda (scene) (eas-vl-gallery-omit-marks scene omit))))
                                          :text-file (expand-file-name (concat name ".txt") dir)))))
 
 (defvar eas-conformance-gallery-functions)

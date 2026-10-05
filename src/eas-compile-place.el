@@ -35,6 +35,7 @@
 (require 'eas-polar)
 (require 'eas-compile-shared)
 (require 'eas-compile-grid)
+(require 'eas-axis-fit)
 
 (defun eas-place-natural-size (group metrics)
   "Set GROUP's natural :w and :h from its spec and scales under METRICS."
@@ -159,6 +160,7 @@ tallest column."
                                                                  (plist-get group (if (string-prefix-p ":x" (symbol-name (car pair))) :w :h))
                                                                  metrics))
                                               (plist-get group :extra-axes)))))
+         (axes (eas-axis-fit-labels axes group metrics))
          (legends (delq nil (mapcar (lambda (spec)
                                       (let ((l (eas-legend-model spec metrics)))
                                         (and l (eas-legend-fit

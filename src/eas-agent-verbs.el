@@ -156,9 +156,9 @@ non-nil), so they come back as warnings with native false."
          (errors (car findings)) (unsupported (cdr findings))
          (data (list :template (or (plist-get src :template) :null)
                      :hash (eas-resolve-hash spec)
-                     :native (if unsupported :false t)
-                     ;; Properties drawn without (eas-spec-props.el) warn but stay native.
-                     :warnings (vconcat unsupported (eas-spec-props-findings spec)))))
+                     ;; An undrawn style property still draws natively.
+                     :native (if (seq-remove (lambda (f) (plist-get f :property)) unsupported) :false t)
+                     :warnings (vconcat unsupported))))
     (cond
      (errors
       (eas-agent-fail (plist-get (car errors) :code) (car errors)

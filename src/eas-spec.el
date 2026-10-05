@@ -22,6 +22,7 @@
 (require 'eas-core)
 (require 'seq)
 (require 'eas-repeat)
+(require 'eas-spec-props)
 
 (defconst eas-spec-vega-lite-version "6.4.1"
   "The Vega-Lite version chart/v1 follows (the version bin/chart pins).")
@@ -61,7 +62,11 @@
     ;; interactive (fc-qx1.33)
     :cursor
     ;; area and arc (fc-qx1.42)
-    :strokeDashOffset :strokeMiterLimit :tension :blend :href)
+    :strokeDashOffset :strokeMiterLimit :tension :blend :href
+    ;; Vega-Lite style properties, honored or named by check (fc-qx1.43, eas-spec-props.el)
+    :lineHeight :ellipsis :lineBreak :dir :bandSize
+    :continuousBandSize :discreteBandSize :minBandSize :timeUnitBandSize :timeUnitBandPosition
+    :smooth :ariaRole :ariaRoleDescription)
   "Mark properties chart/v1 recognises.")
 
 (defconst eas-spec--channels
@@ -95,7 +100,9 @@
 (defconst eas-spec--scale-keys
   '(:type :domain :range :zero :nice :padding :paddingInner :paddingOuter
     :reverse :scheme :clamp :base :domainMin :domainMax
-    :rangeMin :rangeMax :exponent :domainMid)
+    :rangeMin :rangeMax :exponent :domainMid
+    ;; Vega-Lite scale properties, honored or named by check (fc-qx1.43, eas-spec-props.el)
+    :round :interpolate :align :constant :bins :domainRaw)
   "Scale properties chart/v1 recognises.")
 
 (defconst eas-spec--transforms
@@ -342,8 +349,9 @@ plist (:code CODE :message M :path P [:feature ID]).  Parse failures
 are returned as a single finding rather than signalled."
   (condition-case err
       (let ((supported (eas-spec-supported-features))
+            (parsed (eas-spec-parse spec))
             findings)
-        (dolist (f (eas-spec-features (eas-spec-parse spec)))
+        (dolist (f (eas-spec-features parsed))
           (cond
            ((plist-get f :invalid)
             (push (list :code "INVALID_INPUT" :message (plist-get f :invalid)
@@ -357,7 +365,8 @@ are returned as a single finding rather than signalled."
                                          (plist-get f :feature))
                         :path (plist-get f :path) :feature (plist-get f :feature))
                   findings))))
-        (nreverse findings))
+        ;; Style properties eas does not draw (eas-spec-props.el).
+        (append (nreverse findings) (eas-spec-props-findings parsed)))
     (eas-error (list (eas-error-plist err)))))
 
 (defun eas-spec-validate (spec)
@@ -370,8 +379,9 @@ Unsupported features are not errors here: they decide the backend."
     parsed))
 
 (defun eas-spec-unsupported (spec)
-  "Return the UNSUPPORTED_FEATURE findings of SPEC."
-  (seq-filter (lambda (f) (equal (plist-get f :code) "UNSUPPORTED_FEATURE"))
+  "Return the UNSUPPORTED_FEATURE findings of SPEC that keep it from
+drawing natively (an undrawn style property, :property t, does not)."
+  (seq-filter (lambda (f) (and (equal (plist-get f :code) "UNSUPPORTED_FEATURE") (not (plist-get f :property))))
               (eas-spec-check spec)))
 
 (provide 'eas-spec)

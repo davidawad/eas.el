@@ -240,14 +240,13 @@
          (findings (eas-spec-props-findings spec))
          (env (eas-agent "check" (eas-json-encode spec))))
     (should (equal (mapcar (lambda (f) (plist-get f :path)) findings)
-                   '("/mark/aria" "/title/font" "/encoding/color/legend/labelFont" "/encoding/color/legend/orient"
-                     "/config/locale" "/config/axis/labelFont")))
-    (should (cl-every (lambda (f) (and (equal (plist-get f :code) "UNSUPPORTED_FEATURE") (plist-get f :ignored)))
+                   '("/title/font" "/encoding/color/legend/orient")))
+    (should (cl-every (lambda (f) (and (equal (plist-get f :code) "UNSUPPORTED_FEATURE") (plist-get f :property)))
                       findings))
     ;; Ignored properties warn; the chart stays native.
     (should (eq (plist-get env :ok) t))
     (should (eq (plist-get (plist-get env :data) :native) t))
-    (should (= (length (plist-get (plist-get env :data) :warnings)) 6))
+    (should (= (length (plist-get (plist-get env :data) :warnings)) 2))
     (should-not (eas-spec-props-findings (eas-vl-gallery-spec "area-circular" "arc_pie_pyramid")))))
 
 (ert-deftest eas-area-arc-agent-reads-spec-files-relative-data ()

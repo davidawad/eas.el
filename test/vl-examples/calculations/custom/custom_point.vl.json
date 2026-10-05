@@ -1,0 +1,22 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Point chart customization: every non-default property here is one eas draws natively (fc-qx1.43).",
+  "title": {"text": "Latency against load", "anchor": "start", "fontWeight": "normal", "fontSize": 14},
+  "width": 300,
+  "height": 220,
+  "data": {"values": [
+    {"load": 10, "ms": 12, "err": 0.1}, {"load": 20, "ms": 15, "err": 0.4}, {"load": 30, "ms": 19, "err": 0.9},
+    {"load": 40, "ms": 26, "err": 1.6}, {"load": 50, "ms": 34, "err": 2.0}, {"load": 60, "ms": 47, "err": 3.1},
+    {"load": 70, "ms": 61, "err": 4.4}, {"load": 80, "ms": 83, "err": 6.0}
+  ]},
+  "mark": {"type": "point", "shape": "diamond", "size": 140, "filled": true, "stroke": "#202020", "strokeWidth": 1, "strokeOpacity": 0.8, "fillOpacity": 0.85},
+  "encoding": {
+    "x": {"field": "load", "type": "quantitative", "scale": {"domain": [0, 90], "nice": false},
+          "axis": {"title": "Load (req/s)", "labelFontSize": 12, "grid": true, "gridColor": "#eeeeee"}},
+    "y": {"field": "ms", "type": "quantitative", "scale": {"type": "log", "domain": [10, 100]},
+          "axis": {"title": "p99 (ms)", "labelColor": "#444444", "minExtent": 40}},
+    "color": {"field": "err", "type": "quantitative", "scale": {"scheme": "orangered"},
+              "legend": {"title": "Errors %", "gradientLength": 120, "gradientThickness": 10, "titleFontSize": 12, "labelFontSize": 10, "offset": 24}}
+  },
+  "config": {"point": {"opacity": 1}}
+}

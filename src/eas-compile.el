@@ -18,6 +18,7 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-compile-memo)
 (require 'eas-spec)
 (require 'eas-data)
 (require 'eas-transform)
@@ -101,8 +102,8 @@ lines and areas keep them (their default breaks the path instead)."
   (let* ((path (plist-get ctx :path))
          (encoding (eas-layer-drop-empty (plist-get ctx :encoding)))
          (rows (eas-layer-coerce
-                (eas-nested-flatten (eas-transform-run (vconcat (plist-get ctx :transforms)) (plist-get ctx :rows) env
-                                                       (concat path "/transform"))
+                (eas-nested-flatten (eas-compile-memo-transform-run (vconcat (plist-get ctx :transforms)) (plist-get ctx :rows) env
+                                                                    (concat path "/transform"))
                                     encoding)
                 encoding))
          (enc (eas-encode-normalize encoding rows))
@@ -394,7 +395,9 @@ compiling again."
                     :path (plist-get unsupported :path) :feature (plist-get unsupported :feature)))
     (let* ((target (or target 'svg))
            (config (eas-theme-merge eas-theme-vega-lite eas-theme-default
-                                      (let ((c (plist-get spec :config))) (and (eas-object-p c) c))))
+                                      (let ((c (plist-get spec :config))) (and (eas-object-p c) c))
+                                      ;; A top-level padding overrides config.padding, as in Vega-Lite.
+                                      (let ((p (plist-get spec :padding))) (and (numberp p) (list :padding p)))))
            (metrics (eas-layout-metrics target cell config))
            (cellv (plist-get metrics :cell))
            (size (cond ((and (consp size) (plist-get size :cols))
@@ -402,8 +405,9 @@ compiling again."
                        (t size)))
            (rows (if (eas-data-p rows) (plist-get rows :rows) rows))
            (env (eas-compile--env spec state))
-           (tree (eas-compile--collect spec (list :path "" :rows [] :transforms nil :encoding nil :config config)
-                                         env rows nil))
+           (tree (eas-compile-memo
+                  (eas-compile--collect spec (list :path "" :rows [] :transforms nil :encoding nil :config config)
+                                        env rows nil)))
            (groups (eas-place--groups tree))
            (title (eas-compile--title spec))
            (title-h (eas-title-height spec metrics)))

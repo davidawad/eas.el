@@ -1,0 +1,19 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Area chart customization: every non-default property here is one eas draws natively (fc-qx1.43).",
+  "title": {"text": "Queue depth", "frame": "group", "anchor": "start", "color": "#2f4f2f", "fontSize": 13, "offset": 6},
+  "width": 340,
+  "height": 160,
+  "data": {"values": [
+    {"t": 0, "depth": 2}, {"t": 1, "depth": 5}, {"t": 2, "depth": 4}, {"t": 3, "depth": 9},
+    {"t": 4, "depth": 7}, {"t": 5, "depth": 11}, {"t": 6, "depth": 6}, {"t": 7, "depth": 3}
+  ]},
+  "mark": {"type": "area", "interpolate": "step-after", "color": "#4c9a5a", "opacity": 0.55, "line": {"color": "#1f5a2a", "strokeWidth": 2}},
+  "encoding": {
+    "x": {"field": "t", "type": "quantitative", "scale": {"padding": 6},
+          "axis": {"values": [0, 2, 4, 6], "labelExpr": "'t+' + datum.label", "ticks": false, "domainDash": [2, 2], "title": "Minute"}},
+    "y": {"field": "depth", "type": "quantitative", "scale": {"domain": [0, 12]},
+          "axis": {"tickCount": 4, "labelFontWeight": "bold", "domainOpacity": 0.4, "tickOpacity": 0.4, "titleOpacity": 0.7, "title": "Jobs waiting"}}
+  },
+  "config": {"axis": {"gridColor": "#e2ead8", "titlePadding": 10}}
+}

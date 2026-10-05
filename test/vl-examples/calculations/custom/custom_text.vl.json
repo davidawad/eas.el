@@ -1,0 +1,19 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Text chart customization: every non-default property here is one eas draws natively (fc-qx1.43).",
+  "title": {"text": "Annotated releases", "anchor": "start", "color": "#24425c", "fontSize": 14},
+  "width": 340,
+  "height": 180,
+  "data": {"values": [
+    {"x": 1, "y": 2, "name": "alpha (initial cut)"}, {"x": 3, "y": 5, "name": "beta"},
+    {"x": 5, "y": 3, "name": "release candidate one"}, {"x": 7, "y": 7, "name": "stable"},
+    {"x": 9, "y": 4, "name": "long-term support"}
+  ]},
+  "mark": {"type": "text", "font": "Courier New", "fontSize": 13, "fontStyle": "italic", "fontWeight": "bold", "angle": -20,
+           "align": "left", "baseline": "bottom", "dx": 4, "dy": -4, "limit": 90, "ellipsis": "~", "fill": "#24425c", "opacity": 0.9},
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative", "scale": {"domain": [0, 12]}, "axis": {"title": "Month", "grid": false}},
+    "y": {"field": "y", "type": "quantitative", "scale": {"domain": [0, 9]}, "axis": {"title": "Score", "gridOpacity": 0.4}},
+    "text": {"field": "name", "type": "nominal"}
+  }
+}

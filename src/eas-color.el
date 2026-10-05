@@ -43,8 +43,16 @@
   "Inverse of `eas-color--xyz2lab'."
   (if (> tt eas-color--t1) (* tt tt tt) (* eas-color--t2 (- tt eas-color--t0))))
 
+(defvar eas-color--hcl-cache (make-hash-table :test 'equal)
+  "HEX -> its hcl, as `eas-color-hcl' computed it (fc-qx1.43).")
+
 (defun eas-color-hcl (hex)
   "HEX as d3's hcl: (H C L), H a NaN for grays."
+  (or (gethash hex eas-color--hcl-cache)
+      (puthash hex (eas-color--hcl hex) eas-color--hcl-cache)))
+
+(defun eas-color--hcl (hex)
+  "HEX as d3's hcl, computed (see `eas-color-hcl')."
   (pcase-let* ((`(,r ,g ,b) (mapcar #'eas-color--rgb2lrgb (eas-color--hex-rgb hex)))
                (y (eas-color--xyz2lab (+ (* 0.2225045 r) (* 0.7168786 g) (* 0.0606169 b))))
                (x (if (and (= r g) (= g b)) y

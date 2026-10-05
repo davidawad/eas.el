@@ -81,7 +81,8 @@ Return (:name :ok :features :svg :text :error)."
         (spec (plist-get entry :spec)))
     (condition-case err
         (let* ((svg (let ((eas-time-zone (eas-conformance-ref-zone)))
-                      (eas-svg-render (eas-compile spec))))
+                      ;; :oracle-scene drops what a known-defective reference lacks.
+                      (eas-svg-render (funcall (or (plist-get entry :oracle-scene) #'identity) (eas-compile spec)))))
                (text (concat (substring-no-properties
                               (eas-text-render (eas-compile spec :target 'text :size eas-conformance-text-size)))
                              "\n"))

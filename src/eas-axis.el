@@ -29,7 +29,10 @@
 
 (defconst eas-axis--style-keys
   '(:domainColor :domainWidth :domainDash :tickColor :tickWidth :gridColor :gridWidth :gridOpacity
-    :gridDash :labelColor :labelFontSize :labelFontWeight :titleColor :titleFontSize :titleFontWeight)
+    :gridDash :labelColor :labelFontSize :labelFontWeight :titleColor :titleFontSize :titleFontWeight
+    ;; fc-qx1.43
+    :labelFont :labelFontStyle :labelOpacity :titleFont :titleFontStyle :titleOpacity
+    :tickOpacity :domainOpacity :domainDash :tickDash)
   "Axis properties the renderers read, overridable per axis.")
 
 (defconst eas-axis--layout-keys

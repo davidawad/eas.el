@@ -17,6 +17,7 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-time-offset)
 
 (defvar eas-time-zone nil
   "Zone for local time, or nil for UTC.
@@ -144,12 +145,16 @@ Months may be numbers (1-12) or names; utc true reads it in UTC."
   "Return the calendar fields of epoch MS in `eas-time-zone' as a plist.
 Keys are :year :month (1-12) :day :hours :minutes :seconds
 :milliseconds and :weekday (0 is Sunday)."
-  (if eas-time-zone
+  (let ((off (and (stringp eas-time-zone) (eas-time-offset-week ms eas-time-zone))))
+    (cond
+     ;; Outside transition weeks, UTC arithmetic at the zone's offset.
+     (off (eas-time--utc-fields (+ (floor ms) off)))
+     (eas-time-zone
       (let* ((ms (floor ms)) (s (floor ms 1000)) (d (decode-time s eas-time-zone)))
         (list :year (decoded-time-year d) :month (decoded-time-month d) :day (decoded-time-day d)
               :hours (decoded-time-hour d) :minutes (decoded-time-minute d) :seconds (decoded-time-second d)
-              :milliseconds (- ms (* 1000 s)) :weekday (decoded-time-weekday d)))
-    (eas-time--utc-fields ms)))
+              :milliseconds (- ms (* 1000 s)) :weekday (decoded-time-weekday d))))
+     (t (eas-time--utc-fields ms)))))
 
 (defun eas-time--utc-fields (ms)
   "The UTC calendar fields of epoch MS (see `eas-time-fields')."
@@ -165,12 +170,18 @@ Keys are :year :month (1-12) :day :hours :minutes :seconds
 (defun eas-time-ms (year &optional month day hours minutes seconds milliseconds)
   "Return epoch milliseconds for calendar fields in `eas-time-zone'.
 MONTH (1-12), DAY and the clock fields may overflow; they are normalized."
-  (if eas-time-zone
+  (let* ((local (and eas-time-zone (eas-time--utc-ms year month day hours minutes seconds milliseconds)))
+         (guess (and (stringp eas-time-zone) (eas-time-offset-week local eas-time-zone)))
+         (off (and guess (eas-time-offset-week (- local guess) eas-time-zone))))
+    (cond
+     ;; Outside transition weeks the local time names one instant.
+     ((and off (eql off guess)) (- local off))
+     (eas-time-zone
       (+ (* 1000 (time-convert (encode-time (list (or seconds 0) (or minutes 0) (or hours 0) (or day 1)
                                                   (or month 1) year nil -1 eas-time-zone))
                                'integer))
-         (or milliseconds 0))
-    (eas-time--utc-ms year month day hours minutes seconds milliseconds)))
+         (or milliseconds 0)))
+     (t (eas-time--utc-ms year month day hours minutes seconds milliseconds)))))
 
 (defun eas-time--utc-ms (year &optional month day hours minutes seconds milliseconds)
   "UTC epoch milliseconds for calendar fields YEAR MONTH DAY HOURS

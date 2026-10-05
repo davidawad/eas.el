@@ -1,0 +1,381 @@
+{
+  "emacs": "30.1",
+  "compiled": true,
+  "zone": "America/Chicago",
+  "reps": 5,
+  "calibration_ms": 99.751,
+  "baseline_calibration_ms": 84.633,
+  "examples": {
+    "area_cumulative_freq": {
+      "rows": 3201,
+      "items": 1,
+      "ms": {
+        "compile-svg": 23.405,
+        "compile-text": 26.167,
+        "hover": 0.172,
+        "render-svg": 3.496,
+        "render-text": 3.067
+      },
+      "baseline_ms": {
+        "compile-svg": 24.823,
+        "compile-text": 24.33,
+        "hover": 0.187,
+        "render-svg": 3.307,
+        "render-text": 3.073
+      }
+    },
+    "bar_argmax": {
+      "rows": 3201,
+      "items": 13,
+      "ms": {
+        "compile-svg": 15.121,
+        "compile-text": 23.234,
+        "hover": 0.163,
+        "render-svg": 3.694,
+        "render-text": 2.73
+      },
+      "baseline_ms": {
+        "compile-svg": 21.607,
+        "compile-text": 11.159,
+        "hover": 0.22,
+        "render-svg": 3.236,
+        "render-text": 2.205
+      }
+    },
+    "bar_percent_of_total": {
+      "rows": 5,
+      "items": 5,
+      "ms": {
+        "compile-svg": 1.752,
+        "compile-text": 0.92,
+        "hover": 0.091,
+        "render-svg": 1.779,
+        "render-text": 0.819
+      },
+      "baseline_ms": {
+        "compile-svg": 2.804,
+        "compile-text": 1.656,
+        "hover": 0.181,
+        "render-svg": 3.062,
+        "render-text": 2.119
+      }
+    },
+    "joinaggregate_mean_difference": {
+      "rows": 3201,
+      "items": 19,
+      "ms": {
+        "compile-svg": 54.61,
+        "compile-text": 58.865,
+        "hover": 0.193,
+        "render-svg": 4.34,
+        "render-text": 4.896
+      },
+      "baseline_ms": {
+        "compile-svg": 108.257,
+        "compile-text": 97.317,
+        "hover": 0.215,
+        "render-svg": 4.121,
+        "render-text": 5.762
+      }
+    },
+    "joinaggregate_mean_difference_by_year": {
+      "rows": 3201,
+      "items": 34,
+      "ms": {
+        "compile-svg": 106.496,
+        "compile-text": 108.863,
+        "hover": 0.271,
+        "render-svg": 4.611,
+        "render-text": 4.45
+      },
+      "baseline_ms": {
+        "compile-svg": 1351.384,
+        "compile-text": 1203.465,
+        "hover": 0.331,
+        "render-svg": 11.744,
+        "render-text": 4.356
+      }
+    },
+    "joinaggregate_residual_graph": {
+      "rows": 3201,
+      "items": 2972,
+      "ms": {
+        "compile-svg": 279.52,
+        "compile-text": 249.162,
+        "hover": 7.434,
+        "render-svg": 123.293,
+        "render-text": 15.21
+      },
+      "baseline_ms": {
+        "compile-svg": 1012.454,
+        "compile-text": 1024.41,
+        "hover": 7.832,
+        "render-svg": 192.791,
+        "render-text": 19.647
+      }
+    },
+    "layer_cumulative_histogram": {
+      "rows": 3201,
+      "items": 18,
+      "ms": {
+        "compile-svg": 27.784,
+        "compile-text": 23.656,
+        "hover": 0.219,
+        "render-svg": 3.51,
+        "render-text": 2.543
+      },
+      "baseline_ms": {
+        "compile-svg": 52.259,
+        "compile-text": 49.773,
+        "hover": 0.202,
+        "render-svg": 4.349,
+        "render-text": 1.798
+      }
+    },
+    "layer_line_mean_point_raw": {
+      "rows": 560,
+      "items": 69,
+      "ms": {
+        "compile-svg": 9.222,
+        "compile-text": 6.685,
+        "hover": 0.707,
+        "render-svg": 8.741,
+        "render-text": 2.196
+      },
+      "baseline_ms": {
+        "compile-svg": 31.576,
+        "compile-text": 27.231,
+        "hover": 0.848,
+        "render-svg": 4.502,
+        "render-text": 2.747
+      }
+    },
+    "layer_line_rolling_mean_point_raw": {
+      "rows": 1461,
+      "items": 1462,
+      "ms": {
+        "compile-svg": 109.039,
+        "compile-text": 92.967,
+        "hover": 3.164,
+        "render-svg": 72.779,
+        "render-text": 19.564
+      },
+      "baseline_ms": {
+        "compile-svg": 281.928,
+        "compile-text": 126.842,
+        "hover": 3.81,
+        "render-svg": 77.371,
+        "render-text": 16.286
+      }
+    },
+    "layer_line_window": {
+      "rows": 0,
+      "items": 2,
+      "ms": {
+        "compile-svg": 16.588,
+        "compile-text": 21.478,
+        "hover": 0.311,
+        "render-svg": 4.537,
+        "render-text": 10.57
+      },
+      "baseline_ms": {
+        "compile-svg": 16.865,
+        "compile-text": 20.885,
+        "hover": 0.344,
+        "render-svg": 6.179,
+        "render-text": 10.874
+      }
+    },
+    "layer_point_line_loess": {
+      "rows": 3201,
+      "items": 2261,
+      "ms": {
+        "compile-svg": 316.272,
+        "compile-text": 333.808,
+        "hover": 4.055,
+        "render-svg": 92.401,
+        "render-text": 17.489
+      },
+      "baseline_ms": {
+        "compile-svg": 344.34,
+        "compile-text": 366.131,
+        "hover": 4.704,
+        "render-svg": 113.018,
+        "render-text": 12.904
+      }
+    },
+    "layer_point_line_regression": {
+      "rows": 3201,
+      "items": 2262,
+      "ms": {
+        "compile-svg": 75.845,
+        "compile-text": 60.646,
+        "hover": 5.735,
+        "render-svg": 97.808,
+        "render-text": 11.817
+      },
+      "baseline_ms": {
+        "compile-svg": 89.378,
+        "compile-text": 68.437,
+        "hover": 11.716,
+        "render-svg": 135.444,
+        "render-text": 20.841
+      }
+    },
+    "lookup": {
+      "rows": 9,
+      "items": 3,
+      "ms": {
+        "compile-svg": 1.988,
+        "compile-text": 1.246,
+        "hover": 0.166,
+        "render-svg": 2.307,
+        "render-text": 0.621
+      },
+      "baseline_ms": {
+        "compile-svg": 1.613,
+        "compile-text": 0.99,
+        "hover": 0.152,
+        "render-svg": 1.719,
+        "render-text": 0.471
+      }
+    },
+    "parallel_coordinate": {
+      "rows": 344,
+      "items": 4462,
+      "ms": {
+        "compile-svg": 188.641,
+        "compile-text": 159.713,
+        "hover": 32.991,
+        "render-svg": 197.752,
+        "render-text": 249.14
+      },
+      "baseline_ms": {
+        "compile-svg": 504.415,
+        "compile-text": 496.835,
+        "hover": 36.257,
+        "render-svg": 197.989,
+        "render-text": 233.918
+      }
+    },
+    "point_quantile_quantile": {
+      "rows": 500,
+      "items": 200,
+      "ms": {
+        "compile-svg": 13.195,
+        "compile-text": 7.272,
+        "hover": 0.634,
+        "render-svg": 13.659,
+        "render-text": 5.845
+      },
+      "baseline_ms": {
+        "compile-svg": 15.129,
+        "compile-text": 8.995,
+        "hover": 0.498,
+        "render-svg": 12.222,
+        "render-text": 6.221
+      }
+    },
+    "ternary": {
+      "rows": 0,
+      "items": 57,
+      "ms": {
+        "compile-svg": 17.853,
+        "compile-text": 12.058,
+        "hover": 0.561,
+        "render-svg": 2.435,
+        "render-text": 14.914
+      }
+    },
+    "waterfall_chart": {
+      "rows": 14,
+      "items": 56,
+      "ms": {
+        "compile-svg": 12.305,
+        "compile-text": 4.666,
+        "hover": 0.313,
+        "render-svg": 6.094,
+        "render-text": 18.907
+      },
+      "baseline_ms": {
+        "compile-svg": 14.682,
+        "compile-text": 12.183,
+        "hover": 0.576,
+        "render-svg": 5.795,
+        "render-text": 11.65
+      }
+    },
+    "window_impute_null": {
+      "rows": 8,
+      "items": 9,
+      "ms": {
+        "compile-svg": 10.121,
+        "compile-text": 2.765,
+        "hover": 0.441,
+        "render-svg": 2.11,
+        "render-text": 1.604
+      },
+      "baseline_ms": {
+        "compile-svg": 9.875,
+        "compile-text": 6.617,
+        "hover": 0.596,
+        "render-svg": 2.226,
+        "render-text": 1.531
+      }
+    },
+    "window_rank": {
+      "rows": 12,
+      "items": 4,
+      "ms": {
+        "compile-svg": 1.941,
+        "compile-text": 1.626,
+        "hover": 0.167,
+        "render-svg": 7.655,
+        "render-text": 0.85
+      },
+      "baseline_ms": {
+        "compile-svg": 2.041,
+        "compile-text": 1.343,
+        "hover": 0.178,
+        "render-svg": 2.926,
+        "render-text": 0.765
+      }
+    },
+    "window_top_k": {
+      "rows": 22,
+      "items": 5,
+      "ms": {
+        "compile-svg": 3.396,
+        "compile-text": 1.39,
+        "hover": 0.152,
+        "render-svg": 1.987,
+        "render-text": 1.099
+      },
+      "baseline_ms": {
+        "compile-svg": 8.038,
+        "compile-text": 1.522,
+        "hover": 0.145,
+        "render-svg": 1.964,
+        "render-text": 0.952
+      }
+    },
+    "window_top_k_others": {
+      "rows": 3201,
+      "items": 10,
+      "ms": {
+        "compile-svg": 33.843,
+        "compile-text": 33.049,
+        "hover": 0.155,
+        "render-svg": 2.079,
+        "render-text": 2.005
+      },
+      "baseline_ms": {
+        "compile-svg": 35.362,
+        "compile-text": 36.005,
+        "hover": 0.171,
+        "render-svg": 2.523,
+        "render-text": 1.888
+      }
+    }
+  }
+}

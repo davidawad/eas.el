@@ -43,8 +43,25 @@
   (cond ((numberp weight) (>= weight 600))
         ((stringp weight) (and (member weight '("bold" "bolder" "600" "700" "800" "900")) t))))
 
+(defvar eas-font-family nil
+  "Font family TEXT is being measured in, or nil for Arial.
+A monospace family (Courier New and kin) is 0.6 em a character.")
+
+(defun eas-font-mono-p (&optional family)
+  "Non-nil when FAMILY (default `eas-font-family') is a monospace family."
+  (let ((family (or family eas-font-family)))
+    (and (stringp family)
+         (string-match-p "\\`\\(?:courier\\|monospace\\|menlo\\|consolas\\|monaco\\)" (downcase family)))))
+
 (defun eas-font-text-width (text size &optional weight)
-  "Width in pixels of TEXT set in Arial at SIZE px with font WEIGHT."
+  "Width in pixels of TEXT at SIZE px with font WEIGHT.
+Set in Arial, or in the monospace `eas-font-family' when that is one."
+  (if (eas-font-mono-p)
+      (* 0.6 size (length text))
+    (eas-font--arial-width text size weight)))
+
+(defun eas-font--arial-width (text size weight)
+  "Width of TEXT in Arial at SIZE px with font WEIGHT."
   (let* ((bold (eas-font-bold-p weight))
          (table (if bold eas-font-sans-bold eas-font-sans-regular))
          (extra (cdr (assq (if bold 'bold 'regular) eas-font-sans-extra)))

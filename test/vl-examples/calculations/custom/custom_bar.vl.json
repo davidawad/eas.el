@@ -1,0 +1,30 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Bar chart customization: every non-default property here is one eas draws natively (fc-qx1.43).",
+  "title": {"text": "Quarterly revenue by region", "anchor": "end", "color": "#3b3b6d", "fontSize": 15, "fontWeight": "bold", "offset": 16},
+  "width": 320,
+  "height": 200,
+  "padding": 12,
+  "background": "#fbfaf4",
+  "data": {"values": [
+    {"quarter": "Q1", "region": "North", "revenue": 4.2},
+    {"quarter": "Q1", "region": "South", "revenue": 3.1},
+    {"quarter": "Q2", "region": "North", "revenue": 5.6},
+    {"quarter": "Q2", "region": "South", "revenue": 2.4},
+    {"quarter": "Q3", "region": "North", "revenue": 6.1},
+    {"quarter": "Q3", "region": "South", "revenue": 4.8},
+    {"quarter": "Q4", "region": "North", "revenue": 7.3},
+    {"quarter": "Q4", "region": "South", "revenue": 5.2}
+  ]},
+  "mark": {"type": "bar", "cornerRadiusTopLeft": 6, "cornerRadiusTopRight": 6, "stroke": "#1d1d3b", "strokeWidth": 1.5, "strokeDash": [4, 2], "opacity": 0.9},
+  "encoding": {
+    "x": {"field": "quarter", "type": "nominal", "scale": {"paddingInner": 0.3, "paddingOuter": 0.2},
+          "axis": {"labelAngle": 0, "labelColor": "#7a3b00", "labelFontSize": 13, "labelFontStyle": "italic", "labelFontWeight": "bold",
+                   "title": "Quarter", "titleColor": "#7a3b00", "titleFontSize": 14, "tickColor": "#7a3b00", "tickWidth": 2, "domainColor": "#7a3b00", "domainWidth": 2}},
+    "y": {"field": "revenue", "type": "quantitative", "aggregate": "sum", "scale": {"domain": [0, 14]},
+          "axis": {"tickCount": 7, "format": ".1f", "gridDash": [3, 3], "gridColor": "#c9c3a8", "labelOpacity": 0.8, "title": "Revenue (M$)", "titleFontStyle": "italic"}},
+    "color": {"field": "region", "type": "nominal", "scale": {"range": ["#3b6ea8", "#e0913c"]},
+              "legend": {"orient": "top-left", "symbolType": "square", "symbolSize": 120, "labelColor": "#1d1d3b", "labelFontSize": 12, "titleColor": "#1d1d3b", "titleFontWeight": "bold", "title": "Region"}}
+  },
+  "config": {"view": {"stroke": "#d8d2b8"}, "axis": {"labelFont": "Courier New"}}
+}

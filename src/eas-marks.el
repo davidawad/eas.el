@@ -28,6 +28,7 @@
 (require 'eas-marks-image)
 (require 'eas-marks-series)
 (require 'eas-mark-style)
+(require 'eas-marks-props)
 
 (defconst eas-marks-default-color "#4c78a8" "Vega-Lite's default mark color.")
 
@@ -227,20 +228,21 @@ Returns the plot centre when the channel is absent."
                                  :y (+ y yo (if (numberp dy) (if cell (* (aref cell 1) (round dy (aref cell 1))) dy) 0))))
                        (list :datum i :x (+ x xo) :y (+ y yo))))
                    (if (equal type "text")
-                       (let ((text (eas-marks--channel unit scales :text row)))
+                       (let* ((text (eas-marks--channel unit scales :text row))
+                              (size (if (eas-layout-text-p metrics) (aref (plist-get metrics :cell) 1)
+                                      ;; Vega-Lite: size sets a text mark's font size.
+                                      (or (eas-marks--channel unit scales :size row) (plist-get mark :fontSize) 11))))
                          (append
-                          (list :text (let ((v (or text (plist-get mark :text) "")))
-                                        ;; An array is one line per element.
-                                        (if (vectorp v) (mapconcat #'eas-expr--string v "\n")
-                                          (eas-marks--text (plist-get (plist-get unit :encoding) :text) v)))
-                               :fontSize (if (eas-layout-text-p metrics) (aref (plist-get metrics :cell) 1)
-                                           ;; Vega-Lite: size sets a text mark's font size.
-                                           (or (eas-marks--channel unit scales :size row)
-                                               (plist-get mark :fontSize) 11))
+                          (eas-marks-props-text
+                           unit row metrics (let ((v (or text (plist-get mark :text) "")))
+                                              ;; An array is one line per element.
+                                              (if (vectorp v) (mapconcat #'eas-expr--string v "\n")
+                                                (eas-marks--text (plist-get (plist-get unit :encoding) :text) v)))
+                           size)
+                          (list :fontSize size
                                :align (let ((a (eas-marks--mark-value unit :align row))) (if (stringp a) a "center"))
                                :baseline (or (eas-marks--mark-value unit :baseline row) "middle")
-                               :fill (or (eas-marks--channel unit scales :color row)
-                                         (plist-get mark :color) "black")
+                               :fill (eas-marks-props-text-fill unit scales row)
                                :opacity (or (plist-get mark :opacity) 1))
                           (when (plist-get mark :fontWeight) (list :fontWeight (plist-get mark :fontWeight)))))
                      (append (list :size (or (eas-marks--channel unit scales :size row)
@@ -372,6 +374,7 @@ ranged (x2/y2) bar."
                                          (horizontal "horizontal") (t "vertical")))
                      (when-let* ((c (and corners (funcall corners row)))) (list :corners c))
                      (eas-marks--style unit scales row)
+                     (eas-marks-props-bar unit)
                      (eas-marks--extras unit row))))))))
 
 (defun eas-marks--rule-row (unit scales bounds)
@@ -401,6 +404,8 @@ ranged (x2/y2) bar."
               (seg (cond
                     ((and tick x y (not xdisc)) (vector x (- y half) x (+ y half)))
                     ((and tick x y) (vector (- x half) y (+ x half) y))
+                    ;; Both ends given: a free segment (x,y)-(x2,y2).
+                    ((and x y x2 y2) (vector x y x2 y2))
                     ((and x y y2) (vector x y x y2))
                     ((and x y x2) (vector x y x2 y))
                     ;; A range on one axis with no cross channel: across the plot's middle.
@@ -415,9 +420,11 @@ ranged (x2/y2) bar."
                     ((and x y) (vector x y x (eas-marks--zero ys bounds :y))))))
          (when (and seg (seq-every-p #'numberp seg))
            (append (list :datum i :x1 (aref seg 0) :y1 (aref seg 1) :x2 (aref seg 2) :y2 (aref seg 3)
-                         :strokeWidth (or (plist-get mark :strokeWidth) (plist-get mark :thickness) 1))
+                         :strokeWidth (if tick (or (plist-get mark :strokeWidth) (plist-get mark :thickness) 1)
+                                        (eas-marks-props-stroke-width unit scales row 1)))
                    (when-let* ((dash (or (eas-marks--channel unit scales :strokeDash row) (plist-get mark :strokeDash))))
                      (list :strokeDash dash))
+                   (eas-marks-props-rule unit)
                    (eas-marks--style unit scales row)
                    (eas-marks--extras unit row)))))))
 
@@ -454,7 +461,7 @@ MAX-POINTS when SORTED along x."
             (unless (equal mode "linear")
               (list :anchors (vconcat (mapcar (lambda (p) (vector (nth 0 p) (nth 1 p))) kept))))
             (when area (list :base (funcall shape 3)))
-            (list :strokeWidth (or (plist-get mark :strokeWidth) (if area 0 2)))
+            (list :strokeWidth (if area (or (plist-get mark :strokeWidth) 0) (eas-marks-props-stroke-width unit scales row 2)))
             (unless area (list :strokeCap (plist-get mark :strokeCap) :strokeJoin (plist-get mark :strokeJoin)))
             (when dash (list :strokeDash dash))
             (when (equal (plist-get mark :type) "trail")

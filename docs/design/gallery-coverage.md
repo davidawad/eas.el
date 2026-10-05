@@ -18,13 +18,39 @@ topojson map examples have no reference and are out of scope).
 | fc-qx1.27 | scatter-table | 18 | 3 | 1 | 22 |
 | fc-qx1.28 | line | 19 | 1 | 0 | 20 |
 | fc-qx1.29 | area-circular | 13 | 0 | 0 | 13 |
-| fc-qx1.30 | calculations | 16 | 4 | 1 | 21 |
+| fc-qx1.30, .43 | calculations | 21 | 0 | 0 | 21 |
 | fc-qx1.31 | layered | 17 | 2 | 0 | 19 |
 | fc-qx1.32 | multiview | 2 | 9 | 8 | 19 |
 | fc-qx1.33 | interactive | 23 | 7 | 1 | 31 |
-| **total** | | **138** | **39** | **11** | **188** |
+| **total** | | **143** | **35** | **10** | **188** |
 
-138 of 188 (73%) pass, 177 of 188 (94%) render natively.
+143 of 188 (76%) pass, 178 of 188 (95%) render natively.
+
+## Polish: calculations (fc-qx1.43)
+
+Every calculations example passes.  Two of bin/chart's references are
+known to lack marks (Vega-Lite 6.4.1 drops bars under the theme's
+`config.bar.cornerRadiusEnd`); their status.json entries carry
+`refOmits`, so the oracle compares everything but those marks, at the
+default 0.03, and the harness requires the native rendering to draw
+them.  Legends placed in a plot corner (`orient: "top-left"`, ...) sit
+in the plot on purpose and are not counted as overlaps.
+
+- Customizability: `eas-spec-props.el` lists, per scope (mark type, axis,
+  legend, scale, title, config blocks), the Vega-Lite properties eas
+  draws; ERT re-measures the list (a property counts only if it changes
+  the SVG).  `check` reports every other property as
+  `UNSUPPORTED_FEATURE` with its path and `:property t`; the chart still
+  draws natively without it.  `calculations/custom/` holds one
+  customization spec per chart type (bar, line, area, point, rule, tick,
+  text), checked clean, with text goldens; their bin/chart references
+  are built by the harness where bin/chart is installed.
+- Cost: `calculations/bench.json` (scripts/eas-gallery-bench.sh) has
+  each example's bench-verb stages, byte-compiled, against the earlier
+  build.  Layers now share their parent's transforms (run once per
+  compile), zone-local time math uses a per-week cached offset instead
+  of a zone lookup per row, and HCL stop colors are cached: the group's
+  summed stage means went from 8.7 s to 3.6 s.
 
 Second passes: area-circular (fc-qx1.42) keeps 13 of 13. Its
 `bench.json` records the bench verb's numbers per example, before and

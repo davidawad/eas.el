@@ -945,3 +945,40 @@ no reference is committed yet. A local Vega 6 / Vega-Lite 6.4.1 render
 2.0% of pixels. That is about what the canvas-free metrics alone
 account for: the same oracle is 0.5 to 17% off bin/chart's own
 references.
+
+## 12. Vega-Lite gallery: calculations render cost (fc-qx1.43)
+
+Byte-compiled bench verb, 5 runs per example, at each spec's own size,
+Emacs 30.1 in batch on the fc-qx1.43 box (`scripts/eas-gallery-bench.sh
+calculations`; every number is in `test/vl-examples/calculations/bench.json`
+with the earlier build as its baseline).  Calibration was 84.6 ms for the
+baseline run and 99.8 ms for the new one, so the new numbers are if
+anything pessimistic.
+
+| example | compile-svg before | after |
+|---|---:|---:|
+| joinaggregate_mean_difference_by_year | 1351 ms | 107 ms |
+| joinaggregate_residual_graph | 1013 ms | 280 ms |
+| parallel_coordinate | 504 ms | 189 ms |
+| layer_line_rolling_mean_point_raw | 282 ms | 109 ms |
+| layer_point_line_loess | 344 ms | 316 ms |
+
+The sum of all stage means over the group went from 8.7 s to 3.6 s.  What
+it took:
+
+- A layered unit ran its ancestors' transforms on their rows before its
+  own, once per layer (seven times for parallel_coordinate).  Within a
+  compile, a transform array on the same rows vector now runs once
+  (`eas-compile-memo`), as Vega's shared dataflow does.
+- `decode-time`/`encode-time` with a named zone look the zone up on
+  every call: a year timeUnit over 3201 movies cost a second.  The
+  zone's offset is now cached per epoch-aligned week and applied with
+  UTC arithmetic; a week holding a transition asks Emacs directly
+  (`eas-time-offset.el`; agrees with Emacs on 40,000 random instants
+  over 160 years).
+- A sequential color ramp converted its stop colors to HCL for every
+  item; conversions are cached by hex.
+
+Loess remains Vega's O(n * bandwidth) fit over three robustness
+iterations, about 8M kernel evaluations here; inlining the kernel did not
+measurably help, so it was left as it is.

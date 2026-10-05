@@ -1,0 +1,23 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Line chart customization: every non-default property here is one eas draws natively (fc-qx1.43).",
+  "title": {"text": "Weekly active users", "anchor": "middle", "fontSize": 14, "color": "#203040"},
+  "width": 360,
+  "height": 180,
+  "data": {"values": [
+    {"week": 1, "app": "web", "users": 120}, {"week": 2, "app": "web", "users": 132}, {"week": 3, "app": "web", "users": 128},
+    {"week": 4, "app": "web", "users": 150}, {"week": 5, "app": "web", "users": 171}, {"week": 6, "app": "web", "users": 166},
+    {"week": 1, "app": "mobile", "users": 90}, {"week": 2, "app": "mobile", "users": 104}, {"week": 3, "app": "mobile", "users": 121},
+    {"week": 4, "app": "mobile", "users": 117}, {"week": 5, "app": "mobile", "users": 139}, {"week": 6, "app": "mobile", "users": 158}
+  ]},
+  "mark": {"type": "line", "interpolate": "monotone", "strokeWidth": 3, "strokeCap": "butt", "strokeJoin": "miter", "strokeDash": [8, 3], "point": true},
+  "encoding": {
+    "x": {"field": "week", "type": "quantitative", "scale": {"nice": false, "zero": false},
+          "axis": {"tickCount": 6, "domain": false, "labelPadding": 8, "tickSize": 8, "title": "Week", "titleFontWeight": "bold"}},
+    "y": {"field": "users", "type": "quantitative", "scale": {"zero": false, "domainMin": 80, "domainMax": 180},
+          "axis": {"orient": "right", "grid": true, "gridOpacity": 0.5, "gridWidth": 2, "labelColor": "#556070", "title": "Users (k)"}},
+    "color": {"field": "app", "type": "nominal", "scale": {"scheme": "set1"},
+              "legend": {"orient": "bottom-right", "labelFontStyle": "italic", "titleFontSize": 12, "rowPadding": 6}}
+  },
+  "config": {"line": {"opacity": 0.9}, "axis": {"titleFont": "Courier New"}}
+}

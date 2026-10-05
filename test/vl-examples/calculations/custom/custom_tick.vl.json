@@ -1,0 +1,20 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Tick chart customization: every non-default property here is one eas draws natively (fc-qx1.43).",
+  "title": {"text": "Response sizes", "anchor": "start", "offset": 8},
+  "width": 320,
+  "height": 120,
+  "data": {"values": [
+    {"route": "/a", "kb": 3}, {"route": "/a", "kb": 5}, {"route": "/a", "kb": 6}, {"route": "/a", "kb": 9},
+    {"route": "/b", "kb": 12}, {"route": "/b", "kb": 14}, {"route": "/b", "kb": 15}, {"route": "/b", "kb": 21},
+    {"route": "/c", "kb": 7}, {"route": "/c", "kb": 8}, {"route": "/c", "kb": 11}
+  ]},
+  "mark": {"type": "tick", "thickness": 3, "size": 18, "color": "#b03a2e", "opacity": 0.8},
+  "encoding": {
+    "x": {"field": "kb", "type": "quantitative", "scale": {"domain": [0, 24], "zero": true},
+          "axis": {"title": "Payload (kB)", "tickCount": 6, "labelFontWeight": "bold", "titleColor": "#b03a2e"}},
+    "y": {"field": "route", "type": "nominal", "scale": {"paddingInner": 0.4},
+          "axis": {"title": "Route", "titleFontSize": 13, "labelFont": "Courier New", "labelFontSize": 12}}
+  },
+  "config": {"axis": {"domainColor": "#999999", "tickColor": "#999999"}}
+}

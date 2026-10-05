@@ -337,7 +337,7 @@ decades than COUNT (default 10), else powers of ten."
 (defun eas-scale-tick-decimals (scale count)
   "Decimals d3's tickFormat uses for SCALE's ticks at COUNT."
   (let ((domain (plist-get scale :domain)))
-    (if (not (equal (plist-get scale :type) "linear")) 0
+    (if (not (member (plist-get scale :type) '("linear" "sqrt" "pow"))) 0
       (let ((step (abs (eas-scale-tick-increment (aref domain 0) (aref domain 1) count))))
         (if (zerop step) 0
           (let ((step (if (< (eas-scale-tick-increment (aref domain 0) (aref domain 1) count) 0)
@@ -358,7 +358,8 @@ and strftime-style time formats are honored."
        (if format
            (lambda (v) (let ((eas-time-zone zone)) (eas-time-format v (eas-scale--d3-time-format format))))
          (lambda (v) (let ((eas-time-zone zone)) (eas-scale-time-multi-format v))))))
-    ((or "linear" "log")
+    ;; d3 formats pow ticks as linear ones.
+    ((or "linear" "log" "sqrt" "pow")
      (let ((decimals (eas-scale-tick-decimals scale count)))
        (cond
         ((and format (string-match-p "\\`,?%\\'" format))

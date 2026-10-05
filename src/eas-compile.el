@@ -521,7 +521,8 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
                                               (+ (eas-title--get spec metrics :fontSize :chart-title-size) 2)))))
                       (let ((color (plist-get (eas-title--object spec) :color)))
                         (when (stringp color) (list :color color)))) spec metrics))))
-     (list :views (vconcat (mapcar (lambda (g) (eas-compile--view g metrics state)) groups))
+     (list :views (vconcat (eas-facet-title-add (mapcar (lambda (g) (eas-compile--view g metrics state)) groups)
+                                                 groups metrics))
            :params (vconcat (apply #'append (mapcar (lambda (g) (plist-get g :params)) groups)))))))
 
 (cl-defun eas-compile (spec &key rows size target cell state)

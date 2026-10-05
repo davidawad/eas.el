@@ -25,9 +25,13 @@
   "Curved interpolations flattened natively, besides linear and steps.")
 
 (defun eas-marks-path-sort-key (unit)
-  "Function ROW -> sort key of UNIT's series vertices, or nil for x."
+  "Function ROW -> sort key of UNIT's series vertices, nil for x, y or data."
   (let* ((enc (plist-get unit :encoding)) (order (plist-get enc :order)))
     (cond
+     ;; mark.order false or null, or an order channel valued null: data order (fc-qx1.41).
+     ((or (memq (plist-get (plist-get unit :mark) :order) '(:false :null))
+          (and (eas-object-p order) (plist-member order :value) (eq (plist-get order :value) :null)))
+      'data)
      ((and (eas-object-p order) (plist-get order :field))
       (let ((key (eas-encode-field order))) (lambda (row) (plist-get row key))))
      ((equal (plist-get (plist-get unit :mark) :orient) "horizontal") 'y))))

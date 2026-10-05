@@ -1,0 +1,60 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "A line chart with non-default mark, axis, legend, scale, title and config properties, each drawn natively (fc-qx1.41).",
+ "data": {"url": "../../data/stocks.csv"},
+ "transform": [
+  {"filter": "datum.symbol !== 'IBM' && datum.symbol !== 'AMZN'"},
+  {"filter": {"field": "date", "timeUnit": "year", "range": [2005, 2007]}}
+ ],
+ "title": {
+  "text": "Stock prices, 2005-2007",
+  "subtitle": "Monthly close, three tickers",
+  "anchor": "start",
+  "color": "#333333",
+  "fontSize": 15,
+  "subtitleColor": "#777777",
+  "subtitleFontSize": 11,
+  "subtitlePadding": 4
+ },
+ "width": 420,
+ "height": 220,
+ "mark": {
+  "type": "line",
+  "interpolate": "catmull-rom",
+  "strokeWidth": 2.5,
+  "strokeOpacity": 0.85,
+  "strokeDash": [6, 2],
+  "strokeDashOffset": 1,
+  "strokeCap": "butt",
+  "strokeJoin": "bevel",
+  "point": {"filled": false, "fill": "white", "size": 28}
+ },
+ "encoding": {
+  "x": {
+   "field": "date", "type": "temporal", "title": "Month",
+   "axis": {"format": "%b %Y", "tickCount": 6, "labelColor": "#555555", "labelFontSize": 9,
+            "labelFontWeight": "bold", "labelPadding": 6, "titleColor": "#8a3b12", "titleFontSize": 12,
+            "titlePadding": 8, "tickColor": "#8a3b12", "tickSize": 7, "tickWidth": 2, "tickOpacity": 0.6,
+            "domainColor": "#8a3b12", "domainWidth": 2, "domainDash": [4, 2], "grid": true,
+            "gridColor": "#ead7cc", "gridDash": [2, 2], "gridOpacity": 0.8}
+  },
+  "y": {
+   "field": "price", "type": "quantitative", "title": "Close (USD)",
+   "scale": {"zero": false, "nice": true},
+   "axis": {"format": "$.0f", "tickCount": 5, "labelOpacity": 0.8, "titleFontWeight": "normal",
+            "titleOpacity": 0.9, "domain": false, "ticks": false, "gridWidth": 0.5}
+  },
+  "color": {
+   "field": "symbol", "type": "nominal", "title": "Ticker",
+   "scale": {"range": ["#1b9e77", "#d95f02", "#7570b3"]},
+   "legend": {"orient": "bottom", "direction": "horizontal", "titleColor": "#444444",
+              "titleFontSize": 10, "labelColor": "#222222", "labelFontSize": 10, "symbolType": "stroke",
+              "symbolStrokeWidth": 3, "padding": 4, "fillColor": "#f6f4ef", "strokeColor": "#d8d4c8",
+              "cornerRadius": 3, "labelExpr": "'$' + datum.label"}
+  }
+ },
+ "config": {
+  "view": {"stroke": "#cccccc"},
+  "axis": {"labelFont": "Liberation Sans"}
+ }
+}

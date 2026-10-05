@@ -25,6 +25,7 @@
 (require 'eas-core)
 (require 'eas-transform)
 (require 'eas-layout)
+(require 'eas-facet-title)
 
 (declare-function eas-compile--discrete-domain "eas-compile-scales")
 
@@ -58,18 +59,22 @@ left alone and reported unsupported."
              (header (let ((h (plist-get def :header))) (and (eas-object-p h) h)))
              (labels (vconcat (mapcar (lambda (v) (format "%s" v)) levels)))
              (spacing (let ((s (plist-get spec :spacing))) (cond ((numberp s) s) ((eas-object-p s) (plist-get s channel)))))
+             (i -1)
              (cells (mapcar
                      (lambda (v)
+                       (setq i (1+ i))
                        (let ((cell (eas-plist-put (copy-sequence inner) :transform
                                                   (vconcat (list (list :filter (list :field field :equal v)))
                                                            (plist-get inner :transform)))))
                          (eas-plist-put cell :x-eas
                                         (eas-plist-put (plist-get inner :x-eas) :header
-                                                       (append (list :text (format "%s" v) :labels labels
-                                                                     :orient (if (eq channel :row) "left" "top")
-                                                                     :fontSize (or (plist-get header :labelFontSize) 10))
-                                                               (when (numberp (plist-get header :labelAngle))
-                                                                 (list :angle (plist-get header :labelAngle))))))))
+                                                       (eas-facet-title-header
+                                                        (append (list :text (format "%s" v) :value v :labels labels
+                                                                      :orient (if (eq channel :row) "left" "top")
+                                                                      :fontSize (or (plist-get header :labelFontSize) 10))
+                                                                (when (numberp (plist-get header :labelAngle))
+                                                                  (list :angle (plist-get header :labelAngle))))
+                                                        def i (format "%s:%s" channel field) (plist-get spec :config))))))
                      levels))
              (out (eas--plist-without (eas--plist-without (eas--plist-without spec :facet) :spec) :resolve)))
         (setq out (eas-plist-put out (if (eq channel :row) :vconcat :hconcat) (vconcat cells)))
@@ -131,8 +136,11 @@ left alone and reported unsupported."
       (setq enc (eas-plist-put enc :y (eas-facet--bare-axis (plist-get enc :y)))))
     (append (list :mark (plist-get spec :mark) :encoding enc
                   :transform (vector (list :filter (list :field (plist-get fdef :field) :equal value)))
-                  :x-eas (list :header (list :text (eas-expr--string value)
-                                             :orient (if (eq key :row) "left" "top"))))
+                  :x-eas (list :header (eas-facet-title-header
+                                        (list :text (eas-expr--string value) :value value
+                                              :orient (if (eq key :row) "left" "top"))
+                                        fdef i (format "%s:%s" key (plist-get fdef :field))
+                                        (plist-get spec :config))))
             (cl-loop for k in '(:width :height :params :name)
                      when (plist-member spec k) append (list k (plist-get spec k))))))
 
@@ -172,37 +180,59 @@ left alone and reported unsupported."
 ;;; Headers
 
 (defun eas-facet-header-extent (header metrics)
-  "Space HEADER needs beside its plot: (SIDE . PIXELS)."
+  "Space HEADER (and its facet title) needs beside its plot: (SIDE . PIXELS)."
+  (let ((e (eas-facet--label-extent header metrics)))
+    (cons (car e) (+ (cdr e) (eas-facet-title-band header metrics)))))
+
+(defun eas-facet--size (header)
+  "HEADER's label font size (labelFontSize, Vega-Lite's 10)."
+  (or (plist-get header :fontSize) eas-facet-header-size))
+
+(defun eas-facet--pad (header)
+  "HEADER's label padding (labelPadding, Vega-Lite's 10)."
+  (or (plist-get header :padding) eas-facet-header-padding))
+
+(defun eas-facet--label-extent (header metrics)
+  "Space HEADER's label needs beside its plot: (SIDE . PIXELS)."
   (cond
    ((eas-layout-text-p metrics)
     (cons :top (plist-get metrics :label-size)))
    ;; A horizontal row label takes its widest text.
    ((and (equal (plist-get header :orient) "left") (eql (plist-get header :angle) 0))
-    (cons :left (+ eas-facet-header-padding
-                   (apply #'max 0 (mapcar (lambda (l) (eas-layout-text-width metrics l (plist-get header :fontSize)))
+    (cons :left (+ (eas-facet--pad header)
+                   (apply #'max 0 (mapcar (lambda (l) (eas-layout-text-width metrics l (eas-facet--size header)))
                                           (append (plist-get header :labels) nil))))))
    (t (cons (if (equal (plist-get header :orient) "top") :top :left)
-            (+ eas-facet-header-padding eas-facet-header-size 1)))))
+            (+ (eas-facet--pad header) (eas-facet--size header) 1)))))
 
 (defun eas-facet-header-place (header bounds inset metrics)
   "HEADER placed beside plot BOUNDS [X Y W H], outside INSET pixels of axes.
-Return (:text :x :y :angle :align :baseline :fontSize)."
+Return (:text :x :y :angle :align :baseline :fontSize) and the label's
+own :color :fontWeight :font :fontStyle."
   (let* ((top (equal (plist-get header :orient) "top"))
          (x0 (- (aref bounds 0) (if top 0 inset))) (y0 (- (aref bounds 1) (if top inset 0)))
          (w (aref bounds 2)) (h (aref bounds 3))
-         (text (plist-get header :text)))
-    (cond
-     ((eas-layout-text-p metrics)
-      (list :text text :x x0 :y (- y0 (plist-get metrics :label-size)) :angle 0 :align "left" :baseline "top"
-            :fontSize (plist-get metrics :label-size)))
-     ((equal (plist-get header :orient) "top")
-      (list :text text :x (+ x0 (/ w 2.0)) :y (- y0 eas-facet-header-padding) :angle 0
-            :align "center" :baseline "bottom" :fontSize eas-facet-header-size))
-     ((eql (plist-get header :angle) 0)
-      (list :text text :x (- x0 eas-facet-header-padding) :y (+ y0 (/ h 2.0)) :angle 0
-            :align "right" :baseline "middle" :fontSize eas-facet-header-size))
-     (t (list :text text :x (- x0 eas-facet-header-padding) :y (+ y0 (/ h 2.0)) :angle -90
-              :align "center" :baseline "bottom" :fontSize eas-facet-header-size)))))
+         (text (plist-get header :text))
+         (size (eas-facet--size header)) (pad (eas-facet--pad header))
+         (look (cl-loop for k in '(:color :fontWeight :font :fontStyle)
+                        when (plist-get header k) append (list k (plist-get header k)))))
+    (append
+     (cond
+      ((eas-layout-text-p metrics)
+       ;; Cut to the cell (and the gap to the next), so neighbours stay legible.
+       (list :text (eas-layout-truncate metrics text (plist-get metrics :label-size)
+                                        (+ w (plist-get metrics :spacing) (- (plist-get metrics :char-w))))
+             :x x0 :y (- y0 (plist-get metrics :label-size)) :angle 0 :align "left" :baseline "top"
+             :fontSize (plist-get metrics :label-size)))
+      ((equal (plist-get header :orient) "top")
+       (list :text text :x (+ x0 (/ w 2.0)) :y (- y0 pad) :angle 0
+             :align "center" :baseline "bottom" :fontSize size))
+      ((eql (plist-get header :angle) 0)
+       (list :text text :x (- x0 pad) :y (+ y0 (/ h 2.0)) :angle 0
+             :align "right" :baseline "middle" :fontSize size))
+      (t (list :text text :x (- x0 pad) :y (+ y0 (/ h 2.0)) :angle -90
+               :align "center" :baseline "bottom" :fontSize size)))
+     (unless (eas-layout-text-p metrics) look))))
 
 (provide 'eas-facet)
 ;;; eas-facet.el ends here

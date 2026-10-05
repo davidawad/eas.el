@@ -16,13 +16,23 @@
 (require 'eas-core)
 (require 'eas-encode)
 
+(defconst eas-marks--series-channels
+  '(:color :fill :stroke :strokeDash :detail :opacity :fillOpacity :strokeOpacity :strokeWidth)
+  "Channels whose field splits a line, area or trail into series.")
+
 (defun eas-marks--series-defs (unit)
-  "The discrete field defs splitting a line/area UNIT into series, one per
-channel (nil where the channel does not split)."
+  "The field defs splitting a line/area/trail UNIT into series, one per
+channel (nil where the channel does not split).  Vega-Lite's
+pathGroupingFields: any unaggregated field on these channels splits paths,
+whatever its type; size does too, except for trails (fc-qx1.41)."
   (let ((enc (plist-get unit :encoding)))
     (mapcar (lambda (ch) (let ((d (eas-encode-data-def (plist-get enc ch))))
-                           (and d (eas-object-p d) (eas-encode-discrete-p d) d)))
-            '(:color :fill :stroke :strokeDash :detail))))
+                           (and d (eas-object-p d)
+                                (or (eas-encode-discrete-p d)
+                                    (not (or (plist-get d :aggregate) (equal (plist-get d :derived) "aggregate"))))
+                                d)))
+            (if (equal (plist-get (plist-get unit :mark) :type) "trail") eas-marks--series-channels
+              (cons :size eas-marks--series-channels)))))
 
 (defun eas-marks--series-key (unit row &optional defs)
   "The series a ROW of a line/area UNIT belongs to.

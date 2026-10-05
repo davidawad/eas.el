@@ -1,0 +1,123 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "description": "A trail with non-default mark, axis, legend, scale, title and config properties, each drawn natively (fc-qx1.41).",
+ "data": {
+  "url": "../../data/stocks.csv"
+ },
+ "transform": [
+  {
+   "filter": "datum.symbol === 'GOOG' || datum.symbol === 'AAPL'"
+  },
+  {
+   "filter": {
+    "field": "date",
+    "timeUnit": "year",
+    "range": [
+     2007,
+     2009
+    ]
+   }
+  }
+ ],
+ "title": {
+  "text": "Price trails",
+  "subtitle": [
+   "Width follows the close",
+   "2007-2009"
+  ],
+  "fontSize": 14,
+  "subtitleFontStyle": "italic",
+  "dx": 4
+ },
+ "width": 380,
+ "height": 200,
+ "mark": {
+  "type": "trail",
+  "opacity": 0.9,
+  "fillOpacity": 0.7,
+  "order": false
+ },
+ "encoding": {
+  "x": {
+   "field": "date",
+   "type": "temporal",
+   "title": null,
+   "axis": {
+    "format": "%Y",
+    "tickCount": 3,
+    "labelAngle": -30,
+    "labelColor": "#335577",
+    "tickCap": "round",
+    "tickWidth": 2,
+    "domainOpacity": 0.5
+   }
+  },
+  "y": {
+   "field": "price",
+   "type": "quantitative",
+   "scale": {
+    "type": "sqrt",
+    "zero": false
+   },
+   "axis": {
+    "orient": "right",
+    "title": "Close",
+    "titleColor": "#335577",
+    "grid": false,
+    "offset": 4
+   }
+  },
+  "size": {
+   "field": "price",
+   "type": "quantitative",
+   "title": "Close",
+   "scale": {
+    "range": [
+     1,
+     9
+    ]
+   },
+   "legend": {
+    "values": [
+     100,
+     300,
+     500
+    ],
+    "format": "$d",
+    "symbolFillColor": "#999999",
+    "titleFontWeight": "bold",
+    "rowPadding": 4,
+    "labelOffset": 6
+   }
+  },
+  "color": {
+   "field": "symbol",
+   "type": "nominal",
+   "title": "Ticker",
+   "scale": {
+    "range": [
+     "#3b528b",
+     "#5ec962"
+    ]
+   },
+   "legend": {
+    "orient": "top",
+    "direction": "horizontal",
+    "labelFontSize": 9,
+    "titleFontSize": 10,
+    "symbolType": "square",
+    "symbolSize": 60,
+    "titleOrient": "left",
+    "columnPadding": 12
+   }
+  }
+ },
+ "config": {
+  "trail": {
+   "strokeCap": "round"
+  },
+  "legend": {
+   "titleColor": "#222222"
+  }
+ }
+}

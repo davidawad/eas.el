@@ -290,9 +290,9 @@ AGENTS.md already sets.
 native subset (a mark, channel, transform or scale type) decides the
 backend: the view is static. A documented property the native
 renderers do not draw (an axis `zindex`, a legend `orient: "top"`, a
-title `subtitle`) comes back with `ignored: true` and its path: `check`
+title `subtitle`) comes back with `property: true` and its path: `check`
 lists it under `warnings` but keeps `native: true`, and the chart
-renders natively without it (`eas-spec-props.el`, fc-qx1.40).
+renders natively without it (`eas-spec-props.el`, fc-qx1.43).
 
 ## 6. Conformance: bin/chart is the oracle
 

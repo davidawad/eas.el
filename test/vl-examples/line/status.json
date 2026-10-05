@@ -108,10 +108,9 @@
     "threshold": 0.03
   },
   "trail_comet": {
-    "note": "a column facet of trail marks: native draws trails as full-height ribbons because the facet's shared point y scale and the trail size scale are not applied per cell, and the facet field title, legends row and cell spacing differ (175px wider, 93px shorter)",
-    "ratio": 0.158,
-    "reason": "a column facet of trail marks: native draws trails as full-height ribbons because the facet's shared point y scale and the trail size scale are not applied per cell, and the facet field title, legends row and cell spacing differ (175px wider, 93px shorter); svg and text render natively at 3 sizes; oracle ratio 0.1580 (threshold 0.03), size delta [175 -93] px; overlaps: 320x200: a legend of view hconcat_0 leaves the 564x201 canvas; 480x300: a legend of view hconcat_0 leaves the 564x300 canvas; 50x14 cells: a legend of view hconcat_0 leaves the 595x210 canvas; 50x14 cells: x axis labels of view hconcat_0 collide; 50x14 cells: x axis labels of view hconcat_1 collide; 50x14 cells: x axis labels of view hconcat_2 collide; 50x14 cells: x axis labels of view hconcat_3 collide; 50x14 cells: x axis labels of view hconcat_4 collide; 50x14 cells: x axis labels of view hconcat_5 collide; 80x24 cells: x axis labels of view hconcat_0 collide; 80x24 cells: x axis labels of view hconcat_1 collide; 80x24 cells: x axis labels of view hconcat_2 collide; 80x24 cells: x axis labels of view hconcat_3 collide; 80x24 cells: x axis labels of view hconcat_4 collide; 80x24 cells: x axis labels of view hconcat_5 collide",
-    "status": "partial",
+    "ratio": 0.0243,
+    "reason": "svg and text render natively at 3 sizes; oracle ratio 0.0243 (threshold 0.03)",
+    "status": "pass",
     "threshold": 0.03
   },
   "window_rank": {

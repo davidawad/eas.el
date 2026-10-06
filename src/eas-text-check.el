@@ -23,6 +23,8 @@
 ;;               left axis label not left of it.
 ;;   contrast    a glyph's color is under WCAG 3:1 against the
 ;;               background, drawn for a light and for a dark one.
+;;   width       a line is wider than the columns the chart was asked
+;;               to fit (a terminal window cuts it with a `$').
 ;;
 ;; Each problem is a string starting with its kind, so callers can
 ;; count them.  Nothing here draws differently from `eas-text-render'.
@@ -250,9 +252,21 @@ painter's order hid it, as SVG would (a halo under its line)."
         (setq pos next)))
     (nreverse out)))
 
-(defun eas-text-check (scene)
+(defun eas-text-check--width (lines cols)
+  "Width problems of LINES (a vector of strings) wider than COLS."
+  (let (out)
+    (seq-do-indexed (lambda (line row)
+                      (when (> (string-width line) cols)
+                        (push (format "width: line %d is %d columns, over the %d asked for"
+                                      row (string-width line) cols)
+                              out)))
+                    lines)
+    (nreverse out)))
+
+(defun eas-text-check (scene &optional cols)
   "Problems (strings) of SCENE's text rendering; nil when it holds.
-SCENE must be compiled for the text target."
+SCENE must be compiled for the text target.  COLS, when non-nil, is the
+width SCENE was compiled to fit: no line may be wider."
   (let* ((cells (make-hash-table :test 'equal))
          (text (let ((eas-text-trace (lambda (col row) (push (cons col row) (gethash eas-text-trace-item cells)))))
                  (eas-text-render scene)))
@@ -292,7 +306,8 @@ SCENE must be compiled for the text target."
               (unless (eas-text-check--shown-p scene lines (plist-get e :lx) (plist-get e :ly) (plist-get e :label) "left")
                 (push (format "legend: entry %S of view %s is not shown" (plist-get e :label) (plist-get view :id))
                       out)))))))
-    (delete-dups (append (nreverse out) (eas-text-check--labels scene lines) (eas-text-check--sides scene)
+    (delete-dups (append (nreverse out) (and cols (eas-text-check--width lines cols))
+                         (eas-text-check--labels scene lines) (eas-text-check--sides scene)
                          (eas-text-check-contrast scene 'light) (eas-text-check-contrast scene 'dark)))))
 
 (defun eas-text-check-kind (problem)

@@ -12,6 +12,12 @@
 ;; entries that fit and says so in the title ("series, 9 of 14"), so
 ;; the cut is visible to people and to agents reading the scene
 ;; (:truncated holds the full count).
+;;
+;; A terminal canvas cannot grow wider than its window either:
+;; `eas-legend-fit-width' ends a legend label or title that would run
+;; past the canvas's last column with an ellipsis (:full keeps the
+;; whole text), rather than let the text be moved back over its swatch
+;; or cut by the window's truncation glyph (fc-qx1.52).
 
 ;;; Code:
 
@@ -45,6 +51,35 @@ Only symbol legends are cut; at least one entry always stays."
                    for cut = (eas-legend-fit--cut legend k)
                    when (<= (eas-legend-fit--height cut metrics) max-h) return cut)
           (eas-legend-fit--cut legend 1)))))
+
+(defun eas-legend-fit--clip (mark xk tk cols cw)
+  "MARK with its text at TK, anchored left at pixel XK, cut to COLS cells."
+  (let* ((text (plist-get mark tk)) (x (plist-get mark xk))
+         (room (and (stringp text) (numberp x) (- cols (round (/ x (float cw)))))))
+    (if (and room (> (string-width text) room))
+        ;; Text wholly past the edge is left out, not moved back in.
+        (eas-plist-put (eas-plist-put mark tk (if (< room 1) "" (truncate-string-to-width text room nil nil "…")))
+                       :full text)
+      mark)))
+
+(defun eas-legend-fit-width (view width metrics)
+  "VIEW with its legends' labels and titles cut to a text canvas WIDTH
+pixels wide under METRICS; VIEW itself when METRICS is not text."
+  (if (not (and (eas-layout-text-p metrics) (plist-get view :legends)))
+      view
+    (let ((cw (aref (plist-get metrics :cell) 0)))
+      (eas-plist-put
+       view :legends
+       (vconcat
+        (mapcar (lambda (legend)
+                  (let* ((cols (round (/ (float width) cw)))
+                         (legend (eas-plist-put legend :entries
+                                                (vconcat (mapcar (lambda (e) (eas-legend-fit--clip e :lx :label cols cw))
+                                                                 (plist-get legend :entries))))))
+                    (if-let* ((tm (plist-get legend :title-mark)))
+                        (eas-plist-put legend :title-mark (eas-legend-fit--clip tm :x :text cols cw))
+                      legend)))
+                (plist-get view :legends)))))))
 
 (provide 'eas-legend-fit)
 ;;; eas-legend-fit.el ends here

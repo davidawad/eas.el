@@ -356,11 +356,14 @@ target is text."
                (plist-get (car (car (eas-facet-layout--rows node))) :chrome))
       (- (plist-get (eas-facet-layout--plan node metrics) key)))))
 
+(defvar eas-place-squeeze)
+
 (defun eas-facet-layout-min-plot (group metrics)
   "Smallest (W . H) plot of GROUP whose axis labels do not collide.
 A band axis keeps every label (rotated labels need their font height
 each, others their width); a continuous axis keeps at least its first
-and last label."
+and last label.  While `eas-place-squeeze' is non-nil there is no
+floor: a terminal chart thins its labels instead of growing."
   (let ((size (plist-get metrics :label-size)) (w 0) (h 0))
     ;; In a terminal y labels take a row each and band labels are thinned,
     ;; except fewer than three, which Vega's overlap removal never thins:
@@ -384,7 +387,7 @@ and last label."
           (let ((need (if (eq (plist-get axis :discrete) t) (* (length labels) along)
                         (* 2 along))))
             (if x (setq w (max w need)) (setq h (max h need)))))))
-    (cons w h)))
+    (if (bound-and-true-p eas-place-squeeze) '(0 . 0) (cons w h))))
 
 (declare-function eas-place-fit-grid "eas-compile-grid")
 

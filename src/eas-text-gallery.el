@@ -31,8 +31,10 @@
 (require 'eas-vl-gallery)
 (require 'eas-text-check)
 
-(defconst eas-text-gallery-sizes '((:cols 60 :rows 16) (:cols 100 :rows 30) (:cols 160 :rows 45))
-  "Text sizes every gallery chart and template is checked at.")
+(defconst eas-text-gallery-sizes
+  '((:cols 60 :rows 16) (:cols 94 :rows 27) (:cols 100 :rows 30) (:cols 160 :rows 45) (:cols 189 :rows 56))
+  "Text sizes every gallery chart and template is checked at.
+94x27 is a quadrant and 189x56 the whole of a 189x56 terminal frame.")
 
 (defconst eas-text-gallery-group-templates "templates"
   "The pseudo-group the templates are reported under.")
@@ -102,7 +104,10 @@ The window is faked: its size is SIZE whatever the batch frame's is."
               (setq buffer (eas-show view 'text))
               (with-current-buffer buffer
                 (cond ((not (eq (eas-view-target view) 'text)) (list "show: the view is not drawn as text"))
-                      ((string-empty-p (string-trim (buffer-string))) (list "show: eas-show left an empty buffer")))))
+                      ((string-empty-p (string-trim (buffer-string))) (list "show: eas-show left an empty buffer"))
+                      ;; The strip under the chart too fits the window.
+                      ((seq-some (lambda (l) (> (string-width l) (plist-get size :cols))) (split-string (buffer-string) "\n"))
+                       (list (format "show: a buffer line is over %d columns" (plist-get size :cols)))))))
           (error (list (format "show: eas-show fails: %s" (error-message-string err)))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
@@ -119,7 +124,7 @@ The window is faked: its size is SIZE whatever the batch frame's is."
                    (setq view (funcall (plist-get entry :open) size))
                    (if (not (eas-view-interactive view))
                        (push (format "%s: static: %S" tag (eas-view-warnings view)) out)
-                     (dolist (p (append (eas-text-check (eas-view-scene view)) (eas-text-gallery--show view size)))
+                     (dolist (p (append (eas-text-check (eas-view-scene view) (plist-get size :cols)) (eas-text-gallery--show view size)))
                        (push (format "%s: %s" tag p) out))))
                (error (push (format "%s: open: %s" tag (error-message-string err)) out)))
            (when view (remhash (eas-view-id view) eas-views)))))

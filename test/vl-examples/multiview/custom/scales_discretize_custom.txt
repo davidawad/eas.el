@@ -1,7 +1,7 @@
-A   ■   Quantize x3      A   ●   Quantile     A  ●    Threshold
+A   ■   Quantize x3      A   ●   Quantile     A  ●    Thres…
         ■ < 43.0                 ▄▄ 82                ● < 40
-B   ■   ■ 43.0 – 67.0    B   ●   ▄▄           B  ●    ● 40 – 60
-        ■ ≥ 67.0                 ▄▄ 59                ● 60 – 80
+B   ■   ■ 43.0 – 67.0    B   ●   ▄▄           B  ●    ● 40 …
+        ■ ≥ 67.0                 ▄▄ 59                ● 60 …
 C   ■                    C   ●   ▄▄ 40        C  ●    ● ≥ 80
 D   ■                    D   ●   ▄▄           D  ●
 

@@ -34,8 +34,14 @@
 
 (defun eas-mode-strip-string (view)
   "VIEW's values strip as a propertized line."
-  (let ((text (concat " " (eas-strip-format (eas-strip (eas-view-scene view) (eas-view-plan view)
-                                                       (eas-view-state view))))))
+  (let* ((text (concat " " (eas-strip-format (eas-strip (eas-view-scene view) (eas-view-plan view)
+                                                        (eas-view-state view)))))
+         (size (eas-view-size view))
+         ;; In a terminal the strip is no wider than the chart it reads
+         ;; (fc-qx1.52): a longer line ends in a truncation glyph.
+         (text (if (and (eq (eas-view-target view) 'text) (plist-get size :cols))
+                   (truncate-string-to-width text (plist-get size :cols) nil nil "…")
+                 text)))
     (propertize text 'face 'eas-strip 'eas-strip t 'keymap eas-mode-strip-map
                 'help-echo nil 'pointer 'arrow)))
 

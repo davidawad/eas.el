@@ -41,6 +41,12 @@
 
 (declare-function eas-facet-layout-min-plot "eas-facet-layout")
 
+(defvar eas-place-squeeze nil
+  "Non-nil while a text chart is laid out again to fit its target width.
+Composed views then drop their smallest-plot floor and thin their axis
+labels as a lone view does: a terminal line wider than the window is
+cut with a truncation glyph (fc-qx1.52).")
+
 (defvar eas-place-arrange-functions nil
   "Functions (NODE OX OY METRICS) that may place a layout NODE themselves.
 The first to return the block's (W . H) wins; nil lets the next (and
@@ -386,13 +392,23 @@ plot sizes (a relayout after marks were measured)."
         (setq shared (eas-shared-extent tree metrics (plist-get (car groups) :h))))
       (eas-shared-place tree groups metrics (+ pad (car block)) (plist-get (car groups) :y0)
                         top (+ top (cdr block)))
-      ;; A size too small for the chrome grows the canvas rather than clip it.
+      ;; A size too small for the chrome grows the canvas rather than clip it,
       (let ((need (cons (+ (car block) shared (* 2 pad))
                         (max (+ (cdr block) title-h (car band) (cdr band) (* 2 pad))
                              ;; and so do shared legends taller than the block.
                              (+ pad (apply #'max 0 (mapcar (lambda (p) (+ (nth 2 p) (cdr (eas-shared--size (car p) metrics))))
-                                                           (plist-get (car groups) :shared-legends))))))))
-        (if size (cons (max (car size) (car need)) (max (cdr size) (cdr need))) need)))))
+                                                           (plist-get (car groups) :shared-legends)))))))
+            (text (and size (eas-layout-text-p metrics))))
+        ;; :cut records the width a cut canvas needed.
+        (plist-put tree :cut (and text (> (car need) (car size)) (car need)))
+        (cond
+         ;; except a terminal's width: composed views first give up
+         ;; their smallest plots, then the canvas is cut at the window.
+         ((and text (> (car need) (car size)) (not eas-place-squeeze))
+          (let ((eas-place-squeeze t)) (eas-place-layout tree metrics title-h size sized)))
+         (text (cons (car size) (max (cdr size) (cdr need))))
+         (size (cons (max (car size) (car need)) (max (cdr size) (cdr need))))
+         (t need))))))
 
 (provide 'eas-compile-place)
 ;;; eas-compile-place.el ends here

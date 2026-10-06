@@ -204,8 +204,11 @@ list of strings (nil when clean)."
                                                                         (cons (plist-get v :id) b))))
                                                      (plist-get v :legends))))
                                  views)))
+         ;; A text canvas cut at its window (:cut) leaves out what is
+         ;; right of it on purpose.
+         (right (+ (or (plist-get size :cut) w) 0.5))
          (outside (lambda (r) (or (< (aref r 0) -0.5) (< (aref r 1) -0.5)
-                                  (> (+ (aref r 0) (aref r 2)) (+ w 0.5)) (> (+ (aref r 1) (aref r 3)) (+ h 0.5)))))
+                                  (> (+ (aref r 0) (aref r 2)) right) (> (+ (aref r 1) (aref r 3)) (+ h 0.5)))))
          problems)
     (dolist (l legends)
       (when (funcall outside (cdr l))

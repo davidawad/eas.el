@@ -106,11 +106,15 @@ Collection waits until Emacs is idle (`eas-gc-defer')."
 ;;; Rendering
 
 (defun eas-mode--window-size (window target)
-  "Size to compile for WINDOW and TARGET, leaving a line for the values strip."
+  "Size to compile for WINDOW and TARGET, leaving a line for the values strip.
+A text chart is as wide as WINDOW shows a line whole: its body less
+line numbers and, in a terminal, the column the truncation glyph takes
+\(`window-max-chars-per-line'), so no line ends in `$' (fc-qx1.52)."
   (if (eq target 'svg)
       (cons (window-body-width window t)
             (- (window-body-height window t) 4 (with-selected-window window (default-line-height))))
-    (list :cols (max 20 (1- (window-body-width window))) :rows (max 6 (- (window-body-height window) 2)))))
+    (list :cols (max 20 (with-selected-window window (window-max-chars-per-line window)))
+          :rows (max 6 (- (window-body-height window) 2)))))
 
 (defun eas-mode-redraw (&optional buffer)
   "Redraw BUFFER (default current) from its view's scene."
@@ -295,9 +299,10 @@ their own pointer, and a key pressed after them keeps the mouse's hover."
 
 (defun eas-mode--follow-window (window)
   "Recompile this buffer's view when WINDOW, showing it, changed size.
-Run from `window-size-change-functions' (buffer-locally), so a chart
-always fills its window: after `delete-other-windows', a split or a
-resized frame."
+Run from `window-size-change-functions' and `window-buffer-change-functions'
+\(buffer-locally), so a chart always fills its window: after
+`delete-other-windows', a split, a resized frame or a window switched
+to the buffer."
   (when (and eas-mode--view (window-live-p window) (eq (window-buffer window) (current-buffer))
              (eas-view-interactive eas-mode--view))
     (let* ((target (eas-view-target eas-mode--view))
@@ -329,8 +334,12 @@ resized frame."
   "Major mode for a live eas chart.  See `eas-view-mode-map'."
   (setq-local track-mouse t)
   (setq truncate-lines t)
+  ;; Line numbers would take columns from the chart.
+  (when (bound-and-true-p display-line-numbers-mode) (display-line-numbers-mode -1))
+  (setq-local display-line-numbers nil)
   (add-hook 'post-command-hook #'eas-mode--post-command nil t)
-  (add-hook 'window-size-change-functions #'eas-mode--follow-window nil t))
+  (add-hook 'window-size-change-functions #'eas-mode--follow-window nil t)
+  (add-hook 'window-buffer-change-functions #'eas-mode--follow-window nil t))
 
 (defun eas-show (view &optional target)
   "Show VIEW (an id or view) in its buffer; TARGET overrides svg/text.

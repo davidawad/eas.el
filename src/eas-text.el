@@ -593,7 +593,7 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
                        5)))
     (seq-doseq (e (plist-get legend :entries))
       (let ((props (list 'eas-view (plist-get view :id) 'eas-legend (plist-get e :value)
-                         'help-echo (plist-get e :label))))
+                         'help-echo (or (plist-get e :full) (plist-get e :label)))))
         (when (plist-get e :color)
           (eas-text--put g (eas-text--col g (plist-get e :sx)) (eas-text--row g (plist-get e :sy))
                            (cond ((plist-get e :dash) (eas-text--dash-glyph (plist-get e :dash)))

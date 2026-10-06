@@ -461,7 +461,8 @@ compiling again."
                        (dolist (u (plist-get g :units))
                          (plist-put u :items (eas-marks-translate (plist-get u :items) dx dy)))))))
         (unless size (setq total (eas-compile--title-width total groups metrics spec title)))
-        (list :spec spec :metrics metrics :groups groups :total total :title title :env env)))))
+        (list :spec spec :metrics metrics :groups groups :total total :title title :env env
+              :cut (plist-get tree :cut))))))
 
 (defun eas-compile--clipped-p (group state)
   "Non-nil when GROUP's marks are clipped to its plot.
@@ -514,7 +515,9 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
          (spec (plist-get plan :spec)) (groups (plist-get plan :groups)) (title (plist-get plan :title)))
     (append
      (list :contract "scene/v1" :target (plist-get metrics :target)
-           :size (list :w (car total) :h (cdr total) :cell (plist-get metrics :cell))
+           :size (append (list :w (car total) :h (cdr total) :cell (plist-get metrics :cell))
+                         ;; A text canvas cut at its window: the width it needed.
+                         (when-let* ((cut (plist-get plan :cut))) (list :cut cut)))
            :background (let ((bg (plist-get spec :background)))
                          (if (stringp bg) bg (or (eas-theme-get (plist-get metrics :config) :background) "white")))
            :config (plist-get metrics :config))
@@ -546,8 +549,9 @@ Vega.  Return non-nil when anything overhangs, so chrome may grow."
                                               (+ (eas-title--get spec metrics :fontSize :chart-title-size) 2)))))
                       (let ((color (plist-get (eas-title--object spec) :color)))
                         (when (stringp color) (list :color color)))) spec metrics))))
-     (list :views (vconcat (eas-facet-title-add (mapcar (lambda (g) (eas-compile--view g metrics state)) groups)
-                                                 groups metrics))
+     (list :views (vconcat (mapcar (lambda (v) (eas-legend-fit-width v (car total) metrics))
+                                   (eas-facet-title-add (mapcar (lambda (g) (eas-compile--view g metrics state)) groups)
+                                                        groups metrics)))
            :params (vconcat (apply #'append (mapcar (lambda (g) (plist-get g :params)) groups)))))))
 
 (cl-defun eas-compile (spec &key rows size target cell state)

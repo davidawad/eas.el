@@ -1,0 +1,62 @@
+# eas.el: an Emacs-native, interactive, agent-drivable chart engine.
+#
+#   make test             unit, golden and runtime tests (fast; no :gallery)
+#   make compile          byte-compile src/ with warnings as errors
+#   make test-gallery     every gallery group, one Emacs each, in sequence
+#   make test-gallery-GROUP           one official Vega-Lite gallery group
+#   make test-gallery-conformance     the bin/chart conformance oracle
+#   make bench            the 1k/10k/100k ladder against bench-budget.json
+#   make bench-budget     re-measure the budget's references (review the diff)
+#   make tty-check        real-terminal check in tmux (private server -L eas)
+#   make clean            remove byte-compiled files
+#
+# EAS_UPDATE_GOLDEN=1 rewrites goldens; TEST_SKIP_LOG=FILE logs skips.
+
+EMACS ?= emacs
+LOAD := -L src -L test/eas
+BATCH := $(EMACS) -Q --batch $(LOAD) --eval '(setq load-prefer-newer t)'
+
+LIB := $(filter-out %-test.el,$(wildcard src/*.el))
+TESTS := $(wildcard src/*-test.el)
+
+GALLERY_GROUPS := area-circular bar calculations distributions interactive \
+                  layered line multiview scatter-table
+GALLERY_TARGETS := $(addprefix test-gallery-,$(GALLERY_GROUPS))
+
+# Load every test file, then run the tests SELECTOR picks.
+define run-tests
+$(BATCH) --eval '(dolist (f (directory-files "src" t "-test\\.el\\'"'"'")) (load f nil t))' \
+  --eval '(ert-run-tests-batch-and-exit (quote $(1)))'
+endef
+
+.PHONY: all test compile test-gallery $(GALLERY_TARGETS) \
+        test-gallery-conformance bench bench-budget tty-check clean
+
+all: compile test
+
+test:
+	$(call run-tests,(not (tag :gallery)))
+
+compile:
+	$(BATCH) --eval '(setq byte-compile-error-on-warn t)' \
+	  -f batch-byte-compile $(LIB) $(TESTS)
+
+test-gallery: $(GALLERY_TARGETS) test-gallery-conformance
+
+$(GALLERY_TARGETS): test-gallery-%:
+	EAS_GALLERY_GROUPS=$* $(call run-tests,(and (tag :gallery) (or "^eas-vl-gallery-groups-hold-their-status$$" "^eas-vl-gallery-groups-hold-their-text-status$$")))
+
+test-gallery-conformance:
+	$(call run-tests,(and (tag :gallery) (or "^eas-conformance-" "^eas-text-gallery-templates-")))
+
+bench:
+	scripts/eas-bench.sh
+
+bench-budget:
+	scripts/eas-bench.sh --update
+
+tty-check:
+	scripts/eas-tty-check.sh
+
+clean:
+	rm -f src/*.elc test/eas/*.elc scripts/*.elc

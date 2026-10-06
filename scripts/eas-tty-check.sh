@@ -3,15 +3,16 @@
 #
 # Runs `emacs -nw' in a detached tmux pane (private server `-L eas',
 # never the default one) at COLSxROWS (default 189x56), shows
-#   full:  the candles demo (ohlc + volume) alone in the frame;
-#   split, split-mirror: 2x2 splits of the demo and the gallery
+#   full:  a candlestick chart (the gallery's layered/layer_candlestick
+#          at container width) alone in the frame;
+#   split, split-mirror: 2x2 splits of that chart and the gallery
 #          examples layered/layer_bar_annotations and
 #          distributions/layer_point_errorbar_ci, each in a window
 #          with and without a right neighbour,
 # captures the pane and asserts:
 #   - no window line ends in the truncation (`$') or continuation (`\')
 #     glyph, the batch fake window cannot see this;
-#   - full: the ohlc plot (its x axis rule, y axis included) spans at
+#   - full: the candlestick plot (its x axis rule, y axis included) spans at
 #     least 90% of the window width.
 # Exit 0 when every assertion holds, 1 otherwise.  Needs tmux and python3.
 #
@@ -35,7 +36,7 @@ run_layout() {
   local layout=$1 edges="$WORK/$1.edges" capture="$WORK/$1.txt"
   "${TMUX_EAS[@]}" kill-session -t "$SESSION" 2>/dev/null || true
   "${TMUX_EAS[@]}" new-session -d -s "$SESSION" -x "$COLS" -y "$ROWS" \
-    "TERM=xterm-256color $EMACS -nw -Q -L src -L examples -L scripts -l eas-tty-check \
+    "TERM=xterm-256color $EMACS -nw -Q -L src -L scripts -l eas-tty-check \
        --eval '(setq eas-tty-check-edges-file \"$edges\")' -f eas-tty-check-$layout"
   for _ in $(seq 1 100); do
     [ -s "$edges" ] && break
@@ -77,7 +78,7 @@ for row in open(edges, encoding="utf-8").read().split("\n"):
             spans.append(len(seg[k:].rstrip(" ")))
     span = max(spans) if spans else 0
     print(f"{layout} {vid}: {width} cols, {len(body)} rows, x axis spans {span} ({100 * span / width:.0f}%)")
-    if layout == "full" and vid.startswith("ohlc") and span < 0.9 * width:
+    if layout == "full" and vid.startswith("candlestick") and span < 0.9 * width:
         print(f"FAIL {layout} {vid}: plot spans {span} < 90% of {width} cols")
         ok = False
 sys.exit(0 if ok else 1)

@@ -20,10 +20,15 @@
          (eas-brush-functions nil) (eas-action-inhibit t) (inhibit-message t))
      (let* ,bindings ,@body)))
 
-(defun eas-visual-test--ohlc-volume (size)
-  "The ohlc template with its volume pane, opened as text at SIZE."
-  (eas-view-open "ohlc" :bindings (plist-put (copy-sequence (eas-template-example "ohlc")) :volume t)
-                 :target 'text :size size))
+(defun eas-visual-test--panes (size)
+  "A price-and-volume style vconcat of two container-wide panes, as text at SIZE."
+  (let ((pane (lambda (mark height)
+                `(:width "container" :height ,height :mark ,mark
+                  :encoding (:x (:field "date" :type "temporal")
+                             :y (:field "value" :type "quantitative" :scale (:zero :false)))))))
+    (eas-view-open `(:data (:values ,(plist-get (eas-template-example "line") :data))
+                     :vconcat [,(funcall pane "line" 160) ,(funcall pane "bar" 60)])
+                   :target 'text :size size)))
 
 (defun eas-visual-test--width (text)
   "Widest line of TEXT, in columns."
@@ -34,11 +39,11 @@
 (ert-deftest eas-visual-vconcat-panes-share-width-and-fit ()
   (eas-visual-test--with ()
     (dolist (size '((:cols 189 :rows 56) (:cols 94 :rows 28) (:cols 60 :rows 16)))
-      (let* ((scene (eas-view-scene (eas-visual-test--ohlc-volume size)))
+      (let* ((scene (eas-view-scene (eas-visual-test--panes size)))
              (views (append (plist-get scene :views) nil))
              (cw (aref (plist-get (plist-get scene :size) :cell) 0)))
         (should (= (length views) 2))
-        ;; Price and volume panes: one x range.
+        ;; Both panes: one x range.
         (should (equal (aref (plist-get (nth 0 views) :bounds) 0) (aref (plist-get (nth 1 views) :bounds) 0)))
         (should (equal (aref (plist-get (nth 0 views) :bounds) 2) (aref (plist-get (nth 1 views) :bounds) 2)))
         (should (= (plist-get (plist-get scene :size) :w) (* cw (plist-get size :cols))))
@@ -46,7 +51,7 @@
 
 (ert-deftest eas-visual-chart-follows-its-window ()
   (eas-visual-test--with ((size '(:cols 100 :rows 30))
-                          (view (eas-visual-test--ohlc-volume '(:cols 60 :rows 16)))
+                          (view (eas-visual-test--panes '(:cols 60 :rows 16)))
                           (buffer nil))
     (unwind-protect
         (cl-letf (((symbol-function 'eas-mode--window-size) (lambda (_window _target) size)))

@@ -15,7 +15,6 @@
 
 ;;; Code:
 
-(require 'eas-demo-candles)
 (require 'eas-mode)
 (require 'eas-text-gallery)
 
@@ -37,10 +36,16 @@
     (let ((display-buffer-overriding-action '(display-buffer-same-window)))
       (eas-show view 'text))))
 
+(defun eas-tty-check--candlestick ()
+  "The gallery's layered/layer_candlestick at its container's width, as text.
+Candle wicks and bodies over 30 days, like financial-chart's ohlc demo."
+  (eas-view-open (plist-put (eas-text-gallery-spec "layered" "layer_candlestick") :width "container")
+                 :id "candlestick" :target 'text))
+
 (defun eas-tty-check-full ()
-  "The candles demo alone in a full-frame window."
-  (eas-demo-candles)
-  (delete-other-windows (get-buffer-window "*eas ohlc:TSM*"))
+  "The candlestick chart alone in a full-frame window."
+  (delete-other-windows)
+  (eas-tty-check--show-in (selected-window) (eas-tty-check--candlestick))
   ;; The resize redraws from a timer: write the edges after it.
   (run-at-time 1 nil #'eas-tty-check--write-edges))
 
@@ -60,9 +65,9 @@ Window indices: 0 top left, 1 top right, 2 bottom left, 3 bottom right."
   (lambda () (eas-view-open (eas-text-gallery-spec group name) :id name :target 'text)))
 
 (defun eas-tty-check-split ()
-  "2x2: the candles demo and the gallery examples that overflowed (fc-qx1.53)."
+  "2x2: the candlestick chart and the gallery examples that overflowed (fc-qx1.53)."
   (eas-tty-check--split
-   `((0 . ,(lambda () (eas-demo-candles-open 'text)))
+   `((0 . ,#'eas-tty-check--candlestick)
      (1 . ,(eas-tty-check--gallery "layered" "layer_bar_annotations"))
      (2 . ,(eas-tty-check--gallery "distributions" "layer_point_errorbar_ci"))
      (3 . ,(eas-tty-check--gallery "layered" "layer_bar_annotations")))))
@@ -70,7 +75,7 @@ Window indices: 0 top left, 1 top right, 2 bottom left, 3 bottom right."
 (defun eas-tty-check-split-mirror ()
   "`eas-tty-check-split' with its columns swapped: each chart on the other side."
   (eas-tty-check--split
-   `((1 . ,(lambda () (eas-demo-candles-open 'text)))
+   `((1 . ,#'eas-tty-check--candlestick)
      (0 . ,(eas-tty-check--gallery "layered" "layer_bar_annotations"))
      (3 . ,(eas-tty-check--gallery "distributions" "layer_point_errorbar_ci"))
      (2 . ,(eas-tty-check--gallery "distributions" "layer_point_errorbar_ci")))))

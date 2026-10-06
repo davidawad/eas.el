@@ -88,7 +88,8 @@
 
 (ert-deftest eas-fit-strip-no-wider-than-the-chart ()
   (let ((eas-views (make-hash-table :test 'equal)) (inhibit-message t))
-    (let ((view (eas-view-open "ohlc" :bindings (eas-template-example "ohlc") :target 'text
+    (let ((view (eas-view-open "line" :bindings (plist-put (eas-template-example "line") :crosshair t)
+                               :target 'text
                                :size '(:cols 20 :rows 10))))
       (should (<= (string-width (eas-mode-strip-string view)) 20)))))
 

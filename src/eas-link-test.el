@@ -313,44 +313,5 @@ The view clips its marks either way, as Vega-Lite does."
     (should (equal (plist-get (eas-agent "link" "nope" "t") :reason) "VIEW_NOT_FOUND"))
     (should (plist-get (plist-get (eas-agent "describe" "link") :data) :link))))
 
-;;; Demo: panes template, two tickers
-
-(ert-deftest eas-link-panes-template ()
-  "price + volume + RSI: hovering one pane draws the crosshair in all three; zoom moves all."
-  (eas-link-test--fresh
-    (let ((v (eas-view-open "panes" :bindings (eas-template-example "panes") :subject "TSM")))
-      (should (equal (mapcar (lambda (sv) (plist-get sv :id)) (plist-get (eas-view-scene v) :views))
-                     '("price" "volume" "rsi")))
-      (eas-dispatch v (list :type "pointermove" :px (eas-link-test--px v "volume" 0.5)))
-      (dolist (id '("price" "volume" "rsi"))
-        (let ((rule (car (last (append (plist-get (eas-link-test--view v id) :marks) nil)))))
-          (should (= 1 (length (plist-get rule :items))))))
-      (eas-dispatch v '(:type "key" :key "+"))
-      (should (equal (eas-link-test--domain v "price") (eas-link-test--domain v "rsi")))
-      (should (equal (eas-link-test--domain v "price") (eas-link-test--domain v "volume")))
-      (let ((rsi (plist-get (aref (plist-get (eas-inspect v) :views) 2) :visible)))
-        (should (equal (plist-get rsi :field) "rsi"))
-        (should (<= 0 (plist-get rsi :min) (plist-get rsi :max) 100))))))
-
-(ert-deftest eas-link-panes-golden ()
-  (eas-test-golden "resolve-panes.json"
-                   (eas-json-pretty (eas-resolve "panes" (eas-template-example "panes"))))
-  (eas-test-golden "text-panes.txt"
-                   (eas-text-render (eas-compile (eas-resolve "panes" (eas-template-example "panes"))
-                                                 :target 'text :size '(:cols 80 :rows 36)))))
-
-(ert-deftest eas-link-demo-two-tickers ()
-  "The demo's two tickers share hover and zoom over the bus \"tickers\"."
-  (eas-link-test--fresh
-    (pcase-let ((`(,tsm ,demo) (eas-link-demo-open)))
-      (should (equal (eas-view-id tsm) "panes:TSM"))
-      (should (equal (eas-view-id demo) "panes:DEMO"))
-      (eas-dispatch tsm (list :type "pointermove" :px (eas-link-test--px tsm "price" 0.5)))
-      (should (eas-link-test--store demo "crosshair"))
-      (should (equal (plist-get (eas-link-test--store demo "crosshair") :values)
-                     (plist-get (eas-link-test--store tsm "crosshair") :values)))
-      (eas-dispatch demo '(:type "key" :key "+"))
-      (should (equal (eas-link-test--domain tsm "rsi") (eas-link-test--domain demo "price"))))))
-
 (provide 'eas-link-test)
 ;;; eas-link-test.el ends here

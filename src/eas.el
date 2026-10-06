@@ -53,7 +53,6 @@
 (require 'eas-brush)
 (require 'eas-stream)
 (require 'eas-link-bus)
-(require 'eas-link-demo)
 (require 'eas-tty)
 (require 'eas-parity)
 (require 'eas-chart)

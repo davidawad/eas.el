@@ -47,11 +47,12 @@
 
 ;;; The defects seen live (live session, 515bfd3)
 
-(ert-deftest eas-text-parity-ohlc-draws-candle-bodies ()
+(ert-deftest eas-text-parity-candlestick-draws-bodies ()
   "Bodies win over wicks drawn before them; rising solid, falling shaded."
-  (eas-text-parity-test--with-view ("ohlc" '(:cols 80 :rows 22) (eas-template-example "ohlc"))
-    (let ((items (plist-get (eas-scene-mark scene "candles") :items))
-          (chars (eas-text-parity-test--chars text 'eas-mark "candles")))
+  (eas-text-parity-test--with-view ((eas-text-gallery-spec "layered" "layer_candlestick")
+                                    '(:cols 80 :rows 22))
+    (let ((items (plist-get (eas-scene-mark scene "main/1") :items))
+          (chars (eas-text-parity-test--chars text 'eas-mark "main/1")))
       (should (seq-some (lambda (i) (eq (plist-get i :rise) t)) items))
       (should (seq-some (lambda (i) (eq (plist-get i :rise) :false)) items))
       (should (memq ?█ chars))
@@ -107,7 +108,7 @@
 
 (ert-deftest eas-text-parity-show-in-a-fake-text-window ()
   "eas-show draws templates in a text window, in batch."
-  (dolist (name '("ohlc" "bars" "panes"))
+  (dolist (name '("line" "bars" "multi"))
     (let ((entry (seq-find (lambda (e) (equal (plist-get e :name) name))
                            (eas-text-gallery-entries (list eas-text-gallery-group-templates)))))
       (should (equal (cons name (eas-text-gallery-run entry '((:cols 60 :rows 16)))) (list name))))))

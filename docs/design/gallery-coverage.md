@@ -173,10 +173,12 @@ references' canvas sizes exactly, but its glyphs differ (0.2 to 2.2% of
 pixels) because the fonts differ.  Native passes it at 0.0022 (threshold
 0.05).  Rebuild it with bin/chart (`M-x eas-conformance-update-refs`).
 
-The demo `examples/eas-demo-candles.el` opens `ohlc:TSM` (wicks, candle
-bodies, volume, 30 bars each) as a live view: text through `eas-show` in
-a fake 100x30 window (candle bodies drawn: 7 solid rising and 10
-shaded falling body cells; `eas-text-check` clean) and SVG.
+The candle demo (`eas-demo-candles`, `ohlc:TSM`) stayed in
+financial-chart.el with the ohlc template when eas.el was extracted
+(`fc-qx1.11`).  Here `scripts/eas-tty-check.sh` draws the gallery's
+`layered/layer_candlestick` at container width in a real terminal, and
+`eas-text-parity-candlestick-draws-bodies` holds its bodies (solid
+rising, shaded falling).
 
 ## What is left
 

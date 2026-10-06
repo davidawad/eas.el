@@ -48,9 +48,9 @@
     (should (equal (plist-get failure :index) 1))))
 
 (ert-deftest eas-data-csv-reads-the-repo-example ()
-  (let ((data (eas-data-from "csv" (eas-test-file "examples/tsmc-daily.csv"))))
+  (let ((data (eas-data-from "csv" (eas-test-file "test/vl-examples/data/stocks.csv"))))
     (should (> (length (eas-data-rows data)) 10))
-    (should (equal (eas-data-field-type data "close") "quantitative"))))
+    (should (equal (eas-data-field-type data "price") "quantitative"))))
 
 (ert-deftest eas-data-bar-v1-validates-and-lowers ()
   (let ((data (eas-data-from "bar/v1" '((:open 1 :high 2 :low 0.5 :close 1.5 :volume 10 :time 1700000000000)))))

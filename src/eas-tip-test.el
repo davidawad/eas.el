@@ -51,14 +51,7 @@ A template name opens with its example bindings."
                                      :tooltip [(:field "k" :type "nominal") (:field "v" :type "quantitative")]))])
   "Bars and a line, both linking each datum to its url.")
 
-;;; The ohlc template (the demo's candlesticks)
-
-(ert-deftest eas-tip-ohlc-template-golden ()
-  (eas-test-golden "resolve-ohlc.json"
-                     (eas-json-pretty (eas-resolve "ohlc" (eas-template-example "ohlc"))))
-  (should (equal (plist-get (plist-get (plist-get (eas-template-get "ohlc") :meta) :actions) :candles) "echo")))
-
-;;; Tooltips
+;;; Hover
 
 (ert-deftest eas-tip-bars-hover-reports-the-bar-tooltip ()
   (eas-tip-test--with-view v "bars"
@@ -85,11 +78,11 @@ A template name opens with its example bindings."
     (let ((areas (eas-svg-hot-spots (eas-view-scene v))))
       (should (= (length areas) 5))
       (should (equal (plist-get (nth 2 (car areas)) 'help-echo) "category: Mon\nvalue: 8200"))))
-  (eas-tip-test--with-view v "ohlc"
+  (eas-tip-test--with-view v "bars"
     (eas-view-resize v '(:cols 60 :rows 16) 'text)
     (let ((text (eas-text-render (eas-view-scene v))))
       (should (seq-some (lambda (i) (let ((h (get-text-property i 'help-echo text)))
-                                      (and h (string-match-p "close: 416" h))))
+                                      (and h (string-match-p "category: Wed\nvalue: 6100" h))))
                         (number-sequence 0 (1- (length text))))))))
 
 ;;; Click targets and actions
@@ -111,17 +104,17 @@ A template name opens with its example bindings."
       (eas-dispatch v (list :type "click" :px (vector (+ (aref b 0) 2) (+ (aref b 1) 2)))))
     (should (eq (plist-get (eas-inspect v) :click) :null))))
 
-(ert-deftest eas-tip-ohlc-template-actions-run-on-mouse-1 ()
-  ;; mouse-1 is pointerdown + pointerup; the template binds candles to echo.
-  (eas-tip-test--with-view v "ohlc"
-    (let* ((px (eas-tip-test--centre v "candles" 0)) (inhibit-message t))
+(ert-deftest eas-tip-actions-run-on-mouse-1 ()
+  ;; mouse-1 is pointerdown + pointerup; the bars are bound to echo.
+  (eas-tip-test--with-view v "bars"
+    (eas-action-bind v "main/0" "echo")
+    (let* ((px (eas-tip-test--centre v "main/0" 0)) (inhibit-message t))
       (eas-dispatch v (list :type "pointerdown" :px px))
       (let ((click (plist-get (eas-dispatch v (list :type "pointerup" :px px)) :click)))
-        (should (equal (plist-get click :mark) "candles"))
+        (should (equal (plist-get click :mark) "main/0"))
         (should (equal (plist-get click :action) "echo"))
         (should (eq (plist-get click :ran) t))
-        (should (string-match-p "date: Aug 20, 2026\nopen: 408.6\nhigh: 417.96\nlow: 407.72\nclose: 416"
-                                (plist-get click :result))))
+        (should (string-match-p "category: Mon\nvalue: 8200" (plist-get click :result))))
       ;; A press that moves past the click slop is a drag, not a click.
       (eas-dispatch v '(:type "click" :px [0 0]))
       (eas-dispatch v (list :type "pointerdown" :px px))

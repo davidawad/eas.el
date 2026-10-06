@@ -9,18 +9,18 @@
 
 (defconst eas-babel-test--table
   "#+name: tbl
-| time       |  open |  high |   low | close |
-|------------+-------+-------+-------+-------|
-| 2026-03-02 | 100.0 | 104.0 |  99.0 | 103.0 |
-| 2026-03-03 | 103.0 | 105.0 | 101.0 | 101.5 |
-| 2026-03-04 | 101.5 | 106.0 | 101.0 | 105.5 |
-| 2026-03-05 | 105.5 | 108.0 | 104.0 | 107.0 |
+| date       | category | value |
+|------------+----------+-------|
+| 2026-03-02 | Mon      |  8200 |
+| 2026-03-03 | Tue      | 10400 |
+| 2026-03-04 | Wed      |  6100 |
+| 2026-03-05 | Thu      |  9300 |
 "
-  "Four OHLC bars as a named org table.")
+  "Four days of steps as a named org table.")
 
 (defconst eas-babel-test--block
-  "\n#+name: candles\n#+begin_src eas :template ohlc :data tbl :title \"TSM\" :cols 60 :rows 14%s\n%s#+end_src\n"
-  "An ohlc block over tbl; format with extra headers and a body.")
+  "\n#+name: steps\n#+begin_src eas :template bars :data tbl :title \"Steps\" :cols 60 :rows 14%s\n%s#+end_src\n"
+  "A bars block over tbl; format with extra headers and a body.")
 
 (defmacro eas-babel-test--with-org (headers body &rest forms)
   "Run FORMS in an org buffer holding the table and a block with HEADERS and BODY.
@@ -74,7 +74,7 @@ Point starts on the block; views and inline state are fresh."
       (delete-file csv)))
   (eas-babel-test--with-org "" ""
     (should (equal (aref (plist-get (eas-babel-data "tbl") :rows) 3)
-                   '(:time "2026-03-05" :open 105.5 :high 108.0 :low 104.0 :close 107.0)))
+                   '(:date "2026-03-05" :category "Thu" :value 9300)))
     (should (equal (plist-get (eas-error-plist (should-error (eas-babel-data "missing.csv")
                                                                :type 'eas-not-found))
                               :file)
@@ -93,7 +93,11 @@ Point starts on the block; views and inline state are fresh."
     (should (equal (plist-get b :y) "value"))
     (should (equal (plist-get b :data) [(:date "2026-03-02" :value 1) (:date "2026-03-03" :value 2)]))
     (should-not (plist-member b :results)))
-  (should (eq (eas-babel-data-slot (eas-template-get "ohlc")) :bars))
+  ;; The data slot is the first required shape slot, whatever its name.
+  (should (eq (eas-babel-data-slot
+               '(:name "t" :meta (:slots (:title (:type "string") :rows (:shape "plist")
+                                          :bars (:shape "bar/v1" :required t)))))
+              :bars))
   (should-error (eas-babel-bindings (eas-template-get "line") nil "[1, 2]") :type 'eas-invalid-input)
   (should-error (eas-babel-bindings (eas-template-get "line") nil "{oops") :type 'eas-parse-error))
 
@@ -112,32 +116,32 @@ Point starts on the block; views and inline state are fresh."
 (ert-deftest eas-babel-text-result-is-the-deterministic-text-chart ()
   (eas-babel-test--with-org " :as text" ""
     (let ((result (eas-babel-test--execute)))
-      (should (string-match-p "TSM" result))
+      (should (string-match-p "Steps" result))
       (should (equal (eas-view-ids) nil))
-      (eas-test-golden "babel-ohlc.txt" result)
-      (should (search-forward "#+RESULTS: candles" nil t)))))
+      (eas-test-golden "babel-bars.txt" result)
+      (should (search-forward "#+RESULTS: steps" nil t)))))
 
 (ert-deftest eas-babel-vl-result-is-the-resolved-vega-lite ()
   (eas-babel-test--with-org " :as vl" ""
     (let* ((result (eas-babel-test--execute)) (spec (eas-json-parse result)))
       (should-not (string-match-p "x-eas" result))
       (should (equal (length (plist-get (plist-get spec :data) :values)) 4))
-      (should (equal (plist-get spec :title) "TSM"))
+      (should (equal (plist-get spec :title) "Steps"))
       (should (equal (eas-resolve-hash spec)
                      (eas-resolve-hash
-                      (eas-resolve "ohlc" (list :title "TSM"
-                                                  :bars (plist-get (eas-babel-data
-                                                                    '(("time" "open" "high" "low" "close")
-                                                                      ("2026-03-02" 100.0 104.0 99.0 103.0)
-                                                                      ("2026-03-03" 103.0 105.0 101.0 101.5)
-                                                                      ("2026-03-04" 101.5 106.0 101.0 105.5)
-                                                                      ("2026-03-05" 105.5 108.0 104.0 107.0)))
+                      (eas-resolve "bars" (list :title "Steps"
+                                                  :data (plist-get (eas-babel-data
+                                                                    '(("date" "category" "value")
+                                                                      ("2026-03-02" "Mon" 8200)
+                                                                      ("2026-03-03" "Tue" 10400)
+                                                                      ("2026-03-04" "Wed" 6100)
+                                                                      ("2026-03-05" "Thu" 9300)))
                                                                    :rows)))))))))
 
 (ert-deftest eas-babel-file-results-write-by-extension ()
   (let ((dir (make-temp-file "eas-babel" t)))
     (unwind-protect
-        (dolist (case '(("c.svg" . "<svg") ("c.json" . "\"$schema\"") ("c.txt" . "TSM")))
+        (dolist (case '(("c.svg" . "<svg") ("c.json" . "\"$schema\"") ("c.txt" . "Steps")))
           (let ((file (expand-file-name (car case) dir)))
             (eas-babel-test--with-org (format " :results file :file %s" file) ""
               (should (equal (eas-babel-test--execute) file))
@@ -151,17 +155,17 @@ Point starts on the block; views and inline state are fresh."
       "" ""
     (let ((result (org-babel-execute:eas
                    "{\"mark\": \"line\", \"width\": 200, \"height\": 100,
-                     \"encoding\": {\"x\": {\"field\": \"time\", \"type\": \"temporal\"},
-                                    \"y\": {\"field\": \"close\", \"type\": \"quantitative\"}}}"
+                     \"encoding\": {\"x\": {\"field\": \"date\", \"type\": \"temporal\"},
+                                    \"y\": {\"field\": \"value\", \"type\": \"quantitative\"}}}"
                    '((:data . "tbl") (:as . "text") (:cols . 40) (:rows . 10)))))
       (should (stringp result))
-      (should (string-match-p "close" result)))))
+      (should (string-match-p "value" result)))))
 
 (ert-deftest eas-babel-export-yields-text-and-opens-no-view ()
   (eas-babel-test--with-org " :exports results" ""
     (let ((out (org-export-as 'ascii nil nil t)))
-      (should (string-match-p "TSM" out))
-      (should (string-match-p "date" out))
+      (should (string-match-p "Steps" out))
+      (should (string-match-p "category" out))
       (should-not (eas-view-ids))))
   (eas-babel-test--with-org " :exports results" ""
     (let* ((eas-babel-export-as "vl")
@@ -174,24 +178,24 @@ Point starts on the block; views and inline state are fresh."
 (ert-deftest eas-babel-view-opens-inline-under-the-block-name ()
   (eas-babel-test--with-org "" ""
     (let ((result (eas-babel-test--execute)))
-      (should (equal (eas-view-ids) '("ohlc:candles")))
-      (let* ((view (eas-view-get "ohlc:candles"))
+      (should (equal (eas-view-ids) '("bars:steps")))
+      (let* ((view (eas-view-get "bars:steps"))
              (ov (plist-get (eas-babel-inline--entry view) :overlay)))
         (should (overlayp ov))
         (should (eq (overlay-get ov 'keymap) eas-babel-inline-map))
         (should (equal (buffer-substring-no-properties (overlay-start ov) (overlay-end ov))
                        (string-trim-right result "\n+")))
         (should (equal (eas-babel-source-of view) (list :name "tbl" :buffer (current-buffer))))
-        (should (equal (eas-action-for view '(:mark "candles" :view "main")) "org-source-row"))))
+        (should (equal (eas-action-for view '(:mark "main/0" :view "main")) "org-source-row"))))
     ;; Re-running replaces the view rather than adding a second one.
     (eas-babel-test--execute)
-    (should (equal (eas-view-ids) '("ohlc:candles")))))
+    (should (equal (eas-view-ids) '("bars:steps")))))
 
-(ert-deftest eas-babel-click-on-a-candle-jumps-to-its-table-row ()
+(ert-deftest eas-babel-click-on-a-bar-jumps-to-its-table-row ()
   (eas-babel-test--with-org "" ""
     (eas-babel-test--execute)
-    (let* ((view (eas-view-get "ohlc:candles"))
-           (inspect (eas-dispatch view (list :type "click" :px (eas-babel-test--item-px view "candles" 2))))
+    (let* ((view (eas-view-get "bars:steps"))
+           (inspect (eas-dispatch view (list :type "click" :px (eas-babel-test--item-px view "main/0" 2))))
            (click (plist-get inspect :click)))
       (should (equal (plist-get click :action) "org-source-row"))
       (should (eq (plist-get click :ran) t))
@@ -206,8 +210,8 @@ Point starts on the block; views and inline state are fresh."
 (ert-deftest eas-babel-terminal-ret-on-the-result-clicks-the-cell ()
   (eas-babel-test--with-org "" ""
     (eas-babel-test--execute)
-    (let* ((view (eas-view-get "ohlc:candles"))
-           (px (eas-babel-test--item-px view "candles" 0))
+    (let* ((view (eas-view-get "bars:steps"))
+           (px (eas-babel-test--item-px view "main/0" 0))
            (pos (eas-babel-test--px-pos view px)))
       (goto-char pos)
       (let ((back (eas-babel-inline-pos-px pos)))
@@ -215,7 +219,7 @@ Point starts on the block; views and inline state are fresh."
         (should (< (abs (- (aref back 1) (aref px 1))) 14)))
       ;; Point motion hovers.
       (eas-babel-inline--post-command)
-      (should (equal (plist-get (plist-get (plist-get (eas-inspect view) :hover) :row) :time) "2026-03-02"))
+      (should (equal (plist-get (plist-get (plist-get (eas-inspect view) :hover) :row) :date) "2026-03-02"))
       (should (eq (lookup-key eas-babel-inline-map (kbd "RET")) #'eas-babel-inline-click-at-point))
       (eas-babel-inline-click-at-point)
       (should (equal (plist-get (plist-get (eas-inspect view) :click) :result) "tbl:1"))
@@ -224,8 +228,8 @@ Point starts on the block; views and inline state are fresh."
 (ert-deftest eas-babel-terminal-push-rewrites-the-result ()
   (eas-babel-test--with-org "" ""
     (let* ((before (eas-babel-test--execute))
-           (view (eas-view-get "ohlc:candles")))
-      (eas-push view [(:time "2026-03-06" :open 107.0 :high 112.0 :low 106.0 :close 111.0 :volume :null)])
+           (view (eas-view-get "bars:steps")))
+      (eas-push view [(:date "2026-03-06" :category "Fri" :value 12050)])
       (let ((ov (plist-get (eas-babel-inline--entry view) :overlay))
             (now (substring-no-properties (eas-text-render (eas-view-scene view)))))
         (should-not (equal (string-trim-right before "\n+") (string-trim-right now "\n+")))
@@ -240,8 +244,8 @@ Point starts on the block; views and inline state are fresh."
     (insert "\n#+name: zoomable\n#+begin_src eas :data tbl :cols 50 :rows 12
 {\"mark\": \"line\", \"width\": 300, \"height\": 120,
  \"params\": [{\"name\": \"grid\", \"select\": \"interval\", \"bind\": \"scales\"}],
- \"encoding\": {\"x\": {\"field\": \"time\", \"type\": \"temporal\"},
-              \"y\": {\"field\": \"close\", \"type\": \"quantitative\"}}}
+ \"encoding\": {\"x\": {\"field\": \"date\", \"type\": \"temporal\"},
+              \"y\": {\"field\": \"value\", \"type\": \"quantitative\"}}}
 #+end_src\n")
     (re-search-backward "#\\+begin_src eas :data")
     (let ((before (eas-babel-test--execute))
@@ -263,7 +267,7 @@ Point starts on the block; views and inline state are fresh."
   (eas-babel-test--with-org "" ""
     (let ((eas-babel-target 'svg))
       (eas-babel-test--execute)
-      (let* ((view (eas-view-get "ohlc:candles"))
+      (let* ((view (eas-view-get "bars:steps"))
              (ov (plist-get (eas-babel-inline--entry view) :overlay))
              (image (overlay-get ov 'display)))
         (should (eq (car image) 'image))
@@ -272,7 +276,7 @@ Point starts on the block; views and inline state are fresh."
         (let ((area (nth 1 (car (plist-get (cdr image) :map)))))
           (should area)
           (should (eq (lookup-key (overlay-get ov 'keymap) (vector area 'mouse-1)) #'eas-babel-inline-up)))
-        (eas-push view [(:time "2026-03-06" :open 107.0 :high 112.0 :low 106.0 :close 111.0 :volume :null)])
+        (eas-push view [(:date "2026-03-06" :category "Fri" :value 12050)])
         (should-not (eq (overlay-get ov 'display) image))
         (should (string-prefix-p "<svg" (plist-get (cdr (overlay-get ov 'display)) :data)))))))
 
@@ -280,12 +284,12 @@ Point starts on the block; views and inline state are fresh."
   (eas-babel-test--with-org "" ""
     (eas-babel-test--execute)
     (let ((org (current-buffer)) (eas-babel-target 'text))
-      (goto-char (overlay-start (plist-get (eas-babel-inline--entry "ohlc:candles") :overlay)))
+      (goto-char (overlay-start (plist-get (eas-babel-inline--entry "bars:steps") :overlay)))
       (save-window-excursion
         (eas-babel-inline-open)
-        (should (equal (eas-view-ids) '("ohlc:candles" "ohlc:candles/full")))
-        (should (equal (eas-babel-source-of "ohlc:candles/full") (list :name "tbl" :buffer org)))
-        (kill-buffer (eas-view-buffer (eas-view-get "ohlc:candles/full")))))))
+        (should (equal (eas-view-ids) '("bars:steps" "bars:steps/full")))
+        (should (equal (eas-babel-source-of "bars:steps/full") (list :name "tbl" :buffer org)))
+        (kill-buffer (eas-view-buffer (eas-view-get "bars:steps/full")))))))
 
 (provide 'eas-babel-test)
 ;;; eas-babel-test.el ends here

@@ -2,7 +2,7 @@
 
 ;; Run from the repository root:
 ;;   emacs -Q --batch -L src -l scripts/eas-demos/tooltips-click.el
-;; It opens the ohlc and bars templates as text views, hovers and
+;; It opens the bars template as a text view, hovers and
 ;; clicks through `eas-dispatch' exactly as the buffer glue does, and
 ;; prints the chart, each hover tooltip and each click record.
 
@@ -21,7 +21,7 @@
 
 (let ((eas-action-browse-function (lambda (url) (princ (format "[browse-url %s]\n" url))))
       (inhibit-message t))
-  (dolist (case '(("ohlc" "candles" 3) ("bars" "main/0" 1)))
+  (dolist (case '(("bars" "main/0" 1)))
     (let* ((view (eas-view-open (car case) :bindings (eas-template-example (car case)) :subject "demo"))
            (px nil))
       (eas-view-resize view '(:cols 64 :rows 18) 'text)

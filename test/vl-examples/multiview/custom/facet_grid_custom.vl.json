@@ -19,5 +19,11 @@
                "header": {"labelExpr": "upper(slice(datum.label, 0, 3))", "labelFontSize": 9, "labelPadding": 4,
                           "titleFontWeight": "normal"}}
   },
-  "config": {"header": {"titleFontSize": 12}}
+  "config": {"header": {"titleFontSize": 12}},
+  "usermeta": {
+    "eas": {
+      "threshold": 0.07,
+      "threshold_reason": "2026-10-06 eas-agt.2: 120 stacked bars 7.2px thick in 8px steps. The theme's bar cornerRadiusEnd makes Vega-Lite draw each stack as a clipped group, and resvg (bin/chart) antialiases clip and bar both, so every bar edge drops to a quarter coverage: the reference shows 6.5px bars. Native geometry matches the Vega scene (drawn 0.4-0.8px thinner it differs only 0.006) and rsvg-convert does not compound a clip's antialiasing, so native differs 0.058-0.062; facet_grid_bar has the same 0.07 for the same reason."
+    }
+  }
 }

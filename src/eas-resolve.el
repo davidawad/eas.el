@@ -16,6 +16,17 @@
 ;; item of array SLOT; inside X, {"x-eas:item": KEY [, "default": D]}
 ;; reads the item (KEY "." is the item itself) and a missing KEY with no
 ;; default drops the enclosing key or array element.
+;;
+;; {"x-eas:slot": NAME, "key": "a.b"} reads into an object (or array)
+;; slot; a missing key gives the node's "default", else drops the key.
+;; A slot whose value is null drops the key (or array element) it
+;; fills, so a null default means "leave the property out".
+;;
+;; {"x-eas:expr": "datum.v > {{limit}}"} becomes a string with each
+;; {{NAME}} (or {{NAME.key}}) replaced by the slot value as a JSON
+;; literal, which is also a Vega expression literal; {{@KEY}} reads the
+;; x-eas:each item ({{@}} is the item itself).  {"x-eas:text": ...}
+;; inserts string values as they are, for titles and labels.
 
 ;;; Code:
 
@@ -36,8 +47,33 @@ PATH locates the placeholder for failures."
     (let ((value (plist-get values key)))
       (if (eas-data-p value) (plist-get value :rows) value))))
 
+(defun eas-resolve--dig (value key)
+  "VALUE's part at dotted KEY (\"a.b\", \"rows.0\"), or `eas-resolve--absent'."
+  (let ((out value))
+    (dolist (part (split-string key "\\." t))
+      (setq out (cond ((eq out eas-resolve--absent) out)
+                      ((and (vectorp out) (string-match-p "\\`[0-9]+\\'" part)
+                            (< (string-to-number part) (length out)))
+                       (aref out (string-to-number part)))
+                      ((and (eas-object-p out) out (plist-member out (eas-key part)))
+                       (plist-get out (eas-key part)))
+                      (t eas-resolve--absent))))
+    out))
+
+(defun eas-resolve--slot-ref (node values path)
+  "The value {\"x-eas:slot\": NAME [, \"key\": K, \"default\": D]} NODE stands for.
+A missing key or a null value gives D (substituted with VALUES) when
+NODE has one, else `eas-resolve--absent'.  PATH locates NODE."
+  (let* ((value (eas-resolve--slot-value values (plist-get node :x-eas:slot) path))
+         (key (plist-get node :key))
+         (value (if (stringp key) (eas-resolve--dig value key) value)))
+    (cond ((not (memq value (list eas-resolve--absent :null))) value)
+          ((plist-member node :default)
+           (eas-resolve--substitute (plist-get node :default) values path))
+          (t eas-resolve--absent))))
+
 (defvar eas-resolve--item nil
-  "The array item an {\"x-eas:each\"} element is expanding, as (ITEM).")
+  "The items the {\"x-eas:each\"} elements are expanding, innermost first.")
 
 (defconst eas-resolve--absent (make-symbol "absent")
   "An {\"x-eas:item\"} placeholder naming a key its item lacks.")
@@ -46,32 +82,76 @@ PATH locates the placeholder for failures."
   "Return the value of item placeholder NODE inside x-eas:each.
 \"x-eas:item\" names a key of the item (\".\" is the item itself); a
 missing key gives NODE's \"default\" (substituted with VALUES), else
-`eas-resolve--absent', which drops the enclosing key.  PATH locates
-NODE for failures."
-  (unless eas-resolve--item
-    (eas-signal "INVALID_INPUT" "x-eas:item is only meaningful inside an x-eas:each spec"
+`eas-resolve--absent', which drops the enclosing key.  Each leading
+\"../\" reads the item of the next enclosing each instead.  PATH
+locates NODE for failures."
+  (let* ((key (plist-get node :x-eas:item))
+         (up 0))
+    (while (and (stringp key) (string-prefix-p "../" key))
+      (setq key (substring key 3) up (1+ up))
+      (when (equal key "") (setq key ".")))
+    (unless (nthcdr up eas-resolve--item)
+      (eas-signal "INVALID_INPUT"
+                  (if (= up 0) "x-eas:item is only meaningful inside an x-eas:each spec"
+                    (format "x-eas:item %s reaches past the outermost x-eas:each"
+                            (plist-get node :x-eas:item)))
                   :path path))
-  (let* ((item (car eas-resolve--item))
-         (key (plist-get node :x-eas:item)))
-    (cond
-     ((equal key ".") item)
-     ((and (eas-object-p item) (plist-member item (eas-key key)))
-      (plist-get item (eas-key key)))
-     ((plist-member node :default)
-      (eas-resolve--substitute (plist-get node :default) values path))
-     (t eas-resolve--absent))))
+    (eas-resolve--item-lookup (nth up eas-resolve--item) key node values path)))
+
+(defun eas-resolve--item-lookup (item key node values path)
+  "ITEM's KEY for item placeholder NODE; see `eas-resolve--item-value'.
+VALUES and PATH substitute NODE's default."
+  (cond
+   ((equal key ".") item)
+   ((and (eas-object-p item) (plist-member item (eas-key key)))
+    (plist-get item (eas-key key)))
+   ((plist-member node :default)
+    (eas-resolve--substitute (plist-get node :default) values path))
+   (t eas-resolve--absent)))
 
 (defun eas-resolve--each (el values path)
   "Expand {\"x-eas:each\": SLOT, \"spec\": X}: one X per item of SLOT.
-VALUES are the slot values; PATH locates EL."
-  (let ((items (eas-resolve--slot-value values (plist-get el :x-eas:each) path)))
+SLOT may instead be an {\"x-eas:item\": KEY} placeholder, which nests:
+the array is KEY of the enclosing each's item.  VALUES are the slot
+values; PATH locates EL."
+  (let* ((source (plist-get el :x-eas:each))
+         (items (if (stringp source) (eas-resolve--slot-value values source path)
+                  (eas-resolve--substitute source values path)))
+         (items (if (or (eq items eas-resolve--absent) (eq items :null)) [] items)))
     (unless (vectorp items)
       (eas-signal "SLOT_TYPE" (format "x-eas:each at %s needs an array slot" path)
                     :slot (plist-get el :x-eas:each) :path path))
     (seq-map (lambda (item)
-               (let ((eas-resolve--item (list item)))
+               (let ((eas-resolve--item (cons item eas-resolve--item)))
                  (eas-resolve--substitute (plist-get el :spec) values path)))
              items)))
+
+(defun eas-resolve--template-string (template values path raw)
+  "TEMPLATE with each {{REF}} replaced by its value from slot VALUES.
+REF is NAME, NAME.KEY or @KEY (the x-eas:each item; @ alone is the
+item).  Values are JSON literals, but RAW inserts strings as they are.
+PATH locates the template for failures."
+  (unless (stringp template)
+    (eas-signal "INVALID_INPUT" "x-eas:expr and x-eas:text take a string" :path path))
+  (replace-regexp-in-string
+   "{{\\s-*\\([^}]+?\\)\\s-*}}"
+   (lambda (match)
+     (let* ((ref (match-string 1 match))
+            (value (if (string-prefix-p "@" ref)
+                       (eas-resolve--item-value
+                        (list :x-eas:item (if (equal ref "@") "." (substring ref 1))) values path)
+                     (let ((dot (string-search "." ref)))
+                       (eas-resolve--slot-ref
+                        (append (list :x-eas:slot (if dot (substring ref 0 dot) ref))
+                                (and dot (list :key (substring ref (1+ dot)))))
+                        values path)))))
+       (when (eq value eas-resolve--absent)
+         (eas-signal "SLOT_MISSING" (format "{{%s}} at %s has no value" ref path)
+                     :path path :ref ref))
+       (cond ((and raw (stringp value)) value)
+             ((and raw (eq value :null)) "")
+             (t (eas-json-encode value)))))
+   template t t))
 
 (defun eas-resolve--substitute (node values path)
   "Replace slot placeholders and named data in NODE using slot VALUES.
@@ -93,7 +173,11 @@ PATH is NODE's JSON pointer, for findings."
                 (unless (eq value eas-resolve--absent) (push value out)))))))
       (vconcat (nreverse out))))
    ((and (eas-object-p node) node (plist-get node :x-eas:slot))
-    (eas-resolve--slot-value values (plist-get node :x-eas:slot) path))
+    (eas-resolve--slot-ref node values path))
+   ((and (eas-object-p node) node (plist-member node :x-eas:expr))
+    (eas-resolve--template-string (plist-get node :x-eas:expr) values path nil))
+   ((and (eas-object-p node) node (plist-member node :x-eas:text))
+    (eas-resolve--template-string (plist-get node :x-eas:text) values path t))
    ((and (eas-object-p node) node (plist-member node :x-eas:item))
     (eas-resolve--item-value node values path))
    ((and (eas-object-p node) node)

@@ -166,6 +166,12 @@ Without SOURCE, the fixed ladder at 1k, 10k and 100k points."
         (eas-agent--row "templates" "fail" (format "none in %s" (string-join eas-template-directories ", "))
                           "Point eas-template-directories at the repo's templates/"))))
    (mapcar #'eas-agent--template-row (ignore-errors (eas-template-names)))
+   ;; A template that failed to load was skipped; the others still load.
+   (mapcar (lambda (e)
+             (eas-agent--row (concat "template-file:" (file-name-nondirectory (plist-get e :file)))
+                             "fail" (format "%s: %s" (plist-get e :code) (plist-get e :message))
+                             (format "Fix %s; the other templates still load" (plist-get e :file))))
+           eas-template-load-errors)
    (list
     (if (file-exists-p eas-conformance-supported-file)
         (eas-agent--row "supported.json" "pass" eas-conformance-supported-file)

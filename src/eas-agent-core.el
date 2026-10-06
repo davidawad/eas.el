@@ -186,7 +186,7 @@ anything else is returned as it is (already parsed)."
 
 (defun eas-agent-template-name-p (source)
   "Non-nil when SOURCE names a registered template."
-  (and (stringp source) (member source (eas-template-names)) t))
+  (eas-template-p source))
 
 (defun eas-agent-source-label (source)
   "How next[] commands refer to SOURCE."

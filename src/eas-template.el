@@ -20,7 +20,13 @@
 ;; value and an array element {"x-eas:when": NAME, "spec": X} is kept
 ;; (as X) only when the slot is truthy.  {"name": NAME} data refers to a
 ;; data slot.  Templates are JSON files in `eas-template-directories',
-;; loaded on first use.
+;; loaded on first use.  A file that fails to load is skipped and
+;; reported (`eas-template-load-errors'); the others still load.
+;;
+;; Names share one registry.  A package keeps its own names apart with
+;; a namespace: `eas-template-add-directory' with NAMESPACE (or
+;; "x-eas.namespace" in the template) registers "NAMESPACE/NAME".  A
+;; bare NAME still finds a namespaced template when only one has it.
 
 ;;; Code:
 
@@ -38,13 +44,49 @@
   (list (expand-file-name "templates" eas-template--root))
   "Directories whose *.json files are eas templates.")
 
+(defvar eas-template-namespaces nil
+  "Alist of (DIRECTORY . NAMESPACE) for `eas-template-directories'.
+A template loaded from DIRECTORY registers as \"NAMESPACE/NAME\".")
+
 (defvar eas--templates nil
   "Loaded templates: alist of (NAME . PLIST) with :spec :meta :path.
 nil until the first lookup loads `eas-template-directories'.")
 
+(defvar eas-template-load-errors nil
+  "Templates the last `eas-template-reload' skipped, as failure plists.
+Each is (:code CODE :message M :file FILE ...).")
+
+(defun eas-template-add-directory (directory &optional namespace)
+  "Load templates from DIRECTORY too, under NAMESPACE when non-nil.
+A domain package calls this once; its templates register as
+\"NAMESPACE/NAME\" so they cannot collide with another package's."
+  (let ((dir (file-name-as-directory (expand-file-name directory))))
+    (unless (member dir (mapcar #'file-name-as-directory eas-template-directories))
+      (setq eas-template-directories (append eas-template-directories (list dir))))
+    (setf (alist-get dir eas-template-namespaces nil t #'equal) namespace)
+    (setq eas--templates nil)
+    dir))
+
+(defun eas-template--namespace (meta path)
+  "The namespace of the template with x-eas META read from PATH, or nil."
+  (or (plist-get meta :namespace)
+      (and path (alist-get (file-name-directory (expand-file-name path))
+                           eas-template-namespaces nil nil #'equal))))
+
+(defun eas-template--qualified (meta path)
+  "The registry name of the template with x-eas META read from PATH."
+  (let ((name (plist-get meta :template))
+        (ns (eas-template--namespace meta path)))
+    (if (and (stringp ns) (not (string-prefix-p (concat ns "/") name)))
+        (concat ns "/" name)
+      name)))
+
 (defun eas-template--meta-check (meta path)
   "Signal INVALID_INPUT unless META (an x-eas object) declares a template.
 PATH names the template in the error."
+  (unless (eas-object-p meta)
+    (eas-signal "INVALID_INPUT" (format "Template %s needs an x-eas object" path)
+                :path "/x-eas" :file path))
   (dolist (key '(:template :version :slots))
     (unless (plist-get meta key)
       (eas-signal "INVALID_INPUT"
@@ -57,25 +99,57 @@ PATH names the template in the error."
                             :path (concat "/x-eas/slots/" (eas-key-name slot)) :file path)))
 
 (defun eas-template-register (spec &optional path)
-  "Register template SPEC (a parsed chart/v1 value) read from PATH."
+  "Register template SPEC (a parsed chart/v1 value) read from PATH.
+Return its registry name, namespaced when its directory or x-eas
+declares a namespace."
   (let* ((spec (eas-spec-validate spec))
          (meta (plist-get spec :x-eas)))
     (eas-template--meta-check meta (or path "<inline>"))
-    (setf (alist-get (plist-get meta :template) eas--templates nil nil #'equal)
-          (list :name (plist-get meta :template) :spec spec :meta meta :path path))
-    (plist-get meta :template)))
+    (unless (stringp (plist-get meta :template))
+      (eas-signal "INVALID_INPUT" (format "Template %s: x-eas.template must be a string"
+                                          (or path "<inline>"))
+                  :path "/x-eas/template" :file path))
+    (let ((name (eas-template--qualified meta path)))
+      (setf (alist-get name eas--templates nil nil #'equal)
+            (list :name name :spec spec :meta meta :path path))
+      name)))
 
 (defun eas-template-load (file)
   "Load and register the template in FILE; return its name."
   (eas-template-register (eas-json-read-file file) (expand-file-name file)))
 
+(defun eas-template--load-file (file)
+  "Load FILE for `eas-template-reload'; on failure record it and return nil.
+A second file declaring a name already loaded is a failure too."
+  (condition-case err
+      (let* ((spec (eas-json-read-file file))
+             (meta (and (eas-object-p spec) (plist-get spec :x-eas)))
+             (name (and (eas-object-p meta) (stringp (plist-get meta :template))
+                        (eas-template--qualified meta file)))
+             (other (and name (alist-get name eas--templates nil nil #'equal))))
+        (if other
+            (progn
+              (push (list :code "INVALID_INPUT"
+                          :message (format "Template %s in %s is already defined by %s; skipped"
+                                           name file (plist-get other :path))
+                          :file file :template name)
+                    eas-template-load-errors)
+              nil)
+          (eas-template-register spec file)))
+    (error
+     (push (append (eas-error-plist err) (list :file file)) eas-template-load-errors)
+     nil)))
+
 (defun eas-template-reload ()
-  "Forget loaded templates and load every directory again."
-  (setq eas--templates nil)
+  "Forget loaded templates and load every directory again.
+A template that fails to load is skipped and recorded in
+`eas-template-load-errors'; return the loaded names."
+  (setq eas--templates nil eas-template-load-errors nil)
   (dolist (dir eas-template-directories)
     (when (file-directory-p dir)
       (dolist (file (directory-files dir t "\\.json\\'"))
-        (eas-template-load file))))
+        (eas-template--load-file (expand-file-name file)))))
+  (setq eas-template-load-errors (nreverse eas-template-load-errors))
   (mapcar #'car eas--templates))
 
 (defun eas-template-names ()
@@ -83,14 +157,35 @@ PATH names the template in the error."
   (unless eas--templates (eas-template-reload))
   (sort (mapcar #'car eas--templates) #'string<))
 
+(defun eas-template--unqualified (name)
+  "Templates whose name is \"NAMESPACE/NAME\" for a bare NAME."
+  (and (stringp name) (not (string-search "/" name))
+       (seq-filter (lambda (entry) (string-suffix-p (concat "/" name) (car entry)))
+                   eas--templates)))
+
 (defun eas-template-get (name)
-  "Return the template plist NAME or signal NOT_FOUND."
+  "Return the template plist NAME or signal NOT_FOUND.
+A bare NAME finds \"NAMESPACE/NAME\" when exactly one namespace has it."
   (unless eas--templates (eas-template-reload))
   (or (alist-get name eas--templates nil nil #'equal)
+      (let ((matches (eas-template--unqualified name)))
+        (cond ((= (length matches) 1) (cdar matches))
+              (matches
+               (eas-signal "NOT_FOUND"
+                           (format "Template %S is ambiguous; use one of %s" name
+                                   (string-join (sort (mapcar #'car matches) #'string<) ", "))
+                           :template name))))
       (eas-signal "NOT_FOUND"
                     (format "No template %S; templates: %s" name
                             (string-join (eas-template-names) ", "))
                     :template name)))
+
+(defun eas-template-p (name)
+  "Non-nil when a template is registered as NAME, bare or namespaced."
+  (and (stringp name)
+       (or (member name (eas-template-names))
+           (= (length (eas-template--unqualified name)) 1))
+       t))
 
 (defun eas-template-slots (template)
   "Return TEMPLATE's slots plist."
@@ -116,7 +211,8 @@ PATH names the template in the error."
   "Return the describe plist for template NAME."
   (let* ((template (eas-template-get name))
          (meta (plist-get template :meta)))
-    (list :name name :version (plist-get meta :version) :doc (plist-get meta :doc)
+    (list :name (plist-get template :name) :version (plist-get meta :version)
+          :doc (plist-get meta :doc)
           :slots (plist-get meta :slots)
           :example (eas-template-example-file template)
           :path (plist-get template :path))))
@@ -190,6 +286,8 @@ SHAPE_INVALID, FIELD_MISSING or INVALID_INPUT naming the slot."
                                   :slot (eas-key-name slot))))
                  ((plist-get def :shape)
                   (push (cons slot (eas-template--data-value slot def value)) bound))
+                 ;; Null fits any slot: the property it fills is left out.
+                 ((eq value :null) (push (cons slot :null) bound))
                  (t (push (cons slot (eas-template--check-value
                                       slot def (if (and (listp value) (equal (plist-get def :type) "array"))
                                                    (vconcat value) value)))

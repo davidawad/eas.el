@@ -36,6 +36,8 @@ limits the answer to that registry."
          (all (append
                (list :vega-lite eas-spec-vega-lite-version
                      :templates (vconcat (mapcar #'eas-template-describe (eas-template-names)))
+                     ;; Template files the loader skipped, with why.
+                     :template-errors (vconcat eas-template-load-errors)
                      :transforms (vconcat
                                   (mapcar (lambda (entry)
                                             (list :name (car entry) :doc (plist-get (cdr entry) :doc)

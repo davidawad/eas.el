@@ -22,6 +22,7 @@
 (require 'eas-core)
 (require 'seq)
 (require 'eas-repeat)
+(require 'eas-concat-wrap)
 (require 'eas-spec-props)
 
 (defconst eas-spec-vega-lite-version "6.4.1"
@@ -165,6 +166,7 @@ Signals PARSE_ERROR or INVALID_INPUT."
                     :path ""))
     (let ((eas-spec-source-directory (if file (file-name-directory (expand-file-name file))
                                        eas-spec-source-directory)))
+      (setq spec (eas-concat-wrap spec))
       (dolist (f eas-spec-rewrite-functions) (setq spec (funcall f spec))))
     (eas-spec--normalize spec)))
 
@@ -202,7 +204,8 @@ A known operation key wins; else the first key that is not a parameter."
 (defun eas-spec--placeholder-p (value)
   "Non-nil when VALUE is a template slot or item placeholder."
   (and (eas-object-p value) value
-       (or (plist-member value :x-eas:slot) (plist-member value :x-eas:item))))
+       (or (plist-member value :x-eas:slot) (plist-member value :x-eas:item)
+           (plist-member value :x-eas:expr) (plist-member value :x-eas:text))))
 
 (defun eas-spec-features (spec)
   "Return every feature in SPEC, as plists (:feature ID :path POINTER).
@@ -227,6 +230,16 @@ come back as (:invalid MESSAGE :path P)."
              (bad "Each view must be a JSON object" path))
             ((or (plist-get view :x-eas:when) (plist-get view :x-eas:each))
              (walk-view (plist-get view :spec) (concat path "/spec")))
+            ;; A facet parse could not lower (its data is not inline yet,
+            ;; as in a template) or a concat whose views a template
+            ;; expands: not drawn as is, but not malformed either.
+            ((and (plist-get view :facet) (eas-object-p (plist-get view :spec)))
+             (add "composition/facet" (concat path "/facet") :unknown t)
+             (walk-view (plist-get view :spec) (concat path "/spec")))
+            ((vectorp (plist-get view :concat))
+             (add "composition/concat" (concat path "/concat") :unknown t)
+             (cl-loop for child across (plist-get view :concat) for i from 0
+                      do (walk-view child (format "%s/concat/%d" path i))))
             (t
              (check-keys view eas-spec--view-keys path)
              (let ((composite nil))

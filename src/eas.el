@@ -58,6 +58,7 @@
 (require 'eas-force)
 (require 'eas-force-graph)
 (require 'eas-voronoi)
+(require 'eas-label)
 (require 'eas-spec)
 (require 'eas-spec-props)
 (require 'eas-vl-lower)

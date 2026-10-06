@@ -194,7 +194,11 @@ anything else is returned as it is (already parsed)."
 
 (defun eas-agent-bindings (opts)
   "The template bindings in OPTS's :data, parsed (nil when absent)."
-  (let ((b (eas-agent-arg-json (plist-get opts :data))))
+  (let* ((data (plist-get opts :data))
+         (b (if (and (stringp data) (not (equal data "-")) (not (eas-agent-json-text-p data))
+                     (file-readable-p data))
+                (eas-template-read-bindings data)
+              (eas-agent-arg-json data))))
     (unless (eas-object-p b)
       (eas-signal "INVALID_INPUT" "--data is a JSON object keyed by template slot"
                     :option "data"))

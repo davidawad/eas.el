@@ -1,0 +1,243 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "bar-chart",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery bar chart: one bar per category; hovering a bar turns it red and shows its value above it.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with a category and an amount column"
+      },
+      "category": {
+        "type": "field",
+        "of": "data",
+        "default": "category"
+      },
+      "amount": {
+        "type": "field",
+        "of": "data",
+        "default": "amount"
+      },
+      "color": {
+        "type": "string",
+        "default": "steelblue"
+      },
+      "highlight": {
+        "type": "string",
+        "default": "red",
+        "doc": "fill of the hovered bar"
+      },
+      "width": {
+        "type": "number",
+        "default": 400
+      },
+      "height": {
+        "type": "number",
+        "default": 200
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A basic bar chart example, with value labels shown upon pointer hover.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/bar-chart.data.json",
+    "vega": {
+      "example": "bar-chart",
+      "spec": "test/vega-examples/specs/bar-chart.vg.json",
+      "status": "pass",
+      "note": "Bars and axes match; hovering a bar turns it red and shows its amount (a point param on pointerover).",
+      "ratio": 0.0394,
+      "threshold": 0.06,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "category"
+      },
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "paddingInner": 0.05,
+        "paddingOuter": 0.05
+      }
+    },
+    "y": {
+      "field": {
+        "x-eas:slot": "amount"
+      },
+      "type": "quantitative",
+      "axis": {
+        "tickCount": 10
+      }
+    }
+  },
+  "layer": [
+    {
+      "params": [
+        {
+          "name": "hover",
+          "select": {
+            "type": "point",
+            "on": "pointerover",
+            "clear": "pointerout"
+          }
+        }
+      ],
+      "mark": {
+        "type": "bar"
+      },
+      "encoding": {
+        "color": {
+          "condition": {
+            "param": "hover",
+            "empty": false,
+            "value": {
+              "x-eas:slot": "highlight"
+            }
+          },
+          "value": {
+            "x-eas:slot": "color"
+          }
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "category"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "amount"
+            },
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "param": "hover",
+            "empty": false
+          }
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "bottom",
+        "dy": -2,
+        "color": "#333"
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "amount"
+          },
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+}

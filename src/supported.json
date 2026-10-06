@@ -12,7 +12,9 @@
     "transform/x-eas/dotbin": "Vega's dotbin (Wilkinson dot plot bins) as a domain transform (ERT: eas-vega-distributions-dotbin-matches-vega).",
     "transform/x-eas:force": "Vega's force transform, d3-force's simulation and forces (ERT: eas-vega-network-force-matches-d3).",
     "transform/x-eas:graph": "Nodes joined to links: order, degree, link and pair rows (ERT: eas-vega-network-graph-joins-nodes-and-links).",
-    "transform/x-eas:voronoi": "Vega's voronoi transform: cell paths and vertices (ERT: eas-vega-network-voronoi-cells)."
+    "transform/x-eas:voronoi": "Vega's voronoi transform: cell paths and vertices (ERT: eas-vega-network-voronoi-cells).",
+    "transform/x-eas:arc-label": "Pie label layout, materialized by resolve (ERT: eas-vega-std-basic-arc-label-separates-each-side).",
+    "transform/x-eas:label": "Point label layout, materialized by resolve (ERT: eas-vega-std-basic-label-keeps-labels-apart)."
   },
   "features": {
     "bind/input": {

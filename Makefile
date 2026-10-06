@@ -57,6 +57,9 @@ test-gallery-conformance:
 test-gallery-vega:
 	$(call run-tests,(and (tag :gallery) "^eas-vega-"))
 
+test-gallery-vega:
+	$(call run-tests,(and (tag :gallery) "^eas-vega-"))
+
 bench:
 	scripts/eas-bench.sh
 

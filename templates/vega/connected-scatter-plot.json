@@ -1,0 +1,512 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "connected-scatter-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery connected scatter plot: a smooth path through (x, y) points in data order, each labelled on its chosen side.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows in path order with x, y, a label and a label side (left, right, top or bottom)"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "miles"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "gas"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "year"
+      },
+      "side": {
+        "type": "field",
+        "of": "data",
+        "default": "side"
+      },
+      "xTitle": {
+        "type": "string",
+        "default": "Miles driven per capita each year"
+      },
+      "yTitle": {
+        "type": "string",
+        "default": "Price of a gallon of gasoline (adjusted for inflation)"
+      },
+      "yFormat": {
+        "type": "string",
+        "default": "$0.2f"
+      },
+      "width": {
+        "type": "number",
+        "default": 800
+      },
+      "height": {
+        "type": "number",
+        "default": 500
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "An example of a connected scatter plot, tracking changes in miles driven versus the price of gasoline.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/connected-scatter-plot.data.json",
+    "vega": {
+      "example": "connected-scatter-plot",
+      "spec": "test/vega-examples/specs/connected-scatter-plot.vg.json",
+      "status": "pass",
+      "note": "Cardinal path through points in data order, side-placed year labels, and a second axis per side over the shared scales (resolve.axis independent).",
+      "ratio": 0.0347,
+      "threshold": 0.06,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 12,
+      "labelPadding": 2,
+      "tickSize": 0,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4,
+      "domain": false,
+      "labelFontWeight": "bold"
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "x-eas-order"
+        }
+      ]
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": true
+      }
+    },
+    "y": {
+      "field": {
+        "x-eas:slot": "y"
+      },
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": true
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "interpolate": "cardinal",
+        "color": "#000",
+        "strokeWidth": 3
+      },
+      "encoding": {
+        "order": {
+          "field": "x-eas-order",
+          "type": "quantitative"
+        },
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": {
+            "orient": "top",
+            "tickCount": 5,
+            "grid": true,
+            "title": null
+          }
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": {
+            "orient": "left",
+            "tickCount": 5,
+            "grid": true,
+            "format": {
+              "x-eas:slot": "yFormat"
+            },
+            "title": null
+          }
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "fill": "#fff",
+        "stroke": "#000",
+        "strokeWidth": 1,
+        "size": 49,
+        "opacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": {
+            "orient": "bottom",
+            "ticks": false,
+            "labels": false,
+            "title": {
+              "x-eas:slot": "xTitle"
+            }
+          }
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": {
+            "orient": "right",
+            "ticks": false,
+            "labels": false,
+            "title": {
+              "x-eas:slot": "yTitle"
+            }
+          }
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "label"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "x"
+            },
+            "type": "quantitative"
+          },
+          {
+            "field": {
+              "x-eas:slot": "y"
+            },
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{side}}] == 'left'"
+          }
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "middle",
+        "dx": -7,
+        "dy": 1,
+        "color": "#000"
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        },
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": null
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": null
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{side}}] == 'right'"
+          }
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 6,
+        "dy": 1,
+        "color": "#000"
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        },
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": null
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": null
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{side}}] == 'top'"
+          }
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "bottom",
+        "dx": 0,
+        "dy": -5,
+        "color": "#000"
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        },
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": null
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": null
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{side}}] == 'bottom'"
+          }
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "top",
+        "dx": 0,
+        "dy": 6,
+        "color": "#000"
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        },
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": null
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": null
+        }
+      }
+    }
+  ],
+  "resolve": {
+    "axis": {
+      "x": "independent",
+      "y": "independent"
+    }
+  }
+}

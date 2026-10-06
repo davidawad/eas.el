@@ -283,7 +283,8 @@ config."
                       '(:false :null))
             (list :domain :false))
           (list :channel (eas-key-name channel)
-                :orient (if (eq channel :x) "bottom" "left")
+                ;; An extra axis (:x_1, eas-independent.el) is an x axis too.
+                :orient (if (string-prefix-p ":x" (symbol-name channel)) "bottom" "left")
                 :title title :discrete (if discrete t :false) :labelAngle angle
                 :overlap (cond ((and discrete (equal (plist-get def :type) "nominal")) nil)
                                ((equal (plist-get scale :type) "log") "greedy")

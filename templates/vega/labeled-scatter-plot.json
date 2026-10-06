@@ -1,0 +1,408 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "labeled-scatter-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery labelled scatter plot: points with a quadratic trend line, each labelled where its text overlaps no point, the trend or another label.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with x, y and a label; rows missing x or y are dropped"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "Rotten Tomatoes Rating"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "IMDB Rating"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "Title"
+      },
+      "method": {
+        "enum": [
+          "linear",
+          "log",
+          "exp",
+          "pow",
+          "quad",
+          "poly"
+        ],
+        "default": "quad",
+        "doc": "trend regression"
+      },
+      "labelFontSize": {
+        "type": "number",
+        "default": 8
+      },
+      "width": {
+        "type": "number",
+        "default": 800
+      },
+      "height": {
+        "type": "number",
+        "default": 600
+      },
+      "labelWidth": {
+        "type": "number",
+        "default": 860,
+        "doc": "pixels from the left edge labels may use: the width plus 60, as Vega"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A labeled scatter plot of films showing Rotten Tomatoes ratings versus IMDB ratings.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/labeled-scatter-plot.data.json",
+    "vega": {
+      "example": "labeled-scatter-plot",
+      "spec": "test/vega-examples/specs/labeled-scatter-plot.vg.json",
+      "status": "partial",
+      "note": "The reference is defective: vg2svg could not run Vega's label transform without canvas, so every label sits at the origin and the axes are misplaced. Points, trend and axes match the live example; the label transform places labels clear of points, trend and each other, but not label for label as Vega's bitmap does.",
+      "ratio": 0.049,
+      "threshold": 0.07,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "transform": [
+    {
+      "x-eas:transform": "label",
+      "x": {
+        "x-eas:slot": "x"
+      },
+      "y": {
+        "x-eas:slot": "y"
+      },
+      "text": {
+        "x-eas:slot": "label"
+      },
+      "width": {
+        "x-eas:slot": "width"
+      },
+      "height": {
+        "x-eas:slot": "height"
+      },
+      "size": [
+        {
+          "x-eas:slot": "labelWidth"
+        },
+        {
+          "x-eas:slot": "height"
+        }
+      ],
+      "fontSize": {
+        "x-eas:slot": "labelFontSize"
+      },
+      "anchor": [
+        "top",
+        "bottom",
+        "right",
+        "left"
+      ],
+      "offset": [
+        1
+      ],
+      "markSize": 25,
+      "avoidRegression": {
+        "x-eas:slot": "method"
+      }
+    },
+    {
+      "filter": {
+        "x-eas:expr": "isValid(datum[{{x}}]) && isValid(datum[{{y}}])"
+      }
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "quantitative",
+      "scale": {
+        "zero": true,
+        "nice": false
+      },
+      "axis": {
+        "title": {
+          "x-eas:slot": "x"
+        },
+        "tickCount": 10
+      }
+    },
+    "y": {
+      "field": {
+        "x-eas:slot": "y"
+      },
+      "type": "quantitative",
+      "scale": {
+        "zero": true,
+        "nice": false
+      },
+      "axis": {
+        "title": {
+          "x-eas:slot": "y"
+        },
+        "tickCount": 10
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 25,
+        "opacity": 1,
+        "fillOpacity": 0.5,
+        "strokeWidth": 0
+      },
+      "encoding": {
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "label"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "x"
+            },
+            "type": "quantitative"
+          },
+          {
+            "field": {
+              "x-eas:slot": "y"
+            },
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "transform": [
+        {
+          "regression": {
+            "x-eas:slot": "y"
+          },
+          "on": {
+            "x-eas:slot": "x"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          }
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "color": "firebrick"
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum['label_anchor'] == 'top'"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "bottom",
+        "dx": 0,
+        "dy": -3.8,
+        "color": "#000",
+        "fontSize": {
+          "x-eas:slot": "labelFontSize"
+        }
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum['label_anchor'] == 'bottom'"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "top",
+        "dx": 0,
+        "dy": 3.8,
+        "color": "#000",
+        "fontSize": {
+          "x-eas:slot": "labelFontSize"
+        }
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum['label_anchor'] == 'right'"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 3.8,
+        "dy": 0,
+        "color": "#000",
+        "fontSize": {
+          "x-eas:slot": "labelFontSize"
+        }
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum['label_anchor'] == 'left'"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "middle",
+        "dx": -3.8,
+        "dy": 0,
+        "color": "#000",
+        "fontSize": {
+          "x-eas:slot": "labelFontSize"
+        }
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    }
+  ]
+}

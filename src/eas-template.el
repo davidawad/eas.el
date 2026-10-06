@@ -203,6 +203,20 @@ A bare NAME finds \"NAMESPACE/NAME\" when exactly one namespace has it."
     (expand-file-name example (file-name-directory
                                (directory-file-name (file-name-directory path))))))
 
+(defun eas-template-read-bindings (file)
+  "Read the bindings object in FILE.
+A slot bound to {\"file\": F} with a relative F reads F beside FILE,
+so an example can name a dataset wherever Emacs runs."
+  (let ((bindings (eas-json-read-file file)))
+    (if (not (eas-object-p bindings)) bindings
+      (cl-loop for (slot value) on bindings by #'cddr
+               append (list slot
+                            (let ((f (and (eas-object-p value) (plist-get value :file))))
+                              (if (and (stringp f) (not (file-name-absolute-p f)))
+                                  (plist-put (copy-sequence value) :file
+                                             (expand-file-name f (file-name-directory file)))
+                                value)))))))
+
 (defun eas-template-example (name)
   "Return the example bindings of template NAME (they render as-is)."
   (let* ((template (eas-template-get name))
@@ -210,7 +224,7 @@ A bare NAME finds \"NAMESPACE/NAME\" when exactly one namespace has it."
     (unless file
       (eas-signal "NOT_FOUND" (format "Template %s declares no example" name)
                     :template name))
-    (eas-json-read-file file)))
+    (eas-template-read-bindings file)))
 
 (defun eas-template-describe (name)
   "Return the describe plist for template NAME."

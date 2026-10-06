@@ -12,7 +12,9 @@
 ;; view's scales as :y_1, :y_2 ... (:x_1 ...), each with its own axis,
 ;; on the opposite side (right or top) and without a grid, as
 ;; Vega-Lite draws them.  `eas-independent-unit-scales' gives a layer
-;; the scales its marks are drawn with.
+;; the scales its marks are drawn with.  With only resolve.axis
+;; independent, the scale stays shared and each later layer that
+;; declares an axis draws it as well (`eas-independent-shared-axes').
 
 ;;; Code:
 
@@ -53,12 +55,48 @@ axis definitions to GROUP and the mapping to each unit."
                   (plist-put group :extra-axes
                              (append (plist-get group :extra-axes) (list (cons key (eas-plist-put def :axis axis))))))
                 (plist-put u :scale-keys (append (plist-get u :scale-keys) (list ch key)))))
-            (setq k (1+ k))))))))
+            (setq k (1+ k)))))))
+  (eas-independent-shared-axes group))
+
+(defun eas-independent-axis-channels (group)
+  "Positional channels whose axes GROUP's resolve declares independent."
+  (let ((axis (plist-get (plist-get group :resolve) :axis)))
+    (seq-filter (lambda (ch) (equal (plist-get axis ch) "independent")) '(:x :y))))
+
+(defun eas-independent-shared-axes (group)
+  "Give GROUP's later layers their own axes over a shared scale.
+With resolve.axis independent on a channel whose scale stays shared,
+each layer after the first that declares an axis object draws that
+axis too (a second axis on the other side, say): its key is an extra
+scale, a copy of the shared one.  An extra axis without an orient goes
+to the opposite side, and it has no grid unless it asks for one."
+  (dolist (ch (eas-independent-axis-channels group))
+    (when-let* ((scale (and (not (memq ch (eas-independent-channels group)))
+                            (plist-get (plist-get group :scales) ch))))
+      (let ((k (cl-count-if (lambda (pair) (string-prefix-p (format "%s_" ch) (symbol-name (car pair))))
+                            (plist-get group :extra-axes))))
+        (dolist (u (cdr (seq-filter (lambda (u) (eas-compile--defs (list u) ch)) (plist-get group :units))))
+          (let* ((def (cdar (eas-compile--defs (list u) ch)))
+                 (axis (plist-get def :axis)))
+            (when (and (eas-object-p axis) axis)
+              (setq k (1+ k))
+              (let ((key (eas-independent-key ch k)))
+                (unless (plist-get axis :orient)
+                  (setq axis (eas-plist-put axis :orient (if (eq ch :x) "top" "right"))))
+                (unless (plist-member axis :grid) (setq axis (eas-plist-put axis :grid :false)))
+                (plist-put group :scales (append (plist-get group :scales) (list key (copy-sequence scale))))
+                (plist-put group :shared-axes (append (plist-get group :shared-axes) (list (cons key ch))))
+                (plist-put group :extra-axes
+                           (append (plist-get group :extra-axes)
+                                   (list (cons key (eas-plist-put def :axis axis)))))))))))))
 
 (defun eas-independent-ranges (group)
   "Map GROUP's extra scales onto its placed plot."
   (let ((x0 (plist-get group :x0)) (y0 (plist-get group :y0))
         (w (plist-get group :w)) (h (plist-get group :h)) (scales (plist-get group :scales)))
+    ;; A shared axis follows its channel's scale, which a facet may have replaced since.
+    (dolist (pair (plist-get group :shared-axes))
+      (setq scales (plist-put scales (car pair) (copy-sequence (plist-get scales (cdr pair))))))
     (dolist (pair (plist-get group :extra-axes))
       (let* ((key (car pair)) (s (plist-get scales key))
              (x (string-prefix-p ":x" (symbol-name key))))

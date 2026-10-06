@@ -264,7 +264,7 @@ BOUNDS under METRICS."
                                :align (let ((a (eas-marks--mark-value unit :align row))) (if (stringp a) a "center"))
                                :baseline (or (eas-marks--mark-value unit :baseline row) "middle")
                                :fill (eas-marks-props-text-fill unit scales row)
-                               :opacity (or (plist-get mark :opacity) 1))
+                               :opacity (or (eas-marks--channel unit scales :opacity row) (plist-get mark :opacity) 1))
                           (when (plist-get mark :fontWeight) (list :fontWeight (plist-get mark :fontWeight)))
                           ;; font, fontStyle and the angle (channel or mark) the svg text takes.
                           (cl-loop for k in '(:font :fontStyle) for v = (plist-get mark k)

@@ -1,0 +1,349 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "error-bars",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery error bars: the mean of a value per category with an error bar (95% CI, standard error, standard deviation or IQR).",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with a category and a numeric value"
+      },
+      "category": {
+        "type": "field",
+        "of": "data",
+        "default": "variety"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "yield"
+      },
+      "measure": {
+        "enum": [
+          "ci",
+          "stderr",
+          "stdev",
+          "iqr"
+        ],
+        "default": "ci",
+        "doc": "error measure: 95% confidence interval, standard error, standard deviation or interquartile range"
+      },
+      "valueTitle": {
+        "type": "string",
+        "default": "Barley Yield"
+      },
+      "width": {
+        "type": "number",
+        "default": 500
+      },
+      "height": {
+        "type": "number",
+        "default": 160
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A basic error bar visualization example.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/error-bars.data.json",
+    "vega": {
+      "example": "error-bars",
+      "spec": "test/vega-examples/specs/error-bars.vg.json",
+      "status": "pass",
+      "note": "Mean and error bar per category; Vega's measure dropdown is the measure slot (ci, stderr, stdev, iqr); ci is bootstrapped, so its bars vary slightly.",
+      "ratio": 0.0226,
+      "threshold": 0.05,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "transform": [
+    {
+      "aggregate": [
+        {
+          "op": "mean",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "mean"
+        },
+        {
+          "op": "stdev",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "stdev"
+        },
+        {
+          "op": "stderr",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "stderr"
+        },
+        {
+          "op": "ci0",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "ci0"
+        },
+        {
+          "op": "ci1",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "ci1"
+        },
+        {
+          "op": "q1",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "iqr0"
+        },
+        {
+          "op": "q3",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "iqr1"
+        }
+      ],
+      "groupby": [
+        {
+          "x-eas:slot": "category"
+        }
+      ]
+    },
+    {
+      "calculate": "datum.mean - datum.stdev",
+      "as": "stdev0"
+    },
+    {
+      "calculate": "datum.mean + datum.stdev",
+      "as": "stdev1"
+    },
+    {
+      "calculate": "datum.mean - datum.stderr",
+      "as": "stderr0"
+    },
+    {
+      "calculate": "datum.mean + datum.stderr",
+      "as": "stderr1"
+    },
+    {
+      "calculate": {
+        "x-eas:text": "datum['{{measure}}0']"
+      },
+      "as": "lo"
+    },
+    {
+      "calculate": {
+        "x-eas:text": "datum['{{measure}}1']"
+      },
+      "as": "hi"
+    }
+  ],
+  "encoding": {
+    "y": {
+      "field": {
+        "x-eas:slot": "category"
+      },
+      "type": "nominal",
+      "sort": {
+        "field": "mean",
+        "op": "max",
+        "order": "descending"
+      },
+      "scale": {
+        "type": "band",
+        "paddingInner": 0,
+        "paddingOuter": 0
+      },
+      "axis": {
+        "zindex": 1,
+        "bandPosition": 1
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "rule",
+        "opacity": 0
+      },
+      "encoding": {
+        "x": {
+          "field": "stdev0",
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": {
+            "title": {
+              "x-eas:slot": "valueTitle"
+            },
+            "zindex": 1,
+            "tickCount": 10
+          }
+        },
+        "x2": {
+          "field": "stdev1"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "rule",
+        "color": "black",
+        "strokeWidth": 1,
+        "yOffset": 0.5
+      },
+      "encoding": {
+        "x": {
+          "field": "lo",
+          "type": "quantitative"
+        },
+        "x2": {
+          "field": "hi"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "color": "black",
+        "size": 40,
+        "opacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "mean",
+          "type": "quantitative"
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "category"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": "mean",
+            "type": "quantitative",
+            "format": ".2f"
+          },
+          {
+            "field": "lo",
+            "type": "quantitative",
+            "format": ".2f"
+          },
+          {
+            "field": "hi",
+            "type": "quantitative",
+            "format": ".2f"
+          }
+        ]
+      }
+    }
+  ]
+}

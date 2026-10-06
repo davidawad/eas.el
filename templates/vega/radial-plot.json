@@ -1,0 +1,250 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "radial-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery radial plot: each value sets both its wedge's angle and (sqrt-scaled) radius, labelled outside.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with a numeric value"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "value"
+      },
+      "innerRadius": {
+        "type": "number",
+        "default": 20
+      },
+      "outerRadius": {
+        "type": "number",
+        "default": 100
+      },
+      "color": {
+        "type": "string",
+        "default": "#ccc"
+      },
+      "highlight": {
+        "type": "string",
+        "default": "pink"
+      },
+      "size": {
+        "type": "number",
+        "default": 200
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A basic radial plot that encodes two values as the angle and radius of an arc.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/radial-plot.data.json",
+    "vega": {
+      "example": "radial-plot",
+      "spec": "test/vega-examples/specs/radial-plot.vg.json",
+      "status": "pass",
+      "note": "Angle and sqrt radius from the same value, labels radiusOffset 8 outside; hover turns a wedge pink.",
+      "ratio": 0.0059,
+      "threshold": 0.05,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "size"
+  },
+  "height": {
+    "x-eas:slot": "size"
+  },
+  "padding": 0,
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "x-eas-order"
+        }
+      ]
+    }
+  ],
+  "encoding": {
+    "theta": {
+      "field": {
+        "x-eas:slot": "value"
+      },
+      "type": "quantitative",
+      "stack": true
+    },
+    "radius": {
+      "field": {
+        "x-eas:slot": "value"
+      },
+      "type": "quantitative",
+      "scale": {
+        "type": "sqrt",
+        "zero": true,
+        "range": [
+          {
+            "x-eas:slot": "innerRadius"
+          },
+          {
+            "x-eas:slot": "outerRadius"
+          }
+        ]
+      }
+    },
+    "order": {
+      "field": "x-eas-order",
+      "type": "quantitative"
+    }
+  },
+  "layer": [
+    {
+      "params": [
+        {
+          "name": "hover",
+          "select": {
+            "type": "point",
+            "on": "pointerover",
+            "clear": "pointerout"
+          }
+        }
+      ],
+      "mark": {
+        "type": "arc",
+        "radius2": {
+          "x-eas:slot": "innerRadius"
+        },
+        "stroke": "#fff",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "color": {
+          "condition": {
+            "param": "hover",
+            "empty": false,
+            "value": {
+              "x-eas:slot": "highlight"
+            }
+          },
+          "value": {
+            "x-eas:slot": "color"
+          }
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "value"
+            },
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "radiusOffset": 8,
+        "color": "#000"
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+}

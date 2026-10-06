@@ -222,6 +222,29 @@ first, because a template's domain transforms precede its native ones.
 `project` (eas-geo.el) takes `"fit": false` to keep the projection's
 own scale and translate, as a Vega projection does.
 
+
+Vega's label layout, which Vega-Lite lacks, is two such transforms
+(eas-label.el, eas-7r1.1). Both work in plot pixels, so they take the
+plot size and the linear scales' domains (default: the data extent,
+with zero):
+
+```json
+{"x-eas:transform": "label", "x": "X", "y": "Y", "text": "T", "width": 800, "height": 600,
+ "anchor": ["top", "bottom", "right", "left"], "markSize": 25, "avoidRegression": "quad"}
+{"x-eas:transform": "arc-label", "field": "value", "width": 200, "outerRadius": 100}
+```
+
+`label` draws every point (and, with `avoidRegression`, the fitted
+trend line) into an occupancy bitmap, then gives each row in turn the
+first anchor whose text box stays in bounds and touches no mark and no
+earlier label; `label_anchor` holds it (null when none fits), and a
+template draws one text layer per anchor. `arc-label` gives each wedge
+of a pie in data order its leader line (`arc_x1` `arc_y1` to `arc_x2`
+`arc_y2`, across to `arc_x3`, then to the label at `arc_x4` `arc_y4`)
+and side (`arc_side`), and pushes labels on a side at least
+`labelHeight` apart. Output columns of a domain transform must not start
+with `x-eas`: resolve strips such keys.
+
 ### L2 spec: chart/v1
 
 It is Vega-Lite (pinned to the version `bin/chart` pins, 6.4.1).
@@ -318,6 +341,15 @@ is the item itself; a missing KEY with no default drops its key). The
 Eaches nest: the inner one's array may be `{"x-eas:item": KEY}` of the
 outer item, and `"../KEY"` reads the enclosing item (`eas-agt.3`).
 
+The templates of the Vega example gallery live in `templates/vega/`
+under the `vega` namespace (`vega/bar-chart`, eas-7r1), each with
+`x-eas.vega` recording how it compares with the gallery's reference
+image (`status`, `note`, `ratio`, `threshold`; `make
+test-gallery-vega` holds them to it). In an example's bindings a data
+slot bound to `{"file": F}` reads a relative F beside the example file
+(`eas-template-read-bindings`), so the examples point at
+`test/vega-examples/data/` instead of copying it.
+
 Slots reach further than whole nodes (`eas-agt.3`):
 `{"x-eas:slot": S, "key": "a.b"}` reads into an object slot, and
 `{"x-eas:expr": "..."}` / `{"x-eas:text": "..."}` substitute `{{S}}`
@@ -349,6 +381,12 @@ reads:
   "index": {"price/candles": {"kind": "x-sorted"}}
 }
 ```
+
+A layer whose `resolve.axis` makes a channel independent while its
+scale stays shared draws, besides the first layer's axis, the axis each
+later layer declares (eas-independent.el): a top axis with grid and
+labels plus a bottom one with only a title, or the same labels on both
+sides of a trellis cell.
 
 Every item carries `datum`, a back-reference to the row, which is how
 hover, drill, export and describe find the data behind a pixel. Every

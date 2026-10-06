@@ -380,7 +380,10 @@ the data spans the range less P on each side, like Vega's padDomain."
     (if (member (plist-get scale :type) '("band" "point"))
         (append (eas-scale-band (plist-get scale :type) (plist-get scale :domain) range
                                   (plist-get scale :padding-inner) (plist-get scale :padding-outer))
-                (list :field (plist-get scale :field)))
+                (list :field (plist-get scale :field))
+                ;; Keep the paddings, so setting the range again keeps them too.
+                (cl-loop for key in '(:padding-inner :padding-outer)
+                         when (plist-get scale key) append (list key (plist-get scale key))))
       (let ((out (plist-put (copy-sequence scale) :range range))
             (pad (plist-get scale :padding))
             (span (abs (- (aref range 1) (aref range 0)))))

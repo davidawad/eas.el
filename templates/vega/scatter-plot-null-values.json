@@ -1,0 +1,341 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "scatter-plot-null-values",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery scatter plot with null values: points with both values in the plot, points missing one in a strip beside the opposite axis, and a count of rows missing both.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with two numeric columns that may be null"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "Rotten Tomatoes Rating"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "IMDB Rating"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "Title",
+        "doc": "tooltip text"
+      },
+      "width": {
+        "type": "number",
+        "default": 369,
+        "doc": "plot width; the null strip and axes sit outside it"
+      },
+      "height": {
+        "type": "number",
+        "default": 390
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A scatter plot of film statistics, with null values visualized along the axes.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/scatter-plot-null-values.data.json",
+    "vega": {
+      "example": "scatter-plot-null-values",
+      "spec": "test/vega-examples/specs/scatter-plot-null-values.vg.json",
+      "status": "pass",
+      "note": "Null points sit in strips outside the plot with the axes offset past them, plus the both-null count; Vega's field dropdowns are the x and y slots.",
+      "ratio": 0.0367,
+      "threshold": 0.06,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "quantitative",
+      "scale": {
+        "nice": true,
+        "zero": true
+      },
+      "axis": {
+        "offset": 23,
+        "format": "s",
+        "title": {
+          "x-eas:slot": "x"
+        },
+        "tickCount": 10
+      }
+    },
+    "y": {
+      "field": {
+        "x-eas:slot": "y"
+      },
+      "type": "quantitative",
+      "scale": {
+        "nice": true,
+        "zero": true
+      },
+      "axis": {
+        "offset": 23,
+        "format": "s",
+        "title": {
+          "x-eas:slot": "y"
+        },
+        "tickCount": 10
+      }
+    }
+  },
+  "layer": [
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "isValid(datum[{{x}}]) && isValid(datum[{{y}}])"
+          }
+        }
+      ],
+      "params": [
+        {
+          "name": "hover",
+          "select": {
+            "type": "point",
+            "on": "pointerover",
+            "clear": "pointerout"
+          }
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 50,
+        "strokeWidth": 0,
+        "opacity": 1
+      },
+      "encoding": {
+        "color": {
+          "condition": {
+            "param": "hover",
+            "empty": false,
+            "value": "firebrick"
+          },
+          "value": "steelblue"
+        },
+        "fillOpacity": {
+          "condition": {
+            "param": "hover",
+            "empty": false,
+            "value": 1
+          },
+          "value": 0.5
+        },
+        "tooltip": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "isValid(datum[{{x}}]) && !isValid(datum[{{y}}])"
+          }
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 50,
+        "strokeWidth": 0,
+        "opacity": 1,
+        "color": "#aaa",
+        "fillOpacity": 0.2,
+        "yOffset": 14
+      },
+      "encoding": {
+        "y": {
+          "value": "height"
+        },
+        "tooltip": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "!isValid(datum[{{x}}]) && isValid(datum[{{y}}])"
+          }
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 50,
+        "strokeWidth": 0,
+        "opacity": 1,
+        "color": "#aaa",
+        "fillOpacity": 0.2,
+        "xOffset": -14
+      },
+      "encoding": {
+        "x": {
+          "value": 0
+        },
+        "tooltip": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "!isValid(datum[{{x}}]) && !isValid(datum[{{y}}])"
+          }
+        },
+        {
+          "aggregate": [
+            {
+              "op": "count",
+              "as": "count"
+            }
+          ]
+        },
+        {
+          "calculate": "datum.count + ' null'",
+          "as": "x-eas-null-text"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "top",
+        "color": "#999",
+        "fontSize": 9,
+        "dx": -14,
+        "dy": 31
+      },
+      "encoding": {
+        "x": {
+          "value": 0
+        },
+        "y": {
+          "value": "height"
+        },
+        "text": {
+          "field": "x-eas-null-text",
+          "type": "nominal"
+        }
+      }
+    }
+  ]
+}

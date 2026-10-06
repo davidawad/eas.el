@@ -1,0 +1,439 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "population-pyramid",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery population pyramid: females and males per age group back to back for one year; a slider picks the year.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with a year, an age group, a sex code and a head count"
+      },
+      "year": {
+        "type": "field",
+        "of": "data",
+        "default": "year"
+      },
+      "age": {
+        "type": "field",
+        "of": "data",
+        "default": "age"
+      },
+      "sex": {
+        "type": "field",
+        "of": "data",
+        "default": "sex"
+      },
+      "people": {
+        "type": "field",
+        "of": "data",
+        "default": "people"
+      },
+      "initialYear": {
+        "type": "number",
+        "default": 2000
+      },
+      "minYear": {
+        "type": "number",
+        "default": 1850
+      },
+      "maxYear": {
+        "type": "number",
+        "default": 2000
+      },
+      "yearStep": {
+        "type": "number",
+        "default": 10
+      },
+      "female": {
+        "type": "integer",
+        "default": 2,
+        "doc": "sex code of the left (female) side"
+      },
+      "male": {
+        "type": "integer",
+        "default": 1,
+        "doc": "sex code of the right (male) side"
+      },
+      "femaleTitle": {
+        "type": "string",
+        "default": "Females"
+      },
+      "maleTitle": {
+        "type": "string",
+        "default": "Males"
+      },
+      "femaleColor": {
+        "type": "string",
+        "default": "#6c4e97"
+      },
+      "maleColor": {
+        "type": "string",
+        "default": "#d5855a"
+      },
+      "chartWidth": {
+        "type": "number",
+        "default": 300
+      },
+      "height": {
+        "type": "number",
+        "default": 400
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A population pyramid showing U.S. demographics from 1850 to 2000.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/population-pyramid.data.json",
+    "vega": {
+      "example": "population-pyramid",
+      "spec": "test/vega-examples/specs/population-pyramid.vg.json",
+      "status": "pass",
+      "note": "Back-to-back bars around the age column; the year slider is a bound param (initialYear, minYear, maxYear) and the x domain spans every year, as Vega's.",
+      "ratio": 0.0465,
+      "threshold": 0.07,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "transform": [
+    {
+      "joinaggregate": [
+        {
+          "op": "max",
+          "field": {
+            "x-eas:slot": "people"
+          },
+          "as": "x-eas-max"
+        }
+      ]
+    },
+    {
+      "filter": {
+        "x-eas:expr": "datum[{{year}}] == year"
+      }
+    }
+  ],
+  "spacing": 0,
+  "hconcat": [
+    {
+      "width": {
+        "x-eas:slot": "chartWidth"
+      },
+      "height": {
+        "x-eas:slot": "height"
+      },
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{sex}}] == {{female}}"
+          }
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "fillOpacity": 0.6
+          },
+          "encoding": {
+            "x": {
+              "field": {
+                "x-eas:slot": "people"
+              },
+              "type": "quantitative",
+              "scale": {
+                "reverse": true,
+                "nice": true,
+                "zero": true
+              },
+              "axis": {
+                "format": "s",
+                "title": {
+                  "x-eas:slot": "femaleTitle"
+                },
+                "tickCount": 10
+              }
+            },
+            "color": {
+              "value": {
+                "x-eas:slot": "femaleColor"
+              }
+            },
+            "tooltip": [
+              {
+                "field": {
+                  "x-eas:slot": "age"
+                },
+                "type": "ordinal"
+              },
+              {
+                "field": {
+                  "x-eas:slot": "people"
+                },
+                "type": "quantitative"
+              }
+            ],
+            "y": {
+              "field": {
+                "x-eas:slot": "age"
+              },
+              "type": "ordinal",
+              "sort": "descending",
+              "axis": null,
+              "scale": {
+                "paddingInner": 0.05,
+                "paddingOuter": 0
+              }
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "rule",
+            "opacity": 0
+          },
+          "encoding": {
+            "x": {
+              "field": "x-eas-max",
+              "type": "quantitative"
+            }
+          }
+        }
+      ],
+      "params": [
+        {
+          "name": "year",
+          "value": {
+            "x-eas:slot": "initialYear"
+          },
+          "bind": {
+            "input": "range",
+            "min": {
+              "x-eas:slot": "minYear"
+            },
+            "max": {
+              "x-eas:slot": "maxYear"
+            },
+            "step": {
+              "x-eas:slot": "yearStep"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "width": 20,
+      "height": {
+        "x-eas:slot": "height"
+      },
+      "transform": [
+        {
+          "aggregate": [],
+          "groupby": [
+            {
+              "x-eas:slot": "age"
+            }
+          ]
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "middle",
+        "color": "#000"
+      },
+      "encoding": {
+        "y": {
+          "field": {
+            "x-eas:slot": "age"
+          },
+          "type": "ordinal",
+          "sort": "descending",
+          "axis": null
+        },
+        "text": {
+          "field": {
+            "x-eas:slot": "age"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "width": {
+        "x-eas:slot": "chartWidth"
+      },
+      "height": {
+        "x-eas:slot": "height"
+      },
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{sex}}] == {{male}}"
+          }
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "fillOpacity": 0.6
+          },
+          "encoding": {
+            "x": {
+              "field": {
+                "x-eas:slot": "people"
+              },
+              "type": "quantitative",
+              "scale": {
+                "reverse": false,
+                "nice": true,
+                "zero": true
+              },
+              "axis": {
+                "format": "s",
+                "title": {
+                  "x-eas:slot": "maleTitle"
+                },
+                "tickCount": 10
+              }
+            },
+            "color": {
+              "value": {
+                "x-eas:slot": "maleColor"
+              }
+            },
+            "tooltip": [
+              {
+                "field": {
+                  "x-eas:slot": "age"
+                },
+                "type": "ordinal"
+              },
+              {
+                "field": {
+                  "x-eas:slot": "people"
+                },
+                "type": "quantitative"
+              }
+            ],
+            "y": {
+              "field": {
+                "x-eas:slot": "age"
+              },
+              "type": "ordinal",
+              "sort": "descending",
+              "axis": null,
+              "scale": {
+                "paddingInner": 0.05,
+                "paddingOuter": 0
+              }
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "rule",
+            "opacity": 0
+          },
+          "encoding": {
+            "x": {
+              "field": "x-eas-max",
+              "type": "quantitative"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

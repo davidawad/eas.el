@@ -1,0 +1,281 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "nested-bar-chart",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery nested bar chart: the mean of c per b, bars nested in one band group per a, groups sized to their bar count.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with a group a, a category b and a value c (averaged per a and b)"
+      },
+      "group": {
+        "type": "field",
+        "of": "data",
+        "default": "a"
+      },
+      "category": {
+        "type": "field",
+        "of": "data",
+        "default": "b"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "c"
+      },
+      "step": {
+        "type": "number",
+        "default": 20,
+        "doc": "pixels per bar band"
+      },
+      "innerPadding": {
+        "type": "number",
+        "default": 0.1
+      },
+      "outerPadding": {
+        "type": "number",
+        "default": 0.2
+      },
+      "width": {
+        "type": "number",
+        "default": 300
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A nested bar chart example, with bars grouped by category.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/nested-bar-chart.data.json",
+    "vega": {
+      "example": "nested-bar-chart",
+      "spec": "test/vega-examples/specs/nested-bar-chart.vg.json",
+      "status": "pass",
+      "note": "A row facet with an independent band y per group sizes each group to its bars; the bandwidth sliders are the step and padding slots.",
+      "ratio": 0.0196,
+      "threshold": 0.05,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "transform": [
+    {
+      "aggregate": [
+        {
+          "op": "mean",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "x-eas-mean"
+        }
+      ],
+      "groupby": [
+        {
+          "x-eas:slot": "group"
+        },
+        {
+          "x-eas:slot": "category"
+        }
+      ]
+    }
+  ],
+  "facet": {
+    "row": {
+      "field": {
+        "x-eas:slot": "group"
+      },
+      "type": "ordinal",
+      "sort": null,
+      "header": {
+        "title": null,
+        "labels": false
+      }
+    }
+  },
+  "spacing": 0,
+  "spec": {
+    "width": {
+      "x-eas:slot": "width"
+    },
+    "height": {
+      "step": {
+        "x-eas:slot": "step"
+      }
+    },
+    "params": [
+      {
+        "name": "hover",
+        "select": {
+          "type": "point",
+          "on": "pointerover",
+          "clear": "pointerout"
+        }
+      }
+    ],
+    "mark": {
+      "type": "bar",
+      "strokeWidth": 2
+    },
+    "encoding": {
+      "y": {
+        "field": {
+          "x-eas:slot": "category"
+        },
+        "type": "nominal",
+        "sort": null,
+        "scale": {
+          "paddingInner": {
+            "x-eas:slot": "innerPadding"
+          },
+          "paddingOuter": {
+            "x-eas:slot": "outerPadding"
+          }
+        },
+        "axis": {
+          "ticks": false,
+          "domain": false,
+          "labelPadding": 4
+        }
+      },
+      "x": {
+        "field": "x-eas-mean",
+        "type": "quantitative",
+        "axis": {
+          "tickCount": 10,
+          "title": null
+        }
+      },
+      "color": {
+        "field": {
+          "x-eas:slot": "group"
+        },
+        "type": "nominal",
+        "legend": null
+      },
+      "stroke": {
+        "condition": {
+          "param": "hover",
+          "empty": false,
+          "value": "firebrick"
+        },
+        "value": null
+      },
+      "tooltip": [
+        {
+          "field": {
+            "x-eas:slot": "group"
+          },
+          "type": "nominal"
+        },
+        {
+          "field": {
+            "x-eas:slot": "category"
+          },
+          "type": "nominal"
+        },
+        {
+          "field": "x-eas-mean",
+          "type": "quantitative",
+          "title": "mean"
+        }
+      ]
+    }
+  },
+  "resolve": {
+    "scale": {
+      "y": "independent"
+    },
+    "axis": {
+      "y": "independent"
+    }
+  }
+}

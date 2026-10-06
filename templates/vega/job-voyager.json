@@ -1,0 +1,653 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "job-voyager",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery job voyager: a stacked area per series and group (job and sex), shaded by its total, labelled at its peak; filter by group and by a search.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with a series (job), a group (sex), an x (year) and a share (perc)"
+      },
+      "series": {
+        "type": "field",
+        "of": "data",
+        "default": "job"
+      },
+      "group": {
+        "type": "field",
+        "of": "data",
+        "default": "sex"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "year"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "perc"
+      },
+      "groups": {
+        "type": "array",
+        "items": "string",
+        "default": [
+          "men",
+          "women"
+        ]
+      },
+      "colors": {
+        "type": "array",
+        "items": "string",
+        "default": [
+          "#33f",
+          "#f33"
+        ]
+      },
+      "groupChoice": {
+        "type": "string",
+        "default": "all",
+        "doc": "initial group filter: a group or all"
+      },
+      "query": {
+        "type": "string",
+        "default": "",
+        "doc": "initial search: a case-insensitive regexp over the series names"
+      },
+      "alignDomain": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          1730,
+          2130
+        ],
+        "doc": "x range split in thirds: labels in the first are left-aligned, the last right-aligned"
+      },
+      "yFormat": {
+        "type": "string",
+        "default": "%"
+      },
+      "width": {
+        "type": "number",
+        "default": 800
+      },
+      "height": {
+        "type": "number",
+        "default": 500
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A searchable, stacked area chart of U.S. occupations from 1850 to 2000.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/job-voyager.data.json",
+    "vega": {
+      "example": "job-voyager",
+      "spec": "test/vega-examples/specs/job-voyager.vg.json",
+      "status": "partial",
+      "note": "Stacked areas, per-series opacity, peak labels (sized, faded by quantile, aligned by year) and the sex and search filters match; clicking an area to search for its job is not reproduced, and area seams and label fonts differ slightly.",
+      "ratio": 0.0716,
+      "threshold": 0.1,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "params": [
+    {
+      "name": "sex",
+      "value": {
+        "x-eas:slot": "groupChoice"
+      },
+      "bind": {
+        "input": "radio",
+        "options": {
+          "x-eas:expr": "{{groups}}"
+        }
+      }
+    },
+    {
+      "name": "query",
+      "value": {
+        "x-eas:slot": "query"
+      },
+      "bind": {
+        "input": "text",
+        "placeholder": "search"
+      }
+    }
+  ],
+  "transform": [
+    {
+      "filter": {
+        "x-eas:expr": "(sex === 'all' || datum[{{group}}] === sex) && (!query || test(regexp(query, 'i'), datum[{{series}}]))"
+      }
+    },
+    {
+      "stack": {
+        "x-eas:slot": "value"
+      },
+      "groupby": [
+        {
+          "x-eas:slot": "x"
+        }
+      ],
+      "sort": [
+        {
+          "field": {
+            "x-eas:slot": "series"
+          },
+          "order": "descending"
+        },
+        {
+          "field": {
+            "x-eas:slot": "group"
+          },
+          "order": "descending"
+        }
+      ],
+      "as": [
+        "x-eas-y0",
+        "arc_y1"
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "sum",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "x-eas-sum"
+        },
+        {
+          "op": "max",
+          "field": {
+            "x-eas:slot": "value"
+          },
+          "as": "x-eas-peak"
+        }
+      ],
+      "groupby": [
+        {
+          "x-eas:slot": "series"
+        },
+        {
+          "x-eas:slot": "group"
+        }
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "max",
+          "field": "x-eas-sum",
+          "as": "x-eas-sum-max"
+        }
+      ]
+    },
+    {
+      "calculate": "0.4 + 0.4 * datum['x-eas-sum'] / datum['x-eas-sum-max']",
+      "as": "x-eas-alpha"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": false
+      },
+      "stack": null,
+      "axis": {
+        "format": "d",
+        "tickCount": 15,
+        "title": null
+      }
+    },
+    "y": {
+      "field": "x-eas-y0",
+      "type": "quantitative",
+      "scale": {
+        "zero": true,
+        "nice": false
+      },
+      "axis": {
+        "orient": "right",
+        "format": {
+          "x-eas:slot": "yFormat"
+        },
+        "grid": true,
+        "domain": false,
+        "tickSize": 12,
+        "gridColor": "#ccc",
+        "tickColor": "#ccc",
+        "title": null,
+        "tickCount": 10
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "area"
+      },
+      "encoding": {
+        "y2": {
+          "field": "arc_y1"
+        },
+        "detail": {
+          "field": {
+            "x-eas:slot": "series"
+          },
+          "type": "nominal"
+        },
+        "color": {
+          "field": {
+            "x-eas:slot": "group"
+          },
+          "type": "nominal",
+          "legend": null,
+          "scale": {
+            "domain": {
+              "x-eas:slot": "groups"
+            },
+            "range": {
+              "x-eas:slot": "colors"
+            }
+          }
+        },
+        "fillOpacity": {
+          "field": "x-eas-alpha",
+          "type": "quantitative",
+          "legend": null,
+          "scale": null
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "series"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "group"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "x"
+            },
+            "type": "quantitative"
+          },
+          {
+            "field": {
+              "x-eas:slot": "value"
+            },
+            "type": "quantitative",
+            "format": ".2%"
+          }
+        ]
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{value}}] == datum['x-eas-peak']"
+          }
+        },
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "x-eas-tie"
+            }
+          ],
+          "groupby": [
+            {
+              "x-eas:slot": "series"
+            },
+            {
+              "x-eas:slot": "group"
+            }
+          ]
+        },
+        {
+          "filter": "datum['x-eas-tie'] == 1"
+        },
+        {
+          "calculate": "(datum['x-eas-y0'] + datum['arc_y1']) / 2",
+          "as": "x-eas-mid"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{alignDomain}}[0] + ({{alignDomain}}[1] - {{alignDomain}}[0]) / 3"
+          },
+          "as": "x-eas-a1"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{alignDomain}}[0] + 2 * ({{alignDomain}}[1] - {{alignDomain}}[0]) / 3"
+          },
+          "as": "x-eas-a2"
+        }
+      ],
+      "layer": [
+        {
+          "transform": [
+            {
+              "filter": {
+                "x-eas:expr": "datum[{{x}}] < datum['x-eas-a1']"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 6,
+            "baseline": "middle",
+            "color": "#000"
+          },
+          "encoding": {
+            "x": {
+              "field": {
+                "x-eas:slot": "x"
+              },
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "x-eas-mid",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": {
+                "x-eas:slot": "series"
+              },
+              "type": "nominal"
+            },
+            "size": {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "type": "quantitative",
+              "legend": null,
+              "scale": {
+                "type": "sqrt",
+                "zero": true,
+                "range": [
+                  5,
+                  25
+                ]
+              }
+            },
+            "opacity": {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "type": "quantitative",
+              "legend": null,
+              "scale": {
+                "type": "quantile",
+                "range": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0.1,
+                  0.2,
+                  0.4,
+                  0.7,
+                  1.0
+                ]
+              }
+            }
+          }
+        },
+        {
+          "transform": [
+            {
+              "filter": {
+                "x-eas:expr": "datum[{{x}}] >= datum['x-eas-a1'] && datum[{{x}}] < datum['x-eas-a2']"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "dx": 0,
+            "baseline": "middle",
+            "color": "#000"
+          },
+          "encoding": {
+            "x": {
+              "field": {
+                "x-eas:slot": "x"
+              },
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "x-eas-mid",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": {
+                "x-eas:slot": "series"
+              },
+              "type": "nominal"
+            },
+            "size": {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "type": "quantitative",
+              "legend": null,
+              "scale": {
+                "type": "sqrt",
+                "zero": true,
+                "range": [
+                  5,
+                  25
+                ]
+              }
+            },
+            "opacity": {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "type": "quantitative",
+              "legend": null,
+              "scale": {
+                "type": "quantile",
+                "range": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0.1,
+                  0.2,
+                  0.4,
+                  0.7,
+                  1.0
+                ]
+              }
+            }
+          }
+        },
+        {
+          "transform": [
+            {
+              "filter": {
+                "x-eas:expr": "datum[{{x}}] >= datum['x-eas-a2']"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "right",
+            "dx": -6,
+            "baseline": "middle",
+            "color": "#000"
+          },
+          "encoding": {
+            "x": {
+              "field": {
+                "x-eas:slot": "x"
+              },
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "x-eas-mid",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": {
+                "x-eas:slot": "series"
+              },
+              "type": "nominal"
+            },
+            "size": {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "type": "quantitative",
+              "legend": null,
+              "scale": {
+                "type": "sqrt",
+                "zero": true,
+                "range": [
+                  5,
+                  25
+                ]
+              }
+            },
+            "opacity": {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "type": "quantitative",
+              "legend": null,
+              "scale": {
+                "type": "quantile",
+                "range": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0.1,
+                  0.2,
+                  0.4,
+                  0.7,
+                  1.0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

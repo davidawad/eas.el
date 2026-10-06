@@ -1,0 +1,243 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "stacked-bar-chart",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery stacked bar chart: bars of y stacked by series c at each x; hovering a slice fades it.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with an x category, a y value and a series"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "x"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "y"
+      },
+      "series": {
+        "type": "field",
+        "of": "data",
+        "default": "c"
+      },
+      "width": {
+        "type": "number",
+        "default": 500
+      },
+      "height": {
+        "type": "number",
+        "default": 200
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A basic stacked bar chart example.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/stacked-bar-chart.data.json",
+    "vega": {
+      "example": "stacked-bar-chart",
+      "spec": "test/vega-examples/specs/stacked-bar-chart.vg.json",
+      "status": "pass",
+      "note": "A Vega-Lite stack transform sorted by series puts the first series at the bottom, as Vega's; hovering fades a slice.",
+      "ratio": 0.0233,
+      "threshold": 0.05,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": null
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "params": [
+    {
+      "name": "hover",
+      "select": {
+        "type": "point",
+        "on": "pointerover",
+        "clear": "pointerout"
+      }
+    }
+  ],
+  "transform": [
+    {
+      "stack": {
+        "x-eas:slot": "y"
+      },
+      "groupby": [
+        {
+          "x-eas:slot": "x"
+        }
+      ],
+      "sort": [
+        {
+          "field": {
+            "x-eas:slot": "series"
+          },
+          "order": "ascending"
+        }
+      ],
+      "as": [
+        "y0",
+        "y1"
+      ]
+    }
+  ],
+  "mark": {
+    "type": "bar"
+  },
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "ordinal",
+      "sort": null,
+      "scale": {
+        "paddingInner": 0.02,
+        "paddingOuter": 0
+      }
+    },
+    "y": {
+      "field": "y0",
+      "type": "quantitative",
+      "axis": {
+        "tickCount": 10,
+        "title": null
+      }
+    },
+    "y2": {
+      "field": "y1"
+    },
+    "color": {
+      "field": {
+        "x-eas:slot": "series"
+      },
+      "type": "nominal",
+      "legend": null
+    },
+    "fillOpacity": {
+      "condition": {
+        "param": "hover",
+        "empty": false,
+        "value": 0.5
+      },
+      "value": 1
+    },
+    "tooltip": [
+      {
+        "field": {
+          "x-eas:slot": "x"
+        },
+        "type": "ordinal"
+      },
+      {
+        "field": {
+          "x-eas:slot": "series"
+        },
+        "type": "nominal"
+      },
+      {
+        "field": {
+          "x-eas:slot": "y"
+        },
+        "type": "quantitative"
+      }
+    ]
+  }
+}

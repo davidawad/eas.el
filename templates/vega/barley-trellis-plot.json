@@ -1,0 +1,319 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "barley-trellis-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Vega gallery barley trellis: one panel per site (by median), a hollow point per variety and year, varieties sorted by median.",
+    "slots": {
+      "data": {
+        "shape": "json",
+        "required": true,
+        "doc": "rows with a panel (site), a row (variety), a value (yield) and a color group (year)"
+      },
+      "panel": {
+        "type": "field",
+        "of": "data",
+        "default": "site"
+      },
+      "row": {
+        "type": "field",
+        "of": "data",
+        "default": "variety"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "yield"
+      },
+      "group": {
+        "type": "field",
+        "of": "data",
+        "default": "year"
+      },
+      "groupTitle": {
+        "type": "string",
+        "default": "Year"
+      },
+      "width": {
+        "type": "number",
+        "default": 200
+      },
+      "cellHeight": {
+        "type": "number",
+        "default": 100
+      },
+      "spacing": {
+        "type": "number",
+        "default": 1,
+        "doc": "pixels between a panel and the next one's title"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A small multiples view of barley yields by site and variety.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/barley-trellis-plot.data.json",
+    "vega": {
+      "example": "barley-trellis-plot",
+      "spec": "test/vega-examples/specs/barley-trellis-plot.vg.json",
+      "status": "partial",
+      "note": "Every panel, point, dashed grid, both side axes and the legend are drawn, but rows drift a pixel from Vega's (scale round: true is not reproduced), which the thin dashed grid magnifies.",
+      "ratio": 0.0863,
+      "threshold": 0.11,
+      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "config": {
+    "background": "transparent",
+    "view": {
+      "stroke": "#ccc"
+    },
+    "font": "sans-serif",
+    "axis": {
+      "grid": false,
+      "title": null,
+      "labelAngle": 0,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "rect": {
+      "strokeWidth": 0
+    },
+    "arc": {
+      "strokeWidth": 0
+    },
+    "area": {
+      "opacity": 1
+    },
+    "line": {
+      "strokeWidth": 1,
+      "strokeCap": "butt",
+      "strokeJoin": "miter"
+    },
+    "mark": {
+      "color": "#4c78a8"
+    },
+    "point": {
+      "filled": true
+    },
+    "title": {
+      "anchor": "middle",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "facet": {
+    "field": {
+      "x-eas:slot": "panel"
+    },
+    "type": "nominal",
+    "sort": {
+      "field": {
+        "x-eas:slot": "value"
+      },
+      "op": "median",
+      "order": "descending"
+    },
+    "header": {
+      "title": null,
+      "labelFontWeight": "bold",
+      "labelFontSize": 11,
+      "labelColor": "#000",
+      "labelPadding": 3
+    }
+  },
+  "columns": 1,
+  "spacing": {
+    "x-eas:slot": "spacing"
+  },
+  "spec": {
+    "width": {
+      "x-eas:slot": "width"
+    },
+    "height": {
+      "x-eas:slot": "cellHeight"
+    },
+    "encoding": {
+      "x": {
+        "field": {
+          "x-eas:slot": "value"
+        },
+        "type": "quantitative",
+        "scale": {
+          "zero": true,
+          "nice": true
+        },
+        "axis": {
+          "zindex": 1,
+          "title": null,
+          "tickCount": 10
+        }
+      },
+      "stroke": {
+        "field": {
+          "x-eas:slot": "group"
+        },
+        "type": "nominal",
+        "legend": {
+          "title": {
+            "x-eas:slot": "groupTitle"
+          },
+          "symbolStrokeWidth": 2,
+          "symbolSize": 50
+        }
+      }
+    },
+    "layer": [
+      {
+        "mark": {
+          "type": "point",
+          "filled": false,
+          "strokeWidth": 2,
+          "size": 50,
+          "opacity": 1
+        },
+        "encoding": {
+          "y": {
+            "field": {
+              "x-eas:slot": "row"
+            },
+            "type": "nominal",
+            "sort": {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "op": "median",
+              "order": "descending"
+            },
+            "scale": {
+              "type": "point",
+              "padding": 1
+            },
+            "axis": {
+              "tickSize": 0,
+              "domain": false,
+              "grid": true,
+              "gridDash": [
+                3,
+                3
+              ],
+              "title": null
+            }
+          },
+          "tooltip": [
+            {
+              "field": {
+                "x-eas:slot": "panel"
+              },
+              "type": "nominal"
+            },
+            {
+              "field": {
+                "x-eas:slot": "row"
+              },
+              "type": "nominal"
+            },
+            {
+              "field": {
+                "x-eas:slot": "group"
+              },
+              "type": "nominal"
+            },
+            {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "type": "quantitative"
+            }
+          ]
+        }
+      },
+      {
+        "mark": {
+          "type": "point",
+          "opacity": 0
+        },
+        "encoding": {
+          "y": {
+            "field": {
+              "x-eas:slot": "row"
+            },
+            "type": "nominal",
+            "sort": {
+              "field": {
+                "x-eas:slot": "value"
+              },
+              "op": "median",
+              "order": "descending"
+            },
+            "scale": {
+              "type": "point",
+              "padding": 1
+            },
+            "axis": {
+              "orient": "right",
+              "tickSize": 0,
+              "domain": false,
+              "title": null
+            }
+          }
+        }
+      }
+    ],
+    "resolve": {
+      "axis": {
+        "y": "independent"
+      }
+    }
+  }
+}

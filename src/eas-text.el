@@ -388,7 +388,15 @@ shaded, a rising one solid; color tells them apart too."
          (cols (if horizontal (cons (floor x cw) (ceiling (- (+ x w) 0.001) cw)) (eas-text--cells x w cw)))
          (rows (if vertical (cons (floor y ch) (ceiling (- (+ y h) 0.001) ch)) (eas-text--cells y h ch)))
          (c0 (car cols)) (c1 (max (1+ c0) (cdr cols)))
-         (r0 (car rows)) (r1 (max (1+ r0) (cdr rows))))
+         (r0 (car rows)) (r1 (max (1+ r0) (cdr rows)))
+         ;; A ranged bar straddling two cells, under half of each: keep the
+         ;; better covered one so the body never vanishes.
+         (body-row (and vertical (plist-get item :rise) (> (- r1 r0) 1)
+                        (let ((covers (cl-loop for row from r0 below r1
+                                               collect (cons row (- (min 1.0 (/ (- (+ y h) (* row ch)) (float ch)))
+                                                                    (max 0.0 (/ (- y (* row ch)) (float ch))))))))
+                          (unless (seq-some (lambda (c) (>= (cdr c) 0.5)) covers)
+                            (car (car (sort covers (lambda (a b) (> (cdr a) (cdr b)))))))))))
     ;; A zero-length bar (a value of 0) draws nothing, as in SVG, and an
     ;; empty interval (a click, no drag) no brush.
     (unless (or (and vertical (< h 0.01)) (and horizontal (< w 0.01))
@@ -397,6 +405,15 @@ shaded, a rising one solid; color tells them apart too."
              do (cl-loop for col from (max c0 (aref clip 0)) below (min c1 (aref clip 2))
                          for char = (cond
                                      (brush nil)
+                                     ;; A ranged bar (a candle body) taller than a cell
+                                     ;; snaps to whole cells: an end cell it fills at
+                                     ;; least half of is full, a lesser one is left to
+                                     ;; the wick under it, which would otherwise break
+                                     ;; there behind a mostly empty eighth block.
+                                     ((and vertical (plist-get item :rise) (> (- r1 r0) 1))
+                                      (let ((cover (- (min 1.0 (/ (- (+ y h) (* row ch)) (float ch)))
+                                                      (max 0.0 (/ (- y (* row ch)) (float ch))))))
+                                        (and (or (>= cover 0.5) (eql row body-row)) ?█)))
                                      (vertical (eas-text--vglyph (if snap-lo 0.0 (max 0.0 (/ (- y (* row ch)) (float ch))))
                                                                  (if snap-hi 1.0 (min 1.0 (/ (- (+ y h) (* row ch)) (float ch))))))
                                      (horizontal (eas-text--hglyph (if snap-lo 0.0 (max 0.0 (/ (- x (* col cw)) (float cw))))

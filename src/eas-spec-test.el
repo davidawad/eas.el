@@ -164,9 +164,22 @@
       (eas-resolve-spec '(:data (:values [(:a 1)])
                             :transform [(:x-eas:transform "nope")] :mark "point")))))
 
+(defun eas-spec-test--eas-only-p (name)
+  "Non-nil when template NAME declares \"export\": {\"vega-lite\": false}.
+Such a template uses a capability Vega-Lite lacks and says why in
+\"reason\"; it renders natively but bin/chart cannot export it."
+  (let ((export (plist-get (plist-get (eas-template-get name) :meta) :export)))
+    (and export (eq (plist-get export :vega-lite) :false)
+         (stringp (plist-get export :reason)))))
+
+(ert-deftest eas-template-eas-only-exports-say-why ()
+  ;; Every eas-only template names its reason; keep the list short.
+  (should (equal (seq-filter #'eas-spec-test--eas-only-p (eas-template-names))
+                 '("vega/projections"))))
+
 (ert-deftest eas-resolve-output-passes-bin-chart-check ()
   (eas-test-require-chart)
-  (dolist (name (eas-template-names))
+  (dolist (name (seq-remove #'eas-spec-test--eas-only-p (eas-template-names)))
     ;; Gallery reproductions leave the title empty to match their
     ;; untitled references; a caller supplies one, so the check does.
     (let* ((example (eas-template-example name))

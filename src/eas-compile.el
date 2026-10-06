@@ -242,6 +242,11 @@ METRICS supplies the config."
          (shape (let ((type (plist-get (plist-get unit :mark) :type)))
                   (cond ((member type '("bar" "rect" "area" "square")) "square")
                         ((member type '("line" "rule" "trail")) "stroke") (t "circle"))))
+         ;; Vega-Lite merges a size legend of the color's field into it:
+         ;; discretized (eas-scale-discretize.el) or continuous
+         ;; (eas-legend-merge.el).
+         (merge-size (and color (or (eas-scale-discretize-merge-p (nth 1 color) (funcall first-def :size) size)
+                                    (eas-legend-merge-p (nth 1 color) (funcall first-def :size) (nth 2 color) size))))
          (spec (lambda (channel def scale)
                  ;; Symbols copy the look of the layer that encodes the channel.
                  (let ((owner (or (caar (eas-compile--defs units channel)) unit)))
@@ -266,11 +271,8 @@ METRICS supplies the config."
                (delq nil (list (when color (append (funcall spec (nth 0 color) (nth 1 color) (nth 2 color))
                                                    (when (eas-compile-channels-legend-shape units)
                                                      (list :shape-scale shape-scale))
-                                                   ;; Vega-Lite merges a discretized size legend of the same field.
-                                                   (when (eas-scale-discretize-merge-p (nth 1 color) (funcall first-def :size) size)
-                                                     (list :size-scale size))))
-                               (when (and size (not (and color (eas-scale-discretize-merge-p
-                                                                 (nth 1 color) (funcall first-def :size) size))))
+                                                   (when merge-size (list :size-scale size))))
+                               (when (and size (not merge-size))
                                  (funcall spec :size (funcall first-def :size) size))
                                (when opacity (funcall spec :opacity (funcall first-def :opacity) opacity))
 

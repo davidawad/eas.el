@@ -366,16 +366,23 @@ Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
                                 (plist-get (plist-get (caar pairs) :mark) :type))
     (let* ((nums (seq-filter #'numberp (eas-compile--values pairs channel)))
            (sp (plist-get (cdar pairs) :scale))
-           (range (cond ((and (vectorp (plist-get sp :range)) (= (length (plist-get sp :range)) 2)) (plist-get sp :range))
+           ;; {"expr": E} entries of an explicit range read the params.
+           (own (eas-compile--range (plist-get sp :range) (plist-get (caar pairs) :env)))
+           (range (cond ((and own (= (length own) 2)) own)
                         ((and (eq channel :size) (equal (plist-get (plist-get (caar pairs) :mark) :type) "trail")) [1 4])
                         (t range)))
            (range (vector (or (plist-get sp :rangeMin) (aref range 0))
                           (or (plist-get sp :rangeMax) (aref range 1))))
            (explicit (plist-get sp :domain)))
-      (if (and (vectorp explicit) (numberp (aref explicit 0)))
-          (eas-scale-continuous "linear" (aref explicit 0) (aref explicit 1) range :field (plist-get (cdar pairs) :field))
+      (cond
+       ;; A domain and range of more than two stops: piecewise linear.
+       ((and (vectorp explicit) (> (length explicit) 2) own (= (length own) (length explicit)))
+        (list :type "linear" :domain (vconcat (mapcar #'float explicit)) :range own :field (plist-get (cdar pairs) :field)))
+       ((and (vectorp explicit) (numberp (aref explicit 0)))
+        (eas-scale-continuous "linear" (aref explicit 0) (aref explicit 1) range :field (plist-get (cdar pairs) :field)))
+       (t
         (eas-scale-continuous "linear" (if (eq channel :size) 0 (if nums (apply #'min nums) 0))
-                              (if nums (apply #'max nums) 1) range :field (plist-get (cdar pairs) :field)))))))
+                              (if nums (apply #'max nums) 1) range :field (plist-get (cdar pairs) :field))))))))
 
 (defun eas-compile-set-range (scale range)
   "Return SCALE mapped onto RANGE (recomputing band geometry).

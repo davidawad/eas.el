@@ -16,15 +16,17 @@
       "circle_size": {"type": "number", "default": 1.8, "doc": "radius in pixels of a magnitude ln(100) event"},
       "size": {"type": "number", "default": 600, "doc": "width and height"},
       "title": {"type": "string", "default": "Earthquakes with magnitude 2.5+, last 30 days (live feed)"},
+      "subtitle": {"type": "string", "default": "Click anywhere to pause/resume rotation"},
       "description": {"type": "string", "default": "Rotating globe animation depicting earthquake locations. Background - pseudorandomly distributed 'stars'.", "doc": "the takeaway; alt text and table-view fallback"}
     },
     "example": "../examples/vega/earthquakes-globe.data.json",
     "vega": {
       "status": "partial",
-      "note": "the globe (orthographic, #000022 sphere, translucent white countries) and the magnitude rings (stroke colored on Vega's 8-color linear scale, radius circle_size * sqrt(exp(mag) / 100), width 1 + 0.15 r, far side filtered as the circle clip hides it) match ref/earthquakes-globe.png's geometry (ratio 0.0774 overall, resvg; the canvas is 680x640 against 830x658); not reproduced: the stars' positions (random in Vega; x random and y a hash of it here, as eas's random() repeats within a row), the sphere's gradient stroke (its midpoint color), the custom symbol legend sized by magnitude (a gradient color legend here), the title's subtitle and Tahoma font, and the timer rotation and click-to-pause (the angle is a range input)"
+      "note": "the globe (orthographic, #000022 sphere, translucent white countries), the magnitude rings (stroke colored on Vega's 8-color linear scale, radius circle_size * sqrt(exp(mag) / 100), width 1 + 0.15 r, far side filtered as the circle clip hides it), the title and subtitle, and the one symbol legend of magnitudes 1-9 sized and colored as the rings (a size and a color of one field merge, as in Vega-Lite) match ref/earthquakes-globe.png (ratio 0.0232, resvg; canvas 626x658 against 625x658); not reproduced: the stars' positions (random in Vega; x random and y a hash of it here, as eas's random() repeats within a row), the sphere's gradient stroke (its midpoint color), the legend's row spacing by symbol size, the Tahoma font, and the timer rotation and click-to-pause (the angle is a range input)"
     }
   },
-  "title": {"text": {"x-eas:slot": "title"}, "anchor": "start", "color": "#dddddd", "fontSize": 18, "fontWeight": "normal"},
+  "title": {"text": {"x-eas:slot": "title"}, "subtitle": {"x-eas:slot": "subtitle"}, "anchor": "start",
+            "color": "#dddddd", "fontSize": 18, "fontWeight": "normal", "subtitleColor": "#888888", "subtitlePadding": 5},
   "description": {"x-eas:slot": "description"},
   "width": {"x-eas:slot": "size"},
   "height": {"x-eas:slot": "size"},
@@ -43,15 +45,16 @@
         {"calculate": {"x-eas:expr": "ceil((datum.star * 7919 + datum.sx * 104729) % {{size}})"}, "as": "sy"},
         {"calculate": "datum.sx < 60 && datum.sy < 200 ? 0 : ceil(random() * 1.5)", "as": "area"}
       ],
-      "mark": {"type": "circle", "color": "white", "opacity": 1},
       "encoding": {
         "x": {"field": "sx", "type": "quantitative", "axis": null,
               "scale": {"domain": [0, {"x-eas:slot": "size"}], "nice": false, "zero": false}},
         "y": {"field": "sy", "type": "quantitative", "axis": null,
-              "scale": {"domain": [{"x-eas:slot": "size"}, 0], "nice": false, "zero": false}},
-        "size": {"field": "area", "type": "quantitative", "legend": null,
-                 "scale": {"type": "linear", "domain": [0, 1], "range": [0, 1]}}
-      }
+              "scale": {"domain": [{"x-eas:slot": "size"}, 0], "nice": false, "zero": false}}
+      },
+      "layer": [
+        {"transform": [{"filter": "datum.area == 1"}], "mark": {"type": "circle", "color": "white", "opacity": 1, "size": 1}},
+        {"transform": [{"filter": "datum.area == 2"}], "mark": {"type": "circle", "color": "white", "opacity": 1, "size": 2}}
+      ]
     },
     {
       "projection": {"type": "orthographic", "scale": {"x-eas:slot": "scale"}, "rotate": {"expr": "[-angle, 0, 0]"}},
@@ -82,9 +85,11 @@
             "stroke": {"field": "Magnitude", "type": "quantitative",
                        "scale": {"domain": [1.9, 2.9, 3.9, 4.9, 5.9, 6.9, 7.9, 8.9],
                                  "range": ["#afeeee", "#98fb98", "#adff2f", "#ffff00", "#ffd700", "#ff8c00", "#ff0000", "#800000"]},
-                       "legend": {"orient": "left", "title": "Magnitude"}},
-            "size": {"field": "area", "type": "quantitative", "legend": null,
-                     "scale": {"type": "linear", "domain": [0, 1], "range": [0, 1]}},
+                       "legend": {"orient": "left", "offset": -50, "title": "Magnitude", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                                  "titleFontSize": 14, "labelFontSize": 13}},
+            "size": {"field": "Magnitude", "type": "quantitative",
+                     "scale": {"type": "linear", "domain": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                               "range": [{"expr": "PI * circleSize * circleSize * exp(1) / 100"}, {"expr": "PI * circleSize * circleSize * exp(2) / 100"}, {"expr": "PI * circleSize * circleSize * exp(3) / 100"}, {"expr": "PI * circleSize * circleSize * exp(4) / 100"}, {"expr": "PI * circleSize * circleSize * exp(5) / 100"}, {"expr": "PI * circleSize * circleSize * exp(6) / 100"}, {"expr": "PI * circleSize * circleSize * exp(7) / 100"}, {"expr": "PI * circleSize * circleSize * exp(8) / 100"}, {"expr": "PI * circleSize * circleSize * exp(9) / 100"}]}},
             "strokeWidth": {"field": "width", "type": "quantitative", "legend": null,
                             "scale": {"type": "linear", "domain": [0, 1], "range": [0, 1]}},
             "tooltip": [{"field": "Magnitude", "type": "quantitative"}]

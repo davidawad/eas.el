@@ -134,6 +134,14 @@ outer 0.05; point padding 0.5."
     (if (= lo hi) (/ (+ r0 r1) 2.0)
       (+ r0 (* (- r1 r0) (/ (float (- v lo)) (- hi lo)))))))
 
+(defun eas-scale--piecewise (domain range v)
+  "Map V through the piecewise linear DOMAIN onto RANGE, as d3 does.
+DOMAIN and RANGE are vectors of stops; the segment holding V maps it,
+and the end segments extrapolate."
+  (let* ((n (min (length domain) (length range)))
+         (i (or (cl-loop for j from 1 below (1- n) when (< v (aref domain j)) return (1- j)) (- n 2))))
+    (eas-scale--lerp (aref domain i) (aref domain (1+ i)) (vector (aref range i) (aref range (1+ i))) v)))
+
 (defun eas-scale--index (scale v)
   "Index of V in discrete SCALE's domain, or nil."
   (seq-position (plist-get scale :domain) v #'equal))
@@ -144,6 +152,8 @@ Equivalent to `eas-scale-apply' but without per-call dispatch; used
 in compile's per-row loops."
   (let ((domain (plist-get scale :domain)) (range (plist-get scale :range)))
     (pcase (plist-get scale :type)
+      ((and "linear" (guard (> (length domain) 2)))
+       (lambda (v) (and (numberp v) (eas-scale--piecewise domain range v))))
       ((or "linear" "time" "utc")
        (let* ((d0 (float (aref domain 0))) (d1 (float (aref domain 1)))
               (r0 (aref range 0)) (r1 (aref range 1))
@@ -182,6 +192,8 @@ A continuous SCALE with :round t snaps positions to whole pixels."
   "Map data VALUE through SCALE, unrounded; see `eas-scale-apply'."
   (let ((domain (plist-get scale :domain)))
     (pcase (plist-get scale :type)
+      ((and "linear" (guard (> (length domain) 2)))
+       (and (numberp value) (eas-scale--piecewise domain (plist-get scale :range) value)))
       ("linear" (and (numberp value)
                      (eas-scale--lerp (aref domain 0) (aref domain 1) (plist-get scale :range) value)))
       ("log" (and (numberp value) (> value 0)

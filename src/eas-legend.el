@@ -24,6 +24,7 @@
 (require 'eas-legend-extra)
 (require 'eas-legend-style)
 (require 'eas-legend-orient)
+(require 'eas-legend-merge)
 
 (declare-function eas-expr--string "eas-expr")
 (declare-function eas-legend-row-p "eas-legend-row")
@@ -117,6 +118,9 @@ METRICS are the layout's."
                                                             (when-let* ((ss (plist-get spec :shape-scale)))
                                                               (list :shape (eas-scale-apply ss v)))))
                                                          (plist-get scale :domain))))))
+          ;; A size scale of the same field: one symbol legend (eas-legend-merge.el).
+          ((and "sequential" (guard (plist-get spec :size-scale)))
+           (eas-legend-merge-model base spec))
           ("sequential"
            (append base (list :type "gradient"
                               :stops (if (or (plist-get scale :mid) (equal (plist-get scale :interpolate) "hcl"))

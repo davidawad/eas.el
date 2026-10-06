@@ -191,9 +191,12 @@ wins."
                (eas-compile-set-range (plist-get (plist-get group :scales) :size) range))
     ;; A size legend shows the marks' sizes: it reads the re-ranged scale.
     (plist-put group :legend-specs
-               (mapcar (lambda (ls) (if (eq (plist-get ls :channel) :size)
-                                        (plist-put (copy-sequence ls) :scale (plist-get (plist-get group :scales) :size))
-                                      ls))
+               (mapcar (lambda (ls) (cond ((eq (plist-get ls :channel) :size)
+                                           (plist-put (copy-sequence ls) :scale (plist-get (plist-get group :scales) :size)))
+                                          ;; A color legend that merged the size legend in.
+                                          ((plist-get ls :size-scale)
+                                           (plist-put (copy-sequence ls) :size-scale (plist-get (plist-get group :scales) :size)))
+                                          (t ls)))
                        (plist-get group :legend-specs))))
   (let* ((scales (plist-get group :scales))
          (defs (plist-get group :axis-defs))

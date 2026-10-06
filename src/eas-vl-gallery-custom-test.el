@@ -18,10 +18,12 @@
   (let ((groups (eas-vl-gallery-custom-groups)))
     (dolist (g '("area-circular" "calculations" "bar"))
       (should (member g groups)))
-    (dolist (group groups)
-      (dolist (name (eas-vl-gallery-custom-names group))
-        (should (equal (cons (concat group "/" name) (eas-vl-gallery-custom-check group name))
-                       (list (concat group "/" name))))))))
+    ;; Every spec's problems at once, not just the first failing spec's.
+    (should (equal (cl-loop for group in groups
+                            append (cl-loop for name in (eas-vl-gallery-custom-names group)
+                                            for problems = (eas-vl-gallery-custom-check group name)
+                                            when problems collect (cons (concat group "/" name) problems)))
+                   nil))))
 
 (ert-deftest eas-vl-gallery-custom-builds-only-missing-or-stale-refs ()
   ;; With bin/chart on PATH the harness builds a reference only when it

@@ -1,4 +1,4 @@
-Count of Records          Count of Records
+Cars                      Cars
 100┤┈┈██▁┈▁┈┈┈┈┈┈┈┈┈┈┈    100┤┈┈▁▁▆▆▂▂▄▄▁▁┈┈┈┈┈┈┈ Origin
    │▁▁▃▃█ ▆▂▂▆▆▃▃▁ ▁▁▁     50┤▁▁██████▆▆██▁▁▁▁▁▁┈ ■ Europe
   0└┬──────┬──────┬───      0└┬───┬───┬───┬───┬── ■ Japan
@@ -6,7 +6,7 @@ Count of Records          Count of Records
        Horsepower …              Miles_per_G…
 
 
-Count of Records
+Cars
 100┤┈┈┈┈┈┈██▁▁┈┈┈┈┈┈┈┈
    │  ▂▂▆▆▇▇▆▆▂▂▁▁
   0└┬───┬───┬───┬───┬─

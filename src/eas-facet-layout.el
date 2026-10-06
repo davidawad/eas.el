@@ -211,7 +211,9 @@ everything around them and the header items, as
          (boxes (mapcar (lambda (row)
                           (mapcar (lambda (g)
                                     (let ((b (eas-facet-layout--box g (plist-get meta :independent) metrics)))
-                                      (when (and wrap show-c) (aset b 1 (min (aref b 1) (- (+ clp cls)))))
+                                      ;; A wrapped cell's header is its title: it sits above
+                                      ;; the cell's content, its own axes' labels included.
+                                      (when (and wrap show-c) (aset b 1 (- (min 0 (aref b 1)) clp cls)))
                                       b))
                                   row))
                         rows))
@@ -298,7 +300,8 @@ everything around them and the header items, as
       (when show-c
         (if wrap
             (cl-loop for (g . o) in origins for label across clabels
-                     do (push (eas-facet-layout--text label (+ (car o) (/ (plist-get g :w) 2.0)) (- (cdr o) clp) cls
+                     for b in (apply #'append boxes)
+                     do (push (eas-facet-layout--text label (+ (car o) (/ (plist-get g :w) 2.0)) (+ (cdr o) (aref b 1) cls) cls
                                                       :align "center" :baseline "bottom"
                                                       :fontWeight (plist-get chdr :labelFontWeight)
                                                       :fill (plist-get chdr :labelColor))
@@ -320,6 +323,18 @@ everything around them and the header items, as
                                         :fill (plist-get chdr :titleColor))
                 items)
           (setq top (min top (- y size))))))
+    ;; The x axes are Vega's column footers, under the cells' content: with
+    ;; independent y scales that is the cells' own y labels hanging below
+    ;; the plots.
+    (let ((foot (if (memq :y indep)
+                    (apply #'max 0 (cl-loop for row in rows for brow in boxes
+                                            append (cl-loop for g in row for b in brow
+                                                            collect (ceiling (- (aref b 3) (plist-get g :h))))))
+                  0)))
+      (dolist (row rows)
+        (dolist (g row)
+          (plist-put g :facet-axis-offset (and (> foot 0) foot))))
+      (setq bottom (+ bottom foot))
     ;; A wrapped facet's x axes all sit under the last row, as Vega's column
     ;; footers do: a column ending a row early moves its axis down.
     (when (and wrap (cdr rows))
@@ -328,8 +343,9 @@ everything around them and the header items, as
                  do (cl-loop for g in row for j from 0
                              unless (nth j (car (last rows)))
                              do (let ((dy (- last-y (cdr (funcall origin g)))))
-                                  (plist-put g :facet-axis-offset dy)
-                                  (setq bottom (max bottom (+ last-y (plist-get g :h) (plist-get (plist-get g :chrome) :bottom)))))))))
+                                  (plist-put g :facet-axis-offset (+ dy foot))
+                                  (setq bottom (max bottom (+ last-y (plist-get g :h) foot
+                                                              (plist-get (plist-get g :chrome) :bottom))))))))))
     (list :origins origins :left left :top top :right right :bottom bottom :items (nreverse items))))
 
 (defun eas-facet-layout-arrange (node ox oy metrics)

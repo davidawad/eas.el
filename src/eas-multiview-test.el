@@ -187,6 +187,44 @@
 
 ;;; Customization specs (test/vl-examples/multiview/custom)
 
+(ert-deftest eas-multiview-repeat-count-axes-take-the-count-title ()
+  (let* ((scene (eas-compile '(:data (:values [(:p 1 :q 2) (:p 3 :q 4)]) :repeat ["p" "q"]
+                               :spec (:mark "bar" :encoding (:x (:field (:repeat "repeat") :type "quantitative" :bin t)
+                                                             :y (:aggregate "count" :type "quantitative")))
+                               :config (:countTitle "Cars"))))
+         (titles (cl-loop for v in (eas-multiview-test--views scene)
+                          append (cl-loop for a across (plist-get v :axes)
+                                          when (equal (plist-get a :channel) "y") collect (plist-get a :title)))))
+    (should titles)
+    (should (seq-every-p (lambda (tt) (equal tt "Cars")) titles))))
+
+(ert-deftest eas-multiview-wrapped-cells-with-own-y-axes-clear-their-labels ()
+  ;; Vega places a wrapped cell's header above the cell's content and the
+  ;; x axes (column footers) under it: independent y axes' end labels hang
+  ;; over the plot, so the header rises and the x axes drop below them.
+  (let* ((spec (lambda (resolve)
+                 (append (list :data (list :values eas-multiview-test--rows) :mark "point"
+                               :width 60 :height 40
+                               :encoding '(:facet (:field "a" :type "nominal" :columns 2)
+                                           :x (:field "v" :type "quantitative")
+                                           :y (:field "v" :type "quantitative")))
+                         resolve)))
+         (layout (lambda (resolve)
+                   (let* ((views (eas-multiview-test--views (eas-compile (funcall spec resolve))))
+                          (v (car views))
+                          (header (cl-loop for m across (plist-get v :marks)
+                                           when (string-suffix-p "/facet-headers" (plist-get m :id))
+                                           return (aref (plist-get m :items) 0)))
+                          (x-axis (cl-loop for v in views
+                                           thereis (cl-loop for a across (plist-get v :axes)
+                                                            when (equal (plist-get a :channel) "x") return a))))
+                     (list (- (aref (plist-get v :bounds) 1) (plist-get header :y)) (or (plist-get x-axis :offset) 0)))))
+         (shared (funcall layout nil))
+         (own (funcall layout '(:resolve (:scale (:y "independent"))))))
+    (should (= (cadr shared) 0))
+    (should (> (car own) (+ (car shared) 3)))
+    (should (> (cadr own) 3))))
+
 ;;; Map projections
 
 (ert-deftest eas-multiview-albers-usa-matches-d3 ()

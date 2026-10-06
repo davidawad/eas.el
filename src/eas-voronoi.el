@@ -15,8 +15,11 @@
 ;; flatten (one vertex per row, detail by the row).
 ;;
 ;; A cell is the extent clipped by the half-plane of each other point
-;; (Sutherland-Hodgman), nearest points first; a point farther than
-;; twice the cell's reach cannot clip it, which ends the search.  As
+;; (Sutherland-Hodgman); a point farther than twice the cell's reach
+;; cannot clip it.  Sites are sorted by x once and each cell walks out
+;; from its site, so a side's search ends at the first site too far in
+;; x alone: memory stays linear, and time near n log n for spread-out
+;; points.  As
 ;; in d3-delaunay, a row without a numeric point, and every repeat of
 ;; a point already seen, gets a null cell.  "key" makes rows sharing
 ;; that field's value one site (its first row's point), so a table of
@@ -63,27 +66,34 @@ repeat of an earlier one)."
         (when (and x y (not (gethash (cons x y) seen)))
           (puthash (cons x y) i seen)
           (push i sites))))
-    (setq sites (vconcat (nreverse sites)))
-    (seq-doseq (i sites)
-      (let* ((xi (aref xs i)) (yi (aref ys i))
-             (others (sort (seq-filter (lambda (j) (/= j i)) (append sites nil))
-                           (lambda (a b)
-                             (< (+ (expt (- (aref xs a) xi) 2) (expt (- (aref ys a) yi) 2))
-                                (+ (expt (- (aref xs b) xi) 2) (expt (- (aref ys b) yi) 2))))))
+    ;; Sites in x order: a cell's clippers are found by walking out
+    ;; from its site both ways, which stops once x alone is too far.
+    (setq sites (vconcat (sort (nreverse sites) (lambda (a b) (< (aref xs a) (aref xs b))))))
+    (dotimes (p (length sites))
+      (let* ((i (aref sites p)) (xi (aref xs i)) (yi (aref ys i))
              (poly (list (cons x0 y0) (cons x1 y0) (cons x1 y1) (cons x0 y1)))
              (reach2 (lambda ()
                        (let ((r 0.0))
-                         (dolist (p poly r)
-                           (setq r (max r (+ (expt (- (car p) xi) 2) (expt (- (cdr p) yi) 2)))))))))
-        (catch 'done
-          (let ((limit (* 4 (funcall reach2))))
-            (dolist (j others)
+                         (dolist (q poly r)
+                           (setq r (max r (+ (expt (- (car q) xi) 2) (expt (- (cdr q) yi) 2))))))))
+             (limit (* 4 (funcall reach2)))
+             (lo (1- p)) (hi (1+ p)) (m (length sites)))
+        (while (and poly (or (>= lo 0) (< hi m)))
+          ;; The nearer in x of the two next sites; a site whose dx
+          ;; alone exceeds the reach ends that side.
+          (let* ((dl (and (>= lo 0) (expt (- xi (aref xs (aref sites lo))) 2)))
+                 (dh (and (< hi m) (expt (- (aref xs (aref sites hi)) xi) 2)))
+                 (left (and dl (or (null dh) (<= dl dh))))
+                 (j (aref sites (if left lo hi))))
+            (if left (setq lo (1- lo)) (setq hi (1+ hi)))
+            (if (> (if left dl dh) limit)
+                (if left (setq lo -1) (setq hi m))
               (let* ((xj (aref xs j)) (yj (aref ys j))
                      (d2 (+ (expt (- xj xi) 2) (expt (- yj yi) 2))))
-                (when (> d2 limit) (throw 'done nil))
-                (setq poly (eas-voronoi--clip poly (- xj xi) (- yj yi)
-                                              (/ (- (+ (* xj xj) (* yj yj)) (+ (* xi xi) (* yi yi))) 2)))
-                (setq limit (* 4 (funcall reach2)))))))
+                (when (<= d2 limit)
+                  (setq poly (eas-voronoi--clip poly (- xj xi) (- yj yi)
+                                                (/ (- (+ (* xj xj) (* yj yj)) (+ (* xi xi) (* yi yi))) 2)))
+                  (setq limit (* 4 (funcall reach2))))))))
         (aset cells i poly)))
     cells))
 

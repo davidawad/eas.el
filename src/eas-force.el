@@ -52,6 +52,10 @@
   "Non-nil when QUAD is a leaf."
   `(eq (aref ,quad 0) 'leaf))
 
+(defmacro eas-force--finite-p (v)
+  "Non-nil when float V is neither NaN nor infinite."
+  `(< (abs ,v) 1.0e+INF))
+
 (defun eas-force--cover (tree x y)
   "Extend TREE's extent to cover X Y, as d3's quadtree.cover."
   (let ((x0 (aref tree 1)) (y0 (aref tree 2)) (x1 (aref tree 3)) (y1 (aref tree 4)))
@@ -115,7 +119,9 @@ XS and YS hold every point's coordinates."
         (n (length xs)))
     (dotimes (i n)
       (let ((x (aref xs i)) (y (aref ys i)))
-        (unless (or (isnan x) (isnan y))
+        ;; d3 skips NaN only; an infinite point (a diverged node) would
+        ;; make `eas-force--cover' double the extent forever.
+        (when (and (eas-force--finite-p x) (eas-force--finite-p y))
           (when (< x x0) (setq x0 x))
           (when (> x x1) (setq x1 x))
           (when (< y y0) (setq y0 y))
@@ -125,7 +131,7 @@ XS and YS hold every point's coordinates."
       (eas-force--cover tree x1 y1)
       (dotimes (i n)
         (let ((x (aref xs i)) (y (aref ys i)))
-          (unless (or (isnan x) (isnan y))
+          (when (and (eas-force--finite-p x) (eas-force--finite-p y))
             (eas-force--add tree x y i xs ys)))))
     tree))
 

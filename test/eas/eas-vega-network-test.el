@@ -9,8 +9,10 @@
 ;; network examples as eas templates (templates/vega/).  The force
 ;; transform is held to numbers d3-force 3 itself computed (node,
 ;; d3-force 3.0.0, the same parameters); each template resolves with
-;; its example binding, compiles natively, passes the text checker and,
-;; where rsvg-convert is installed, matches its Vega reference PNG as
+;; its example binding; a bounded slice of that binding compiles
+;; natively, passes the text checker and drives the interactions; and,
+;; under :gallery (make test-gallery-conformance) where rsvg-convert is
+;; installed, the full example matches its Vega reference PNG as
 ;; closely as its x-eas.vega block records.
 
 ;;; Code:
@@ -63,10 +65,52 @@
                (should (< (abs (- a e)) (or tolerance 1e-6)))))
            actual expected))
 
-(defun eas-vega-network-miserables ()
-  "The Les Misérables graph: (NODES . LINKS)."
-  (let ((data (eas-json-read-file (eas-test-file "test/vega-examples/data/miserables.json"))))
-    (cons (plist-get data :nodes) (plist-get data :links))))
+(defun eas-vega-network-miserables (&optional n)
+  "The Les Misérables graph: (NODES . LINKS).
+With N, only its first N nodes and the links among them."
+  (let* ((data (eas-json-read-file (eas-test-file "test/vega-examples/data/miserables.json")))
+         (nodes (plist-get data :nodes)) (links (plist-get data :links)))
+    (if (null n)
+        (cons nodes links)
+      (cons (vconcat (seq-take nodes n)) (eas-vega-network-links-within links n)))))
+
+(defun eas-vega-network-links-within (links n)
+  "The LINKS whose source and target are both among the first N nodes."
+  (vconcat (seq-filter (lambda (l) (and (< (plist-get l :source) n) (< (plist-get l :target) n)))
+                       links)))
+
+;; The examples are the whole gallery data: 77 nodes of a 5929-cell
+;; matrix, 305 airports with 5366 routes.  Compiling them interpreted
+;; takes seconds each, and every drag compiles the view again, so the
+;; fast suite renders and drives bounded slices of them; the full
+;; examples resolve once and meet their reference PNGs under :gallery.
+
+(defconst eas-vega-network-bound 20
+  "Most nodes, airports or rows a bounded example binding keeps.")
+
+(defun eas-vega-network-bounded (name)
+  "Template vega/NAME's example binding cut to `eas-vega-network-bound' rows.
+Links and routes keep only those among the kept nodes and airports;
+a simulation runs 60 ticks; the matrix shrinks to fit its nodes."
+  (let* ((n eas-vega-network-bound)
+         (b (copy-sequence (eas-template-example (concat "vega/" name))))
+         (airports (and (plist-get b :airports) (seq-take (plist-get b :airports) n)))
+         (codes (mapcar (lambda (a) (plist-get a :iata)) airports)))
+    (dolist (slot '(:nodes :data))
+      (when (plist-get b slot) (setq b (plist-put b slot (vconcat (seq-take (plist-get b slot) n))))))
+    (when (plist-get b :links)
+      (setq b (plist-put b :links (eas-vega-network-links-within (plist-get b :links) n))))
+    (when airports
+      (setq b (plist-put b :airports (vconcat airports)))
+      (setq b (plist-put b :flights
+                         (vconcat (seq-filter (lambda (f) (and (member (plist-get f :origin) codes)
+                                                               (member (plist-get f :destination) codes)))
+                                              (plist-get b :flights))))))
+    (when (plist-get (plist-get (plist-get (eas-template-get (concat "vega/" name)) :meta) :slots) :iterations)
+      (setq b (plist-put b :iterations (min 60 (or (plist-get b :iterations) 60)))))
+    (when (equal name "reorderable-matrix")
+      (setq b (plist-put b :size (* 10 (length (plist-get b :nodes))))))
+    b))
 
 ;;; The force transform against d3-force
 
@@ -120,7 +164,7 @@
 
 (ert-deftest eas-vega-network-force-pins-starts-and-ticks ()
   "fx/fy pin a node; x/y are where a node starts; a simulation ticks on demand."
-  (let* ((graph (eas-vega-network-miserables))
+  (let* ((graph (eas-vega-network-miserables 30))
          (nodes (vconcat (seq-map-indexed (lambda (r i) (if (= i 0) (append r '(:fx 10 :fy 20)) r)) (car graph))))
          (params (list :iterations 300 :forces (vector '(:force "nbody")
                                                        (list :force "link" :links (cdr graph)))))
@@ -161,6 +205,16 @@
     (eas-force-transform [(:a 1)] (list :forces [(:force "link" :links [(:source 0 :target 3)])])))
   (eas-test-should-code "INVALID_INPUT"
     (eas-resolve-spec '(:data (:values [(:a 1)]) :transform [(:x-eas:transform "force")] :mark "point"))))
+
+(ert-deftest eas-vega-network-force-survives-infinite-positions ()
+  "A node at infinity stays out of the quadtree instead of growing it forever."
+  (let ((out (eas-force-transform [(:x 1.0e+INF :y 0) (:x 1 :y 2) (:x 3 :y 4)]
+                                  (list :iterations 5 :forces [(:force "nbody") (:force "collide" :radius 2)]))))
+    (should (= (length out) 3))
+    ;; The finite nodes still repel each other, and only each other.
+    (dolist (i '(1 2))
+      (should (< (abs (plist-get (aref out i) :x)) 100))
+      (should (< (abs (plist-get (aref out i) :y)) 100)))))
 
 ;;; The graph transform
 
@@ -218,7 +272,7 @@
 ;;; The templates
 
 (ert-deftest eas-vega-network-templates-render-natively ()
-  "Each template resolves with its example, compiles natively, passes the text check."
+  "Each template resolves with its example; a bounded slice compiles and passes the text check."
   (eas-vega-network-with-templates
     (dolist (name eas-vega-network-names)
       (let* ((spec (eas-vega-network-spec name))
@@ -226,7 +280,9 @@
         (should (member (plist-get meta :status) '("pass" "partial" "unsupported")))
         (should (stringp (plist-get meta :note)))
         (should (equal (cons name (eas-spec-check spec)) (list name)))
-        (let ((scene (eas-compile spec :target 'text :size '(:cols 100 :rows 30))))
+        (let* ((small (eas-resolve (concat "vega/" name) (eas-vega-network-bounded name)))
+               (scene (eas-compile small :target 'text :size '(:cols 100 :rows 30))))
+          (should (equal (cons name (eas-spec-check small)) (list name)))
           (should (equal (cons name (eas-text-check scene 100)) (list name))))))))
 
 (defun eas-vega-network-ratio (name offset)
@@ -245,7 +301,9 @@ The native image is shifted by OFFSET, [DX DY]."
       (delete-file png))))
 
 (ert-deftest eas-vega-network-templates-match-references ()
-  "Each template's native PNG is as close to Vega's as its x-eas.vega block says."
+  "Each template's native PNG is as close to Vega's as its x-eas.vega block says.
+It renders the full examples, so it runs with the conformance gallery."
+  :tags '(:gallery)
   (unless (executable-find eas-chart-rsvg-program)
     (eas-test-skip (format "%s not on PATH; needed to rasterize native SVG for the Vega reference PNGs"
                            eas-chart-rsvg-program)))
@@ -253,12 +311,13 @@ The native image is shifted by OFFSET, [DX DY]."
     (let* ((meta (eas-vega-network-meta name))
            (ratio (eas-vega-network-ratio name (plist-get meta :offset))))
       ;; Recorded with resvg and Arimo; rsvg's anti-aliasing and fonts differ a little.
-      (should (equal (list name (<= ratio (+ (plist-get meta :ratio) 0.02))) (list name t))))))
+      (should (equal (list name (<= ratio (+ (plist-get meta :ratio) 0.02))) (list name t)))
+      (garbage-collect))))
 
 (ert-deftest eas-vega-network-drag-pins-a-node ()
   "Dragging a node pins it where it is dropped; replay redraws the same; dblclick frees it."
   (eas-vega-network-with-templates
-    (let* ((bindings (eas-template-example "vega/force-directed-layout"))
+    (let* ((bindings (eas-vega-network-bounded "force-directed-layout"))
            (view (eas-view-open "vega/force-directed-layout" :bindings bindings))
            (node (lambda (v i) (nth i (seq-filter (lambda (r) (equal (plist-get r :eas_kind) "node"))
                                                   (plist-get (eas-view-data v) :rows)))))
@@ -280,7 +339,7 @@ The native image is shifted by OFFSET, [DX DY]."
 (ert-deftest eas-vega-network-matrix-drag-reorders ()
   "Dragging a row label moves that node's row; a column label its column."
   (eas-vega-network-with-templates
-    (let* ((view (eas-view-open "vega/reorderable-matrix" :bindings (eas-template-example "vega/reorderable-matrix")))
+    (let* ((view (eas-view-open "vega/reorderable-matrix" :bindings (eas-vega-network-bounded "reorderable-matrix")))
            (order (lambda (name) (plist-get (seq-find (lambda (r) (and (equal (plist-get r :eas_kind) "node")
                                                                        (equal (plist-get r :name) name)))
                                                       (plist-get (eas-view-data view) :rows))
@@ -290,20 +349,23 @@ The native image is shifted by OFFSET, [DX DY]."
                                                                       (eq column (not (zerop (mod (or (plist-get it :angle) 0) 360))))))
                                                     (plist-get m :items)))
                               (plist-get (aref (plist-get (eas-view-scene view) :views) 0) :marks)))))
-      (should (equal (list (funcall order "Myriel") (funcall order "Valjean")) '(4 15)))
-      (let ((row (funcall label "Myriel" nil)) (last (funcall label "Child2" nil)))
+      ;; The bounded matrix: groups 1, 2 and 3 in data order.
+      (should (equal (list (funcall order "Myriel") (funcall order "Valjean")) '(1 12)))
+      (let ((row (funcall label "Myriel" nil)) (last (funcall label "Blacheville" nil)))
         (eas-dispatch view (list :type "drag" :from (vector (- (plist-get row :x) 10) (plist-get row :y))
                                  :to (vector (plist-get row :x) (plist-get last :y)))))
-      (should (equal (list (funcall order "Myriel") (funcall order "Child2") (funcall order "Valjean")) '(76 77 14)))
-      (let ((col (funcall label "Valjean" t)) (first (funcall label "Fauchelevent" t)))
+      (should (equal (list (funcall order "Myriel") (funcall order "Blacheville") (funcall order "Valjean")) '(19 20 11)))
+      (let ((col (funcall label "Valjean" t)) (first (funcall label "Napoleon" t)))
         (eas-dispatch view (list :type "drag" :from (vector (plist-get col :x) (- (plist-get col :y) 10))
-                                 :to (vector (plist-get first :x) 0))))
-      (should (equal (list (funcall order "Valjean") (funcall order "Fauchelevent")) '(1 2))))))
+                                 ;; The first column's left half: ahead of its node, not tied.
+                                 :to (vector (- (plist-get first :x) 4) 0))))
+      (should (equal (list (funcall order "Valjean") (funcall order "Napoleon")) '(1 2))))))
 
 (ert-deftest eas-vega-network-airport-hover-draws-routes ()
-  "Hovering an airport draws its routes; the map starts with none."
+  "Hovering an airport draws the routes from it; the map starts with none."
   (eas-vega-network-with-templates
-    (let* ((view (eas-view-open "vega/airport-connections" :bindings (eas-template-example "vega/airport-connections")))
+    (let* ((bindings (eas-vega-network-bounded "airport-connections"))
+           (view (eas-view-open "vega/airport-connections" :bindings bindings))
            (marks (lambda () (plist-get (aref (plist-get (eas-view-scene view) :views) 0) :marks)))
            (rules (lambda () (length (plist-get (seq-find (lambda (m) (equal (plist-get m :mark) "rule")) (funcall marks)) :items))))
            (circles (seq-find (lambda (m) (equal (plist-get m :mark) "circle")) (funcall marks)))
@@ -312,7 +374,9 @@ The native image is shifted by OFFSET, [DX DY]."
       (should (eas-view-interactive view))
       (should (= (funcall rules) 0))
       (eas-dispatch view (list :type "pointermove" :px (vector (plist-get atl :x) (plist-get atl :y))))
-      (should (> (funcall rules) 100))
+      (should (= (funcall rules) (seq-count (lambda (f) (equal (plist-get f :origin) "ATL"))
+                                            (plist-get bindings :flights))))
+      (should (> (funcall rules) 0))
       (eas-dispatch view '(:type "pointerleave"))
       (should (= (funcall rules) 0)))))
 

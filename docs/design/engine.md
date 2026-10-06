@@ -204,7 +204,8 @@ natively and deterministically:
   "range": [lo, hi]}` (the center of F's band, Vega's `xfocus`).
   `"output": "both"` appends one row per link with its endpoints in
   x, y, x2, y2, so rule marks draw the links (`eas_kind` tells rows
-  apart).
+  apart). A node that diverges to infinity stays out of the quadtree
+  (d3 skips only NaN), so it cannot grow the tree without bound.
 - `graph` (eas-force-graph.el) joins node rows to link rows, the
   aggregate and lookup Vega does across datasets: node `order` (stable
   by `sort`), `degree` and `count`; link rows carrying every node field
@@ -212,7 +213,9 @@ natively and deterministically:
 - `voronoi` (eas-voronoi.el) is Vega's voronoi transform: each point's
   cell within `extent` as SVG path data (`as`) and, with `polygon`, as
   [x, y] vertices a line mark draws after a flatten; `key` makes rows
-  sharing a value one site.
+  sharing a value one site. Sites are sorted by x once and each cell
+  clips against neighbours walking out in x until they are too far to
+  matter, so memory stays linear in the number of sites.
 
 Each takes `"transform": [...]`, Vega-Lite transforms run on its rows
 first, because a template's domain transforms precede its native ones.

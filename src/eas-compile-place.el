@@ -181,6 +181,21 @@ tallest column."
       (setq y (+ y (cdr s)) col-w (max col-w (car s)) tallest (max tallest y)))
     (list (nreverse offsets) (+ x col-w) tallest)))
 
+(defun eas-place--rect-zindex (axis group channel metrics)
+  "AXIS of GROUP's CHANNEL with Vega-Lite's default zindex under METRICS.
+A rect mark over a discrete (nominal or ordinal) field draws its axis
+in front, zindex 1, so heatmap cells do not hide the domain line; an
+axis or config zindex wins."
+  (let* ((def (plist-get (plist-get group :axis-defs) channel))
+         (explicit (let ((a (plist-get def :axis)))
+                     (or (and (eas-object-p a) (plist-member a :zindex))
+                         (eas-theme-axis (plist-get metrics :config) channel :zindex)))))
+    (if (and axis (not explicit) (not (plist-get axis :zindex))
+             (member (plist-get def :type) '("nominal" "ordinal"))
+             (equal (plist-get (plist-get (car (plist-get group :units)) :mark) :type) "rect"))
+        (plist-put (copy-sequence axis) :zindex 1)
+      axis)))
+
 (defun eas-place-chrome (group metrics)
   "Compute GROUP's axis and legend models and its chrome under METRICS."
   (when-let* ((range (eas-bins-size-range group (lambda (ch) (eas-place--local-scale group ch)))))
@@ -194,10 +209,14 @@ tallest column."
                        (plist-get group :legend-specs))))
   (let* ((scales (plist-get group :scales))
          (defs (plist-get group :axis-defs))
-         (axes (delq nil (list (eas-layout-axis :x (plist-get defs :x) (plist-get scales :x)
-                                                  (plist-get group :w) metrics)
-                               (eas-layout-axis :y (plist-get defs :y) (plist-get scales :y)
-                                                  (plist-get group :h) metrics))))
+         (axes (delq nil (list (eas-place--rect-zindex
+                                (eas-layout-axis :x (plist-get defs :x) (plist-get scales :x)
+                                                 (plist-get group :w) metrics)
+                                group :x metrics)
+                               (eas-place--rect-zindex
+                                (eas-layout-axis :y (plist-get defs :y) (plist-get scales :y)
+                                                 (plist-get group :h) metrics)
+                                group :y metrics))))
          ;; Fitted to a size, legends get the height beside the plot.
          (room (and (plist-get group :fit-height)
                     (- (plist-get group :fit-height) (or (plist-get (plist-get group :chrome) :top) 0))))

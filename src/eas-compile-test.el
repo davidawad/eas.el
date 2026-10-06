@@ -38,6 +38,26 @@
                                            :mark "bar" :encoding (:x (:field "a" :bin t) :y (:aggregate "count"))))
   (eas-compile-test--scene "crosshair" eas-compile-test--crosshair))
 
+(ert-deftest eas-compile-rect-bands-pad-outside-by-half-the-inner-padding ()
+  ;; Vega-Lite: a band's paddingOuter defaults to paddingInner / 2, for
+  ;; rects too, so config.scale.rectBandPaddingInner keeps a step-sized
+  ;; plot whole: 4 * (3 - 0.5 + 2 * 0.25) = 12.  Its discrete axes draw
+  ;; in front of the cells (zindex 1) unless the spec says otherwise.
+  (let* ((spec (lambda (axis)
+                 (list :data '(:values [(:a "p" :b "u") (:a "q" :b "v") (:a "r" :b "u")])
+                       :mark "rect"
+                       :encoding (list :x (list :field "a" :type "nominal" :axis axis)
+                                       :y '(:field "b" :type "ordinal"))
+                       :config '(:view (:step 4) :scale (:rectBandPaddingInner 0.5)))))
+         (view (aref (plist-get (eas-compile (funcall spec nil)) :views) 0))
+         (x (plist-get (plist-get view :scales) :x)))
+    (should (= (aref (plist-get view :bounds) 2) 12))
+    (should (= (plist-get x :step) 4))
+    (should (= (plist-get x :bandwidth) 2))
+    (should (equal (mapcar (lambda (a) (plist-get a :zindex)) (plist-get view :axes)) '(1 1)))
+    (let ((view (aref (plist-get (eas-compile (funcall spec '(:zindex 0))) :views) 0)))
+      (should (equal (mapcar (lambda (a) (plist-get a :zindex)) (plist-get view :axes)) '(0 1))))))
+
 (ert-deftest eas-compile-is-pure-and-json-serializable ()
   (let ((spec (eas-resolve "bars" (eas-template-example "bars"))))
     (should (equal (eas-scene-to-json (eas-compile spec)) (eas-scene-to-json (eas-compile spec))))

@@ -246,9 +246,10 @@ ZOOM is a [LO HI] domain from view state, or nil."
                                              ("tick" :tickBandPaddingInner)))
                             (cond (rect 0) (tick 0.25) (nested 0.2))))
                  (outer (or (plist-get sp :paddingOuter) (plist-get sp :padding)
-                            (and nested 0.2) (and (not rect) (plist-get cfg :bandPaddingOuter))
-                            ;; Vega-Lite: paddingInner / 2 (0.125 for a tick's default 0.25).
-                            (cond (rect 0) (tick (/ inner 2.0)) (nested 0.2)))))
+                            (and nested 0.2) (plist-get cfg :bandPaddingOuter)
+                            ;; Vega-Lite: paddingInner / 2 (0.125 for a tick's default 0.25,
+                            ;; 0 for touching rects), so a step size spans whole pixels.
+                            (cond ((or rect tick) (/ inner 2.0)) (nested 0.2)))))
             (append (eas-scale-band type (eas-compile--discrete-domain pairs values) [0 1] inner outer)
                     (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)))
         (eas-compile--continuous type pairs channel values zoom)))))

@@ -417,6 +417,8 @@ GROUPS, METRICS and SPEC place the title as in `eas-compile--title-start'."
              do (setq env (eas-plist-put env k v)))
     env))
 
+(defvar eas-encode-count-title)
+
 (cl-defun eas-compile-plan (spec &key rows size target cell state)
   "Everything `eas-compile' derives before items: units, scales, layout.
 SPEC, ROWS, SIZE, TARGET, CELL and STATE are as in `eas-compile'.  The
@@ -425,7 +427,10 @@ runtime keeps the plan so that a selection change can patch it
 
   (let* ((gc-cons-threshold (max gc-cons-threshold eas-compile-gc-threshold))
          (spec (eas-projection-expand (eas-composite-expand (eas-facet-expand (eas-overlay-expand (eas-spec-validate spec))))))
-         (unsupported (car (eas-spec-unsupported spec))))
+         (unsupported (car (eas-spec-unsupported spec)))
+         ;; Axis and legend titles are made here, some without a config at hand.
+         (eas-encode-count-title (let ((c (plist-get (plist-get spec :config) :countTitle)))
+                                   (and (stringp c) c))))
     (when unsupported
       (eas-signal "UNSUPPORTED_FEATURE" (plist-get unsupported :message)
                     :path (plist-get unsupported :path) :feature (plist-get unsupported :feature)))
@@ -513,8 +518,6 @@ METRICS and STATE are as for `eas-compile--view'."
           (plist-put g :mark-over m)
           (plist-put g :scope-over (aref (funcall over sbox) 2)))))
     grew))
-
-(defvar eas-encode-count-title)
 
 (defun eas-compile-scene (plan state)
   "Assemble scene/v1 from PLAN under view STATE, reusing cached items."

@@ -58,6 +58,8 @@
             (setq size '(:cols 189 :rows 56))
             (eas-mode--follow-window (get-buffer-window buffer))
             (should (equal (eas-view-size view) size))
+            ;; The redraw runs from a timer, after redisplay (fc-qx1.53).
+            (accept-process-output nil 0.05)
             (let ((lines (split-string (buffer-string) "\n")))
               (should (= (apply #'max (mapcar #'string-width lines)) 189))))
           ;; The hook may run with another buffer current.

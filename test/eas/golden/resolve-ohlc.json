@@ -24,7 +24,8 @@
           {"field": "open", "type": "quantitative"},
           {"field": "high", "type": "quantitative"},
           {"field": "low", "type": "quantitative"},
-          {"field": "close", "type": "quantitative"}
+          {"field": "close", "type": "quantitative"},
+          {"field": "volume", "type": "quantitative"}
         ],
         "x": {"field": "time", "title": "date", "type": "temporal"}
       },
@@ -55,10 +56,45 @@
           },
           "mark": {"type": "bar"},
           "name": "candles"
+        },
+        {
+          "encoding": {
+            "y": {"field": "low", "type": "quantitative"},
+            "y2": {"field": "high"}
+          },
+          "mark": {"opacity": 0, "type": "rule"},
+          "name": "crosshair-hit",
+          "params": [
+            {
+              "name": "crosshair",
+              "select": {
+                "clear": "pointerleave",
+                "encodings": ["x"],
+                "nearest": true,
+                "on": "pointermove",
+                "type": "point"
+              }
+            }
+          ]
+        },
+        {
+          "encoding": {
+            "color": {"value": "gray"}
+          },
+          "mark": {
+            "strokeDash": [2, 2],
+            "type": "rule"
+          },
+          "name": "crosshair-rule",
+          "transform": [
+            {
+              "filter": {"empty": false, "param": "crosshair"}
+            }
+          ]
         }
       ],
       "name": "price",
-      "width": 400
+      "width": "container"
     }
   ]
 }

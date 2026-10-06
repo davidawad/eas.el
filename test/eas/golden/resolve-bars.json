@@ -21,5 +21,5 @@
   "height": 200,
   "mark": {"type": "bar"},
   "title": "Steps per day",
-  "width": 300
+  "width": "container"
 }

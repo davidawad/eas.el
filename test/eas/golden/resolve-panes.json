@@ -126,7 +126,7 @@
         }
       ],
       "name": "price",
-      "width": 400
+      "width": "container"
     },
     {
       "height": 60,
@@ -169,7 +169,7 @@
         }
       ],
       "name": "volume",
-      "width": 400
+      "width": "container"
     },
     {
       "height": 60,
@@ -236,7 +236,7 @@
         }
       ],
       "name": "rsi",
-      "width": 400
+      "width": "container"
     }
   ]
 }

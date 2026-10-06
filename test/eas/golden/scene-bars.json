@@ -62,7 +62,7 @@
   "size": {
     "cell": [7, 14],
     "h": 284,
-    "w": 369
+    "w": 480
   },
   "target": "svg",
   "title": {"align": "left", "baseline": "top", "fontSize": 16, "fontWeight": 600, "text": "Steps per day", "x": 5, "y": 5},
@@ -70,10 +70,10 @@
     {
       "axes": [
         {
-          "bounds": [64, 232, 364, 278.618],
+          "bounds": [64, 232, 475, 278.618],
           "channel": "x",
           "discrete": true,
-          "domain-line": [64.5, 233.5, 364.5, 233.5],
+          "domain-line": [64.5, 233.5, 475.5, 233.5],
           "grid": false,
           "labelAngle": 270,
           "orient": "bottom",
@@ -83,55 +83,55 @@
               "align": "right",
               "baseline": "middle",
               "label": "Mon",
-              "lx": 94.0,
+              "lx": 105.1,
               "ly": 241.5,
-              "pos": 93.5,
-              "tick": [94.5, 233.5, 94.5, 237.5],
+              "pos": 104.6,
+              "tick": [105.5, 233.5, 105.5, 237.5],
               "value": "Mon"
             },
             {
               "align": "right",
               "baseline": "middle",
               "label": "Tue",
-              "lx": 154.0,
+              "lx": 187.3,
               "ly": 241.5,
-              "pos": 153.5,
-              "tick": [154.5, 233.5, 154.5, 237.5],
+              "pos": 186.8,
+              "tick": [187.5, 233.5, 187.5, 237.5],
               "value": "Tue"
             },
             {
               "align": "right",
               "baseline": "middle",
               "label": "Wed",
-              "lx": 214.0,
+              "lx": 269.5,
               "ly": 241.5,
-              "pos": 213.5,
-              "tick": [214.5, 233.5, 214.5, 237.5],
+              "pos": 269.0,
+              "tick": [269.5, 233.5, 269.5, 237.5],
               "value": "Wed"
             },
             {
               "align": "right",
               "baseline": "middle",
               "label": "Thu",
-              "lx": 274.0,
+              "lx": 351.7,
               "ly": 241.5,
-              "pos": 273.5,
-              "tick": [274.5, 233.5, 274.5, 237.5],
+              "pos": 351.2,
+              "tick": [351.5, 233.5, 351.5, 237.5],
               "value": "Thu"
             },
             {
               "align": "right",
               "baseline": "middle",
               "label": "Fri",
-              "lx": 334.0,
+              "lx": 433.9,
               "ly": 241.5,
-              "pos": 333.5,
-              "tick": [334.5, 233.5, 334.5, 237.5],
+              "pos": 433.4,
+              "tick": [433.5, 233.5, 433.5, 237.5],
               "value": "Fri"
             }
           ],
           "title": "category",
-          "title-mark": {"align": "center", "angle": 0, "baseline": "top", "text": "category", "x": 214.5, "y": 268.118}
+          "title-mark": {"align": "center", "angle": 0, "baseline": "top", "text": "category", "x": 270.0, "y": 268.118}
         },
         {
           "bounds": [5.355, 33, 65, 238.0],
@@ -146,7 +146,7 @@
             {
               "align": "right",
               "baseline": "middle",
-              "grid": [64.5, 233.5, 364.5, 233.5],
+              "grid": [64.5, 233.5, 475.5, 233.5],
               "label": "0",
               "lx": 56.5,
               "ly": 233.5,
@@ -157,7 +157,7 @@
             {
               "align": "right",
               "baseline": "middle",
-              "grid": [64.5, 202.731, 364.5, 202.731],
+              "grid": [64.5, 202.731, 475.5, 202.731],
               "label": "2,000",
               "lx": 56.5,
               "ly": 202.731,
@@ -168,7 +168,7 @@
             {
               "align": "right",
               "baseline": "middle",
-              "grid": [64.5, 171.962, 364.5, 171.962],
+              "grid": [64.5, 171.962, 475.5, 171.962],
               "label": "4,000",
               "lx": 56.5,
               "ly": 171.962,
@@ -179,7 +179,7 @@
             {
               "align": "right",
               "baseline": "middle",
-              "grid": [64.5, 141.192, 364.5, 141.192],
+              "grid": [64.5, 141.192, 475.5, 141.192],
               "label": "6,000",
               "lx": 56.5,
               "ly": 141.192,
@@ -190,7 +190,7 @@
             {
               "align": "right",
               "baseline": "middle",
-              "grid": [64.5, 110.423, 364.5, 110.423],
+              "grid": [64.5, 110.423, 475.5, 110.423],
               "label": "8,000",
               "lx": 56.5,
               "ly": 110.423,
@@ -201,7 +201,7 @@
             {
               "align": "right",
               "baseline": "middle",
-              "grid": [64.5, 79.654, 364.5, 79.654],
+              "grid": [64.5, 79.654, 475.5, 79.654],
               "label": "10,000",
               "lx": 56.5,
               "ly": 79.654,
@@ -212,7 +212,7 @@
             {
               "align": "right",
               "baseline": "middle",
-              "grid": [64.5, 48.885, 364.5, 48.885],
+              "grid": [64.5, 48.885, 475.5, 48.885],
               "label": "12,000",
               "lx": 56.5,
               "ly": 48.885,
@@ -225,7 +225,7 @@
           "title-mark": {"align": "center", "angle": -90, "baseline": "bottom", "text": "value", "x": 18.855, "y": 133.5}
         }
       ],
-      "bounds": [64, 33, 300, 200],
+      "bounds": [64, 33, 411, 200],
       "clip": false,
       "frame": {},
       "header": {},
@@ -248,8 +248,8 @@
                 {"title": "category", "value": "Mon"},
                 {"title": "value", "value": "8200"}
               ],
-              "w": 54.0,
-              "x": 67.0,
+              "w": 73.98,
+              "x": 68.11,
               "y": 106.846
             },
             {
@@ -264,8 +264,8 @@
                 {"title": "category", "value": "Tue"},
                 {"title": "value", "value": "10400"}
               ],
-              "w": 54.0,
-              "x": 127.0,
+              "w": 73.98,
+              "x": 150.31,
               "y": 73.0
             },
             {
@@ -280,8 +280,8 @@
                 {"title": "category", "value": "Wed"},
                 {"title": "value", "value": "6100"}
               ],
-              "w": 54.0,
-              "x": 187.0,
+              "w": 73.98,
+              "x": 232.51,
               "y": 139.154
             },
             {
@@ -296,8 +296,8 @@
                 {"title": "category", "value": "Thu"},
                 {"title": "value", "value": "9300"}
               ],
-              "w": 54.0,
-              "x": 247.0,
+              "w": 73.98,
+              "x": 314.71,
               "y": 89.923
             },
             {
@@ -312,8 +312,8 @@
                 {"title": "category", "value": "Fri"},
                 {"title": "value", "value": "12050"}
               ],
-              "w": 54.0,
-              "x": 307.0,
+              "w": 73.98,
+              "x": 396.91,
               "y": 47.615
             }
           ],
@@ -332,13 +332,13 @@
       "path": "",
       "scales": {
         "x": {
-          "bandwidth": 54.0,
+          "bandwidth": 73.98,
           "domain": ["Mon", "Tue", "Wed", "Thu", "Fri"],
           "field": "category",
-          "range": [64, 364],
+          "range": [64, 475],
           "reverse": false,
-          "start": 67.0,
-          "step": 60.0,
+          "start": 68.11,
+          "step": 82.2,
           "type": "band"
         },
         "y": {

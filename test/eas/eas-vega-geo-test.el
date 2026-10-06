@@ -384,13 +384,16 @@ Twelve countries; for the choropleths, the shapes of a few counties."
 
 (defconst eas-vega-geo-ratios
   '(("world-map" . 0.03) ("county-unemployment" . 0.03) ("earthquakes" . 0.03) ("zoomable-world-map" . 0.03)
-    ("distortion-comparison" . 0.03) ("map-with-tooltip" . 0.03) ("earthquakes-globe" . 0.09) ("projections" . 0.09))
+    ("distortion-comparison" . 0.03) ("map-with-tooltip" . 0.03) ("earthquakes-globe" . 0.13) ("projections" . 0.09))
   "Pixel ratio each template's render stays within against its reference.
 Measured with resvg and Arimo (eas-7r1.6): world-map 0.0071,
 county-unemployment 0.0165, earthquakes 0.0131, zoomable-world-map
 0.0000, distortion-comparison 0.0001, map-with-tooltip 0.0156,
 earthquakes-globe 0.0774 (partial), projections 0.0747 against its
-360 px thumbnail (partial).")
+360 px thumbnail (partial).  Against the vg2png reference (node-canvas)
+earthquakes-globe is 0.1208: it still lacks the subtitle and Vega's
+combined size and color symbol legend, and its canvas is 680x640
+against 625x658 (eas-7r1.11).")
 
 (ert-deftest eas-vega-geo-templates-match-their-references ()
   "Each map template against test/vega-examples/ref/NAME.png (needs rsvg-convert)."

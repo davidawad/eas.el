@@ -334,22 +334,24 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
             out))
     (nreverse out)))
 
-(defun eas-svg--axes (axes theme front)
-  "Return the SVG nodes of AXES under THEME: behind the items, or in FRONT.
-Every grid lies beneath every axis, as Vega-Lite puts the grids in axes
-of their own ahead of the others.  An axis's zindex above 0 draws it in
-front; its grid follows :grid-zindex when it has one."
-  (let* ((z (lambda (a key) (> (or (plist-get a key) 0) 0)))
-         (grid-front (lambda (a) (funcall z a (if (plist-member a :grid-zindex) :grid-zindex :zindex))))
-         (parts (mapcar (lambda (axis)
-                          (let ((n (seq-count (lambda (tk) (plist-get tk :grid)) (plist-get axis :ticks)))
-                                (nodes (eas-svg--axis axis theme)))
-                            (list axis (seq-take nodes n) (seq-drop nodes n))))
-                        axes)))
-    (append (apply #'append (mapcar (lambda (p) (and (eq (not (funcall grid-front (car p))) (not front)) (nth 1 p)))
-                                    parts))
-            (apply #'append (mapcar (lambda (p) (and (eq (not (funcall z (car p) :zindex)) (not front)) (nth 2 p)))
-                                    parts)))))
+(defun eas-svg--axes (axes theme)
+  "Return the SVG nodes of AXES under THEME as (BEHIND . FRONT).
+BEHIND goes under the marks, FRONT over them.  Every grid lies beneath
+every axis, as Vega-Lite puts the grids in axes of their own ahead of
+the others.  An axis's zindex above 0 draws it in front; its grid
+follows :grid-zindex when it has one."
+  (let ((z (lambda (a key) (> (or (plist-get a key) 0) 0)))
+        grids-back grids-front back front)
+    (seq-doseq (axis axes)
+      (let* ((n (seq-count (lambda (tk) (plist-get tk :grid)) (plist-get axis :ticks)))
+             (nodes (eas-svg--axis axis theme))
+             (grid (seq-take nodes n)) (rest (seq-drop nodes n)))
+        (if (funcall z axis (if (plist-member axis :grid-zindex) :grid-zindex :zindex))
+            (push grid grids-front)
+          (push grid grids-back))
+        (if (funcall z axis :zindex) (push rest front) (push rest back))))
+    (cl-flet ((join (parts) (apply #'append (nreverse parts))))
+      (cons (append (join grids-back) (join back)) (append (join grids-front) (join front))))))
 
 (defun eas-svg--gradient-id (legend)
   "Stable id of LEGEND's gradient definition."
@@ -415,7 +417,9 @@ front; its grid follows :grid-zindex when it has one."
           children)
     (seq-doseq (view (plist-get scene :views))
       (let* ((b (plist-get view :bounds))
-             (clip (concat "clip-" (replace-regexp-in-string "[^A-Za-z0-9_-]" "_" (plist-get view :id)))))
+             (clip (concat "clip-" (replace-regexp-in-string "[^A-Za-z0-9_-]" "_" (plist-get view :id))))
+             ;; (BEHIND . FRONT): axes draw on either side of the marks.
+             (axes (eas-svg--axes (plist-get view :axes) theme)))
         (push (append (eas-svg--node 'clipPath :id clip)
                       (list (eas-svg--node 'rect :x (aref b 0) :y (aref b 1) :width (aref b 2) :height (aref b 3))))
               defs)
@@ -430,7 +434,7 @@ front; its grid follows :grid-zindex when it has one."
                                  :stroke-opacity (plist-get vc :strokeOpacity))
                   children)))
         ;; An axis with zindex above 0 draws over the marks.
-        (setq children (append (reverse (eas-svg--axes (plist-get view :axes) theme nil)) children))
+        (setq children (append (reverse (car axes)) children))
         (when-let* ((h (plist-get view :header)))
           (push (eas-svg--text (plist-get h :text) (plist-get h :x) (plist-get h :y) (plist-get h :fontSize)
                                :align (plist-get h :align) :baseline (plist-get h :baseline)
@@ -447,7 +451,7 @@ front; its grid follows :grid-zindex when it has one."
                                                         (plist-get mark :items))))
                                     (plist-get view :marks))))
               children)
-        (setq children (append (reverse (eas-svg--axes (plist-get view :axes) theme t)) children))
+        (setq children (append (reverse (cdr axes)) children))
         (seq-doseq (legend (plist-get view :legends))
           (when (plist-get legend :bar) (push (eas-svg--gradient-def legend) defs))
           (setq children (append (reverse (eas-svg--legend legend theme)) children)))))

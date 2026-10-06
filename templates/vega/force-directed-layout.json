@@ -6,67 +6,263 @@
     "version": "1.0.0",
     "doc": "A node-link diagram laid out by a force simulation (center, collide, nbody and link forces); drag a node to pin it.",
     "slots": {
-      "nodes": {"shape": "plist", "required": true, "doc": "one row per node; links name nodes by their position here (or by the id slot's field)"},
-      "links": {"shape": "plist", "required": true, "doc": "one row per link with source and target node references"},
-      "id": {"type": "field", "of": "nodes", "default": null, "doc": "node field that links refer to; null means the node's position in nodes"},
-      "group": {"type": "field", "of": "nodes", "default": "group", "doc": "node field colored by category"},
-      "label": {"type": "field", "of": "nodes", "default": "name", "doc": "node field shown in the tooltip"},
-      "nodeRadius": {"type": "number", "default": 8, "doc": "node radius in pixels; also the collision radius"},
-      "nodeSize": {"type": "number", "default": 128, "doc": "node symbol area in square pixels (2 * nodeRadius^2 in the Vega example)"},
-      "nodeCharge": {"type": "number", "default": -30, "doc": "many-body strength: negative repels"},
-      "linkDistance": {"type": "number", "default": 30, "doc": "rest length of a link in pixels"},
-      "iterations": {"type": "number", "default": 300, "doc": "simulation ticks run for the static layout"},
-      "width": {"type": "number", "default": 700},
-      "height": {"type": "number", "default": 500},
-      "scheme": {"type": "string", "default": "category20c"},
-      "description": {"type": "string", "default": "A node-link diagram with force-directed layout, depicting character co-occurrence in the novel Les Misérables."}
+      "nodes": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per node; links name nodes by their position here (or by the id slot's field)"
+      },
+      "links": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per link with source and target node references"
+      },
+      "id": {
+        "type": "field",
+        "of": "nodes",
+        "default": null,
+        "doc": "node field that links refer to; null means the node's position in nodes"
+      },
+      "group": {
+        "type": "field",
+        "of": "nodes",
+        "default": "group",
+        "doc": "node field colored by category"
+      },
+      "label": {
+        "type": "field",
+        "of": "nodes",
+        "default": "name",
+        "doc": "node field shown in the tooltip"
+      },
+      "nodeRadius": {
+        "type": "number",
+        "default": 8,
+        "doc": "node radius in pixels; also the collision radius"
+      },
+      "nodeSize": {
+        "type": "number",
+        "default": 128,
+        "doc": "node symbol area in square pixels (2 * nodeRadius^2 in the Vega example)"
+      },
+      "nodeCharge": {
+        "type": "number",
+        "default": -30,
+        "doc": "many-body strength: negative repels"
+      },
+      "linkDistance": {
+        "type": "number",
+        "default": 30,
+        "doc": "rest length of a link in pixels"
+      },
+      "iterations": {
+        "type": "number",
+        "default": 300,
+        "doc": "simulation ticks run for the static layout"
+      },
+      "width": {
+        "type": "number",
+        "default": 700
+      },
+      "height": {
+        "type": "number",
+        "default": 500
+      },
+      "scheme": {
+        "type": "string",
+        "default": "category20c"
+      },
+      "description": {
+        "type": "string",
+        "default": "A node-link diagram with force-directed layout, depicting character co-occurrence in the novel Les Misérables."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
+      }
     },
     "example": "../examples/vega/force-directed-layout.data.json",
-    "interaction": {"force-drag": {"slot": "nodes"}},
-    "vega": {"status": "pass", "ratio": 0.0001, "offset": [0, 0], "note": "The d3-force port lays the graph out exactly as Vega (0.01% of pixels differ at offset [0, 0]). Links are rule marks; dragging a node pins it and reruns the simulation (eas-force-drag.el). Vega's radius, charge and distance sliders are the nodeRadius, nodeCharge and linkDistance slots."}
+    "interaction": {
+      "force-drag": {
+        "slot": "nodes"
+      }
+    },
+    "vega": {
+      "status": "pass",
+      "ratio": 0.0001,
+      "offset": [
+        0,
+        0
+      ],
+      "note": "The d3-force port lays the graph out exactly as Vega (0.01% of pixels differ at offset [0, 0]). Links are rule marks; dragging a node pins it and reruns the simulation (eas-force-drag.el). Vega's radius, charge and distance sliders are the nodeRadius, nodeCharge and linkDistance slots."
+    }
   },
-  "description": {"x-eas:slot": "description"},
-  "width": {"x-eas:slot": "width"},
-  "height": {"x-eas:slot": "height"},
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
   "padding": 0,
   "autosize": "none",
   "background": "white",
-  "config": {"view": {"stroke": null}},
-  "data": {"name": "nodes"},
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "data": {
+    "name": "nodes"
+  },
   "transform": [
     {
       "x-eas:transform": "force",
-      "iterations": {"x-eas:slot": "iterations"},
+      "iterations": {
+        "x-eas:slot": "iterations"
+      },
       "output": "both",
       "forces": [
-        {"force": "center", "x": {"expr": {"x-eas:expr": "{{width}} / 2"}}, "y": {"expr": {"x-eas:expr": "{{height}} / 2"}}},
-        {"force": "collide", "radius": {"x-eas:slot": "nodeRadius"}},
-        {"force": "nbody", "strength": {"x-eas:slot": "nodeCharge"}},
-        {"force": "link", "links": {"x-eas:slot": "links"}, "id": {"x-eas:slot": "id"}, "distance": {"x-eas:slot": "linkDistance"}}
+        {
+          "force": "center",
+          "x": {
+            "expr": {
+              "x-eas:expr": "{{width}} / 2"
+            }
+          },
+          "y": {
+            "expr": {
+              "x-eas:expr": "{{height}} / 2"
+            }
+          }
+        },
+        {
+          "force": "collide",
+          "radius": {
+            "x-eas:slot": "nodeRadius"
+          }
+        },
+        {
+          "force": "nbody",
+          "strength": {
+            "x-eas:slot": "nodeCharge"
+          }
+        },
+        {
+          "force": "link",
+          "links": {
+            "x-eas:slot": "links"
+          },
+          "id": {
+            "x-eas:slot": "id"
+          },
+          "distance": {
+            "x-eas:slot": "linkDistance"
+          }
+        }
       ]
     }
   ],
   "encoding": {
-    "x": {"field": "x", "type": "quantitative", "axis": null,
-          "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
-    "y": {"field": "y", "type": "quantitative", "axis": null,
-          "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}}
+    "x": {
+      "field": "x",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {
+        "domain": [
+          0,
+          {
+            "x-eas:slot": "width"
+          }
+        ],
+        "nice": false,
+        "zero": false
+      }
+    },
+    "y": {
+      "field": "y",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {
+        "domain": [
+          {
+            "x-eas:slot": "height"
+          },
+          0
+        ],
+        "nice": false,
+        "zero": false
+      }
+    }
   },
   "layer": [
     {
-      "transform": [{"filter": "datum.eas_kind === 'link'"}],
-      "mark": {"type": "rule", "stroke": "#ccc", "strokeWidth": 0.5},
-      "encoding": {"x2": {"field": "x2"}, "y2": {"field": "y2"}}
+      "transform": [
+        {
+          "filter": "datum.eas_kind === 'link'"
+        }
+      ],
+      "mark": {
+        "type": "rule",
+        "stroke": "#ccc",
+        "strokeWidth": 0.5
+      },
+      "encoding": {
+        "x2": {
+          "field": "x2"
+        },
+        "y2": {
+          "field": "y2"
+        }
+      }
     },
     {
-      "transform": [{"filter": "datum.eas_kind === 'node'"}],
-      "mark": {"type": "circle", "opacity": 1, "stroke": "white", "strokeWidth": 1, "size": {"x-eas:slot": "nodeSize"}},
+      "transform": [
+        {
+          "filter": "datum.eas_kind === 'node'"
+        }
+      ],
+      "mark": {
+        "type": "circle",
+        "opacity": 1,
+        "stroke": "white",
+        "strokeWidth": 1,
+        "size": {
+          "x-eas:slot": "nodeSize"
+        }
+      },
       "encoding": {
-        "color": {"field": {"x-eas:slot": "group"}, "type": "nominal", "sort": null,
-                  "scale": {"scheme": {"x-eas:slot": "scheme"}}, "legend": null},
+        "color": {
+          "field": {
+            "x-eas:slot": "group"
+          },
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "scheme": {
+              "x-eas:slot": "scheme"
+            }
+          },
+          "legend": null
+        },
         "tooltip": [
-          {"field": {"x-eas:slot": "label"}, "type": "nominal"},
-          {"field": {"x-eas:slot": "group"}, "type": "nominal"}
+          {
+            "field": {
+              "x-eas:slot": "label"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "group"
+            },
+            "type": "nominal"
+          }
         ]
       }
     }

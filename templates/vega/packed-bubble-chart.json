@@ -6,71 +6,283 @@
     "version": "1.0.0",
     "doc": "Packed bubbles: one labeled circle per row, its area proportional to a value, packed together by center, x, y and collision forces.",
     "slots": {
-      "data": {"shape": "plist", "required": true, "doc": "one row per bubble"},
-      "category": {"type": "field", "of": "data", "default": "category", "doc": "field naming (and coloring) each bubble"},
-      "amount": {"type": "field", "of": "data", "default": "amount", "doc": "field the bubble's area is proportional to"},
-      "maxSize": {"type": "number", "default": 10000, "doc": "area in square pixels of the largest amount"},
-      "gravityX": {"type": "number", "default": 0.2},
-      "gravityY": {"type": "number", "default": 0.1},
-      "collide": {"type": "number", "default": 2, "doc": "collision passes per tick"},
-      "iterations": {"type": "number", "default": 300, "doc": "simulation ticks run for the static layout"},
-      "width": {"type": "number", "default": 800},
-      "height": {"type": "number", "default": 500},
-      "scheme": {"type": "string", "default": "blues"},
-      "fontSize": {"type": "number", "default": 15},
-      "description": {"type": "string", "default": "A packed bubble chart."}
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per bubble"
+      },
+      "category": {
+        "type": "field",
+        "of": "data",
+        "default": "category",
+        "doc": "field naming (and coloring) each bubble"
+      },
+      "amount": {
+        "type": "field",
+        "of": "data",
+        "default": "amount",
+        "doc": "field the bubble's area is proportional to"
+      },
+      "maxSize": {
+        "type": "number",
+        "default": 10000,
+        "doc": "area in square pixels of the largest amount"
+      },
+      "gravityX": {
+        "type": "number",
+        "default": 0.2
+      },
+      "gravityY": {
+        "type": "number",
+        "default": 0.1
+      },
+      "collide": {
+        "type": "number",
+        "default": 2,
+        "doc": "collision passes per tick"
+      },
+      "iterations": {
+        "type": "number",
+        "default": 300,
+        "doc": "simulation ticks run for the static layout"
+      },
+      "width": {
+        "type": "number",
+        "default": 800
+      },
+      "height": {
+        "type": "number",
+        "default": 500
+      },
+      "scheme": {
+        "type": "string",
+        "default": "blues"
+      },
+      "fontSize": {
+        "type": "number",
+        "default": 15
+      },
+      "description": {
+        "type": "string",
+        "default": "A packed bubble chart."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
+      }
     },
     "example": "../examples/vega/packed-bubble-chart.data.json",
-    "vega": {"status": "pass", "ratio": 0.0012, "offset": [5, 20], "note": "0.12% of pixels differ at offset [5, 20] (Vega's left and top padding). The Vega example's force is not static, so its reference is the first frame, after one tick: the example binding sets iterations to 1; the template's default, 300, draws the settled packing."}
+    "vega": {
+      "status": "pass",
+      "ratio": 0.0012,
+      "offset": [
+        5,
+        20
+      ],
+      "note": "0.12% of pixels differ at offset [5, 20] (Vega's left and top padding). The Vega example's force is not static, so its reference is the first frame, after one tick: the example binding sets iterations to 1; the template's default, 300, draws the settled packing."
+    }
   },
-  "description": {"x-eas:slot": "description"},
-  "width": {"x-eas:slot": "width"},
-  "height": {"x-eas:slot": "height"},
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
   "padding": 0,
   "autosize": "none",
   "background": "white",
-  "config": {"view": {"stroke": null}},
-  "data": {"name": "data"},
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "data": {
+    "name": "data"
+  },
   "transform": [
     {
       "x-eas:transform": "force",
-      "iterations": {"x-eas:slot": "iterations"},
+      "iterations": {
+        "x-eas:slot": "iterations"
+      },
       "transform": [
-        {"joinaggregate": [{"op": "max", "field": {"x-eas:slot": "amount"}, "as": "eas_max"}]},
-        {"calculate": {"x-eas:expr": "{{maxSize}} * datum[{{amount}}] / datum.eas_max"}, "as": "eas_size"}
+        {
+          "joinaggregate": [
+            {
+              "op": "max",
+              "field": {
+                "x-eas:slot": "amount"
+              },
+              "as": "eas_max"
+            }
+          ]
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{maxSize}} * datum[{{amount}}] / datum.eas_max"
+          },
+          "as": "eas_size"
+        }
       ],
       "forces": [
-        {"force": "collide", "iterations": {"x-eas:slot": "collide"}, "radius": {"expr": "sqrt(datum.eas_size) / 2"}},
-        {"force": "center", "x": {"expr": {"x-eas:expr": "{{width}} / 2"}}, "y": {"expr": {"x-eas:expr": "{{height}} / 2"}}},
-        {"force": "x", "x": {"expr": {"x-eas:expr": "{{width}} / 2"}}, "strength": {"x-eas:slot": "gravityX"}},
-        {"force": "y", "y": {"expr": {"x-eas:expr": "{{height}} / 2"}}, "strength": {"x-eas:slot": "gravityY"}}
+        {
+          "force": "collide",
+          "iterations": {
+            "x-eas:slot": "collide"
+          },
+          "radius": {
+            "expr": "sqrt(datum.eas_size) / 2"
+          }
+        },
+        {
+          "force": "center",
+          "x": {
+            "expr": {
+              "x-eas:expr": "{{width}} / 2"
+            }
+          },
+          "y": {
+            "expr": {
+              "x-eas:expr": "{{height}} / 2"
+            }
+          }
+        },
+        {
+          "force": "x",
+          "x": {
+            "expr": {
+              "x-eas:expr": "{{width}} / 2"
+            }
+          },
+          "strength": {
+            "x-eas:slot": "gravityX"
+          }
+        },
+        {
+          "force": "y",
+          "y": {
+            "expr": {
+              "x-eas:expr": "{{height}} / 2"
+            }
+          },
+          "strength": {
+            "x-eas:slot": "gravityY"
+          }
+        }
       ]
     }
   ],
   "encoding": {
-    "x": {"field": "x", "type": "quantitative", "axis": null,
-          "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
-    "y": {"field": "y", "type": "quantitative", "axis": null,
-          "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}}
+    "x": {
+      "field": "x",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {
+        "domain": [
+          0,
+          {
+            "x-eas:slot": "width"
+          }
+        ],
+        "nice": false,
+        "zero": false
+      }
+    },
+    "y": {
+      "field": "y",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {
+        "domain": [
+          {
+            "x-eas:slot": "height"
+          },
+          0
+        ],
+        "nice": false,
+        "zero": false
+      }
+    }
   },
   "layer": [
     {
-      "mark": {"type": "circle", "opacity": 1, "stroke": "white", "strokeWidth": 1},
+      "mark": {
+        "type": "circle",
+        "opacity": 1,
+        "stroke": "white",
+        "strokeWidth": 1
+      },
       "encoding": {
-        "size": {"field": "eas_size", "type": "quantitative", "legend": null,
-                 "scale": {"domain": [0, 1000000], "range": [0, 1000000], "zero": true}},
-        "color": {"field": {"x-eas:slot": "category"}, "type": "ordinal",
-                  "scale": {"scheme": {"x-eas:slot": "scheme"}}, "legend": null},
+        "size": {
+          "field": "eas_size",
+          "type": "quantitative",
+          "legend": null,
+          "scale": {
+            "domain": [
+              0,
+              1000000
+            ],
+            "range": [
+              0,
+              1000000
+            ],
+            "zero": true
+          }
+        },
+        "color": {
+          "field": {
+            "x-eas:slot": "category"
+          },
+          "type": "ordinal",
+          "scale": {
+            "scheme": {
+              "x-eas:slot": "scheme"
+            }
+          },
+          "legend": null
+        },
         "tooltip": [
-          {"field": {"x-eas:slot": "category"}, "type": "nominal"},
-          {"field": {"x-eas:slot": "amount"}, "type": "quantitative"}
+          {
+            "field": {
+              "x-eas:slot": "category"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "amount"
+            },
+            "type": "quantitative"
+          }
         ]
       }
     },
     {
-      "mark": {"type": "text", "align": "center", "baseline": "middle", "fontWeight": "bold",
-               "fill": "white", "fontSize": {"x-eas:slot": "fontSize"}},
-      "encoding": {"text": {"field": {"x-eas:slot": "category"}, "type": "nominal"}}
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "middle",
+        "fontWeight": "bold",
+        "fill": "white",
+        "fontSize": {
+          "x-eas:slot": "fontSize"
+        }
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "category"
+          },
+          "type": "nominal"
+        }
+      }
     }
   ]
 }

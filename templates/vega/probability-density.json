@@ -45,15 +45,17 @@
         "x": {"field": "value", "type": "quantitative", "title": null, "scale": {"domain": {"x-eas:slot": "extent"}}}
       },
       "layer": [
-        {"mark": {"type": "area"},
+        {"transform": [{"calculate": {"x-eas:expr": "{{kde_label}}"}, "as": "series"}],
+         "mark": {"type": "area"},
          "encoding": {"y": {"field": "density", "type": "quantitative", "title": null, "axis": null, "scale": {"nice": false}},
-                      "color": {"datum": {"x-eas:slot": "kde_label"}, "type": "nominal", "title": null,
+                      "color": {"field": "series", "type": "nominal", "title": null,
                                 "scale": {"domain": [{"x-eas:slot": "normal_label"}, {"x-eas:slot": "kde_label"}],
                                           "range": [{"x-eas:slot": "normal_color"}, {"x-eas:slot": "color"}]},
                                 "legend": {"orient": "top-left", "offset": 0, "symbolType": "circle"}}}},
-        {"mark": {"type": "line", "strokeWidth": 2},
+        {"transform": [{"calculate": {"x-eas:expr": "{{normal_label}}"}, "as": "series"}],
+         "mark": {"type": "line", "strokeWidth": 2},
          "encoding": {"y": {"field": "normal", "type": "quantitative"},
-                      "color": {"datum": {"x-eas:slot": "normal_label"}, "type": "nominal", "title": null,
+                      "color": {"field": "series", "type": "nominal", "title": null,
                                 "scale": {"domain": [{"x-eas:slot": "normal_label"}, {"x-eas:slot": "kde_label"}],
                                           "range": [{"x-eas:slot": "normal_color"}, {"x-eas:slot": "color"}]},
                                 "legend": {"orient": "top-left", "offset": 0, "symbolType": "circle"}}}}

@@ -53,7 +53,8 @@
 (defun eas-spec-props-lower--map-legends (spec fn)
   "SPEC with FN applied to every legend-drawing channel definition."
   (let ((out (copy-sequence spec)))
-    (when (eas-object-p (plist-get out :encoding))
+    ;; A spec without encoding (a concat) keeps none: nil is an empty object.
+    (when (and (plist-get out :encoding) (eas-object-p (plist-get out :encoding)))
       (let ((enc (copy-sequence (plist-get out :encoding))))
         (dolist (ch eas-spec-props-lower--legend-channels)
           (let ((def (plist-get enc ch)))

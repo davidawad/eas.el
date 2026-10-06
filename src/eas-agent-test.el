@@ -17,7 +17,7 @@
   "Points with an x brush, as JSON (what an agent sends).")
 
 (defconst eas-agent-test--unsupported-spec
-  "{\"mark\":\"geoshape\",\"data\":{\"values\":[{\"a\":1}]},\"encoding\":{\"latitude\":{\"field\":\"a\",\"type\":\"quantitative\"}}}"
+  "{\"mark\":\"geoshape\",\"projection\":{\"type\":\"identity\"},\"data\":{\"values\":[{\"a\":1}]},\"encoding\":{\"latitude\":{\"field\":\"a\",\"type\":\"quantitative\"}}}"
   "A spec outside the native subset.")
 
 (defun eas-agent-test--bindings ()
@@ -133,7 +133,7 @@
   (let* ((env (eas-agent "check" eas-agent-test--unsupported-spec))
          (data (eas-agent-test--ok env)))
     (should (eq (plist-get data :native) :false))
-    (should (equal (plist-get (aref (plist-get data :warnings) 0) :path) "/mark"))
+    (should (equal (plist-get (aref (plist-get data :warnings) 0) :path) "/projection"))
     (should (seq-find (lambda (c) (string-match-p "export .* --vl" c)) (plist-get env :next)))))
 
 (ert-deftest eas-agent-render-text-is-the-engine-text-deterministically ()

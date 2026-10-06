@@ -128,9 +128,9 @@
 
 (ert-deftest eas-compile-unsupported-and-unresolved-fail-as-data ()
   (should (equal (plist-get (eas-test-should-code "UNSUPPORTED_FEATURE"
-                              (eas-compile '(:data (:values []) :mark "geoshape")))
+                              (eas-compile '(:data (:values []) :mark "geoshape" :projection (:type "identity"))))
                             :path)
-                 "/mark"))
+                 "/projection"))
   (eas-test-should-code "INVALID_INPUT" (eas-compile '(:data (:name "bars") :mark "bar")))
   (eas-test-should-code "NOT_FOUND" (eas-compile '(:data (:url "no-such-file.csv") :mark "bar")))
   (eas-test-should-code "UNSUPPORTED_FEATURE" (eas-compile '(:data (:url "https://example.com/x.csv") :mark "bar")))

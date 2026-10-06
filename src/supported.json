@@ -205,6 +205,10 @@
       "oracle": "verified",
       "specs": ["distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev"]
     },
+    "mark/geoshape": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map", "vega/county-unemployment", "vega/earthquakes", "vega/projections", "vega/zoomable-world-map", "vega/distortion-comparison", "vega/map-with-tooltip", "vega/earthquakes-globe"]
+    },
     "mark/image": {
       "oracle": "verified",
       "specs": ["scatter-table/scatter_image"]
@@ -253,13 +257,149 @@
       "oracle": "verified",
       "specs": ["param-value", "interactive/dynamic_color_legend", "interactive/param_search_input"]
     },
+    "projection/airy": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/aitoff": {
+      "oracle": "unverified",
+      "specs": ["eas-vega-geo-test"]
+    },
+    "projection/albers": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map"]
+    },
     "projection/albersUsa": {
       "oracle": "verified",
       "specs": ["multiview/geo_circle"]
     },
+    "projection/armadillo": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/azimuthalEqualArea": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map", "vega/distortion-comparison"]
+    },
+    "projection/azimuthalEquidistant": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map", "vega/projections"]
+    },
+    "projection/baker": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/berghaus": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/bottomley": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/collignon": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/conicConformal": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map", "vega/projections"]
+    },
+    "projection/conicEqualArea": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map"]
+    },
+    "projection/conicEquidistant": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map"]
+    },
+    "projection/eckert1": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
     "projection/equalEarth": {
       "oracle": "verified",
       "specs": ["scatter-table/point_angle_windvector"]
+    },
+    "projection/equirectangular": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map"]
+    },
+    "projection/gnomonic": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map", "vega/projections"]
+    },
+    "projection/guyou": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/hammer": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/interruptedMollweide": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/interruptedMollweideHemispheres": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/interruptedSinusoidal": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/littrow": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/mercator": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map", "vega/projections", "vega/zoomable-world-map", "vega/map-with-tooltip", "vega/distortion-comparison"]
+    },
+    "projection/mollweide": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/naturalEarth1": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map"]
+    },
+    "projection/orthographic": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map", "vega/earthquakes", "vega/earthquakes-globe"]
+    },
+    "projection/peirceQuincuncial": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/polyhedralButterfly": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/sinusoidal": {
+      "oracle": "unverified",
+      "specs": ["eas-vega-geo-test"]
+    },
+    "projection/stereographic": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map", "vega/projections"]
+    },
+    "projection/transverseMercator": {
+      "oracle": "unverified",
+      "specs": ["vega/world-map"]
+    },
+    "projection/wagner6": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/wiechel": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
+    },
+    "projection/winkel3": {
+      "oracle": "unverified",
+      "specs": ["vega/projections"]
     },
     "scale/band": {
       "oracle": "verified",

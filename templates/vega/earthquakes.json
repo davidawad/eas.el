@@ -1,0 +1,70 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "earthquakes",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Point events on an orthographic globe, sized by magnitude, over country shapes; the globe's rotation and the dot size are bound to inputs.",
+    "slots": {
+      "world": {"shape": "geojson", "required": true, "doc": "country shapes: GeoJSON features, or TopoJSON {\"url\" or \"topology\", \"feature\"}"},
+      "quakes": {"shape": "geojson", "required": true, "doc": "the events: GeoJSON point features or rows (a FeatureCollection, or {\"url\": F})"},
+      "longitude": {"type": "string", "default": "geometry.coordinates[0]", "doc": "path of an event's longitude in its row"},
+      "latitude": {"type": "string", "default": "geometry.coordinates[1]", "doc": "path of an event's latitude in its row"},
+      "magnitude": {"type": "string", "default": "properties.mag", "doc": "path of an event's magnitude in its row"},
+      "quake_size": {"type": "number", "default": 6, "doc": "radius in pixels of a magnitude ln(100) event (the quakeSize input, 0 to 12)"},
+      "rotate0": {"type": "number", "default": 90, "doc": "initial rotation about the poles, degrees"},
+      "rotate1": {"type": "number", "default": -5, "doc": "initial tilt, degrees"},
+      "scale": {"type": "number", "default": 225},
+      "size": {"type": "number", "default": 450, "doc": "width and height"},
+      "ocean": {"type": "string", "default": "aliceblue"},
+      "land": {"type": "string", "default": "mintcream"},
+      "quake_color": {"type": "string", "default": "red"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "An interactive globe depicting earthquake locations and magnitudes.", "doc": "the takeaway; alt text and table-view fallback"}
+    },
+    "example": "../examples/vega/earthquakes.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "native SVG vs ref/earthquakes.png: ratio 0.0131 (resvg), the canvas 3x6 px larger for the quakes overhanging the view; the orthographic projection clips to the visible hemisphere as d3 does; quakes are Vega-Lite circles of area pi r^2 with Vega's pointRadius r = quake_size * sqrt(exp(mag) / 100), and a filter drops those on the far side, which Vega's geoshape clip hides"
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "size"},
+  "height": {"x-eas:slot": "size"},
+  "padding": 10,
+  "background": "white",
+  "params": [
+    {"name": "quakeSize", "value": {"x-eas:slot": "quake_size"}, "bind": {"input": "range", "min": 0, "max": 12}},
+    {"name": "rotate0", "value": {"x-eas:slot": "rotate0"}, "bind": {"input": "range", "min": -180, "max": 180}},
+    {"name": "rotate1", "value": {"x-eas:slot": "rotate1"}, "bind": {"input": "range", "min": -180, "max": 180}}
+  ],
+  "projection": {"type": "orthographic", "scale": {"x-eas:slot": "scale"}, "rotate": {"expr": "[rotate0, rotate1, 0]"}},
+  "layer": [
+    {
+      "data": {"sphere": true},
+      "mark": {"type": "geoshape", "fill": {"x-eas:slot": "ocean"}, "stroke": "black", "strokeWidth": 1.5}
+    },
+    {
+      "data": {"name": "world"},
+      "mark": {"type": "geoshape", "fill": {"x-eas:slot": "land"}, "stroke": "black", "strokeWidth": 0.35}
+    },
+    {
+      "data": {"name": "quakes"},
+      "transform": [
+        {"calculate": {"x-eas:text": "datum.{{longitude}}"}, "as": "lon"},
+        {"calculate": {"x-eas:text": "datum.{{latitude}}"}, "as": "lat"},
+        {"calculate": {"x-eas:text": "datum.{{magnitude}}"}, "as": "mag"},
+        {"filter": "cos((datum.lon + rotate0) * PI / 180) * cos(datum.lat * PI / 180) * cos(rotate1 * PI / 180) - sin(datum.lat * PI / 180) * sin(rotate1 * PI / 180) > 0"},
+        {"calculate": "PI * pow(quakeSize * sqrt(exp(datum.mag) / 100), 2)", "as": "area"}
+      ],
+      "mark": {"type": "circle", "color": {"x-eas:slot": "quake_color"}, "opacity": 0.25},
+      "encoding": {
+        "longitude": {"field": "lon", "type": "quantitative"},
+        "latitude": {"field": "lat", "type": "quantitative"},
+        "size": {"field": "area", "type": "quantitative", "scale": {"type": "linear", "domain": [0, 1], "range": [0, 1]}, "legend": null},
+        "tooltip": [{"field": "mag", "type": "quantitative", "title": "magnitude"}]
+      }
+    }
+  ]
+}

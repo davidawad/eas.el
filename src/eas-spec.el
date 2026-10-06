@@ -46,7 +46,9 @@
     "errorbar" "errorband"
     "trail" "image"
     ;; composite, expanded by eas-composite-boxplot.el (fc-qx1.49)
-    "boxplot")
+    "boxplot"
+    ;; maps, drawn by eas-geoshape.el (eas-7r1.6)
+    "geoshape")
   "Mark types chart/v1 recognises.")
 
 (defconst eas-spec--mark-keys
@@ -259,8 +261,10 @@ come back as (:invalid MESSAGE :path P)."
                (when (plist-get view :mark) (walk-mark (plist-get view :mark) path))
                (when-let* ((proj (plist-get view :projection)))
                  (let ((type (or (and (eas-object-p proj) (plist-get proj :type)) "equalEarth")))
-                   (add (concat "projection/" type) (concat path "/projection")
-                        :unknown (not (member type eas-spec--projections)))))
+                   ;; A type given as {"expr": ...} is checked once evaluated (eas-geoshape.el).
+                   (when (stringp type)
+                     (add (concat "projection/" type) (concat path "/projection")
+                          :unknown (not (member type eas-spec--projections))))))
                (unless (or composite (plist-get view :mark))
                  (bad "A view needs a mark, or a layer, vconcat or hconcat" path)))
              (walk-encoding (plist-get view :encoding) (concat path "/encoding"))

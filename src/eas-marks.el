@@ -577,6 +577,7 @@ Call it inside `eas-marks-with-cache'."
   `(let ((eas-marks--cache (make-hash-table :test 'equal))) ,@body))
 
 (declare-function eas-polar-unit-p "eas-polar")
+(declare-function eas-geoshape-items "eas-geoshape")
 (declare-function eas-polar-items "eas-polar")
 
 (defun eas-marks--items (unit scales bounds metrics)
@@ -587,6 +588,7 @@ The builder draws with SCALES inside BOUNDS under METRICS."
      (eas-polar-items unit scales bounds metrics))
     ((or "point" "circle" "square" "text" "bar" "rect" "rule" "tick" "image")
      (eas-marks--each unit (eas-marks-row-fn unit scales bounds metrics)))
+    ("geoshape" (eas-geoshape-items unit scales bounds metrics))
     ((or "line" "area" "trail")
      (eas-marks--series-items unit scales bounds
                                 (max 3 (round (* (aref bounds 2)

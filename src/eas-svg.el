@@ -220,6 +220,8 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                (if (and sw (> r 0)) (plist-put (copy-sequence attrs) :stroke-width (/ sw r)) attrs))))
      (t (apply #'eas-svg--node 'circle :cx x :cy y :r r attrs)))))
 
+(declare-function eas-geoshape-svg "eas-geoshape-render")
+
 (defun eas-svg--item (mark item)
   "SVG node for ITEM of MARK."
   (let ((fill (eas-paint-svg-fill item)) (stroke (plist-get item :stroke))
@@ -243,6 +245,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
       ((or "rule" "tick")
        (eas-svg--line (vector (plist-get item :x1) (plist-get item :y1) (plist-get item :x2) (plist-get item :y2))
                         stroke (plist-get item :strokeWidth) opacity (plist-get item :strokeDash) (plist-get item :strokeCap)))
+      ("geoshape" (eas-geoshape-svg item fill stroke opacity))
       ("arc" (eas-mark-style-svg
               (eas-svg--node 'path :d (eas-arc-path item) :fill fill
                              :stroke (unless (equal stroke "none") stroke)

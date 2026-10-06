@@ -1,0 +1,57 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "county-unemployment",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A choropleth: each shape filled by a value joined from a table by key, on a quantized blue scale (albersUsa by default).",
+    "slots": {
+      "shapes": {"shape": "geojson", "required": true, "doc": "the regions: GeoJSON features, or TopoJSON {\"url\" or \"topology\", \"feature\"}"},
+      "rates": {"shape": "tsv", "required": true, "doc": "the values: a tab-separated table (text, or {\"file\": F}) with a key and a value column"},
+      "shape_key": {"type": "string", "default": "id", "doc": "the shapes' key field (a feature's id)"},
+      "rates_key": {"type": "field", "of": "rates", "default": "id", "doc": "the table's key column"},
+      "value": {"type": "field", "of": "rates", "default": "rate", "doc": "the table's value column"},
+      "domain": {"type": "array", "items": "number", "default": [0, 0.15], "doc": "the value range the colors split"},
+      "colors": {"type": "integer", "default": 7, "doc": "how many blues"},
+      "scheme": {"type": "string", "default": "blues"},
+      "format": {"type": "string", "default": ".1%", "doc": "legend and tooltip number format"},
+      "legend_title": {"type": "string", "default": "Unemployment"},
+      "projection": {"type": "object", "default": {"type": "albersUsa", "scale": 1070, "translate": [480, 250]}, "doc": "the Vega-Lite projection; without scale and translate it fits the shapes"},
+      "hover": {"type": "string", "default": "red", "doc": "fill of the shape under the pointer"},
+      "width": {"type": "number", "default": 960},
+      "height": {"type": "number", "default": 500},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "A choropleth map depicting U.S. unemployment rates by county in 2009.", "doc": "the takeaway; alt text and table-view fallback"}
+    },
+    "example": "../examples/vega/county-unemployment.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "native SVG vs ref/county-unemployment.png: ratio 0.0165 at 960x500 (resvg); albersUsa is d3's composite (lower 48, Alaska, Hawaii insets) and its paths equal d3-geo's; the hovered county turns red through a mouseover selection"
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": 0,
+  "background": "white",
+  "data": {"name": "shapes"},
+  "transform": [
+    {"lookup": {"x-eas:slot": "shape_key"},
+     "from": {"data": {"name": "rates"}, "key": {"x-eas:slot": "rates_key"}, "fields": [{"x-eas:slot": "value"}]}},
+    {"filter": {"x-eas:expr": "isValid(datum[{{value}}])"}}
+  ],
+  "projection": {"x-eas:slot": "projection"},
+  "params": [{"name": "hover", "select": {"type": "point", "on": "mouseover", "clear": "mouseout"}}],
+  "mark": {"type": "geoshape"},
+  "encoding": {
+    "fill": {
+      "condition": {"param": "hover", "empty": false, "value": {"x-eas:slot": "hover"}},
+      "field": {"x-eas:slot": "value"}, "type": "quantitative",
+      "scale": {"type": "quantize", "domain": {"x-eas:slot": "domain"},
+                "scheme": {"name": {"x-eas:slot": "scheme"}, "count": {"x-eas:slot": "colors"}}},
+      "legend": {"orient": "bottom-right", "title": {"x-eas:slot": "legend_title"}, "format": {"x-eas:slot": "format"}}
+    },
+    "tooltip": [{"field": {"x-eas:slot": "value"}, "type": "quantitative", "format": {"x-eas:slot": "format"}}]
+  }
+}

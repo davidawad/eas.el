@@ -1,0 +1,82 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "distortion-comparison",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Area distortion between two projections: a circle per feature at its centroid under the base projection, one sized by its projected area under each projection, over the base projection's graticule.",
+    "slots": {
+      "world": {"shape": "geojson", "required": true, "doc": "the features: GeoJSON features, or TopoJSON {\"url\" or \"topology\", \"feature\"}"},
+      "base": {"enum": ["albers", "albersUsa", "azimuthalEqualArea", "azimuthalEquidistant", "conicConformal", "conicEqualArea", "conicEquidistant", "equalEarth", "equirectangular", "gnomonic", "mercator", "naturalEarth1", "orthographic", "stereographic", "transverseMercator"], "default": "azimuthalEqualArea", "doc": "the base projection: centroids, graticule and the base areas"},
+      "alt": {"enum": ["albers", "albersUsa", "azimuthalEqualArea", "azimuthalEquidistant", "conicConformal", "conicEqualArea", "conicEquidistant", "equalEarth", "equirectangular", "gnomonic", "mercator", "naturalEarth1", "orthographic", "stereographic", "transverseMercator"], "default": "mercator", "doc": "the projection compared with it"},
+      "scale": {"type": "number", "default": 150, "doc": "both projections' scale"},
+      "base_color": {"type": "string", "default": "#bb8800"},
+      "alt_color": {"type": "string", "default": "#0088bb"},
+      "opacity": {"type": "number", "default": 0.15, "doc": "circle fill opacity"},
+      "scale_factor": {"type": "number", "default": 1, "doc": "initial circle area multiplier (the scaleFactor input, 0.05 to 2)"},
+      "width": {"type": "number", "default": 900},
+      "height": {"type": "number", "default": 500},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "A map view comparing area distortions between two projections.", "doc": "the takeaway; alt text and table-view fallback"}
+    },
+    "example": "../examples/vega/distortion-comparison.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "native SVG vs ref/distortion-comparison.png: ratio 0.0001 at 900x500 (resvg); Vega's geoCentroid and geoArea with a projection are the x-eas geo-measure transform (eas-geoshape.el), materialized at resolve, so the circles are plain Vega-Lite at pixel positions; scaleFactor stays an input, but the projection selects are slots, since resolve computes the areas once; hover outlines are not drawn"
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": 0,
+  "background": "white",
+  "params": [
+    {"name": "scaleFactor", "value": {"x-eas:slot": "scale_factor"}, "bind": {"input": "range", "min": 0.05, "max": 2, "step": 0.05}}
+  ],
+  "layer": [
+    {
+      "data": {"graticule": true},
+      "projection": {"type": {"x-eas:slot": "base"}, "scale": {"x-eas:slot": "scale"}},
+      "mark": {"type": "geoshape", "stroke": "#ddd", "strokeWidth": 1}
+    },
+    {
+      "data": {"name": "world"},
+      "transform": [
+        {"x-eas:transform": "geo-measure", "projection": {"type": {"x-eas:slot": "base"}, "scale": {"x-eas:slot": "scale"}},
+         "size": [{"x-eas:slot": "width"}, {"x-eas:slot": "height"}], "as": ["cx", "cy", "area1"]},
+        {"x-eas:transform": "geo-measure", "projection": {"type": {"x-eas:slot": "alt"}, "scale": {"x-eas:slot": "scale"}},
+         "size": [{"x-eas:slot": "width"}, {"x-eas:slot": "height"}], "as": ["cx2", "cy2", "area2"]},
+        {"filter": "isValid(datum.cx)"}
+      ],
+      "encoding": {
+        "x": {"field": "cx", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+        "y": {"field": "cy", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}}
+      },
+      "layer": [
+        {
+          "transform": [{"calculate": "datum.area2 * scaleFactor", "as": "size"}],
+          "mark": {"type": "circle", "clip": true, "opacity": 1, "fill": {"x-eas:slot": "alt_color"}, "fillOpacity": {"x-eas:slot": "opacity"},
+                   "stroke": "#bbb", "strokeWidth": 1},
+          "encoding": {
+            "size": {"field": "size", "type": "quantitative", "legend": null,
+                     "scale": {"type": "linear", "domain": [0, 1], "range": [0, 1]}},
+            "tooltip": [{"field": "id", "type": "nominal"}, {"field": "area2", "type": "quantitative", "format": ",.0f", "title": "area (alt)"}]
+          }
+        },
+        {
+          "transform": [{"calculate": "datum.area1 * scaleFactor", "as": "size"}],
+          "mark": {"type": "circle", "clip": true, "opacity": 1, "fill": {"x-eas:slot": "base_color"}, "fillOpacity": {"x-eas:slot": "opacity"},
+                   "stroke": "#bbb", "strokeWidth": 1},
+          "encoding": {
+            "size": {"field": "size", "type": "quantitative", "legend": null,
+                     "scale": {"type": "linear", "domain": [0, 1], "range": [0, 1]}},
+            "tooltip": [{"field": "id", "type": "nominal"}, {"field": "area1", "type": "quantitative", "format": ",.0f", "title": "area (base)"}]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -18,8 +18,8 @@
 ;; Native: points, circles, squares, text, rules without x2/y2 and the
 ;; other point-placed marks, under equalEarth, mercator or
 ;; equirectangular with no other projection property.  Geoshapes,
-;; longitude2/latitude2, topojson and projection parameters (scale,
-;; rotate, center, ...) stay unsupported (eas-spec-props.el reports them).
+;; topojson and projection parameters (scale, rotate, center, ...) are
+;; eas-geoshape.el's; longitude2/latitude2 stay unsupported.
 
 ;;; Code:
 
@@ -112,11 +112,14 @@ placed on projected x and y."
                                                         (plist-get out k)))))))
     out))
 
+(declare-function eas-geoshape-group-p "eas-geoshape")
+
 (defun eas-projection-view-p (group)
   "Non-nil when GROUP draws projected positions (this file's or eas-geo's).
 Vega-Lite styles such a view \"view\", not \"cell\": config.view's fill
 and frame stroke do not paint it."
-  (member (plist-get (plist-get (plist-get group :scales) :x) :field) (list eas-projection--x "x_projected")))
+  (or (member (plist-get (plist-get (plist-get group :scales) :x) :field) (list eas-projection--x "x_projected"))
+      (and (fboundp 'eas-geoshape-group-p) (eas-geoshape-group-p group))))
 
 (defun eas-projection--fit (scale lo hi)
   "SCALE with domain [LO HI], keeping its range."

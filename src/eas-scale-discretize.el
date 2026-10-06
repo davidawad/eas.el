@@ -83,6 +83,11 @@ the mark, for the size range's ends."
            (hi (if (> (length nums) 0) (aref nums (1- (length nums))) 1))
            (lo (if (eq (plist-get sp :zero) t) (min 0 lo) lo))
            (hi (if (eq (plist-get sp :zero) t) (max 0 hi) hi))
+           ;; An explicit [min, max] domain is what a quantize scale cuts.
+           (explicit (let ((d (plist-get sp :domain)))
+                       (and (equal type "quantize") (vectorp d) (= (length d) 2) (seq-every-p #'numberp d) d)))
+           (lo (if explicit (aref explicit 0) lo))
+           (hi (if explicit (aref explicit 1) hi))
            (thresholds
             (pcase type
               ("threshold" (plist-get sp :domain))

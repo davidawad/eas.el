@@ -229,9 +229,9 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
 ;;; Static fallback
 
 (defconst eas-conformance-test--geo
-  '(:data (:values [(:k "a" :v 1) (:k "b" :v 2)]) :mark "geoshape"
+  '(:data (:values [(:k "a" :v 1) (:k "b" :v 2)]) :mark "geoshape" :projection (:type "identity")
     :encoding (:latitude (:field "v" :type "quantitative") :color (:field "k" :type "nominal")))
-  "A map: outside the native subset.")
+  "A map under the identity projection: outside the native subset.")
 
 (ert-deftest eas-conformance-unsupported-specs-fall-back-to-static ()
   (let ((eas-views (make-hash-table :test 'equal))
@@ -240,9 +240,9 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
     (let* ((view (eas-view-open eas-conformance-test--geo :id "map"))
            (inspect (eas-inspect view)))
       (should (eq (plist-get inspect :interactive) :false))
-      ;; latitude is native since fc-qx1.40 (projected points); the geoshape is not.
+      ;; geoshape is native since eas-7r1.6; the identity projection is not.
       (should (equal (mapcar (lambda (w) (plist-get w :path)) (plist-get inspect :warnings))
-                     '("/mark")))
+                     '("/projection")))
       (should (equal (plist-get (plist-get (plist-get inspect :static) :error) :code) "NOT_FOUND"))
       (eas-dispatch view '(:type "key" :key "+"))
       (should (equal (plist-get (eas-inspect view) :last-event) "key +"))
@@ -250,7 +250,7 @@ writing PNG too when CHART is non-nil (otherwise no bin/chart)."
         (unwind-protect
             (with-current-buffer buffer
               (should (string-match-p "Static chart (not interactive)" (buffer-string)))
-              (should (string-match-p "mark/geoshape at /mark" (buffer-string))))
+              (should (string-match-p "projection/identity at /projection" (buffer-string))))
           (kill-buffer buffer))))))
 
 (ert-deftest eas-conformance-fallback-takes-bin-chart-image ()
@@ -280,7 +280,7 @@ the view shows UNSUPPORTED_FEATURE text and svg render fails."
               (unwind-protect
                   (with-current-buffer buffer
                     (should (string-match-p "No static image (UNSUPPORTED_FEATURE)" (buffer-string)))
-                    (should (string-match-p "mark/geoshape at /mark" (buffer-string))))
+                    (should (string-match-p "projection/identity at /projection" (buffer-string))))
                 (kill-buffer buffer))))
           (let ((env (eas-agent "render" (eas-json-encode eas-conformance-test--geo) :backend "svg")))
             (should (eq (plist-get env :ok) :false))

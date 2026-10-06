@@ -44,6 +44,8 @@
 (require 'eas-independent)
 (require 'eas-compile-shared-pos)
 (require 'eas-projection)
+(require 'eas-geoshape)
+(require 'eas-geoshape-interact)
 (require 'eas-spec-props)
 (require 'eas-title)
 (require 'eas-axis)
@@ -314,7 +316,8 @@ legend (OWN t).  CONFIG gives the ranges."
     (plist-put group :scales (eas-offset-set-ranges scales))
     (eas-polar-ranges group)
     (eas-independent-ranges group)
-    (eas-projection-ranges group)))
+    (eas-projection-ranges group)
+    (eas-geoshape-ranges group)))
 
 (defun eas-compile--brush-span (scale range lo len)
   "Pixel span (START . SIZE) of RANGE on SCALE; the whole LO..LO+LEN without RANGE."
@@ -360,7 +363,7 @@ legend (OWN t).  CONFIG gives the ranges."
                                      :items (plist-get unit :items))))
                      (unless (plist-get unit :index)
                        (plist-put unit :index (eas-hit-index mark)))
-                     (append mark (list :index (plist-get unit :index)))))
+                     (append mark (list :index (plist-get unit :index)) (eas-geoshape-mark-meta unit))))
                  (plist-get group :units)))
          (legend-y (plist-get group :y0)))
     (append

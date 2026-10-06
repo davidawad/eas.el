@@ -480,7 +480,7 @@ Braille draws it when diagonal.  PROPS, CLIP and PRIO apply to its cells."
   "X, nudged inside the plot when it lies on BOUNDS' right edge."
   (if (< (abs (- x (+ (aref bounds 0) (aref bounds 2)))) 0.005) (- x 0.01) x))
 
-(defconst eas-text--fills '("bar" "rect" "arc" "area" "brush")
+(defconst eas-text--fills '("bar" "rect" "arc" "area" "brush" "geoshape")
   "Marks that fill a region; strokes drawn before one sit under it.")
 
 (defun eas-text--translucent-p (mark)
@@ -509,6 +509,8 @@ sits under strokes.  Later marks win ties."
                                      ((eas-text--translucent-p mark) 1.5)
                                      (t 3)))))))
 
+(declare-function eas-geoshape-text "eas-geoshape-render")
+
 (defun eas-text--marks (g view)
   "Draw every mark of VIEW into grid G, clipped to its plot."
   (let* ((b (plist-get view :bounds))
@@ -525,6 +527,7 @@ sits under strokes.  Later marks win ties."
            (pcase (plist-get mark :mark)
              ((or "line" "area" "trail") (eas-text--series g view mark item clip prio))
              ((or "bar" "rect" "brush") (eas-text--rect g view mark item clip prio))
+             ("geoshape" (eas-geoshape-text g view mark item clip prio))
              ("arc" (let ((props (eas-text--item-props view mark item (plist-get item :datum))))
                       (eas-text-arc-dots item (eas-text--grid-cw g) (eas-text--grid-ch g)
                                          (lambda (dx dy) (eas-text--arc-dot g dx dy props i clip arcs)))))

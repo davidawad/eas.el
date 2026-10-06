@@ -62,11 +62,11 @@ the resolved spec keeps its projection (export stays pure Vega-Lite)."
     (should (plist-get (eas-resolve-spec eas-projection-test--spec) :projection))))
 
 (ert-deftest eas-projection-other-types-stay-unsupported ()
-  ;; albersUsa, albers and conicEqualArea are eas-geo.el's (fc-qx1.45);
-  ;; orthographic is drawn by neither.
+  ;; albersUsa, albers and conicEqualArea are eas-geo.el's (fc-qx1.45),
+  ;; the other d3 types eas-geoshape.el's (eas-7r1.6); identity is drawn by none.
   (let ((eas-spec-supported-function nil))
     (should (equal (plist-get (car (eas-spec-check (plist-put (copy-tree eas-projection-test--spec)
-                                                               :projection '(:type "orthographic"))))
+                                                               :projection '(:type "identity"))))
                               :code)
                    "UNSUPPORTED_FEATURE"))))
 

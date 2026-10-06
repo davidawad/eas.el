@@ -1,0 +1,73 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "world-map",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A configurable map of the world: country shapes over a graticule, under any projection, with its type, scale, rotation and centre bound to inputs.",
+    "slots": {
+      "world": {"shape": "geojson", "required": true, "doc": "country shapes: GeoJSON features, a FeatureCollection, or TopoJSON {\"url\" or \"topology\", \"feature\"}"},
+      "projection": {"enum": ["albers", "albersUsa", "azimuthalEqualArea", "azimuthalEquidistant", "conicConformal", "conicEqualArea", "conicEquidistant", "equalEarth", "equirectangular", "gnomonic", "mercator", "naturalEarth1", "orthographic", "stereographic", "transverseMercator"], "default": "mercator", "doc": "the initial projection type (the type param's select input)"},
+      "scale": {"type": "number", "default": 150, "doc": "the initial projection scale (a range input, 50 to 2000)"},
+      "rotate0": {"type": "number", "default": 0, "doc": "initial rotation about the poles, degrees"},
+      "rotate1": {"type": "number", "default": 0, "doc": "initial rotation about the x axis, degrees"},
+      "rotate2": {"type": "number", "default": 0, "doc": "initial rotation about the view axis, degrees"},
+      "center0": {"type": "number", "default": 0, "doc": "initial centre longitude"},
+      "center1": {"type": "number", "default": 0, "doc": "initial centre latitude"},
+      "graticule_dash": {"type": "array", "items": "number", "default": null, "doc": "graticule stroke dash, e.g. [3, 3]; null draws it solid"},
+      "border_width": {"type": "number", "default": 1, "doc": "country outline width"},
+      "land": {"type": "string", "default": "#000", "doc": "country fill (Vega's invert swaps it to #fff)"},
+      "border": {"type": "string", "default": "#bbb", "doc": "country outline color"},
+      "graticule": {"type": "string", "default": "#ddd", "doc": "graticule color"},
+      "background": {"type": "string", "default": "#ffffff"},
+      "width": {"type": "number", "default": 900},
+      "height": {"type": "number", "default": 500},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "A configurable map of countries of the world.", "doc": "the takeaway; alt text and table-view fallback"}
+    },
+    "example": "../examples/vega/world-map.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "native SVG vs ref/world-map.png: ratio 0.0071 at 900x500 (resvg), paths equal d3-geo's to 1e-10; type, scale, rotate and center are params bound to inputs; the hovered country's firebrick outline is a mouseover selection; Vega's invert checkbox and border-width text input are slots (land, border, graticule colors and border_width)"
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": 0,
+  "background": {"x-eas:slot": "background"},
+  "params": [
+    {"name": "type", "value": {"x-eas:slot": "projection"},
+     "bind": {"input": "select", "options": ["albers", "albersUsa", "azimuthalEqualArea", "azimuthalEquidistant", "conicConformal", "conicEqualArea", "conicEquidistant", "equalEarth", "equirectangular", "gnomonic", "mercator", "naturalEarth1", "orthographic", "stereographic", "transverseMercator"]}},
+    {"name": "scale", "value": {"x-eas:slot": "scale"}, "bind": {"input": "range", "min": 50, "max": 2000, "step": 1}},
+    {"name": "rotate0", "value": {"x-eas:slot": "rotate0"}, "bind": {"input": "range", "min": -180, "max": 180, "step": 1}},
+    {"name": "rotate1", "value": {"x-eas:slot": "rotate1"}, "bind": {"input": "range", "min": -90, "max": 90, "step": 1}},
+    {"name": "rotate2", "value": {"x-eas:slot": "rotate2"}, "bind": {"input": "range", "min": -180, "max": 180, "step": 1}},
+    {"name": "center0", "value": {"x-eas:slot": "center0"}, "bind": {"input": "range", "min": -180, "max": 180, "step": 1}},
+    {"name": "center1", "value": {"x-eas:slot": "center1"}, "bind": {"input": "range", "min": -90, "max": 90, "step": 1}}
+  ],
+  "projection": {
+    "type": {"expr": "type"},
+    "scale": {"expr": "scale"},
+    "rotate": {"expr": "[rotate0, rotate1, rotate2]"},
+    "center": {"expr": "[center0, center1]"}
+  },
+  "layer": [
+    {
+      "data": {"graticule": true},
+      "mark": {"type": "geoshape", "clip": true, "stroke": {"x-eas:slot": "graticule"}, "strokeWidth": 1,
+               "strokeDash": {"x-eas:slot": "graticule_dash"}}
+    },
+    {
+      "data": {"name": "world"},
+      "params": [{"name": "hover", "select": {"type": "point", "on": "mouseover", "clear": "mouseout"}}],
+      "mark": {"type": "geoshape", "clip": true, "fill": {"x-eas:slot": "land"}},
+      "encoding": {
+        "stroke": {"condition": {"param": "hover", "empty": false, "value": "firebrick"}, "value": {"x-eas:slot": "border"}},
+        "strokeWidth": {"condition": {"param": "hover", "empty": false, "value": 2}, "value": {"x-eas:slot": "border_width"}},
+        "tooltip": [{"field": "id", "type": "nominal", "title": "country"}]
+      }
+    }
+  ]
+}

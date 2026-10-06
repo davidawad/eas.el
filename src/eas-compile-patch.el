@@ -135,6 +135,9 @@ Must run with selection hooks bound to NEW (`eas-params-with-state')."
                      (filter-deps (append (eas-patch--param-names (plist-get ctx :transforms))
                                           (eas-patch--mentions (plist-get ctx :transforms) changed))))
                 (cond
+                 ;; A projection reading a changed param moves every shape (eas-geoshape.el).
+                 ((eas-patch--mentions (plist-get (plist-get (plist-get unit :node) :x-eas) :geo) changed)
+                  (throw 'full nil))
                  ((seq-intersection filter-deps changed)
                   (let ((fresh (append (eas-compile--unit (plist-get unit :node) ctx env)
                                        (list :node (plist-get unit :node) :ctx ctx))))
@@ -142,7 +145,7 @@ Must run with selection hooks bound to NEW (`eas-params-with-state')."
                     fresh))
                  ((eas-patch--mentions (plist-get unit :encoding) changed)
                   (if (or (eas-patch--positional-p unit changed)
-                          (member (plist-get (plist-get unit :mark) :type) '("line" "area" "trail"))
+                          (member (plist-get (plist-get unit :mark) :type) '("line" "area" "trail" "geoshape"))
                           (null (plist-get unit :items))
                           (seq-some (lambda (c) (plist-get c :test))
                                     (cl-loop for (_ d) on (plist-get unit :encoding) by #'cddr

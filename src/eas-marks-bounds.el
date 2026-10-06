@@ -111,6 +111,7 @@ Transparent items count too, so hover and selection never move layout."
                                                   (plist-get item :fontWeight)))
                         lines))))
       ("arc" (eas-marks--grow (eas-arc-bounds item) item))
+      ("geoshape" (eas-geoshape-item-box item))
       ("line" (eas-marks--grow (eas-marks--points-box (plist-get item :points)) item))
       ("trail" (let ((b (eas-marks--points-box (plist-get item :points)))
                      (r (/ (apply #'max 0 (append (plist-get item :widths) nil)) 2.0)))
@@ -119,6 +120,8 @@ Transparent items count too, so hover and selection never move layout."
                                   (eas-marks--points-box (plist-get item :base))))
       (_ (let ((r (/ (sqrt (or (plist-get item :size) 0)) 2.0)) (x (plist-get item :x)) (y (plist-get item :y)))
            (eas-marks--grow (vector (- x r) (- y r) (+ x r) (+ y r)) item)))))
+
+(declare-function eas-geoshape-item-box "eas-geoshape")
 
 (defun eas-marks-line-shift (item)
   "Lines a multi-line text ITEM's first line sits above its anchor.

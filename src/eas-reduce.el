@@ -29,6 +29,7 @@
 (require 'eas-zoom)
 (require 'eas-intersect)
 (require 'eas-link)
+(require 'eas-geoshape-interact)
 
 (defconst eas-reduce-click-slop 3 "Pixels a press may move and still be a click.")
 (defconst eas-reduce-hover-radius 30 "Pixels beyond which hover finds nothing.")
@@ -344,11 +345,14 @@ Views sharing a param bound to scales move together (`eas-link-scales')."
        (dolist (p (eas-params-of scene "point"))
          (when (eas-reduce--on-p p "pointermove") (setq state (eas-reduce--store state (plist-get p :name) nil))))
        (eas-reduce--put (eas-reduce--put (eas-reduce--put state :hover nil) :drag nil) :pointer nil))
-      ("wheel" (eas-reduce--wheel state scene px (plist-get event :delta)))
+      ;; A map zooms and pans through its projection's params (eas-geoshape-interact.el).
+      ("wheel" (or (eas-geoshape-wheel state scene px (plist-get event :delta))
+                   (eas-reduce--wheel state scene px (plist-get event :delta))))
       ("drag"
-       (let* ((s (eas-reduce--press state scene (plist-get event :from)))
-              (s (eas-reduce--drag-to s scene (plist-get event :to))))
-         (eas-reduce--release s scene (plist-get event :to))))
+       (or (eas-geoshape-drag state scene (plist-get event :from) (plist-get event :to))
+           (let* ((s (eas-reduce--press state scene (plist-get event :from)))
+                  (s (eas-reduce--drag-to s scene (plist-get event :to))))
+             (eas-reduce--release s scene (plist-get event :to)))))
       ("brush" (eas-reduce--brush-event state scene event))
       ("param" (eas-params-set state scene (plist-get event :param) (plist-get event :value)))
       ("key" (eas-reduce--key state scene (plist-get event :key)))

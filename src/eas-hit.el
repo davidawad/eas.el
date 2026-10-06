@@ -41,6 +41,7 @@
   (let ((items (plist-get mark :items)))
     (pcase (plist-get mark :mark)
       ((or "bar" "rect" "brush" "image") (list :kind "rects"))
+      ("geoshape" (list :kind "shapes"))
       ((or "line" "area" "trail" "rule" "tick")
        (let (entries)
          (seq-do-indexed
@@ -154,6 +155,8 @@ The first wins on ties; X-ONLY measures the horizontal distance alone."
         (when (or (null best-d) (< d best-d)) (setq best i best-d d))))
     (eas-hit--candidate mark best :null px py x-only)))
 
+(declare-function eas-geoshape-hit "eas-geoshape-render")
+
 (defun eas-hit-mark (mark px py &optional x-only)
   "Nearest hit candidate in MARK for PX PY; X-ONLY measures |dx| only."
   (let ((index (plist-get mark :index)) (items (plist-get mark :items)))
@@ -170,6 +173,7 @@ The first wins on ties; X-ONLY measures the horizontal distance alone."
                  (when (or (null best) (< (plist-get c :distance) (plist-get best :distance))) (setq best c)))
                (setq j (1+ j))))
            (if x-only (plist-put best :distance (abs (- px (plist-get best :x)))) best)))
+        ("shapes" (eas-geoshape-hit mark px py))
         ;; Box distance can undercut a cell's bound: only point items use the grid.
         ("grid" (if (plist-member (aref items 0) :w) (eas-hit--scan mark px py x-only)
                   (eas-hit--grid mark px py x-only)))

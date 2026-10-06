@@ -303,7 +303,11 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                                             (delq nil (mapcar #'eas-time-parse values))
                                           (seq-filter #'numberp values))))
                               (list :type "sequential"
-                                    :domain (vector (if nums (apply #'min nums) 0) (if nums (apply #'max nums) 1))
+                                    ;; An explicit numeric domain sets the ends (its stops evenly spaced).
+                                    :domain (let ((d (plist-get sp :domain)))
+                                              (if (and (vectorp d) (> (length d) 1) (seq-every-p #'numberp d))
+                                                  (vector (aref d 0) (aref d (1- (length d))))
+                                                (vector (if nums (apply #'min nums) 0) (if nums (apply #'max nums) 1))))
                                     :mid (plist-get sp :domainMid)
                                     ;; Vega-Lite interpolates an explicit range in HCL.
                                     :interpolate (and (vectorp (plist-get sp :range)) "hcl")

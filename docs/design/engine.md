@@ -383,6 +383,67 @@ Entry points:
   for the live verbs `views`, `inspect`, `dispatch`, `log` and
   `selection`.
 
+### Maps: geoshape, TopoJSON and projections (`eas-7r1.6`)
+
+Vega-Lite maps draw natively. The spherical half is a port of d3-geo's
+stream pipeline, so a path is the one Vega draws (checked against d3
+to 0.01 px for every projection in `test/eas/golden/vega-geo-d3.json`):
+
+```
+GeoJSON -> radians -> 3-axis rotation -> preclip (antimeridian cut, or the
+small circle of clipAngle) -> adaptive resampling -> postclip (clipExtent;
+mercator's own square) -> pixel rings, lines and point circles
+```
+
+| file | what |
+|---|---|
+| `eas-geo-stream.el` | streams, rotation, resampling, the path sink, planar area and centroid, d3's graticule |
+| `eas-geo-clip.el` | the polygon clip and rejoin, spherical point-in-polygon, antimeridian, circle and rectangle clips |
+| `eas-geo-raw.el`, `eas-geo-polyhedral.el` | raw projections: d3-geo's, and d3-geo-projection's the Vega gallery registers (airy, armadillo, baker, berghaus, bottomley, collignon, eckert1, guyou, hammer, littrow, mollweide, wagner6, wiechel, winkel3, aitoff, sinusoidal, the three interrupted ones, polyhedralButterfly, peirceQuincuncial) |
+| `eas-geo-proj.el` | d3's projectionMutator (scale, translate, center, rotate, clipAngle, clipExtent, precision, reflectX/Y), albersUsa's three insets, fitExtent, a Newton inverse |
+| `eas-topojson.el` | format `{"type": "topojson", "feature"|"mesh": NAME}` for data.url and inline values; the `geojson` adapter for template slots |
+| `eas-geoshape.el` | the lowering, the compile hook, geoshape items, the `geo-point` and `geo-measure` transforms |
+| `eas-geoshape-render.el` | SVG paths, text fills and outlines, hit tests |
+| `eas-geoshape-interact.el` | wheel and drag on a map change the params its projection reads |
+
+`eas-geoshape-lower` (a rewrite function) takes every view whose
+projection the point-only lowerings (`eas-geo.el`, `eas-projection.el`)
+do not already draw: a geoshape mark, `{"graticule": ...}` or
+`{"sphere": true}` data (inlined; a graticule's geoshape is unfilled),
+a type beyond theirs, or projection properties. The projection moves
+onto each unit under `x-eas.geo` with the path of the view that
+declared it; longitude/latitude units get x and y on fixed scales. At
+compile, `eas-geoshape-ranges` resolves each projection once per
+layered view: `{"expr": ...}` values read the params; with neither
+scale nor translate the projection is fitted to every layer's shapes
+and points (Vega-Lite's `fit`), else translate defaults to the view's
+centre. A view laid out at another size than its spec declares (a
+text window, a container) scales a fixed scale and translate by
+min(w/W, h/H), so the same map fills it. Geoshape items keep their path
+relative to an anchor (the centroid) with a bounding box, so moving an
+item moves its shape; the scene mark carries the projection (`:geo`,
+with expressions and resolved), which the reducer reads.
+
+Text draws a filled shape as full blocks over the cells whose centre
+it holds (nonzero rule) and an unfilled one (a graticule) in braille;
+hover picks the smallest shape under the pointer. A wheel tick over a
+map whose `scale` is `{"expr": "S"}` multiplies param S by the zoom step;
+a drag adds the inverted longitude delta to the param `rotate`'s first
+element names and the latitude delta to `center`'s second, each clamped
+by its bound range input (the Vega gallery's zoomable world map).
+
+Two domain transforms join the vocabulary: `geo-measure` (projected
+centroid and area per feature, Vega's `geoCentroid` and `geoArea` with
+a projection; materialized at resolve, so export stays pure Vega-Lite)
+and `geo-point` (internal: the lowering's placeholder positions).
+`templates/vega/` holds the Vega gallery's maps as templates (namespace
+`vega`, loaded with `eas-template-add-directory` or `eas-template-load`);
+each records `x-eas.vega.status` and a note against its
+`test/vega-examples/ref` image. Not drawn: the `identity` projection,
+`clip: {"sphere": ...}` (Vega's, which Vega-Lite cannot express), Vega's
+`pointRadius` (a circle mark of area pi r^2 stands in), and gradient
+strokes.
+
 ## 3. Driving it as an agent (the intended loop)
 
 1. `describe` and pick a template, or `check` a hand-written Vega-Lite

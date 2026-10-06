@@ -30,6 +30,7 @@
 (require 'eas-adapters)
 
 (defvar eas-spec-source-directory)
+(declare-function eas-topojson-rows "eas-topojson")
 
 (defvar eas-data-url-directory nil
   "Directory relative data URLs resolve against; nil means `default-directory'.")
@@ -146,6 +147,8 @@ Local time (`eas-time-zone') unless UTC is non-nil."
                 (eas-signal "SHAPE_INVALID" (format "data.url %s is not a JSON array of rows" url)
                             :path "/data/url"))
               v))
+    ;; Maps (eas-topojson.el): the features or mesh of one object.
+    ("topojson" (eas-topojson-rows (eas-json-read-file file) format))
     (type (eas-signal "UNSUPPORTED_FEATURE" (format "data format %s is not supported natively" type)
                       :feature (concat "data/" type) :path "/data/format/type"))))
 

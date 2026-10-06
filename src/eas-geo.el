@@ -19,7 +19,8 @@
 ;; Projections: albersUsa (d3's composite: lower 48, Alaska at 0.35x
 ;; and Hawaii, each clipped to its inset), albers and conicEqualArea
 ;; (parallels, rotate), mercator, equirectangular and equalEarth.
-;; Topojson and geoshape are not drawn.
+;; Maps with geoshapes, graticules or other projection properties are
+;; eas-geoshape.el's, which lowers them first.
 
 ;;; Code:
 

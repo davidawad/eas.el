@@ -1,0 +1,59 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "zoomable-world-map",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A world map that pans and zooms: the wheel scales the projection, a drag turns it (longitude) and moves its centre (latitude).",
+    "slots": {
+      "world": {"shape": "geojson", "required": true, "doc": "country shapes: GeoJSON features, or TopoJSON {\"url\" or \"topology\", \"feature\"}"},
+      "projection": {"enum": ["mercator", "equirectangular", "equalEarth", "naturalEarth1", "transverseMercator"], "default": "mercator"},
+      "scale": {"type": "number", "default": 150, "doc": "the initial scale"},
+      "min_scale": {"type": "number", "default": 150, "doc": "the wheel's outermost zoom"},
+      "max_scale": {"type": "number", "default": 3000, "doc": "the wheel's innermost zoom"},
+      "rotate": {"type": "number", "default": 0, "doc": "the initial rotation (longitude at the centre, negated)"},
+      "center": {"type": "number", "default": 0, "doc": "the initial centre latitude (a drag keeps it within +-60)"},
+      "graticule_step": {"type": "array", "items": "number", "default": [15, 15]},
+      "land": {"type": "string", "default": "#e5e8d3"},
+      "border": {"type": "string", "default": "#bbb"},
+      "graticule": {"type": "string", "default": "#ddd"},
+      "width": {"type": "number", "default": 900},
+      "height": {"type": "number", "default": 500},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "An interactive world map supporting pan and zoom.", "doc": "the takeaway; alt text and table-view fallback"}
+    },
+    "example": "../examples/vega/zoomable-world-map.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "native SVG vs ref/zoomable-world-map.png: ratio 0.0000 at 900x500 (resvg); scale, rotateX and centerY are params: a wheel event scales by the zoom step clamped to 150-3000, a drag adds the inverted longitude and latitude deltas as Vega's invert(projection, xy()) does (eas-geoshape-interact.el), and range inputs set them too"
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": 0,
+  "background": "white",
+  "params": [
+    {"name": "scale", "value": {"x-eas:slot": "scale"},
+     "bind": {"input": "range", "min": {"x-eas:slot": "min_scale"}, "max": {"x-eas:slot": "max_scale"}}},
+    {"name": "rotateX", "value": {"x-eas:slot": "rotate"}, "bind": {"input": "range", "min": -180, "max": 180}},
+    {"name": "centerY", "value": {"x-eas:slot": "center"}, "bind": {"input": "range", "min": -60, "max": 60}}
+  ],
+  "projection": {
+    "type": {"x-eas:slot": "projection"},
+    "scale": {"expr": "scale"},
+    "rotate": {"expr": "[rotateX, 0, 0]"},
+    "center": {"expr": "[0, centerY]"}
+  },
+  "layer": [
+    {
+      "data": {"graticule": {"step": {"x-eas:slot": "graticule_step"}}},
+      "mark": {"type": "geoshape", "clip": true, "stroke": {"x-eas:slot": "graticule"}, "strokeWidth": 1}
+    },
+    {
+      "data": {"name": "world"},
+      "mark": {"type": "geoshape", "clip": true, "fill": {"x-eas:slot": "land"}, "stroke": {"x-eas:slot": "border"}, "strokeWidth": 0.5}
+    }
+  ]
+}

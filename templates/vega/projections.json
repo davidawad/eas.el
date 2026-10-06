@@ -1,0 +1,62 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "projections",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A grid of world maps, one per projection type: sphere, graticule and countries, each labelled with its projection's name.",
+    "slots": {
+      "world": {"shape": "geojson", "required": true, "doc": "country shapes: GeoJSON features, or TopoJSON {\"url\" or \"topology\", \"feature\"}"},
+      "projections": {"type": "array", "items": "string", "required": true, "doc": "projection type names, one map each (d3-geo's, and d3-geo-projection's as the Vega gallery registers them)"},
+      "map_width": {"type": "number", "default": 300},
+      "map_height": {"type": "number", "default": 200},
+      "scale": {"type": "number", "default": 45, "doc": "every map's projection scale"},
+      "translate": {"type": "array", "items": "number", "default": [150, 100], "doc": "every map's projection translate (the map's centre)"},
+      "label_y": {"type": "number", "default": 195, "doc": "the label's baseline, map_height - 5"},
+      "columns": {"type": "integer", "default": 3},
+      "spacing": {"type": "number", "default": 20},
+      "ocean": {"type": "string", "default": "aliceblue"},
+      "land": {"type": "string", "default": "black"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "A gallery of maps showcasing different cartographic projections.", "doc": "the takeaway; alt text and table-view fallback"}
+    },
+    "example": "../examples/vega/projections.data.json",
+    "vega": {
+      "status": "partial",
+      "note": "all 24 gallery projections draw natively and their country and sphere paths equal d3-geo-projection's to 1e-9 (peirceQuincuncial's graticule meridians resample differently near its poles); against ref/projections.png, the Vega site's 360 px thumbnail, the 940x1740 render scaled to it differs by ratio 0.0747 (resvg); Vega clips the graticule and countries to each projection's sphere outline, which Vega-Lite cannot express, so the interrupted projections draw the parts of countries their cuts split across the gaps"
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "background": "white",
+  "padding": 0,
+  "columns": {"x-eas:slot": "columns"},
+  "spacing": {"x-eas:slot": "spacing"},
+  "concat": [
+    {"x-eas:each": "projections", "spec": {
+      "width": {"x-eas:slot": "map_width"},
+      "height": {"x-eas:slot": "map_height"},
+      "projection": {"type": {"x-eas:item": "."}, "scale": {"x-eas:slot": "scale"}, "translate": {"x-eas:slot": "translate"}},
+      "layer": [
+        {"data": {"sphere": true}, "mark": {"type": "geoshape", "clip": true, "fill": {"x-eas:slot": "ocean"}}},
+        {"data": {"graticule": true}, "mark": {"type": "geoshape", "clip": true, "stroke": "#ddd", "strokeWidth": 1}},
+        {"data": {"name": "world"}, "mark": {"type": "geoshape", "clip": true, "fill": {"x-eas:slot": "land"}, "stroke": "#888", "strokeWidth": 0.25}},
+        {"data": {"values": [{}]},
+         "mark": {"type": "text", "align": "left", "baseline": "bottom", "fontSize": 14, "fontWeight": "bold", "color": "white", "dx": -1, "dy": -1},
+         "encoding": {"x": {"value": 5}, "y": {"value": {"x-eas:slot": "label_y"}}, "text": {"value": {"x-eas:item": "."}}}},
+        {"data": {"values": [{}]},
+         "mark": {"type": "text", "align": "left", "baseline": "bottom", "fontSize": 14, "fontWeight": "bold", "color": "white", "dx": -1, "dy": 1},
+         "encoding": {"x": {"value": 5}, "y": {"value": {"x-eas:slot": "label_y"}}, "text": {"value": {"x-eas:item": "."}}}},
+        {"data": {"values": [{}]},
+         "mark": {"type": "text", "align": "left", "baseline": "bottom", "fontSize": 14, "fontWeight": "bold", "color": "white", "dx": 1, "dy": -1},
+         "encoding": {"x": {"value": 5}, "y": {"value": {"x-eas:slot": "label_y"}}, "text": {"value": {"x-eas:item": "."}}}},
+        {"data": {"values": [{}]},
+         "mark": {"type": "text", "align": "left", "baseline": "bottom", "fontSize": 14, "fontWeight": "bold", "color": "white", "dx": 1, "dy": 1},
+         "encoding": {"x": {"value": 5}, "y": {"value": {"x-eas:slot": "label_y"}}, "text": {"value": {"x-eas:item": "."}}}},
+        {"data": {"values": [{}]},
+         "mark": {"type": "text", "align": "left", "baseline": "bottom", "fontSize": 14, "fontWeight": "bold", "color": "black"},
+         "encoding": {"x": {"value": 5}, "y": {"value": {"x-eas:slot": "label_y"}}, "text": {"value": {"x-eas:item": "."}}}}
+      ]
+    }}
+  ]
+}

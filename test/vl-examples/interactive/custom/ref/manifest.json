@@ -1,0 +1,32 @@
+{
+  "generator": "bin/chart build SPEC --out ref/NAME.png, via eas-vl-gallery-custom-build-ref",
+  "refs": {
+    "custom_area": {
+      "png_sha256": "1f412d48eb5d37aec9e8ec45d47677106f598f8aa0ba9114336c2d7ea1109ccd",
+      "spec_sha256": "569fa7a38c98b51301ee0d51d23122e499a97bdb145263a901b5dc421761b8da"
+    },
+    "custom_bar": {
+      "png_sha256": "a2472ad517b4a8a1cf0895e3dc0544835df8268be7fe1e626cfa0eb7b900c6c7",
+      "spec_sha256": "3537034b71e8ba34b510a9626d813192d380c97e509001e40cd0ed6bb54ceb82"
+    },
+    "custom_line": {
+      "png_sha256": "95a9328ba6fa141c6a8133aed8e8780331dfe27dc61296c95a3065fc5af8e209",
+      "spec_sha256": "c549f1c6e311bf305998f6bb11a31a12c031bb1bd6776679a53444f86337b801"
+    },
+    "custom_point": {
+      "png_sha256": "0a54f98902415b5f04018cd1e9332597bbabcaf73b3a0b6a504fe7c4e8821ef8",
+      "spec_sha256": "fcc6121d3f5abeb8b8634437ff038c28af8fda0330b726e854bdbd3034afc719"
+    },
+    "custom_rect": {
+      "png_sha256": "b247ff7b5bb499250a87b4fc68e1b88bb719639573a9ef47881f49633e2c9e1c",
+      "spec_sha256": "9560075ad889a95955513cd3510baab060962efa0daf4ccae288959207dded84"
+    },
+    "custom_text": {
+      "png_sha256": "15b80c83cb43e6406010a19796d3a6c41a837429eccc57a1d4a0c64081419eda",
+      "spec_sha256": "f9af5aa31f50d18037aae98bd720e8cd0f4ce24d0b62a5c78dfc6a51c5bf7215"
+    }
+  },
+  "spec_hash": "eas-conformance-spec-hash of the spec with its data inlined",
+  "tz": "America/Chicago"
+}
+

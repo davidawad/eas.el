@@ -1,0 +1,20 @@
+{
+  "generator": "bin/chart build SPEC --out ref/NAME.png, via eas-vl-gallery-custom-build-ref",
+  "refs": {
+    "custom_arc": {
+      "png_sha256": "93139d972115bc7a5ca5a7b221f97d37657908a5dc9695f5cd57c786260ea5d1",
+      "spec_sha256": "3668fdb57f8d72f15b5f30ee08143aa0174171737a36447aba0039e07113a7f2"
+    },
+    "custom_area": {
+      "png_sha256": "2c567349d4f57ddc7b7e9470af92277a22152624967a75e0be5ce635e4a1f364",
+      "spec_sha256": "ba4c7d1a223d4e89cdeef451ca5c371fe715b947664e78fcf446b1086b37115a"
+    },
+    "custom_radial": {
+      "png_sha256": "2b2e6a335dc446614c25676df0f20731b0b142dcf7a42eeca059fba18e5b2320",
+      "spec_sha256": "9b6574149104bef13899bcd24b834c4c257a6bd36717bfab68c87a9db8e4cf8e"
+    }
+  },
+  "spec_hash": "eas-conformance-spec-hash of the spec with its data inlined",
+  "tz": "America/Chicago"
+}
+

@@ -18,10 +18,14 @@
 ;;   - the text rendering equals the golden custom/NAME.txt
 ;;     (EAS_UPDATE_GOLDEN=1 rewrites it);
 ;;   - the native SVG is within the threshold of bin/chart's image.
-;;     The harness builds custom/ref/NAME.png with bin/chart when it is
-;;     on PATH; without it a committed reference is compared wherever a
-;;     rasterizer exists.  With no reference the image check is
-;;     "ref-pending", with no rasterizer "unverified"; neither is a pass.
+;;     References are committed: custom/ref/NAME.png, with the hash of
+;;     the spec each was built from in custom/ref/manifest.json
+;;     (`eas-conformance-spec-hash', usermeta excluded, data inlined).
+;;     With bin/chart on PATH the harness builds a reference only when
+;;     it is missing or its spec changed, and never rewrites an
+;;     up-to-date one.  Without a reference the image check is
+;;     "ref-pending", with a reference of an older spec "ref-stale",
+;;     with no rasterizer "unverified"; none of them is a pass.
 
 ;;; Code:
 
@@ -31,6 +35,7 @@
 (require 'eas-vl-gallery)
 (require 'eas-chart)
 (require 'eas-png)
+(require 'eas-conformance-oracle)
 
 (defun eas-vl-gallery-custom-directory (group)
   "GROUP's directory of customization specs."
@@ -57,6 +62,58 @@
   "Return bin/chart's reference PNG for customization spec NAME of GROUP."
   (expand-file-name (concat "ref/" name ".png") (eas-vl-gallery-custom-directory group)))
 
+;;; References and their manifest
+
+(defun eas-vl-gallery-custom-manifest-file (group)
+  "GROUP's manifest of customization references."
+  (expand-file-name "ref/manifest.json" (eas-vl-gallery-custom-directory group)))
+
+(defun eas-vl-gallery-custom-manifest (group)
+  "GROUP's parsed reference manifest, or nil when absent."
+  (let ((file (eas-vl-gallery-custom-manifest-file group)))
+    (and (file-exists-p file) (eas-json-read-file file))))
+
+(defun eas-vl-gallery-custom-ref-state (group name spec)
+  "State of the reference of customization SPEC NAME in GROUP.
+Return `missing' without a reference PNG, `stale' when the manifest
+records another spec hash for it, else `current'.  A committed PNG the
+manifest does not know is current: nothing proves it is out of date."
+  (let ((entry (plist-get (plist-get (eas-vl-gallery-custom-manifest group) :refs) (eas-key name))))
+    (cond ((not (file-exists-p (eas-vl-gallery-custom-ref group name))) 'missing)
+          ((and entry (not (equal (plist-get entry :spec_sha256) (eas-conformance-spec-hash spec)))) 'stale)
+          (t 'current))))
+
+(defun eas-vl-gallery-custom-record-ref (group name spec)
+  "Record in GROUP's manifest that NAME's reference was built from SPEC."
+  (let* ((manifest (eas-vl-gallery-custom-manifest group))
+         (refs (eas-plist-put (plist-get manifest :refs) (eas-key name)
+                              (list :png_sha256 (eas-conformance--file-hash (eas-vl-gallery-custom-ref group name))
+                                    :spec_sha256 (eas-conformance-spec-hash spec)))))
+    (with-temp-file (eas-vl-gallery-custom-manifest-file group)
+      (set-buffer-file-coding-system 'utf-8-unix)
+      (insert (eas-json-pretty
+               (list :generator "bin/chart build SPEC --out ref/NAME.png, via eas-vl-gallery-custom-build-ref"
+                     :spec_hash "eas-conformance-spec-hash of the spec with its data inlined"
+                     :tz eas-vl-gallery-zone
+                     :refs (eas-json-canonical refs))))
+      (insert "\n"))))
+
+(defun eas-vl-gallery-custom-build-ref (group name spec)
+  "Build NAME's reference in GROUP from SPEC with bin/chart if it is due.
+A reference is due when it is missing or stale; an up-to-date one is
+never rewritten.  Return non-nil when a reference was built."
+  (when (and (eas-chart-available-p) (not (eq (eas-vl-gallery-custom-ref-state group name spec) 'current)))
+    (let ((ref (eas-vl-gallery-custom-ref group name)))
+      (make-directory (file-name-directory ref) t)
+      (let ((process-environment (cons (concat "TZ=" eas-vl-gallery-zone) process-environment))
+            (coding-system-for-write 'no-conversion)
+            (png (eas-chart-build spec "png")))
+        (with-temp-file ref
+          (set-buffer-multibyte nil)
+          (insert png)))
+      (eas-vl-gallery-custom-record-ref group name spec)
+      t)))
+
 (defun eas-vl-gallery-custom-spec (group name)
   "Customization spec NAME of GROUP with its data inlined."
   (let ((dir (eas-vl-gallery-custom-directory group)))
@@ -69,33 +126,36 @@
 
 (defun eas-vl-gallery-custom-image (group name spec svg)
   "Judge native SVG of customization SPEC NAME in GROUP against bin/chart.
-Return (:status pass|fail|unverified :detail D [:ratio R])."
+Return (:status S :detail D [:ratio R]), S one of pass, fail,
+ref-pending, ref-stale and unverified."
   (let ((ref (eas-vl-gallery-custom-ref group name))
         (threshold (or (plist-get (plist-get (plist-get spec :usermeta) :eas) :threshold)
                        eas-vl-gallery-default-threshold)))
-    (when (eas-chart-available-p)
-      (make-directory (file-name-directory ref) t)
-      (let ((process-environment (cons (concat "TZ=" eas-vl-gallery-zone) process-environment))
-            (coding-system-for-write 'no-conversion))
-        (with-temp-file ref
-          (set-buffer-multibyte nil)
-          (insert (eas-chart-build spec "png")))))
-    (cond
-     ((not (file-exists-p ref))
-      ;; ref-pending: no bin/chart reference yet; never a failure.
-      (list :status "ref-pending" :detail (format "no reference: %s builds custom/ref/%s.png" eas-chart-program name)))
-     ((not (eas-vl-gallery-rasterizer-p))
-      (list :status "unverified" :detail (format "%s is not on PATH to rasterize native SVG" eas-chart-rsvg-program)))
-     (t (let ((mine (make-temp-file "eas-custom" nil ".png")))
-          (unwind-protect
-              (let* ((cmp (progn (eas-chart-rasterize svg mine)
-                                 (eas-png-compare (eas-png-read mine) (eas-png-read ref))))
-                     (ratio (plist-get cmp :ratio)) (delta (plist-get cmp :size-delta)))
-                (list :status (if (and (<= ratio threshold) (<= (max (abs (aref delta 0)) (abs (aref delta 1))) 8))
-                                  "pass" "fail")
-                      :ratio ratio
-                      :detail (format "ratio %.4f (threshold %s), size delta %S" ratio threshold delta)))
-            (delete-file mine)))))))
+    (eas-vl-gallery-custom-build-ref group name spec)
+    (pcase (eas-vl-gallery-custom-ref-state group name spec)
+      ('missing
+       ;; ref-pending: no bin/chart reference yet; never a failure.
+       (list :status "ref-pending" :detail (format "no reference: %s builds custom/ref/%s.png" eas-chart-program name)))
+      ('stale
+       ;; A reference of an older spec proves nothing either way.
+       (list :status "ref-stale"
+             :detail (format "custom/ref/%s.png was built from an older spec: %s rebuilds it" name eas-chart-program)))
+      (_ (eas-vl-gallery-custom--compare ref svg threshold)))))
+
+(defun eas-vl-gallery-custom--compare (ref svg threshold)
+  "Judge native SVG against reference PNG REF within THRESHOLD."
+  (if (not (eas-vl-gallery-rasterizer-p))
+      (list :status "unverified" :detail (format "%s is not on PATH to rasterize native SVG" eas-chart-rsvg-program))
+    (let ((mine (make-temp-file "eas-custom" nil ".png")))
+      (unwind-protect
+          (let* ((cmp (progn (eas-chart-rasterize svg mine)
+                             (eas-png-compare (eas-png-read mine) (eas-png-read ref))))
+                 (ratio (plist-get cmp :ratio)) (delta (plist-get cmp :size-delta)))
+            (list :status (if (and (<= ratio threshold) (<= (max (abs (aref delta 0)) (abs (aref delta 1))) 8))
+                              "pass" "fail")
+                  :ratio ratio
+                  :detail (format "ratio %.4f (threshold %s), size delta %S" ratio threshold delta)))
+        (delete-file mine)))))
 
 (defun eas-vl-gallery-custom-check (group name)
   "Return the problems of customization spec NAME of GROUP, as strings.

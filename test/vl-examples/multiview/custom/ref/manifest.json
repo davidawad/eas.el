@@ -1,0 +1,32 @@
+{
+  "generator": "bin/chart build SPEC --out ref/NAME.png, via eas-vl-gallery-custom-build-ref",
+  "refs": {
+    "concat_flush_custom": {
+      "png_sha256": "06170d3fbd816ab0214e28de70a976e20ea15d84a99070e38dd47b5c5370324f",
+      "spec_sha256": "1d3d5ae672ba365bdcd9176bb644cada4efbb7b2a16e8b32d182d3a95f464feb"
+    },
+    "facet_grid_custom": {
+      "png_sha256": "704e949cb4fdc5f3a6a28fba1acf7b73eecf9dacf79323bb2940dbc7992f7032",
+      "spec_sha256": "31e785904bebb8b30e823fe51575c39569d76c1bed167430dc24a9aa366e9a8a"
+    },
+    "facet_wrap_custom": {
+      "png_sha256": "6314f0718b5e588f4c3cfdde89a2a8b860e1a7b920f16eda8ecb1cfa5fcb5720",
+      "spec_sha256": "dddc46d1b3a26ed4cafb498c04fb35b66b624658f540024c2262f6301f5da6d3"
+    },
+    "geo_points_custom": {
+      "png_sha256": "768f52fb4f1ba65c752780919057b3a58b4f38e850524b11afe1d7c7eafd0163",
+      "spec_sha256": "17673abc932e3913b50bdd5309a8e4962ac84dfd3167c39b8d9177fbe509b83c"
+    },
+    "repeat_custom": {
+      "png_sha256": "2ae6b1a344c5d27c3ce012251e7178a32df56d3da73fed464bbc37ca50e18dd5",
+      "spec_sha256": "eda9a8e316a3bacdae7947b0b958edf51edde1c9fa513b676748cee6caaa0bba"
+    },
+    "scales_discretize_custom": {
+      "png_sha256": "893420cbee2279039ced1f19266bf9a0f2feff6815961bd0e2584d68ac3d8b6f",
+      "spec_sha256": "4866573adcee0d3a76003d6f20f4ffcb010608036fbe03c54753d4e5205ada4f"
+    }
+  },
+  "spec_hash": "eas-conformance-spec-hash of the spec with its data inlined",
+  "tz": "America/Chicago"
+}
+

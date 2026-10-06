@@ -1,0 +1,24 @@
+{
+  "generator": "bin/chart build SPEC --out ref/NAME.png, via eas-vl-gallery-custom-build-ref",
+  "refs": {
+    "custom_point": {
+      "png_sha256": "d85588af18364206b8b4cba880012a964a6d7d6e7c218e6bf9dbbdaab0e68f12",
+      "spec_sha256": "c5ed272c840037a58516ffcc0e93b97c732eddd92d817260014d33bce367f932"
+    },
+    "custom_rect": {
+      "png_sha256": "8109e31ad17ba0843f14a7e9fb63bfc79add814555e9396b9196df8c2959b86c",
+      "spec_sha256": "abd20d37a37edf723877f2fa590099132bd53248a3ea3e96941142ae83f7f62c"
+    },
+    "custom_text": {
+      "png_sha256": "6e3935713c34e3486a01375722426c3ef3720cf49905db48c286c33bc7f6ceef",
+      "spec_sha256": "6701e6e9438ea0cff6e4387800725c874c5f04328d9cbca65a94f762bb40fcc1"
+    },
+    "custom_tick": {
+      "png_sha256": "d0cd0a8d5aa93716ef40c29a1bdd76d880e0addcda3294c5e35dac4591bd973d",
+      "spec_sha256": "57df23dc5b954a401a6da8e20b42901df2873a479502cd5924f1336c7f891e20"
+    }
+  },
+  "spec_hash": "eas-conformance-spec-hash of the spec with its data inlined",
+  "tz": "America/Chicago"
+}
+

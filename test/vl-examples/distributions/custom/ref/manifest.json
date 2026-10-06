@@ -1,0 +1,40 @@
+{
+  "generator": "bin/chart build SPEC --out ref/NAME.png, via eas-vl-gallery-custom-build-ref",
+  "refs": {
+    "custom_boxplot": {
+      "png_sha256": "c1031e6932fca3794ae2f927ecb84513ed227aa94471c1f0bdf64904ff4a48b3",
+      "spec_sha256": "123f6623a42ccb7f4a648e53f2b246b35b14e12839fca2e36640d74a9288ce7c"
+    },
+    "custom_circle_binned": {
+      "png_sha256": "e226851f9e9b8201aea2cb448a16a774b187e856f2f193b62b6b7ff7c573766c",
+      "spec_sha256": "969f0c9cc313e318f95eecb1d9da1303a5c1b44ba9b4104859cfa3acb896912a"
+    },
+    "custom_density": {
+      "png_sha256": "977d482788e950242f28e68bb22ff5ba2b72415a6c5081b123d0e0290512b51c",
+      "spec_sha256": "60398db8046b642ccae2b2f9dcf61c0df01d07b2b691158ad6bfff4aa04f4c61"
+    },
+    "custom_errorband": {
+      "png_sha256": "24f001a8eafce56c4ca172e8a2a39dba67bf64f8dd053e421ce28a8be86fcec8",
+      "spec_sha256": "eb4bfc996a6ddfad9d7a32199b4b4f798ec81301c41efb13b5d9f6a17a4cde07"
+    },
+    "custom_errorbar": {
+      "png_sha256": "5060bfec7b57aa581927358249bd3251a3488b06ff4bbd721fc2fe4475c859ef",
+      "spec_sha256": "b9408912d9373856c0db8e02669d398c1982fcf9e369c5e0528d49ec512cc1f4"
+    },
+    "custom_heatmap": {
+      "png_sha256": "9e55057d068c132b86be0863c12f4c4c67b26397638bc42c1f4c11daee837559",
+      "spec_sha256": "56928dad48618180fc5b6e5d778b7c25b695aa8fbebec0431968e0abc064845e"
+    },
+    "custom_histogram": {
+      "png_sha256": "e3da2dbe973414d29eac94936a10ad9cf5f718578d0a5ba2107736671cf1c30c",
+      "spec_sha256": "bf7c463490bdda50b0f8d2b5037407ba5c44f1dacee12d9ad728800d2286e395"
+    },
+    "custom_isotype": {
+      "png_sha256": "00e239e2c80b5e25d12f2515ca85cdceed7a42bc462548f5b8674ee526d9a71c",
+      "spec_sha256": "8ec6c58b4d188ee4abb10b7baaee798a1006401cc8186f44610f09a5cb9178a3"
+    }
+  },
+  "spec_hash": "eas-conformance-spec-hash of the spec with its data inlined",
+  "tz": "America/Chicago"
+}
+

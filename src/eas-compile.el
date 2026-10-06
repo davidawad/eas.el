@@ -223,6 +223,9 @@ METRICS supplies the config."
          (config (plist-get metrics :config))
          (zoom (plist-get (plist-get state :domains) (eas-key (plist-get group :id))))
          (color (eas-compile-color-scale units config))
+         ;; Other color channels: one of the same field shares color's
+         ;; scale and legend, one of another field gets its own.
+         (extra-colors (eas-compile--extra-colors units config color))
          (size (eas-compile-aux-scale units :size [4 361]))
          (opacity (eas-compile-aux-scale units :opacity [0.3 0.8]))
          (shape-scale (eas-bins-shape-scale units))
@@ -246,6 +249,7 @@ METRICS supplies the config."
                                 when s append (list ch s))
                        (eas-polar-scales units)
                        (when color (list (nth 0 color) (nth 2 color)))
+                       (cl-loop for (ch _ scale) in extra-colors append (list ch scale))
                        (when size (list :size size))
                        (when opacity (list :opacity opacity))
                        (when shape-scale (list :shape shape-scale))
@@ -264,7 +268,35 @@ METRICS supplies the config."
                                                                  (nth 1 color) (funcall first-def :size) size))))
                                  (funcall spec :size (funcall first-def :size) size))
                                (when opacity (funcall spec :opacity (funcall first-def :opacity) opacity))
-                               (when dash (funcall spec :strokeDash (funcall first-def :strokeDash) dash)))))))
+
+                               (when dash (funcall spec :strokeDash (funcall first-def :strokeDash) dash)))))
+    (plist-put group :legend-specs
+               (append (plist-get group :legend-specs)
+                       (cl-loop for (ch def scale own) in extra-colors
+                                when own
+                                collect (let ((owner (caar (eas-compile--defs units ch))))
+                                          (append (list :shape (eas-compile--legend-shape owner) :extra t)
+                                                  (funcall spec ch def scale))))))))
+
+(defun eas-compile--legend-shape (unit)
+  "The legend symbol shape of UNIT's mark: square, stroke or circle."
+  (let ((type (plist-get (plist-get unit :mark) :type)))
+    (cond ((member type '("bar" "rect" "area" "square")) "square")
+          ((member type '("line" "rule" "trail")) "stroke") (t "circle"))))
+
+(defun eas-compile--extra-colors (units config color)
+  "(CHANNEL DEF SCALE OWN) for UNITS' color channels besides COLOR's.
+COLOR is `eas-compile-color-scale's answer.  A channel mapping COLOR's
+field shares its scale (OWN nil); another field gets its own scale and
+legend (OWN t).  CONFIG gives the ranges."
+  (when color
+    (delq nil (mapcar (lambda (ch)
+                        (unless (eq ch (nth 0 color))
+                          (when-let* ((c (eas-compile-color-scale units config (list ch))))
+                            (if (equal (plist-get (nth 1 c) :field) (plist-get (nth 1 color) :field))
+                                (list ch (nth 1 c) (nth 2 color) nil)
+                              (append c (list t))))))
+                      '(:color :fill :stroke)))))
 
 (defun eas-compile--ranges (group)
   "Map GROUP's positional scales onto its placed plot."

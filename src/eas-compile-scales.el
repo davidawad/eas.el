@@ -266,10 +266,11 @@ ZOOM is a [LO HI] domain from view state, or nil."
                 (seq-some (lambda (row) (not (plist-member row k))) (plist-get (car p) :rows))))
             pairs))
 
-(defun eas-compile-color-scale (units &optional config)
+(defun eas-compile-color-scale (units &optional config channels)
   "Return (CHANNEL DEF SCALE) for the first field-mapped color channel of UNITS.
+CHANNELS, default color, fill and stroke, are the ones tried, in order.
 Ranges come from CONFIG's range.category, .heatmap and .ramp."
-  (cl-loop for channel in '(:color :fill :stroke)
+  (cl-loop for channel in (or channels '(:color :fill :stroke))
            ;; A nominal datum (a repeat's field name) joins the scale too.
            ;; scale: null uses the field's values as the colors themselves.
            for pairs = (seq-filter (lambda (p) (and (not (eq (plist-get (cdr p) :scale) :null))

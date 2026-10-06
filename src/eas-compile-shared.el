@@ -57,7 +57,8 @@ TREE as :shared-legends."
       (dolist (g groups)
         (dolist (ls (plist-get g :legend-specs))
           (let* ((ch (plist-get ls :channel))
-                 (slot (if (memq ch '(:color :fill :stroke)) :color ch)))
+                 ;; A fill or stroke legend of its own field (:extra) keeps its slot.
+                 (slot (if (and (memq ch '(:color :fill :stroke)) (not (plist-get ls :extra))) :color ch)))
             (unless (eas-shared--independent-p spec ch)
               (let ((old (assq slot shared)))
                 (if old (setcdr old (plist-put (copy-sequence (cdr old)) :scale

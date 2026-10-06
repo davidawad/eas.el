@@ -237,5 +237,37 @@
       (delete-directory one t)
       (delete-directory two t))))
 
+;;; Legends and the text target
+
+(defconst eas-port-gaps-test--color-and-fill
+  '(:data (:values [(:a 1 :b 2 :c "x" :d "p") (:a 2 :b 3 :c "y" :d "q")])
+    :layer [(:mark "line" :encoding (:x (:field "a" :type "quantitative") :y (:field "b" :type "quantitative")
+                                     :color (:field "c" :type "nominal")))
+            (:mark (:type "point" :filled t)
+             :encoding (:x (:field "a" :type "quantitative") :y (:field "b" :type "quantitative")
+                        :fill (:field "d" :type "nominal" :scale (:range ["red" "green"]))))])
+  "A color legend on the lines and a fill legend of another field on the points.")
+
+(ert-deftest eas-port-gaps-fill-legend-beside-a-color-legend ()
+  (let* ((scene (eas-compile eas-port-gaps-test--color-and-fill))
+         (view (aref (vconcat (plist-get scene :views)) 0))
+         (legends (append (plist-get view :legends) nil)))
+    (should (equal (mapcar (lambda (l) (plist-get l :channel)) legends) '("color" "fill")))
+    (should (equal (mapcar (lambda (e) (plist-get e :color)) (plist-get (nth 1 legends) :entries))
+                   '("red" "green")))
+    (should (equal (mapcar (lambda (i) (plist-get i :fill))
+                           (plist-get (car (eas-port-gaps-test--marks scene "point")) :items))
+                   '("red" "green"))))
+  (let ((text (eas-port-gaps-test--text eas-port-gaps-test--color-and-fill 60 12)))
+    (should (string-match-p "● p" text))
+    (should (string-match-p "━ x" text))))
+
+(ert-deftest eas-port-gaps-fill-of-the-color-field-shares-its-legend ()
+  (let* ((spec '(:data (:values [(:a 1 :c "x") (:a 2 :c "y")]) :mark "bar"
+                 :encoding (:x (:field "c" :type "nominal") :y (:field "a" :type "quantitative")
+                            :color (:field "c" :type "nominal") :fill (:field "c" :type "nominal"))))
+         (view (aref (vconcat (plist-get (eas-compile spec) :views)) 0)))
+    (should (= (length (plist-get view :legends)) 1))))
+
 (provide 'eas-port-gaps-test)
 ;;; eas-port-gaps-test.el ends here

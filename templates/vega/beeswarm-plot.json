@@ -1,0 +1,71 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "beeswarm-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A beeswarm: one dot per row, pulled by x and y forces to the center of its category's band and kept apart by collision.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "one row per dot"},
+      "category": {"type": "field", "of": "data", "default": "group", "doc": "field whose sorted values make the x bands"},
+      "label": {"type": "field", "of": "data", "default": "name", "doc": "field shown in the tooltip"},
+      "radius": {"type": "number", "default": 8, "doc": "collision radius in pixels"},
+      "size": {"type": "number", "default": 256, "doc": "dot area in square pixels ((2 * radius)^2 in the Vega example)"},
+      "collide": {"type": "number", "default": 1, "doc": "collision passes per tick"},
+      "gravityX": {"type": "number", "default": 0.2, "doc": "strength of the pull to the band center"},
+      "gravityY": {"type": "number", "default": 0.1, "doc": "strength of the pull to the vertical middle"},
+      "iterations": {"type": "number", "default": 300, "doc": "simulation ticks run for the static layout"},
+      "width": {"type": "number", "default": 800},
+      "height": {"type": "number", "default": 100},
+      "scheme": {"type": "string", "default": "category20c"},
+      "description": {"type": "string", "default": "A beeswarm chart example that uses a force-directed layout to group items by category."}
+    },
+    "example": "../examples/vega/beeswarm-plot.data.json",
+    "vega": {"status": "pass", "ratio": 0.0133, "offset": [0, -5], "note": "1.3% of pixels differ at offset [0, -5]: eas reads padding only as a number, so its canvas is 9px taller than Vega's {top: 0, bottom: 20}. The band axis comes from an invisible tick layer on an independent x scale."}
+  },
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": {"left": 5, "right": 5, "top": 0, "bottom": 20},
+  "autosize": "none",
+  "background": "white",
+  "config": {"view": {"stroke": null}},
+  "data": {"name": "data"},
+  "transform": [
+    {
+      "x-eas:transform": "force",
+      "iterations": {"x-eas:slot": "iterations"},
+      "forces": [
+        {"force": "collide", "iterations": {"x-eas:slot": "collide"}, "radius": {"x-eas:slot": "radius"}},
+        {"force": "x", "x": {"band": {"x-eas:slot": "category"}, "range": [0, {"x-eas:slot": "width"}]}, "strength": {"x-eas:slot": "gravityX"}},
+        {"force": "y", "y": {"expr": {"x-eas:expr": "{{height}} / 2"}}, "strength": {"x-eas:slot": "gravityY"}}
+      ]
+    }
+  ],
+  "resolve": {"scale": {"x": "independent"}},
+  "layer": [
+    {
+      "mark": {"type": "tick", "opacity": 0},
+      "encoding": {
+        "x": {"field": {"x-eas:slot": "category"}, "type": "ordinal", "title": null,
+              "scale": {"type": "band", "paddingInner": 0, "paddingOuter": 0},
+              "axis": {"orient": "bottom", "labelAngle": 0, "grid": false}}
+      }
+    },
+    {
+      "mark": {"type": "circle", "opacity": 1, "stroke": "white", "strokeWidth": 1, "size": {"x-eas:slot": "size"}},
+      "encoding": {
+        "x": {"field": "x", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+        "y": {"field": "y", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}},
+        "color": {"field": {"x-eas:slot": "category"}, "type": "nominal", "sort": null,
+                  "scale": {"scheme": {"x-eas:slot": "scheme"}}, "legend": null},
+        "tooltip": [
+          {"field": {"x-eas:slot": "label"}, "type": "nominal"},
+          {"field": {"x-eas:slot": "category"}, "type": "nominal"}
+        ]
+      }
+    }
+  ]
+}

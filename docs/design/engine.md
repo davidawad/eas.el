@@ -181,6 +181,44 @@ Vega's distribution functions are in the expression subset too
 `resolve`: `"independent"` samples each group over its own extent (a
 violin ends at its group's extremes), the default `"shared"` over one.
 
+
+Three domain transforms lay out networks and point sets (`eas-7r1.5`),
+natively and deterministically:
+
+```json
+{"x-eas:transform": "force", "iterations": 300, "output": "both",
+ "forces": [{"force": "center", "x": 350, "y": 250}, {"force": "collide", "radius": 8},
+            {"force": "nbody", "strength": -30}, {"force": "link", "links": [...], "distance": 30}]}
+{"x-eas:transform": "graph", "links": [...], "sort": "group", "output": "both", "cross": true}
+{"x-eas:transform": "voronoi", "x": "x", "y": "y", "polygon": "cell"}
+```
+
+- `force` (eas-force.el) is Vega's force transform: a port of d3-force 3
+  (simulation, center, collide, nbody, link, x and y forces, and the
+  d3-quadtree they search) that matches d3's layout digit for digit.
+  Nodes start at their x/y fields or on d3's phyllotaxis, fx/fy pin
+  them, and the jiggle for coincident nodes draws from d3's seeded
+  generator (`seed`, 1). A static render runs `iterations` ticks;
+  `eas-force-simulation`/`eas-force-tick` advance one live. A per-node
+  parameter is a number, a field, `{"expr": E}` or `{"band": F,
+  "range": [lo, hi]}` (the center of F's band, Vega's `xfocus`).
+  `"output": "both"` appends one row per link with its endpoints in
+  x, y, x2, y2, so rule marks draw the links (`eas_kind` tells rows
+  apart).
+- `graph` (eas-force-graph.el) joins node rows to link rows, the
+  aggregate and lookup Vega does across datasets: node `order` (stable
+  by `sort`), `degree` and `count`; link rows carrying every node field
+  as `source_*`/`target_*`; with `cross`, a row per node pair.
+- `voronoi` (eas-voronoi.el) is Vega's voronoi transform: each point's
+  cell within `extent` as SVG path data (`as`) and, with `polygon`, as
+  [x, y] vertices a line mark draws after a flatten; `key` makes rows
+  sharing a value one site.
+
+Each takes `"transform": [...]`, Vega-Lite transforms run on its rows
+first, because a template's domain transforms precede its native ones.
+`project` (eas-geo.el) takes `"fit": false` to keep the projection's
+own scale and translate, as a Vega projection does.
+
 ### L2 spec: chart/v1
 
 It is Vega-Lite (pinned to the version `bin/chart` pins, 6.4.1).
@@ -258,6 +296,15 @@ what `make test-gallery-vega` holds it to. The references were drawn
 by Vega with estimated text widths (0.8 em per character), so a
 binding may set `label_extent` (an axis `minExtent`) to keep the
 gallery's layout.
+
+`templates/vega/` holds one template per Vega gallery example
+(`test/vega-examples/`), namespaced `vega/NAME` and loaded with
+`(eas-template-add-directory "templates/vega")`; its bindings live in
+`examples/vega/` (an `example` path is relative to the parent of the
+template's directory, so they read `../examples/vega/NAME.data.json`).
+Each records in `x-eas.vega` how it compares with Vega's reference
+PNG: `status` (pass, partial, unsupported), the differing-pixel
+`ratio` at `offset`, and a `note`.
 
 A slot that holds an array can expand into views:
 `{"x-eas:each": SLOT, "spec": X}` in any array becomes one X per item,
@@ -559,6 +606,15 @@ selections without `nearest` need the pointer on a drawn mark (within
 the stroke, symbol or box, plus half a character cell); `nearest`
 selections, and so the crosshair, still follow the nearest datum. What
 a chart reads where the pointer merely is goes in the values strip.
+
+Two pointer interactions of the Vega network examples rebind a
+template's data instead (eas-force-drag.el, run from
+`eas-view-dispatch-functions`): a template declaring
+`"interaction": {"force-drag": {"slot": "nodes"}}` pins a dragged node
+where it is dropped (dblclick frees it) and reruns its force layout
+from the current positions; one declaring `"matrix-reorder"` moves the
+node whose row or column label is dragged, as Vega's reorderable
+matrix does. Both are deterministic, so `eas-replay` redraws them.
 
 Semantics follow the Vega-Lite docs (Selection, Bind, Parameter,
 Tooltip). The static path renders the initial state, which is what

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "reorderable-matrix",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "An adjacency matrix: one cell per pair of nodes, filled where a link joins them, colored by the group both share; rows and columns follow the sort field.",
+    "slots": {
+      "nodes": {"shape": "plist", "required": true, "doc": "one row per node"},
+      "links": {"shape": "plist", "required": true, "doc": "one row per link with source and target node references"},
+      "id": {"type": "field", "of": "nodes", "default": null, "doc": "node field that links refer to; null means the node's position in nodes"},
+      "group": {"type": "field", "of": "nodes", "default": "group", "doc": "node field coloring links within one group"},
+      "sort": {"type": "field", "of": "nodes", "default": "group", "doc": "node field the rows and columns are ordered by (ties keep data order)"},
+      "label": {"type": "field", "of": "nodes", "default": "name", "doc": "node field written beside each row and above each column"},
+      "cellSize": {"type": "number", "default": 10, "doc": "cell pitch in pixels"},
+      "size": {"type": "number", "default": 770, "doc": "matrix width and height in pixels: node count x cellSize"},
+      "scheme": {"type": "string", "default": "tableau10"},
+      "description": {"type": "string", "default": "A re-orderable adjacency matrix depicting character co-occurrence in the novel Les Misérables."}
+    },
+    "example": "../examples/vega/reorderable-matrix.data.json",
+    "interaction": {"matrix-reorder": {"slot": "nodes", "sort": "sort"}},
+    "vega": {"status": "pass", "ratio": 0.0321, "offset": [55, 55], "note": "3.2% of pixels differ at offset [55, 55], mostly label glyphs; Vega's headless text-width estimate pads its canvas 55px further left and up. The graph transform orders nodes by group and supplies the node pairs (cross) and links. Dragging a row or column label moves that node (eas-force-drag.el)."}
+  },
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "size"},
+  "height": {"x-eas:slot": "size"},
+  "padding": 2,
+  "autosize": "none",
+  "background": "white",
+  "config": {"view": {"stroke": null}},
+  "data": {"name": "nodes"},
+  "transform": [
+    {"x-eas:transform": "graph", "links": {"x-eas:slot": "links"}, "id": {"x-eas:slot": "id"},
+     "sort": {"x-eas:slot": "sort"}, "output": "both", "cross": true},
+    {"calculate": {"x-eas:expr": "(datum.source_order - 1) * {{cellSize}}"}, "as": "eas_sx"},
+    {"calculate": {"x-eas:expr": "(datum.target_order - 1) * {{cellSize}}"}, "as": "eas_tx"},
+    {"calculate": {"x-eas:expr": "(datum.order - 1) * {{cellSize}} + {{cellSize}} / 2"}, "as": "eas_mid"},
+    {"calculate": {"x-eas:text": "datum.eas_kind === 'node' ? datum['{{group}}'] : datum.eas_kind === 'cell' ? datum.count : datum['source_{{group}}'] === datum['target_{{group}}'] ? datum['source_{{group}}'] : datum.count"}, "as": "eas_group"},
+    {"calculate": {"x-eas:expr": "datum.eas_sx + {{cellSize}} - 1"}, "as": "eas_sx2"},
+    {"calculate": {"x-eas:expr": "datum.eas_tx + {{cellSize}} - 1"}, "as": "eas_tx2"},
+    {"calculate": "-2", "as": "eas_edge"}
+  ],
+  "layer": [
+    {
+      "transform": [{"filter": "datum.eas_kind === 'node' || (datum.eas_kind === 'cell' && datum.source_order === 1 && datum.target_order === 1)"}],
+      "mark": {"type": "point", "opacity": 0},
+      "encoding": {
+        "x": {"field": "eas_sx", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "size"}], "nice": false, "zero": false}},
+        "y": {"field": "eas_tx", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "size"}, 0], "nice": false, "zero": false}},
+        "color": {"field": "eas_group", "type": "ordinal", "legend": null,
+                  "scale": {"scheme": {"x-eas:slot": "scheme"}}}
+      }
+    },
+    {
+      "transform": [{"filter": "datum.eas_kind === 'cell'"}],
+      "mark": {"type": "rect", "fill": "#f5f5f5"},
+      "encoding": {
+        "x": {"field": "eas_sx", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "size"}], "nice": false, "zero": false}},
+        "x2": {"field": "eas_sx2"},
+        "y": {"field": "eas_tx", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "size"}, 0], "nice": false, "zero": false}},
+        "y2": {"field": "eas_tx2"}
+      }
+    },
+    {
+      "transform": [{"filter": "datum.eas_kind === 'link'"},
+                    {"fold": ["eas_sx", "eas_tx"], "as": ["eas_axis", "eas_cx"]},
+                    {"calculate": "datum.eas_axis === 'eas_sx' ? datum.eas_tx : datum.eas_sx", "as": "eas_cy"},
+                    {"calculate": {"x-eas:expr": "datum.eas_cx + {{cellSize}} - 1"}, "as": "eas_cx2"},
+                    {"calculate": {"x-eas:expr": "datum.eas_cy + {{cellSize}} - 1"}, "as": "eas_cy2"}],
+      "mark": {"type": "rect"},
+      "encoding": {
+        "x": {"field": "eas_cx", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "size"}], "nice": false, "zero": false}},
+        "x2": {"field": "eas_cx2"},
+        "y": {"field": "eas_cy", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "size"}, 0], "nice": false, "zero": false}},
+        "y2": {"field": "eas_cy2"},
+        "color": {"field": "eas_group", "type": "ordinal", "legend": null,
+                  "scale": {"scheme": {"x-eas:slot": "scheme"}}},
+        "tooltip": [
+          {"field": {"x-eas:text": "source_{{label}}"}, "type": "nominal", "title": "source"},
+          {"field": {"x-eas:text": "target_{{label}}"}, "type": "nominal", "title": "target"}
+        ]
+      }
+    },
+    {
+      "transform": [{"filter": "datum.eas_kind === 'node'"}],
+      "mark": {"type": "text", "angle": 270, "align": "left", "baseline": "middle", "fontSize": 10},
+      "encoding": {
+        "x": {"field": "eas_mid", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "size"}], "nice": false, "zero": false}},
+        "y": {"field": "eas_edge", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "size"}, 0], "nice": false, "zero": false}},
+        "text": {"field": {"x-eas:slot": "label"}, "type": "nominal"}
+      }
+    },
+    {
+      "transform": [{"filter": "datum.eas_kind === 'node'"}],
+      "mark": {"type": "text", "align": "right", "baseline": "middle", "fontSize": 10},
+      "encoding": {
+        "x": {"field": "eas_edge", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "size"}], "nice": false, "zero": false}},
+        "y": {"field": "eas_mid", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "size"}, 0], "nice": false, "zero": false}},
+        "text": {"field": {"x-eas:slot": "label"}, "type": "nominal"}
+      }
+    }
+  ]
+}

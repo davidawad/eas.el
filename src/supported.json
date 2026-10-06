@@ -9,7 +9,10 @@
     "transform/x-eas:linkpath": "linkpath draws Vega's line, arc, curve, diagonal and orthogonal links, radial too (ERT: eas-vega-hierarchy-linkpath-*).",
     "x-eas/on": "x-eas.on handlers turn timer ticks and keys into param events (ERT: eas-vega-interaction-keys-drive-params).",
     "x-eas/timer": "x-eas.timer ticks a shown view's timer handlers every interval while its buffer is visible (ERT: eas-vega-interaction-timer-drives-params).",
-    "transform/x-eas/dotbin": "Vega's dotbin (Wilkinson dot plot bins) as a domain transform (ERT: eas-vega-distributions-dotbin-matches-vega)."
+    "transform/x-eas/dotbin": "Vega's dotbin (Wilkinson dot plot bins) as a domain transform (ERT: eas-vega-distributions-dotbin-matches-vega).",
+    "transform/x-eas:force": "Vega's force transform, d3-force's simulation and forces (ERT: eas-vega-network-force-matches-d3).",
+    "transform/x-eas:graph": "Nodes joined to links: order, degree, link and pair rows (ERT: eas-vega-network-graph-joins-nodes-and-links).",
+    "transform/x-eas:voronoi": "Vega's voronoi transform: cell paths and vertices (ERT: eas-vega-network-voronoi-cells)."
   },
   "features": {
     "bind/input": {

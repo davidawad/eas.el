@@ -85,6 +85,22 @@ A plist (:fill :stroke :stroke-width :opacity :stroked :field-color
     (let ((xs (mapcar (lambda (p) (aref p 0)) points)) (ys (mapcar (lambda (p) (aref p 1)) points)))
       (vector (apply #'min xs) (apply #'min ys) (apply #'max xs) (apply #'max ys)))))
 
+(defun eas-marks--rotate-box (box item)
+  "BOX turned by text ITEM's :angle (degrees) about its anchor, boxed again.
+Vega bounds rotated text this way; BOX is returned as is at angle 0."
+  (let ((angle (or (plist-get item :angle) 0)))
+    (if (or (null box) (not (numberp angle)) (zerop (mod angle 360)))
+        box
+      (let* ((a (degrees-to-radians angle)) (c (cos a)) (s (sin a))
+             (x (plist-get item :x)) (y (plist-get item :y))
+             (pts (mapcar (lambda (p)
+                            (let ((dx (- (car p) x)) (dy (- (cdr p) y)))
+                              (cons (+ x (- (* dx c) (* dy s))) (+ y (* dx s) (* dy c)))))
+                          (list (cons (aref box 0) (aref box 1)) (cons (aref box 2) (aref box 1))
+                                (cons (aref box 0) (aref box 3)) (cons (aref box 2) (aref box 3))))))
+        (vector (apply #'min (mapcar #'car pts)) (apply #'min (mapcar #'cdr pts))
+                (apply #'max (mapcar #'car pts)) (apply #'max (mapcar #'cdr pts)))))))
+
 (defun eas-marks-item-bounds (type item metrics)
   "Vega's bounds of ITEM of mark TYPE, or nil.
 Transparent items count too, so hover and selection never move layout."
@@ -102,14 +118,16 @@ Transparent items count too, so hover and selection never move layout."
                     (lines (or (plist-get item :lines)
                                (vconcat (split-string (format "%s" (plist-get item :text)) "\n"))))
                     (lh (+ (plist-get item :fontSize) 2)))
-                (apply #'eas-layout-union
-                       (seq-map-indexed
-                        (lambda (line i)
-                          (eas-layout-text-bounds metrics line (plist-get item :fontSize) (plist-get item :x)
-                                                  (+ (plist-get item :y) (* lh (- i (eas-marks-line-shift item))))
-                                                  (plist-get item :align) (plist-get item :baseline) nil
-                                                  (plist-get item :fontWeight)))
-                        lines))))
+                (eas-marks--rotate-box
+                 (apply #'eas-layout-union
+                        (seq-map-indexed
+                         (lambda (line i)
+                           (eas-layout-text-bounds metrics line (plist-get item :fontSize) (plist-get item :x)
+                                                   (+ (plist-get item :y) (* lh (- i (eas-marks-line-shift item))))
+                                                   (plist-get item :align) (plist-get item :baseline) nil
+                                                   (plist-get item :fontWeight)))
+                         lines))
+                 item)))
       ("arc" (eas-marks--grow (eas-arc-bounds item) item))
       ("geoshape" (eas-geoshape-item-box item))
       ("line" (eas-marks--grow (eas-marks--points-box (plist-get item :points)) item))

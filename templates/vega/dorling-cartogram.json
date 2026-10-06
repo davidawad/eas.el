@@ -1,0 +1,88 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "dorling-cartogram",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A Dorling cartogram: one circle per region at its projected centroid, sized and colored by a value, pushed apart by collision and pulled back to the centroid.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "one row per region with its centroid's longitude and latitude"},
+      "value": {"type": "field", "of": "data", "default": "rate", "doc": "field sizing and coloring the circles"},
+      "label": {"type": "field", "of": "data", "default": "state", "doc": "field written in each circle"},
+      "longitude": {"type": "field", "of": "data", "default": "longitude"},
+      "latitude": {"type": "field", "of": "data", "default": "latitude"},
+      "projection": {"type": "string", "default": "albersUsa", "doc": "albersUsa, albers or conicEqualArea"},
+      "scale": {"type": "number", "default": 1100, "doc": "the projection's scale"},
+      "translate": {"type": "array", "default": [450, 260], "doc": "the projection's translate, in pixels"},
+      "minSize": {"type": "number", "default": 1000, "doc": "circle area in square pixels of the lowest value"},
+      "maxSize": {"type": "number", "default": 5000, "doc": "circle area in square pixels of the highest value"},
+      "iterations": {"type": "number", "default": 300, "doc": "simulation ticks run for the static layout"},
+      "legendTitle": {"type": "string", "default": "% of Obese Adults"},
+      "format": {"type": "string", "default": ".1%", "doc": "d3 format of the value in the legend and tooltip"},
+      "width": {"type": "number", "default": 900},
+      "height": {"type": "number", "default": 520},
+      "scheme": {"type": "string", "default": "blues"},
+      "description": {"type": "string", "default": "A Dorling cartogram depicting U.S. state obesity rates."}
+    },
+    "example": "../examples/vega/dorling-cartogram.data.json",
+    "vega": {"status": "partial", "ratio": 0.0242, "offset": [0, 0], "note": "Circles, labels and colors match Vega (2.4% of pixels differ); the binding carries each state's d3 geoCentroid (eas reads no TopoJSON; scripts/eas-vega-network-data.mjs) and the force transform projects it with albersUsa at scale 1100. The legend is a color gradient: Vega's merged size-and-fill symbol legend is not drawn."}
+  },
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": 0,
+  "autosize": "none",
+  "background": "white",
+  "config": {"view": {"stroke": null}},
+  "data": {"name": "data"},
+  "transform": [
+    {
+      "x-eas:transform": "force",
+      "iterations": {"x-eas:slot": "iterations"},
+      "transform": [
+        {"x-eas:transform": "project", "fit": false,
+         "projection": {"type": {"x-eas:slot": "projection"}, "scale": {"x-eas:slot": "scale"}, "translate": {"x-eas:slot": "translate"}},
+         "longitude": {"x-eas:slot": "longitude"}, "latitude": {"x-eas:slot": "latitude"},
+         "size": [{"x-eas:slot": "width"}, {"x-eas:slot": "height"}], "as": ["eas_cx", "eas_up"]},
+        {"calculate": "datum.eas_cx", "as": "x"},
+        {"calculate": {"x-eas:expr": "{{height}} - datum.eas_up"}, "as": "y"},
+        {"calculate": "datum.y", "as": "eas_cy"},
+        {"joinaggregate": [{"op": "min", "field": {"x-eas:slot": "value"}, "as": "eas_lo"},
+                           {"op": "max", "field": {"x-eas:slot": "value"}, "as": "eas_hi"}]},
+        {"calculate": {"x-eas:expr": "{{minSize}} + ({{maxSize}} - {{minSize}}) * (datum[{{value}}] - datum.eas_lo) / (datum.eas_hi - datum.eas_lo)"}, "as": "eas_size"}
+      ],
+      "forces": [
+        {"force": "collide", "radius": {"expr": "1 + sqrt(datum.eas_size) / 2"}},
+        {"force": "x", "x": "eas_cx"},
+        {"force": "y", "y": "eas_cy"}
+      ]
+    }
+  ],
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative", "axis": null,
+          "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+    "y": {"field": "y", "type": "quantitative", "axis": null,
+          "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}}
+  },
+  "layer": [
+    {
+      "mark": {"type": "circle", "opacity": 1, "stroke": "white", "strokeWidth": 1.5},
+      "encoding": {
+        "size": {"field": "eas_size", "type": "quantitative", "legend": null,
+                 "scale": {"domain": [0, 1000000], "range": [0, 1000000], "zero": true}},
+        "color": {"field": {"x-eas:slot": "value"}, "type": "quantitative",
+                  "scale": {"scheme": {"x-eas:slot": "scheme"}, "nice": true},
+                  "legend": {"title": {"x-eas:slot": "legendTitle"}, "format": {"x-eas:slot": "format"},
+                             "orient": "bottom-right"}},
+        "tooltip": [
+          {"field": {"x-eas:slot": "label"}, "type": "nominal"},
+          {"field": {"x-eas:slot": "value"}, "type": "quantitative", "format": {"x-eas:slot": "format"}}
+        ]
+      }
+    },
+    {
+      "mark": {"type": "text", "align": "center", "baseline": "middle", "fontSize": 13, "fontWeight": "bold"},
+      "encoding": {"text": {"field": {"x-eas:slot": "label"}, "type": "nominal"}}
+    }
+  ]
+}

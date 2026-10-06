@@ -1,0 +1,96 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "arc-diagram",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "An arc diagram: nodes on a line in data order, sized by degree, each link a semicircle above them as wide as its weight.",
+    "slots": {
+      "nodes": {"shape": "plist", "required": true, "doc": "one row per node, in the order they are drawn"},
+      "links": {"shape": "plist", "required": true, "doc": "one row per link with source and target node references"},
+      "id": {"type": "field", "of": "nodes", "default": null, "doc": "node field that links refer to; null means the node's position in nodes"},
+      "group": {"type": "field", "of": "nodes", "default": "group", "doc": "node field colored by category"},
+      "label": {"type": "field", "of": "nodes", "default": "name", "doc": "node field written under each node"},
+      "weight": {"type": "field", "of": "links", "default": "value", "doc": "link field giving the arc's stroke width in pixels"},
+      "width": {"type": "number", "default": 770},
+      "height": {"type": "number", "default": 436},
+      "scheme": {"type": "string", "default": "tableau10"},
+      "description": {"type": "string", "default": "An arc diagram depicting character co-occurrence in the novel Les Misérables."}
+    },
+    "example": "../examples/vega/arc-diagram.data.json",
+    "vega": {"status": "pass", "ratio": 0.0448, "offset": [10, 0], "note": "4.5% of pixels differ at offset [10, 0]: label glyphs and anti-aliasing. Arcs are 32-segment line marks, one per link; the graph transform supplies node order and degree. Vega's headless text-width estimate pads its canvas 10px further left."}
+  },
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": 5,
+  "autosize": "none",
+  "background": "white",
+  "config": {"view": {"stroke": null}},
+  "data": {"name": "nodes"},
+  "transform": [
+    {"x-eas:transform": "graph", "links": {"x-eas:slot": "links"}, "id": {"x-eas:slot": "id"}, "output": "both"},
+    {"calculate": {"x-eas:expr": "{{width}} / datum.count"}, "as": "eas_step"},
+    {"calculate": "datum.eas_kind === 'link' ? (min(datum.source_order, datum.target_order) - 1) * datum.eas_step : (datum.order - 1) * datum.eas_step", "as": "eas_x0"},
+    {"calculate": "datum.eas_kind === 'link' ? (max(datum.source_order, datum.target_order) - 1) * datum.eas_step : datum.eas_x0", "as": "eas_x1"},
+    {"calculate": {"x-eas:expr": "(datum.eas_x1 - datum.eas_x0) / 2 + (datum.eas_kind === 'link' ? datum[{{weight}}] / 2 : 0)"}, "as": "eas_reach"},
+    {"joinaggregate": [{"op": "max", "field": "eas_reach", "as": "eas_baseline"}]}
+  ],
+  "encoding": {
+    "x": {"field": "eas_px", "type": "quantitative", "axis": null,
+          "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+    "y": {"field": "eas_py", "type": "quantitative", "axis": null,
+          "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}}
+  },
+  "layer": [
+    {
+      "transform": [
+        {"filter": "datum.eas_kind === 'link'"},
+        {"window": [{"op": "row_number", "as": "eas_link"}]},
+        {"calculate": "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]", "as": "eas_k"},
+        {"flatten": ["eas_k"]},
+        {"calculate": {"x-eas:expr": "(datum.eas_x0 + datum.eas_x1) / 2 - (datum.eas_x1 - datum.eas_x0) / 2 * cos(PI * datum.eas_k / 32)"}, "as": "eas_px"},
+        {"calculate": {"x-eas:expr": "datum.eas_baseline - (datum.eas_x1 - datum.eas_x0) / 2 * sin(PI * datum.eas_k / 32)"}, "as": "eas_py"}
+      ],
+      "mark": {"type": "line", "stroke": "#000", "strokeOpacity": 0.2, "strokeCap": "butt", "interpolate": "linear"},
+      "encoding": {
+        "detail": {"field": "eas_link", "type": "nominal"},
+        "order": {"field": "eas_k", "type": "quantitative"},
+        "size": {"field": {"x-eas:slot": "weight"}, "type": "quantitative", "legend": null,
+                 "scale": {"domain": [0, 1000], "range": [0, 1000], "zero": true}}
+      }
+    },
+    {
+      "transform": [
+        {"filter": "datum.eas_kind === 'node'"},
+        {"calculate": "datum.eas_x0", "as": "eas_px"},
+        {"calculate": "datum.eas_baseline", "as": "eas_py"},
+        {"calculate": "datum.degree * 5 + 10", "as": "eas_size"}
+      ],
+      "layer": [
+        {
+          "mark": {"type": "circle", "opacity": 1},
+          "encoding": {
+            "size": {"field": "eas_size", "type": "quantitative", "legend": null,
+                     "scale": {"domain": [0, 100000], "range": [0, 100000], "zero": true}},
+            "color": {"field": {"x-eas:slot": "group"}, "type": "nominal", "sort": null,
+                      "scale": {"scheme": {"x-eas:slot": "scheme"}}, "legend": null},
+            "tooltip": [
+              {"field": {"x-eas:slot": "label"}, "type": "nominal"},
+              {"field": "degree", "type": "quantitative"}
+            ]
+          }
+        },
+        {
+          "mark": {"type": "text", "angle": 270, "align": "right", "baseline": "middle", "fontSize": 9, "dy": 0},
+          "encoding": {
+            "y": {"field": "eas_label_y", "type": "quantitative", "axis": null,
+                  "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}},
+            "text": {"field": {"x-eas:slot": "label"}, "type": "nominal"}
+          },
+          "transform": [{"calculate": "datum.eas_py + 7", "as": "eas_label_y"}]
+        }
+      ]
+    }
+  ]
+}

@@ -115,8 +115,13 @@ PARAMS: :projection, :longitude and :latitude fields, :size [W H]."
     (dolist (p points)
       (when p (setq x0 (min x0 (car p)) y0 (min y0 (cdr p)) x1 (max x1 (car p)) y1 (max y1 (cdr p)))))
     (let* ((ok (and (< x0 x1) (< y0 y1)))
-           (k (if ok (min (/ w (- x1 x0)) (/ h (- y1 y0))) 1))
-           (tx (if ok (/ (- w (* k (+ x1 x0))) 2) 0)) (ty (if ok (/ (- h (* k (+ y1 y0))) 2) 0)))
+           (proj (plist-get params :projection))
+           ;; "fit": false keeps the projection's own scale and translate, as Vega's.
+           (fixed (and (eq (plist-get params :fit) :false) (numberp (plist-get proj :scale))))
+           (translate (or (plist-get proj :translate) (vector (/ w 2.0) (/ h 2.0))))
+           (k (cond (fixed (plist-get proj :scale)) (ok (min (/ w (- x1 x0)) (/ h (- y1 y0)))) (t 1)))
+           (tx (cond (fixed (aref translate 0)) (ok (/ (- w (* k (+ x1 x0))) 2)) (t 0)))
+           (ty (cond (fixed (aref translate 1)) (ok (/ (- h (* k (+ y1 y0))) 2)) (t 0))))
       (vconcat (cl-mapcar (lambda (r p)
                             (append r (list kx (if p (+ tx (* k (car p))) 0)
                                             ;; y grows up on the linear scale that reads it
@@ -130,7 +135,8 @@ PARAMS: :projection, :longitude and :latitude fields, :size [W H]."
            :longitude (:type "string" :required t :doc "longitude field")
            :latitude (:type "string" :required t :doc "latitude field")
            :size (:type "array" :required t :doc "[width height] the projection is fitted to")
-           :as (:type "array" :default ["x_projected" "y_projected"] :doc "output fields"))
+           :as (:type "array" :default ["x_projected" "y_projected"] :doc "output fields")
+           :fit (:type "boolean" :doc "false: the projection's scale and translate, not fitted to size"))
  :fn #'eas-geo-project)
 
 ;;; Lowering

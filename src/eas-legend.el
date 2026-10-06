@@ -181,12 +181,15 @@ METRICS are the layout's."
          (glen (eas-legend--gradient-length legend metrics))
          (count (if (eas-layout-text-p metrics) (max 2 (ceiling (/ glen 40.0)))
                   (max 2 (* 2 (floor glen 100)))))
-         (fmt (eas-scale-tick-format (list :type "linear" :domain domain) count))
+         ;; Vega formats gradient labels as ticks: "%" takes the ticks' precision.
+         (format (let ((f (plist-get (plist-get legend :overrides) :format))) (and (stringp f) f)))
+         (fmt (eas-scale-tick-format (list :type "linear" :domain domain) count format))
          (values (if (vectorp (plist-get legend :values)) (append (plist-get legend :values) nil)
                    (eas-scale-linear-ticks (aref domain 0) (aref domain 1) count))))
     (when (and (not (eas-layout-text-p metrics)) (< (length values) 3) (/= (aref domain 0) (aref domain 1)))
       (setq values (list (aref domain 0) (aref domain 1))))
-    (vconcat (mapcar (lambda (v) (list :value v :label (funcall fmt v))) values))))
+    (vconcat (mapcar (lambda (v) (append (list :value v :label (funcall fmt v)) (and format (list :formatted t))))
+                     values))))
 
 (defun eas-legend-sized (legend metrics)
   "LEGEND with its gradient entries filled in for its final length.

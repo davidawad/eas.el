@@ -1,0 +1,14 @@
+{
+  "domain": [1926, 2026],
+  "end": "Today",
+  "data": [
+    {"domain": 1928, "label": "Major Event A"},
+    {"domain": 1939, "label": "Major Event B"},
+    {"domain": 1954, "label": "Major Event C"},
+    {"domain": 1962, "label": "Major Event D"},
+    {"domain": 1974, "label": "Major Event E"},
+    {"domain": 1990, "label": "Major Event F"},
+    {"domain": 2001, "label": "Major Event G"},
+    {"domain": 2015, "label": "Major Event H"}
+  ]
+}

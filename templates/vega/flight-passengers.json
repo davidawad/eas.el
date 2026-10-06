@@ -1,0 +1,167 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "flight-passengers",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Year-over-year change: a line with points of the relative change from a prior value, a dashed zero line, signed percent labels.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "monthly rows with a date, the current value and the prior year's value"
+      },
+      "date": {"type": "field", "of": "data", "default": "date", "doc": "month (ISO date)"},
+      "current": {"type": "field", "of": "data", "default": "curr", "doc": "this year's value"},
+      "prior": {"type": "field", "of": "data", "default": "prev", "doc": "the prior year's value"},
+      "yTitle": {"type": "string", "default": "Change from Prior Year"},
+      "title": {"type": "string", "default": ""},
+      "subtitle": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "Change from the prior year, month by month.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/flight-passengers.data.json",
+    "vega": {
+      "status": "partial",
+      "note": "line, points, signed percent axis and dashed zero rule match; the reference's autosize fit shrinks the plot to about 170 px to make room for its title as vg2svg over-estimates it (0.8 em a character), which eas's container fit does not reproduce",
+      "size": [500, 250],
+      "ratio": 0.0615
+    }
+  },
+  "title": {
+    "text": {"x-eas:slot": "title"},
+    "subtitle": {"x-eas:slot": "subtitle"},
+    "subtitleFontStyle": "italic",
+    "subtitlePadding": 5,
+    "frame": "bounds",
+    "anchor": "start",
+    "offset": 12,
+    "fontSize": 13,
+    "fontWeight": "bold"
+  },
+  "description": {"x-eas:slot": "description"},
+  "width": "container",
+  "height": "container",
+  "autosize": {"type": "fit", "contains": "padding"},
+  "background": "#fff",
+  "padding": 5,
+  "data": {"name": "data"},
+  "transform": [
+    {"calculate": {"x-eas:expr": "toDate(datum[{{date}}])"}, "as": "_t"},
+    {"timeUnit": "yearmonth", "field": "_t", "as": "month"},
+    {"calculate": {"x-eas:expr": "datum[{{current}}] / datum[{{prior}}] - 1"}, "as": "change"}
+  ],
+  "layer": [
+    {
+      "encoding": {
+        "x": {
+          "field": "month",
+          "type": "temporal",
+          "title": null,
+          "scale": {"padding": 24},
+          "axis": {
+            "format": "%b %Y",
+            "labelPadding": 10,
+            "grid": false,
+            "labelFlush": false,
+            "labelOverlap": false,
+            "zindex": 1
+          }
+        },
+        "y": {
+          "field": "change",
+          "type": "quantitative",
+          "scale": {"nice": true, "zero": true},
+          "axis": {
+            "format": "+%",
+            "grid": true,
+            "tickCount": 5,
+            "labelOverlap": false,
+            "gridColor": "#eee",
+            "title": {"x-eas:slot": "yTitle"},
+            "titleAlign": "left",
+            "titleAngle": 0,
+            "titleAnchor": "end",
+            "titleBaseline": "middle",
+            "titleFontSize": 10,
+            "titleFontWeight": "normal",
+            "titleX": 1,
+            "titleY": 0,
+            "zindex": 1,
+            "labelExpr": "datum.value ? datum.label : ''"
+          }
+        }
+      },
+      "layer": [
+        {"mark": {"type": "line", "stroke": "steelblue", "strokeWidth": 3}},
+        {
+          "mark": {
+            "type": "point",
+            "shape": "circle",
+            "filled": true,
+            "fill": "steelblue",
+            "opacity": 1,
+            "size": 64
+          }
+        }
+      ]
+    },
+    {
+      "transform": [{"aggregate": []}, {"calculate": "0", "as": "change"}],
+      "mark": {"type": "rule", "stroke": "#888", "strokeDash": [5, 4], "strokeWidth": 1},
+      "encoding": {"y": {"field": "change", "type": "quantitative"}}
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#555",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#555",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4,
+      "domain": false,
+      "ticks": false
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

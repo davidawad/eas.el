@@ -149,10 +149,13 @@ in compile's per-row loops."
               (r0 (aref range 0)) (r1 (aref range 1))
               (k (if (= d0 d1) 0.0 (/ (- r1 r0) (- d1 d0))))
               (mid (/ (+ r0 r1) 2.0))
-              (time (member (plist-get scale :type) '("time" "utc"))))
-         (lambda (v)
-           (let ((v (if (and time (not (numberp v))) (eas-time-parse v) v)))
-             (and (numberp v) (if (= d0 d1) mid (+ r0 (* k (- v d0)))))))))
+              (time (member (plist-get scale :type) '("time" "utc")))
+              (fn (lambda (v)
+                    (let ((v (if (and time (not (numberp v))) (eas-time-parse v) v)))
+                      (and (numberp v) (if (= d0 d1) mid (+ r0 (* k (- v d0)))))))))
+         (if (eq (plist-get scale :round) t)
+             (lambda (v) (let ((p (funcall fn v))) (and p (float (round p)))))
+           fn)))
       ((or "band" "point" "ordinal")
        (let ((index (make-hash-table :test 'equal)) (i 0))
          (seq-doseq (v domain) (unless (gethash v index) (puthash v i index)) (setq i (1+ i)))
@@ -168,7 +171,15 @@ in compile's per-row loops."
 (declare-function eas-scale-discretize-apply "eas-scale-discretize")
 
 (defun eas-scale-apply (scale value)
-  "Map data VALUE through SCALE; nil when VALUE has no position."
+  "Map data VALUE through SCALE; nil when VALUE has no position.
+A continuous SCALE with :round t snaps positions to whole pixels."
+  (if (and (eq (plist-get scale :round) t)
+           (member (plist-get scale :type) '("linear" "log" "sqrt" "pow" "time" "utc")))
+      (let ((p (eas-scale--apply scale value))) (if (numberp p) (float (round p)) p))
+    (eas-scale--apply scale value)))
+
+(defun eas-scale--apply (scale value)
+  "Map data VALUE through SCALE, unrounded; see `eas-scale-apply'."
   (let ((domain (plist-get scale :domain)))
     (pcase (plist-get scale :type)
       ("linear" (and (numberp value)
@@ -275,7 +286,9 @@ the domain spans half the ramp, interpolated in HCL as Vega does.  An
 too; other ramps (schemes, sampled finely) linearly in RGB."
   (when (numberp value)
     (let* ((domain (plist-get scale :domain)) (stops (plist-get scale :range))
-           (lo (aref domain 0)) (hi (aref domain 1)) (mid (plist-get scale :mid)))
+           (lo (aref domain 0)) (hi (aref domain 1)) (mid (plist-get scale :mid))
+           ;; A clamped scale holds values outside its domain at the ends.
+           (value (if (plist-get scale :clamp) (max (min lo hi) (min (max lo hi) value)) value)))
       (cond
        (mid
         (eas-color-piecewise-hcl
@@ -409,10 +422,11 @@ See `eas-scale-tick-format', which adds the log label filter."
     ((or "linear" "log" "sqrt" "pow")
      (let ((decimals (eas-scale-tick-decimals scale count)))
        (cond
-        ((and format (string-match-p "\\`,?%\\'" format))
-         ;; d3 tickFormat "%": the step's precision less two places.
-         (let ((d (max 0 (- decimals 2))))
-           (lambda (v) (concat (eas-scale-format-number (* 100 v) d) "%"))))
+        ((and format (string-match "\\`\\(\\+?\\),?%\\'" format))
+         ;; d3 tickFormat "%": the step's precision less two places; a
+         ;; "+" sign marks positive values (and zero) too.
+         (let ((d (max 0 (- decimals 2))) (plus (equal (match-string 1 format) "+")))
+           (lambda (v) (concat (if (and plus (>= v 0)) "+" "") (eas-scale-format-number (* 100 v) d) "%"))))
         ((and format (string-match "\\.\\([0-9]+\\)%" format))
          (let ((d (string-to-number (match-string 1 format))))
            (lambda (v) (concat (eas-scale-format-number (* 100 v) d) "%"))))

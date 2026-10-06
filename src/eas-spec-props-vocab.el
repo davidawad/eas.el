@@ -85,7 +85,7 @@
 (defconst eas-spec-props--scale
   '((type "sqrt") (domain [0 20]) (domainMax 20) (domainMin -5) (domainMid 1) (domainRaw :null)
     (range (:any [0 50] ["#d62728" "#2ca02c" "#9467bd" "#8c564b"])) (rangeMax 50) (rangeMin 20) (scheme "reds") (interpolate "hcl") (reverse t)
-    (round t) (clamp t (domain [0 2])) (nice :false (zero :false)) (zero :false) (padding 20) (paddingInner 0.5)
+    (round t (domain [0 7])) (clamp t (domain [0 2] domainMid 1)) (nice :false (zero :false)) (zero :false) (padding 20) (paddingInner 0.5)
     (paddingOuter 1) (align 0) (base 2 (type "log")) (exponent 3 (type "pow")) (constant 2 (type "symlog"))
     (bins [0 5 10]))
   "Vega-Lite scale properties.")

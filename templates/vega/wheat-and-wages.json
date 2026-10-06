@@ -1,0 +1,221 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "wheat-and-wages",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Playfair's wheat and wages: price bars, a wage area and line, and a band of reigns above, alternating up and down.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per period: its year, the price and (where known) the wage"
+      },
+      "monarchs": {
+        "shape": "plist",
+        "required": true,
+        "doc": "reigns in order: name, start, end, and commonwealth true for an interregnum"
+      },
+      "year": {"type": "field", "of": "data", "default": "year", "doc": "period start year"},
+      "price": {"type": "field", "of": "data", "default": "wheat", "doc": "bar height"},
+      "wages": {
+        "type": "field",
+        "of": "data",
+        "default": "wages",
+        "doc": "area and line height; rows without one are left out"
+      },
+      "domain": {
+        "type": "array",
+        "items": "number",
+        "default": [1565, 1825],
+        "doc": "years the x axis spans"
+      },
+      "barWidth": {"type": "number", "default": 17, "doc": "bar width in pixels"},
+      "band": {"type": "number", "default": 95, "doc": "value the reign band is centred on"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "Prices as bars against wages as an area, under the reigns of the period.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/wheat-and-wages.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "two data slots (prices and wages, reigns); bars offset 17 px right as Vega's left-anchored rects",
+      "ratio": 0.0101
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": 900,
+  "height": 465,
+  "padding": 5,
+  "encoding": {
+    "x": {
+      "field": "_x",
+      "type": "quantitative",
+      "title": null,
+      "scale": {"domain": {"x-eas:slot": "domain"}, "zero": false, "nice": false},
+      "axis": {
+        "tickCount": 5,
+        "format": "04d",
+        "grid": false,
+        "labelFlush": false,
+        "labelOverlap": false,
+        "zindex": 1
+      }
+    },
+    "y": {
+      "field": "_y",
+      "type": "quantitative",
+      "title": null,
+      "scale": {"zero": true, "nice": false},
+      "axis": {
+        "orient": "right",
+        "tickCount": 5,
+        "grid": true,
+        "domain": false,
+        "offset": 5,
+        "tickSize": 0,
+        "ticks": false,
+        "gridColor": "#fff",
+        "gridWidth": 1,
+        "gridOpacity": 0.25,
+        "labelFontStyle": "italic",
+        "labelOverlap": false,
+        "zindex": 1
+      }
+    }
+  },
+  "layer": [
+    {
+      "data": {"name": "data"},
+      "transform": [
+        {"calculate": {"x-eas:expr": "toNumber(datum[{{year}}])"}, "as": "_x"},
+        {"calculate": {"x-eas:expr": "datum[{{price}}]"}, "as": "_y"},
+        {"calculate": "0", "as": "_y2"}
+      ],
+      "mark": {
+        "type": "bar",
+        "fill": "#aaa",
+        "stroke": "#5d5d5d",
+        "strokeWidth": 0.25,
+        "x2Offset": {"x-eas:slot": "barWidth"}
+      },
+      "encoding": {"x2": {"field": "_x"}, "y2": {"field": "_y2"}}
+    },
+    {
+      "data": {"name": "data"},
+      "transform": [
+        {"filter": {"x-eas:expr": "!!datum[{{wages}}]"}},
+        {"calculate": {"x-eas:expr": "toNumber(datum[{{year}}])"}, "as": "_x"},
+        {"calculate": {"x-eas:expr": "datum[{{wages}}]"}, "as": "_y"},
+        {"calculate": "0", "as": "_y2"}
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "area",
+            "interpolate": "linear",
+            "fill": "#B3D9E6",
+            "fillOpacity": 0.8,
+            "opacity": 1
+          },
+          "encoding": {"y2": {"field": "_y2"}}
+        },
+        {"mark": {"type": "line", "interpolate": "linear", "stroke": "#ff7e79", "strokeWidth": 3}},
+        {"mark": {"type": "line", "interpolate": "linear", "stroke": "#000", "strokeWidth": 1}}
+      ]
+    },
+    {
+      "data": {"name": "monarchs"},
+      "transform": [
+        {"window": [{"op": "row_number", "as": "_index"}]},
+        {
+          "calculate": {
+            "x-eas:expr": "((!datum.commonwealth && (datum._index - 1) % 2) ? -1 : 1) * 2 + {{band}}"
+          },
+          "as": "_y2"
+        },
+        {"calculate": {"x-eas:expr": "{{band}}"}, "as": "_y"},
+        {"calculate": "datum.start", "as": "_x"},
+        {"calculate": "(datum.start + datum.end) / 2", "as": "_mid"},
+        {"calculate": "datum.commonwealth ? 'white' : 'black'", "as": "_fill"}
+      ],
+      "layer": [
+        {
+          "mark": {"type": "rect", "stroke": "#000", "strokeWidth": 2},
+          "encoding": {
+            "x2": {"field": "end"},
+            "y2": {"field": "_y2"},
+            "fill": {"field": "_fill", "type": "nominal", "scale": null, "legend": null}
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "dy": 14,
+            "font": "Helvetica Neue, Arial",
+            "fontSize": 10,
+            "fontStyle": "italic",
+            "color": "black"
+          },
+          "encoding": {
+            "x": {"field": "_mid", "type": "quantitative"},
+            "y": {"field": "_y2", "type": "quantitative"},
+            "text": {"field": "name", "type": "nominal"}
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

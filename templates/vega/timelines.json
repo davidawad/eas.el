@@ -1,0 +1,169 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "timelines",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Lifelines: one labelled line per person from birth to death with their term in office highlighted, under dated events.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "one row per person, in display order"},
+      "events": {
+        "shape": "plist",
+        "required": true,
+        "doc": "dated events drawn as tilted labels over rules: name and when"
+      },
+      "label": {"type": "field", "of": "data", "default": "label", "doc": "person's name"},
+      "start": {
+        "type": "field",
+        "of": "data",
+        "default": "born",
+        "doc": "lifeline start (epoch ms or date)"
+      },
+      "end": {"type": "field", "of": "data", "default": "died", "doc": "lifeline end"},
+      "spanStart": {"type": "field", "of": "data", "default": "enter", "doc": "highlighted span start"},
+      "spanEnd": {"type": "field", "of": "data", "default": "leave", "doc": "highlighted span end"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "Lifelines with highlighted spans under dated events.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/timelines.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "people and events as two data slots; band step fixed at 16 px so bars and labels keep Vega's offsets from the band top",
+      "ratio": 0.0074
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": 500,
+  "height": {"step": 16},
+  "padding": 5,
+  "layer": [
+    {
+      "data": {"name": "events"},
+      "transform": [{"calculate": "toDate(datum.when)", "as": "_x"}],
+      "encoding": {
+        "x": {
+          "field": "_x",
+          "type": "temporal",
+          "title": null,
+          "scale": {"nice": false, "round": true},
+          "axis": {
+            "format": "%Y",
+            "grid": false,
+            "tickCount": 10,
+            "labelFlush": false,
+            "labelOverlap": false
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "text",
+            "angle": -25,
+            "fontSize": 10,
+            "align": "left",
+            "baseline": "alphabetic",
+            "color": "#000"
+          },
+          "encoding": {"y": {"value": -10}, "text": {"field": "name"}}
+        },
+        {"mark": {"type": "rule", "stroke": "#888", "strokeWidth": 1, "xOffset": 0.5}},
+        {
+          "mark": {"type": "rule", "stroke": "#888", "strokeWidth": 1, "xOffset": 0.5},
+          "encoding": {"y": {"value": -8}, "y2": {"value": 0}}
+        }
+      ]
+    },
+    {
+      "data": {"name": "data"},
+      "transform": [
+        {"calculate": {"x-eas:expr": "toDate(datum[{{start}}])"}, "as": "_x"},
+        {"calculate": {"x-eas:expr": "toDate(datum[{{end}}])"}, "as": "_x2"},
+        {"calculate": {"x-eas:expr": "toDate(datum[{{spanStart}}])"}, "as": "_s"},
+        {"calculate": {"x-eas:expr": "toDate(datum[{{spanEnd}}])"}, "as": "_s2"}
+      ],
+      "encoding": {
+        "y": {
+          "field": {"x-eas:slot": "label"},
+          "type": "nominal",
+          "sort": null,
+          "axis": null,
+          "scale": {"paddingInner": 0, "paddingOuter": 0}
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "text",
+            "fontSize": 10,
+            "align": "left",
+            "baseline": "alphabetic",
+            "dy": -11,
+            "color": "#000"
+          },
+          "encoding": {"x": {"field": "_x", "type": "temporal"}, "text": {"field": {"x-eas:slot": "label"}}}
+        },
+        {
+          "mark": {"type": "bar", "fill": "#557", "height": 2, "yOffset": -7},
+          "encoding": {"x": {"field": "_x", "type": "temporal"}, "x2": {"field": "_x2"}}
+        },
+        {
+          "mark": {"type": "bar", "fill": "#e44", "height": 4, "yOffset": -7},
+          "encoding": {"x": {"field": "_s", "type": "temporal"}, "x2": {"field": "_s2"}}
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

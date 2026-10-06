@@ -1,0 +1,381 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "serpentine-timeline",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A serpentine timeline: a dashed path running back and forth down the page, ticked and labelled along its length, with labelled milestones.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "milestones: a position on the timeline and a label"
+      },
+      "date": {
+        "type": "field",
+        "of": "data",
+        "default": "domain",
+        "doc": "milestone position (e.g. a year)"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "label",
+        "doc": "milestone label, printed after its position"
+      },
+      "domain": {
+        "type": "array",
+        "items": "number",
+        "required": true,
+        "doc": "[first, last] position of the timeline"
+      },
+      "diameter": {"type": "number", "default": 125, "doc": "arc diameter, pixels"},
+      "arcs": {"type": "number", "default": 2.2, "doc": "number of arcs (fractional allowed)"},
+      "ticks": {"type": "integer", "default": 21, "doc": "ticks along the timeline, ends included"},
+      "offset": {"type": "number", "default": 35, "doc": "milestone label distance from the path, pixels"},
+      "height": {
+        "type": "number",
+        "default": 312,
+        "doc": "lowest point of the path in pixels: floor(arcs) * diameter plus the last arc's drop"
+      },
+      "start": {"type": "string", "default": "", "doc": "annotation at the start of the timeline"},
+      "end": {"type": "string", "default": "", "doc": "annotation at the end of the timeline"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "Milestones along a serpentine timeline.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/serpentine-timeline.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "x-eas transform serpentine lays the domain along the path; label offsets rotated in expressions as Vega applies dx/dy after rotation; sliders are slots; label halos and the arrow glyph's white stroke are left out",
+      "ratio": 0.0084
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": 300,
+  "height": {"x-eas:slot": "height"},
+  "padding": 15,
+  "data": {"name": "data"},
+  "transform": [
+    {
+      "x-eas:transform": "serpentine",
+      "field": {"x-eas:slot": "date"},
+      "domain": {"x-eas:slot": "domain"},
+      "width": 300,
+      "diameter": {"x-eas:slot": "diameter"},
+      "arcs": {"x-eas:slot": "arcs"},
+      "ticks": {"x-eas:slot": "ticks"}
+    },
+    {"calculate": "round(datum.alpha * 180 / PI)", "as": "_deg"},
+    {"calculate": "datum.labelAngle * PI / 180", "as": "_a"},
+    {"calculate": "datum.x", "as": "_px"},
+    {"calculate": "datum.y", "as": "_py"},
+    {
+      "calculate": {
+        "x-eas:expr": "!isValid(datum.side) ? -{{offset}} : datum.side === 'right' ? (datum._deg >= 90 ? 1 : -0.5) * ({{offset}} + 3.5) : (datum._deg > 89 ? 1 : -0.5) * ({{offset}} + 3.5)"
+      },
+      "as": "_mdy"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "_px",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {"domain": [0, 300], "zero": false, "nice": false}
+    },
+    "y": {
+      "field": "_py",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {"domain": [0, {"x-eas:slot": "height"}], "reverse": true, "zero": false, "nice": false}
+    }
+  },
+  "layer": [
+    {
+      "transform": [
+        {"filter": "datum.category === 'start' || datum.category === 'end'"},
+        {
+          "calculate": {"x-eas:expr": "datum.category === 'start' ? {{start}} : {{end}}"},
+          "as": "_text"
+        },
+        {
+          "calculate": "datum.category === 'start' || (datum.direction === '←' && datum.type === 'straight') || datum.side === 'left' ? 'right' : 'left'",
+          "as": "_align"
+        },
+        {"calculate": "datum.x + (datum._align === 'right' ? -13 : 13)", "as": "_px"},
+        {"calculate": "datum.y + 1", "as": "_py"}
+      ],
+      "layer": [
+        {
+          "transform": [{"filter": "datum._align === 'right'"}],
+          "mark": {"type": "text", "align": "right", "baseline": "middle", "fontSize": 10, "color": "gray"},
+          "encoding": {"text": {"field": "_text"}}
+        },
+        {
+          "transform": [{"filter": "datum._align === 'left'"}],
+          "mark": {"type": "text", "align": "left", "baseline": "middle", "fontSize": 10, "color": "gray"},
+          "encoding": {"text": {"field": "_text"}}
+        }
+      ]
+    },
+    {
+      "transform": [{"filter": "datum.category === 'serpentine'"}],
+      "mark": {"type": "line", "stroke": "#888", "strokeWidth": 5, "strokeDash": [2, 2]},
+      "encoding": {"order": {"field": "domain", "type": "quantitative"}}
+    },
+    {
+      "transform": [
+        {"filter": "datum.category === 'serpentine' && datum.first"},
+        {"calculate": "datum.direction === '→' ? 0 : 180", "as": "_angle"},
+        {"calculate": "datum.x - (1) * sin(datum._a)", "as": "_px"},
+        {"calculate": "datum.y + (1) * cos(datum._a)", "as": "_py"}
+      ],
+      "mark": {
+        "type": "text",
+        "text": "➤",
+        "fontSize": 18,
+        "align": "center",
+        "baseline": "middle",
+        "color": "#000",
+        "angle": {"expr": "datum._angle"}
+      },
+      "encoding": {
+        "x": {"field": "_px", "type": "quantitative"},
+        "y": {"field": "_py", "type": "quantitative"}
+      }
+    },
+    {
+      "transform": [
+        {"filter": "datum.category === 'tick'"},
+        {
+          "calculate": "datum.x - (2.5 * (datum.type === 'straight' ? 1 : datum.side === 'right' ? (datum._deg >= 90 ? -1 : 4) : (datum._deg > 89 ? -1 : 4))) * sin(datum._a)",
+          "as": "_px"
+        },
+        {
+          "calculate": "datum.y + (2.5 * (datum.type === 'straight' ? 1 : datum.side === 'right' ? (datum._deg >= 90 ? -1 : 4) : (datum._deg > 89 ? -1 : 4))) * cos(datum._a)",
+          "as": "_py"
+        }
+      ],
+      "layer": [
+        {
+          "transform": [{"filter": "datum.type === 'straight'"}],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "top",
+            "fontSize": 7,
+            "color": "#000",
+            "text": "|",
+            "angle": {"expr": "datum.labelAngle"}
+          },
+          "encoding": {
+            "x": {"field": "_px", "type": "quantitative"},
+            "y": {"field": "_py", "type": "quantitative"}
+          }
+        },
+        {
+          "transform": [{"filter": "datum.type === 'arc'"}],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "bottom",
+            "fontSize": 7,
+            "color": "#000",
+            "text": "|",
+            "angle": {"expr": "datum.labelAngle"}
+          },
+          "encoding": {
+            "x": {"field": "_px", "type": "quantitative"},
+            "y": {"field": "_py", "type": "quantitative"}
+          }
+        }
+      ]
+    },
+    {
+      "transform": [
+        {"filter": "datum.category === 'tick'"},
+        {
+          "calculate": "datum.x - (!isValid(datum.side) ? 11.5 : datum.side === 'right' ? (datum._deg >= 90 ? -1 : 1.75) * 11.5 : (datum._deg > 89 ? -1 : 1.75) * 11.5) * sin(datum._a)",
+          "as": "_px"
+        },
+        {
+          "calculate": "datum.y + (!isValid(datum.side) ? 11.5 : datum.side === 'right' ? (datum._deg >= 90 ? -1 : 1.75) * 11.5 : (datum._deg > 89 ? -1 : 1.75) * 11.5) * cos(datum._a)",
+          "as": "_py"
+        }
+      ],
+      "layer": [
+        {
+          "transform": [{"filter": "datum.type === 'straight'"}],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "top",
+            "fontSize": 10,
+            "color": "#000",
+            "angle": {"expr": "datum.labelAngle"}
+          },
+          "encoding": {
+            "x": {"field": "_px", "type": "quantitative"},
+            "y": {"field": "_py", "type": "quantitative"},
+            "text": {"field": "domain", "type": "nominal"}
+          }
+        },
+        {
+          "transform": [{"filter": "datum.type === 'arc'"}],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "bottom",
+            "fontSize": 10,
+            "color": "#000",
+            "angle": {"expr": "datum.labelAngle"}
+          },
+          "encoding": {
+            "x": {"field": "_px", "type": "quantitative"},
+            "y": {"field": "_py", "type": "quantitative"},
+            "text": {"field": "domain", "type": "nominal"}
+          }
+        }
+      ]
+    },
+    {
+      "transform": [
+        {"filter": "datum.category === 'milestone'"},
+        {
+          "calculate": {
+            "x-eas:expr": "datum.x - (datum.type === 'arc' && datum._deg > 89 ? 0.35 * ({{offset}} + 3.5) : datum._mdy / 2) * sin(datum._a)"
+          },
+          "as": "_px"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "datum.y + (datum.type === 'arc' && datum._deg > 89 ? 0.35 * ({{offset}} + 3.5) : datum._mdy / 2) * cos(datum._a)"
+          },
+          "as": "_py"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "text": "|",
+        "fontSize": 15,
+        "fontWeight": 100,
+        "align": "center",
+        "baseline": "middle",
+        "color": "#000",
+        "opacity": 0.35,
+        "angle": {"expr": "datum.labelAngle"}
+      },
+      "encoding": {
+        "x": {"field": "_px", "type": "quantitative"},
+        "y": {"field": "_py", "type": "quantitative"}
+      }
+    },
+    {
+      "transform": [{"filter": "datum.category === 'milestone'"}],
+      "mark": {
+        "type": "point",
+        "shape": "circle",
+        "size": 150,
+        "filled": true,
+        "fill": "firebrick",
+        "stroke": "#fff",
+        "strokeWidth": 2,
+        "opacity": 1
+      }
+    },
+    {
+      "transform": [
+        {"filter": "datum.category === 'milestone'"},
+        {"calculate": {"x-eas:expr": "datum.domain + ' - ' + datum[{{label}}]"}, "as": "_text"},
+        {"calculate": "datum.x - (datum._mdy) * sin(datum._a)", "as": "_px"},
+        {"calculate": "datum.y + (datum._mdy) * cos(datum._a)", "as": "_py"}
+      ],
+      "layer": [
+        {
+          "transform": [{"filter": "datum.type === 'straight'"}],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "top",
+            "fontSize": 10,
+            "color": "firebrick",
+            "angle": {"expr": "datum.labelAngle"}
+          },
+          "encoding": {
+            "x": {"field": "_px", "type": "quantitative"},
+            "y": {"field": "_py", "type": "quantitative"},
+            "text": {"field": "_text"}
+          }
+        },
+        {
+          "transform": [{"filter": "datum.type === 'arc'"}],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "bottom",
+            "fontSize": 10,
+            "color": "firebrick",
+            "angle": {"expr": "datum.labelAngle"}
+          },
+          "encoding": {
+            "x": {"field": "_px", "type": "quantitative"},
+            "y": {"field": "_py", "type": "quantitative"},
+            "text": {"field": "_text"}
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

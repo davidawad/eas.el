@@ -58,7 +58,9 @@
     :transform/x-eas:graph "Nodes joined to links: order, degree, link and pair rows (ERT: eas-vega-network-graph-joins-nodes-and-links)."
     :transform/x-eas:voronoi "Vega's voronoi transform: cell paths and vertices (ERT: eas-vega-network-voronoi-cells)."
     :transform/x-eas:arc-label "Pie label layout, materialized by resolve (ERT: eas-vega-std-basic-arc-label-separates-each-side)."
-    :transform/x-eas:label "Point label layout, materialized by resolve (ERT: eas-vega-std-basic-label-keeps-labels-apart).")
+    :transform/x-eas:label "Point label layout, materialized by resolve (ERT: eas-vega-std-basic-label-keeps-labels-apart)."
+    :transform/x-eas/parallel-coordinates "Fields folded and scaled on their own niced domains, with axis tick rows (ERT: eas-vega-other-custom-parallel-coordinates-scales-each-field)."
+    :transform/x-eas/serpentine "A domain laid along a serpentine path, in pixels (ERT: eas-vega-other-custom-serpentine-lays-out-the-path).")
   "Features outside Vega-Lite proper, proven by ERT rather than the gallery.")
 
 (defvar eas-conformance-gallery-functions nil

@@ -60,6 +60,10 @@ test-gallery-vega:
 test-gallery-vega:
 	$(call run-tests,(and (tag :gallery) "^eas-vega-"))
 
+# The Vega gallery templates (templates/vega/) against test/vega-examples/ref.
+test-gallery-vega:
+	$(call run-tests,(and (tag :gallery) "^eas-vega-"))
+
 bench:
 	scripts/eas-bench.sh
 

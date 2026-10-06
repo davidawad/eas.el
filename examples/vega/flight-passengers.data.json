@@ -1,0 +1,13 @@
+{
+  "title": "Passenger Traffic at Seattle-Tacoma International Airport, One Year to the Next",
+  "subtitle": "Source: Port of Seattle, Airport Statistics",
+  "data": [
+    {"date": "2019-10-01", "curr": 4292562, "prev": 4044655},
+    {"date": "2019-11-01", "curr": 3892767, "prev": 3817267},
+    {"date": "2019-12-01", "curr": 4320042, "prev": 3937790},
+    {"date": "2020-01-01", "curr": 3764192, "prev": 3560276},
+    {"date": "2020-02-01", "curr": 3620083, "prev": 3192656},
+    {"date": "2020-03-01", "curr": 1824676, "prev": 4111729},
+    {"date": "2020-04-01", "curr": 259153, "prev": 4033516}
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "budget-forecasts",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Forecasts versus reality: one faint line per forecast vintage, the realised values as a bold line, up to a chosen vintage.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows: the vintage a forecast was made in, the year it forecasts, and the value"
+      },
+      "vintage": {"type": "field", "of": "data", "default": "budgetYear", "doc": "year the forecast was made"},
+      "year": {
+        "type": "field",
+        "of": "data",
+        "default": "forecastYear",
+        "doc": "year forecast (consecutive integers)"
+      },
+      "value": {"type": "field", "of": "data", "default": "value", "doc": "forecast value"},
+      "current": {
+        "type": "number",
+        "default": 2010,
+        "doc": "latest vintage shown; its year is printed and marked on the zero line"
+      },
+      "xValues": {
+        "type": "array",
+        "items": "number",
+        "default": [1982, 1986, 1990, 1994, 1998, 2002, 2006, 2010, 2014, 2018],
+        "doc": "years labelled on the x axis"
+      },
+      "yValues": {
+        "type": "array",
+        "items": "number",
+        "default": [0, -0.5, -1, -1.5],
+        "doc": "values labelled on the right axis"
+      },
+      "format": {"type": "string", "default": ".1f", "doc": "d3 format of the right axis labels"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "Forecasts by vintage against the values that came true.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/budget-forecasts.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "static: the vintage slider (current) is a slot, the hover tooltip is left out; band starts reproduced with a quantitative x over [first, last + 1]",
+      "ratio": 0.0021
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": 700,
+  "height": 400,
+  "padding": 5,
+  "background": "#edf1f7",
+  "data": {"name": "data"},
+  "transform": [
+    {"calculate": {"x-eas:expr": "datum[{{vintage}}]"}, "as": "_vintage"},
+    {"calculate": {"x-eas:expr": "datum[{{year}}]"}, "as": "_year"},
+    {"calculate": {"x-eas:expr": "datum[{{value}}]"}, "as": "_value"},
+    {"calculate": {"x-eas:expr": "{{current}}"}, "as": "_current"}
+  ],
+  "encoding": {
+    "x": {
+      "field": "_year",
+      "type": "quantitative",
+      "title": null,
+      "scale": {"nice": false, "zero": false},
+      "axis": {
+        "values": {"x-eas:slot": "xValues"},
+        "format": "d",
+        "grid": true,
+        "gridColor": "white",
+        "gridOpacity": 0.75,
+        "domain": false,
+        "ticks": false,
+        "tickSize": 0,
+        "labelPadding": 5,
+        "labelFlush": false,
+        "labelOverlap": false
+      }
+    },
+    "y": {
+      "field": "_value",
+      "type": "quantitative",
+      "title": null,
+      "scale": {"zero": true, "nice": false},
+      "axis": {
+        "orient": "right",
+        "values": {"x-eas:slot": "yValues"},
+        "format": {"x-eas:slot": "format"},
+        "grid": true,
+        "gridColor": "white",
+        "gridOpacity": 0.75,
+        "domain": false,
+        "ticks": false,
+        "tickSize": 0,
+        "labelPadding": 2,
+        "labelOverlap": false
+      }
+    }
+  },
+  "layer": [
+    {
+      "transform": [
+        {"aggregate": [{"op": "max", "field": "_year", "as": "_year"}]},
+        {"calculate": "datum._year + 1", "as": "_year"},
+        {"calculate": "0", "as": "_value"}
+      ],
+      "mark": {"type": "point", "opacity": 0}
+    },
+    {
+      "transform": [{"filter": "datum._vintage <= datum._current"}],
+      "mark": {"type": "line", "stroke": "steelblue", "strokeWidth": 1, "strokeOpacity": 0.25},
+      "encoding": {"detail": {"field": "_vintage", "type": "nominal"}}
+    },
+    {
+      "transform": [{"filter": "datum._vintage <= datum._current && datum._year == datum._vintage - 1"}],
+      "mark": {"type": "line", "stroke": "steelblue", "strokeWidth": 3}
+    },
+    {
+      "transform": [
+        {
+          "aggregate": [
+            {"op": "min", "field": "_year", "as": "_year"},
+            {"op": "max", "field": "_current", "as": "_current"}
+          ]
+        },
+        {"calculate": "0", "as": "_value"}
+      ],
+      "mark": {"type": "rule", "stroke": "#000", "strokeWidth": 1},
+      "encoding": {"x2": {"field": "_current"}}
+    },
+    {
+      "transform": [
+        {"aggregate": [{"op": "max", "field": "_current", "as": "_year"}]},
+        {"calculate": "0", "as": "_value"}
+      ],
+      "mark": {
+        "type": "point",
+        "shape": "triangle-down",
+        "size": 400,
+        "filled": true,
+        "fill": "#fff",
+        "stroke": "#000",
+        "strokeWidth": 0.5,
+        "yOffset": 1
+      }
+    },
+    {
+      "transform": [{"aggregate": [{"op": "max", "field": "_current", "as": "_current"}]}],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "alphabetic",
+        "fontSize": 32,
+        "fontWeight": "bold",
+        "color": "steelblue"
+      },
+      "encoding": {
+        "x": {"value": 0},
+        "y": {"value": 25},
+        "text": {"field": "_current", "type": "quantitative", "format": "d"}
+      }
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

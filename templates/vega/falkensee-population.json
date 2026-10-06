@@ -1,0 +1,166 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "falkensee-population",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "An annotated line: a smooth line with points over time, with shaded periods named in a legend.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a year and a value"},
+      "periods": {"shape": "plist", "required": true, "doc": "shaded periods: start, end and text"},
+      "x": {"type": "field", "of": "data", "default": "year", "doc": "year column"},
+      "y": {"type": "field", "of": "data", "default": "population", "doc": "value column"},
+      "xTitle": {"type": "string", "default": "Year"},
+      "yTitle": {"type": "string", "default": "Population"},
+      "legend": {"type": "string", "default": "Period", "doc": "legend title of the periods"},
+      "colors": {
+        "type": "array",
+        "items": "string",
+        "default": ["black", "red"],
+        "doc": "period colours, in period order"
+      },
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "A value over time with shaded, named periods.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/falkensee-population.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "periods as a second data slot with a top-left legend; the title is a slot (Vega computes it from the data extent)",
+      "ratio": 0.0211
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": 500,
+  "height": 250,
+  "padding": 5,
+  "layer": [
+    {
+      "data": {"name": "periods"},
+      "mark": {"type": "rect", "opacity": 0.2},
+      "encoding": {
+        "x": {
+          "field": "start",
+          "type": "quantitative",
+          "title": {"x-eas:slot": "xTitle"},
+          "scale": {"zero": false, "nice": false},
+          "axis": {
+            "format": "d",
+            "tickCount": 15,
+            "grid": false,
+            "labelFlush": false,
+            "labelOverlap": false
+          }
+        },
+        "x2": {"field": "end"},
+        "color": {
+          "field": "text",
+          "type": "nominal",
+          "sort": null,
+          "scale": {"range": {"x-eas:slot": "colors"}},
+          "legend": {
+            "title": {"x-eas:slot": "legend"},
+            "orient": "top-left",
+            "offset": 8,
+            "symbolType": "square",
+            "symbolOpacity": 0.3,
+            "symbolStrokeWidth": 0
+          }
+        }
+      }
+    },
+    {
+      "data": {"name": "data"},
+      "encoding": {
+        "x": {
+          "field": {"x-eas:slot": "x"},
+          "type": "quantitative",
+          "title": {"x-eas:slot": "xTitle"},
+          "scale": {"zero": false, "nice": false},
+          "axis": {
+            "format": "d",
+            "tickCount": 15,
+            "grid": false,
+            "labelFlush": false,
+            "labelOverlap": false
+          }
+        },
+        "y": {
+          "field": {"x-eas:slot": "y"},
+          "type": "quantitative",
+          "title": {"x-eas:slot": "yTitle"},
+          "scale": {"zero": true, "nice": true},
+          "axis": {"titlePadding": 10, "grid": true, "labelOverlap": false}
+        }
+      },
+      "layer": [
+        {
+          "mark": {"type": "line", "interpolate": "monotone", "stroke": "steelblue", "strokeWidth": 3}
+        },
+        {
+          "mark": {
+            "type": "point",
+            "shape": "circle",
+            "filled": true,
+            "fill": "white",
+            "stroke": "steelblue",
+            "strokeWidth": 1.5,
+            "size": 30,
+            "opacity": 1
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 16,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

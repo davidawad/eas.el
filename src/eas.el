@@ -59,6 +59,8 @@
 (require 'eas-force-graph)
 (require 'eas-voronoi)
 (require 'eas-label)
+(require 'eas-parallel)
+(require 'eas-serpentine)
 (require 'eas-spec)
 (require 'eas-spec-props)
 (require 'eas-vl-lower)

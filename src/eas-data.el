@@ -108,6 +108,16 @@ SCHEMA, when nil, is inferred from the rows."
 ;;; Built-in adapters
 
 (defun eas-data--plist-rows (value)
+  "Convert VALUE, a list or vector of row objects, to data/v1.
+VALUE may instead be (:file F): F's rows, read as CSV, TSV or JSON by
+its extension."
+  (if (and (eas-object-p value) (stringp (plist-get value :file)))
+      (eas-data-from (pcase (downcase (or (file-name-extension (plist-get value :file)) ""))
+                       ("csv" "csv") ("tsv" "tsv") (_ "json"))
+                     value)
+    (eas-data--plist-rows-1 value)))
+
+(defun eas-data--plist-rows-1 (value)
   "Convert VALUE, a list or vector of row objects, to data/v1."
   (unless (or (vectorp value) (listp value))
     (eas-shape-invalid "Rows must be a list or array of objects" nil))

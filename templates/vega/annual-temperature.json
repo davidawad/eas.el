@@ -1,0 +1,158 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "annual-temperature",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A ridgeline of the year: one area per hour of the day, stacked in rows, each tracing a value across the days of the year.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with a timestamp and a value, one per hour"
+      },
+      "date": {
+        "type": "field",
+        "of": "data",
+        "default": "date",
+        "doc": "timestamp column (ISO local time or epoch ms)"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "temperature",
+        "doc": "numeric column each area traces"
+      },
+      "color": {"type": "string", "default": "#4c78a8", "doc": "area colour"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "One area per hour of the day across the year.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/annual-temperature.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "one area per hour placed in pixel rows; the hour axis is an independent ordinal y",
+      "ratio": 0.0019
+    }
+  },
+  "title": {"text": {"x-eas:slot": "title"}, "anchor": "start", "offset": 4},
+  "description": {"x-eas:slot": "description"},
+  "width": 800,
+  "height": 600,
+  "padding": 5,
+  "data": {"name": "data"},
+  "transform": [
+    {"calculate": {"x-eas:expr": "toDate(datum[{{date}}])"}, "as": "_t"},
+    {"calculate": "hours(datum._t)", "as": "hour"},
+    {"calculate": "datetime(year(datum._t), month(datum._t), date(datum._t))", "as": "day"},
+    {
+      "joinaggregate": [
+        {"op": "min", "field": {"x-eas:slot": "value"}, "as": "_lo"},
+        {"op": "max", "field": {"x-eas:slot": "value"}, "as": "_hi"}
+      ]
+    },
+    {"calculate": "(datum.hour + 18) % 24", "as": "_row"},
+    {
+      "calculate": {
+        "x-eas:expr": "datum._row * 25 + 25 - (datum[{{value}}] - datum._lo) / (datum._hi - datum._lo) * (25 - 1)"
+      },
+      "as": "_y"
+    },
+    {"calculate": {"x-eas:expr": "datum._row * 25 + 25"}, "as": "_y2"}
+  ],
+  "layer": [
+    {
+      "mark": {"type": "area", "color": {"x-eas:slot": "color"}, "opacity": 1},
+      "encoding": {
+        "x": {
+          "field": "day",
+          "type": "temporal",
+          "title": "Month",
+          "axis": {"domain": false, "grid": false, "format": "%b", "labelFlush": false}
+        },
+        "y": {
+          "field": "_y",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {"domain": [0, 600], "reverse": true, "nice": false, "zero": false}
+        },
+        "y2": {"field": "_y2"},
+        "detail": {"field": "hour", "type": "nominal"}
+      }
+    },
+    {
+      "transform": [{"aggregate": [], "groupby": ["hour"]}],
+      "mark": {"type": "tick", "opacity": 0},
+      "encoding": {
+        "y": {
+          "field": "hour",
+          "type": "ordinal",
+          "title": "Hour",
+          "scale": {
+            "domain": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5],
+            "paddingInner": 0,
+            "paddingOuter": 0
+          },
+          "axis": {
+            "domain": false,
+            "ticks": false,
+            "tickSize": 0,
+            "labelExpr": "datum.value === 0 ? 'Midnight' : datum.value === 12 ? 'Noon' : datum.value < 12 ? datum.value + ':00 am' : (datum.value - 12) + ':00 pm'",
+            "orient": "left"
+          }
+        }
+      }
+    }
+  ],
+  "resolve": {"scale": {"y": "independent"}},
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 14,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

@@ -1,0 +1,249 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "warming-stripes",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Warming stripes: one coloured stripe per year on a diverging scale centred on zero, with the base period bracketed above.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "one row per year: the year and its anomaly"},
+      "year": {"type": "field", "of": "data", "default": "year", "doc": "year column (integers)"},
+      "value": {"type": "field", "of": "data", "default": "temp", "doc": "anomaly against the base period"},
+      "baseStart": {"type": "integer", "default": 1951, "doc": "first year of the base period"},
+      "baseEnd": {"type": "integer", "default": 1980, "doc": "last year of the base period"},
+      "every": {"type": "integer", "default": 20, "doc": "years between x labels"},
+      "major": {"type": "integer", "default": 100, "doc": "labels of years divisible by this are large"},
+      "colors": {
+        "type": "array",
+        "items": "string",
+        "default": ["#08306B", "#08519C", "#2171B5", "#4292C6", "#6BAED6", "#9ECAE1", "#C6DBEF", "#DEEBF7", "#FFFFFF", "#FEE0D2", "#FCBBA1", "#FC9272", "#FB6A4A", "#EF3B2C", "#CB181D", "#A50F15", "#67000D"],
+        "doc": "colours from coldest to warmest; the middle one is zero"
+      },
+      "legend": {"type": "string", "default": "°C", "doc": "legend title"},
+      "legendValues": {
+        "type": "array",
+        "items": "number",
+        "default": [-0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        "doc": "values labelled on the legend"
+      },
+      "source": {
+        "type": "string",
+        "default": "Data Source: NASA 🔗",
+        "doc": "credit printed under the legend"
+      },
+      "title": {"type": "string", "default": ""},
+      "subtitle": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "One stripe per year, coloured by its anomaly.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/warming-stripes.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "axes, base-period bracket, legend tick and credit drawn as marks; an invisible point stands in for the legend's padded box, which eas does not model; hover and the stripe tick are static",
+      "ratio": 0.022
+    }
+  },
+  "title": {
+    "text": {"x-eas:slot": "title"},
+    "subtitle": {"x-eas:slot": "subtitle"},
+    "anchor": "start",
+    "font": "Tahoma, sans-serif",
+    "fontSize": 16,
+    "fontWeight": "lighter",
+    "subtitlePadding": 5
+  },
+  "description": {"x-eas:slot": "description"},
+  "background": "white",
+  "width": 650,
+  "height": 200,
+  "padding": 10,
+  "data": {"name": "data"},
+  "transform": [
+    {"calculate": {"x-eas:expr": "datum[{{year}}]"}, "as": "_x"},
+    {"calculate": {"x-eas:expr": "datum[{{value}}]"}, "as": "_v"}
+  ],
+  "encoding": {
+    "x": {
+      "field": "_x",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {"zero": false, "nice": false, "padding": 0}
+    },
+    "y": {
+      "field": "_y",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {"domain": [0, 200], "reverse": true, "zero": false, "nice": false}
+    }
+  },
+  "layer": [
+    {
+      "transform": [{"calculate": "8", "as": "_y"}, {"calculate": "192", "as": "_y2"}],
+      "mark": {"type": "bar", "xOffset": -2, "x2Offset": 2, "strokeWidth": 0, "opacity": 1},
+      "encoding": {
+        "y2": {"field": "_y2"},
+        "color": {
+          "field": "_v",
+          "type": "quantitative",
+          "scale": {"range": {"x-eas:slot": "colors"}, "domainMid": 0},
+          "legend": {
+            "title": {"x-eas:slot": "legend"},
+            "orient": "none",
+            "legendX": 710,
+            "legendY": -20,
+            "titleColor": "gray",
+            "titleFontSize": 14,
+            "labelFontSize": 12,
+            "labelColor": "#808080",
+            "labelOffset": 7,
+            "gradientLength": 200,
+            "values": {"x-eas:slot": "legendValues"},
+            "labelExpr": "(datum.value > 0 ? '+' : '') + datum.label"
+          }
+        },
+        "tooltip": [
+          {"field": "_x", "type": "quantitative", "title": "year"},
+          {"field": "_v", "type": "quantitative", "title": "anomaly", "format": "+.2f"}
+        ],
+        "x2": {"field": "_x"}
+      }
+    },
+    {
+      "transform": [
+        {"filter": {"x-eas:expr": "datum._x % {{every}} === 0"}},
+        {"calculate": "197", "as": "_y"},
+        {"calculate": "205", "as": "_y2"}
+      ],
+      "mark": {"type": "rule", "stroke": "#888", "strokeWidth": 1, "xOffset": 0.5},
+      "encoding": {"y2": {"field": "_y2"}}
+    },
+    {
+      "transform": [
+        {"filter": {"x-eas:expr": "datum._x % {{every}} === 0 && datum._x % {{major}} !== 0"}},
+        {"calculate": "208", "as": "_y"}
+      ],
+      "mark": {"type": "text", "align": "center", "baseline": "top", "fontSize": 14, "color": "#808080"},
+      "encoding": {"text": {"field": "_x", "type": "quantitative", "format": ".4"}}
+    },
+    {
+      "transform": [
+        {"filter": {"x-eas:expr": "datum._x % {{every}} === 0 && datum._x % {{major}} === 0"}},
+        {"calculate": "208", "as": "_y"}
+      ],
+      "mark": {"type": "text", "align": "center", "baseline": "top", "fontSize": 20, "color": "#808080"},
+      "encoding": {"text": {"field": "_x", "type": "quantitative", "format": ".4"}}
+    },
+    {
+      "transform": [
+        {"filter": {"x-eas:expr": "datum._x === {{baseStart}} || datum._x === {{baseEnd}}"}},
+        {"calculate": "-5", "as": "_y"},
+        {"calculate": "0", "as": "_y2"}
+      ],
+      "layer": [
+        {
+          "mark": {"type": "rule", "stroke": "black", "strokeWidth": 1, "xOffset": 0.5},
+          "encoding": {"y2": {"field": "_y2"}}
+        },
+        {
+          "transform": [{"calculate": "-7", "as": "_y"}],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "bottom",
+            "fontSize": 14,
+            "color": "black"
+          },
+          "encoding": {"text": {"field": "_x", "type": "quantitative", "format": ".4"}}
+        }
+      ]
+    },
+    {
+      "transform": [
+        {"filter": {"x-eas:expr": "datum._x === {{baseStart}}"}},
+        {"calculate": {"x-eas:expr": "{{baseEnd}}"}, "as": "_x2"},
+        {"calculate": "0", "as": "_y"}
+      ],
+      "mark": {"type": "rule", "stroke": "black", "strokeWidth": 0.9, "yOffset": 0.5},
+      "encoding": {"x2": {"field": "_x2"}}
+    },
+    {
+      "transform": [
+        {
+          "joinaggregate": [{"op": "min", "field": "_v", "as": "_lo"}, {"op": "max", "field": "_v", "as": "_hi"}]
+        },
+        {
+          "aggregate": [{"op": "max", "field": "_lo", "as": "_lo"}, {"op": "max", "field": "_hi", "as": "_hi"}]
+        },
+        {"calculate": "datum._hi / (datum._hi - datum._lo) * 200", "as": "_y"}
+      ],
+      "mark": {"type": "rule", "stroke": "black", "strokeWidth": 0.5, "yOffset": 0.5},
+      "encoding": {"x": {"value": 688}, "x2": {"value": 708}}
+    },
+    {
+      "transform": [{"aggregate": []}, {"calculate": "250", "as": "_y"}],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "alphabetic",
+        "fontSize": 12,
+        "color": "#CCCCCC"
+      },
+      "encoding": {"x": {"value": 650}, "text": {"value": {"x-eas:slot": "source"}}}
+    },
+    {
+      "transform": [{"aggregate": []}, {"calculate": "-35", "as": "_y"}],
+      "mark": {"type": "point", "opacity": 0, "size": 1},
+      "encoding": {"x": {"value": 690}}
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

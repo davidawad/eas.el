@@ -1,0 +1,161 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "weekly-temperature",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Weekly temperatures overlaid per day: record range, normal range, actual range, and forecast ranges drawn as an I-beam.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per day in order: id, day, record_low/high, normal_low/high and either actual_low/high or forecast_low_low/high and forecast_high_low/high"
+      },
+      "id": {"type": "field", "of": "data", "default": "id", "doc": "day order"},
+      "day": {
+        "type": "field",
+        "of": "data",
+        "default": "day",
+        "doc": "day label printed above each column"
+      },
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "Record, normal, actual and forecast temperature ranges for each day.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/weekly-temperature.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "nested record/normal/actual/forecast objects flattened to columns in the binding; insets as band fractions of the rounded band",
+      "ratio": 0.0256
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": 250,
+  "height": 200,
+  "padding": 0,
+  "data": {"name": "data"},
+  "encoding": {
+    "x": {
+      "field": {"x-eas:slot": "id"},
+      "type": "ordinal",
+      "axis": null,
+      "scale": {"paddingInner": 0.1, "paddingOuter": 0.1, "round": true}
+    }
+  },
+  "layer": [
+    {
+      "mark": {"type": "text", "align": "center", "baseline": "bottom", "color": "#000"},
+      "encoding": {"y": {"value": 0}, "text": {"field": {"x-eas:slot": "day"}, "type": "nominal"}}
+    },
+    {
+      "mark": {"type": "bar", "fill": "#ccc", "width": {"band": 0.9545}},
+      "encoding": {
+        "y": {
+          "field": "record_low",
+          "type": "quantitative",
+          "title": null,
+          "scale": {"nice": true, "zero": false},
+          "axis": {
+            "orient": "right",
+            "tickCount": 3,
+            "tickSize": 0,
+            "ticks": false,
+            "labelPadding": 0,
+            "grid": true,
+            "gridColor": "white",
+            "domain": false,
+            "zindex": 1,
+            "labelOverlap": false
+          }
+        },
+        "y2": {"field": "record_high"}
+      }
+    },
+    {
+      "mark": {"type": "bar", "fill": "#999", "width": {"band": 0.9545}},
+      "encoding": {"y": {"field": "normal_low", "type": "quantitative"}, "y2": {"field": "normal_high"}}
+    },
+    {
+      "transform": [{"filter": "isValid(datum.actual_low)"}],
+      "mark": {"type": "bar", "fill": "#000", "width": {"band": 0.6364}},
+      "encoding": {"y": {"field": "actual_low", "type": "quantitative"}, "y2": {"field": "actual_high"}}
+    },
+    {
+      "transform": [{"filter": "isValid(datum.forecast_low_low)"}],
+      "layer": [
+        {
+          "mark": {"type": "bar", "fill": "#000", "width": {"band": 0.1818}},
+          "encoding": {
+            "y": {"field": "forecast_low_low", "type": "quantitative"},
+            "y2": {"field": "forecast_high_high"}
+          }
+        },
+        {
+          "mark": {"type": "bar", "fill": "#000", "width": {"band": 0.6364}},
+          "encoding": {
+            "y": {"field": "forecast_low_low", "type": "quantitative"},
+            "y2": {"field": "forecast_low_high"}
+          }
+        },
+        {
+          "mark": {"type": "bar", "fill": "#000", "width": {"band": 0.6364}},
+          "encoding": {
+            "y": {"field": "forecast_high_low", "type": "quantitative"},
+            "y2": {"field": "forecast_high_high"}
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

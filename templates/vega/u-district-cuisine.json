@@ -1,0 +1,268 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "u-district-cuisine",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A ridgeline of densities: one overlapping kernel-density area per category along a position, coloured by group, under labelled landmarks.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per place: its category and its position; rows in category order draw the ridges top to bottom, later rows over earlier ones"
+      },
+      "annotations": {
+        "shape": "plist",
+        "required": true,
+        "doc": "landmarks along the position: name, position (same field name as the data) and align (left or center)"
+      },
+      "category": {"type": "field", "of": "data", "default": "key", "doc": "category column"},
+      "position": {
+        "type": "field",
+        "of": "data",
+        "default": "lat",
+        "doc": "position column the densities run along"
+      },
+      "categories": {"type": "array", "items": "string", "required": true, "doc": "categories top to bottom"},
+      "names": {"type": "array", "items": "string", "required": true, "doc": "row labels, one per category"},
+      "colors": {
+        "type": "array",
+        "items": "string",
+        "required": true,
+        "doc": "fill colours, one per category"
+      },
+      "offsets": {
+        "type": "object",
+        "default": {},
+        "doc": "pixels to nudge a category's baseline start by (default 1)"
+      },
+      "bandwidth": {"type": "number", "default": 0.0005, "doc": "kernel bandwidth, in position units"},
+      "peak": {
+        "type": "number",
+        "default": 5000,
+        "doc": "count density that reaches the full ridge height"
+      },
+      "overlap": {"type": "number", "default": 2.3, "doc": "ridge height above its row, in row heights"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "Where each category clusters along one position.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/u-district-cuisine.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "kernel densities with counts placed in pixel rows; landmarks, baselines and row names as rules and text; rows in category order set the drawing order; the reference's font fallback differs",
+      "ratio": 0.0286
+    }
+  },
+  "title": {"text": {"x-eas:slot": "title"}, "anchor": "start", "frame": "group", "dx": -1},
+  "description": {"x-eas:slot": "description"},
+  "width": 500,
+  "height": 380,
+  "padding": 5,
+  "encoding": {
+    "x": {
+      "field": "_x",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {"zero": false, "nice": false},
+      "stack": null
+    },
+    "y": {
+      "field": "_y",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {"domain": [0, 380], "reverse": true, "zero": false, "nice": false},
+      "stack": null
+    }
+  },
+  "layer": [
+    {
+      "data": {"name": "annotations"},
+      "transform": [
+        {"calculate": {"x-eas:expr": "datum[{{position}}]"}, "as": "_x"},
+        {"calculate": "20", "as": "_y"},
+        {"calculate": "386", "as": "_y2"}
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "rule",
+            "stroke": "#ddd",
+            "strokeDash": [3, 2],
+            "strokeWidth": 1,
+            "xOffset": 0.5
+          },
+          "encoding": {"y2": {"field": "_y2"}}
+        },
+        {
+          "transform": [{"filter": "datum.align === 'left'"}, {"calculate": "386", "as": "_y"}],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "top",
+            "dx": -1,
+            "fontStyle": "italic",
+            "fontSize": 11,
+            "font": "Ideal Sans, Avenir Next, Helvetica",
+            "color": "#000"
+          },
+          "encoding": {"text": {"field": "name"}}
+        },
+        {
+          "transform": [{"filter": "datum.align !== 'left'"}, {"calculate": "386", "as": "_y"}],
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "top",
+            "fontStyle": "italic",
+            "fontSize": 11,
+            "font": "Ideal Sans, Avenir Next, Helvetica",
+            "color": "#000"
+          },
+          "encoding": {"text": {"field": "name"}}
+        }
+      ]
+    },
+    {
+      "data": {"name": "data"},
+      "transform": [
+        {"calculate": {"x-eas:expr": "datum[{{category}}]"}, "as": "_key"},
+        {"calculate": {"x-eas:expr": "datum[{{position}}]"}, "as": "_pos"},
+        {"calculate": {"x-eas:expr": "floor(380 / length({{categories}}))"}, "as": "_step"}
+      ],
+      "layer": [
+        {
+          "transform": [
+            {"calculate": {"x-eas:expr": "indexof({{categories}}, datum._key)"}, "as": "_row"},
+            {
+              "density": "_pos",
+              "groupby": ["_row", "_key", "_step"],
+              "bandwidth": {"x-eas:slot": "bandwidth"},
+              "counts": true,
+              "steps": 200,
+              "as": ["_x", "_density"]
+            },
+            {
+              "calculate": {
+                "x-eas:expr": "datum._row * datum._step + datum._step - datum._density / {{peak}} * datum._step * (1 + {{overlap}})"
+              },
+              "as": "_y"
+            },
+            {"calculate": "datum._row * datum._step + datum._step", "as": "_y2"}
+          ],
+          "mark": {"type": "area", "fillOpacity": 0.7, "opacity": 1, "stroke": "white", "strokeWidth": 1},
+          "encoding": {
+            "y2": {"field": "_y2"},
+            "color": {
+              "field": "_key",
+              "type": "nominal",
+              "legend": null,
+              "scale": {"domain": {"x-eas:slot": "categories"}, "range": {"x-eas:slot": "colors"}}
+            },
+            "detail": {"field": "_row", "type": "ordinal"}
+          }
+        },
+        {
+          "transform": [
+            {
+              "joinaggregate": [
+                {"op": "min", "field": "_pos", "as": "_lo"},
+                {"op": "max", "field": "_pos", "as": "_hi"}
+              ]
+            },
+            {
+              "aggregate": [
+                {"op": "min", "field": "_pos", "as": "_min"},
+                {"op": "max", "field": "_lo", "as": "_lo"},
+                {"op": "max", "field": "_hi", "as": "_hi"}
+              ],
+              "groupby": ["_key", "_step"]
+            },
+            {"calculate": {"x-eas:expr": "indexof({{categories}}, datum._key)"}, "as": "_row"},
+            {
+              "calculate": {
+                "x-eas:expr": "datum._min - 2 * {{bandwidth}} + ((({{offsets}})[datum._key] || 1) - 3) * (datum._hi - datum._lo) / 500"
+              },
+              "as": "_x"
+            },
+            {"calculate": "datum._row * datum._step + datum._step - 0.5", "as": "_y"}
+          ],
+          "mark": {"type": "rule", "stroke": "#aaa", "strokeWidth": 0.25, "strokeOpacity": 1},
+          "encoding": {"x2": {"field": "_hi"}}
+        },
+        {
+          "transform": [
+            {
+              "aggregate": [{"op": "max", "field": "_pos", "as": "_x"}],
+              "groupby": ["_key", "_step"]
+            },
+            {"calculate": {"x-eas:expr": "indexof({{categories}}, datum._key)"}, "as": "_row"},
+            {"calculate": {"x-eas:expr": "({{names}})[datum._row]"}, "as": "_name"},
+            {"calculate": "datum._row * datum._step + datum._step + 2", "as": "_y"}
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "bottom",
+            "fontSize": 12,
+            "font": "Ideal Sans, Avenir Next, Helvetica",
+            "color": "#000",
+            "limit": 180
+          },
+          "encoding": {"x": {"value": 504}, "text": {"field": "_name"}}
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 17,
+      "fontWeight": 500,
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12,
+      "font": "Ideal Sans, Avenir Next, Helvetica"
+    },
+    "view": {"stroke": null}
+  }
+}

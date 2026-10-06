@@ -1,0 +1,14 @@
+{
+  "data": [
+    {"day": "M", "record_high": 62, "record_low": 15, "normal_high": 50, "normal_low": 38, "actual_high": 48, "actual_low": 36, "id": 0},
+    {"day": "T", "record_high": 62, "record_low": 23, "normal_high": 50, "normal_low": 38, "actual_high": 50, "actual_low": 40, "id": 1},
+    {"day": "W", "record_high": 61, "record_low": 20, "normal_high": 50, "normal_low": 38, "actual_high": 55, "actual_low": 36, "id": 2},
+    {"day": "T", "record_high": 67, "record_low": 21, "normal_high": 50, "normal_low": 38, "actual_high": 51, "actual_low": 33, "id": 3},
+    {"day": "F", "record_high": 61, "record_low": 23, "normal_high": 50, "normal_low": 38, "actual_high": 50, "actual_low": 30, "id": 4},
+    {"day": "S", "record_high": 67, "record_low": 20, "normal_high": 50, "normal_low": 38, "forecast_high_high": 53, "forecast_high_low": 49, "forecast_low_high": 40, "forecast_low_low": 35, "id": 5},
+    {"day": "S", "record_high": 63, "record_low": 23, "normal_high": 50, "normal_low": 39, "forecast_high_high": 55, "forecast_high_low": 49, "forecast_low_high": 42, "forecast_low_low": 37, "id": 6},
+    {"day": "M", "record_high": 61, "record_low": 26, "normal_high": 51, "normal_low": 39, "forecast_high_high": 53, "forecast_high_low": 49, "forecast_low_high": 43, "forecast_low_low": 40, "id": 7},
+    {"day": "T", "record_high": 61, "record_low": 24, "normal_high": 51, "normal_low": 39, "forecast_high_high": 52, "forecast_high_low": 46, "forecast_low_high": 44, "forecast_low_low": 40, "id": 8},
+    {"day": "W", "record_high": 63, "record_low": 20, "normal_high": 51, "normal_low": 39, "forecast_high_high": 53, "forecast_high_low": 46, "forecast_low_high": 43, "forecast_low_low": 38, "id": 9}
+  ]
+}

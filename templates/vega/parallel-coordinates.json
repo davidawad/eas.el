@@ -1,0 +1,178 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "parallel-coordinates",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Parallel coordinates: one vertical axis per numeric field, each row a polyline through its values.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with the numeric fields; rows missing one are dropped"
+      },
+      "fields": {
+        "type": "array",
+        "items": "string",
+        "required": true,
+        "doc": "numeric fields, one axis each, left to right"
+      },
+      "format": {
+        "type": "object",
+        "default": {},
+        "doc": "d3 format per field for its axis labels, e.g. {\"Year\": \"d\"}"
+      },
+      "color": {"type": "string", "default": "steelblue", "doc": "line colour"},
+      "opacity": {"type": "number", "default": 0.3, "doc": "line opacity"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "Parallel coordinates of several numeric fields.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/parallel-coordinates.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "x-eas transform parallel-coordinates scales each field on its own niced domain and emits the axes as tick rows; axes drawn as rules and text on a rounded point scale",
+      "ratio": 0.0236
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": 700,
+  "height": 400,
+  "padding": 5,
+  "data": {"name": "data"},
+  "transform": [
+    {
+      "x-eas:transform": "parallel-coordinates",
+      "fields": {"x-eas:slot": "fields"},
+      "format": {"x-eas:slot": "format"}
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "key",
+      "type": "nominal",
+      "axis": null,
+      "scale": {"type": "point", "padding": 0, "round": true, "domain": {"x-eas:slot": "fields"}}
+    },
+    "y": {
+      "field": "norm",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {"domain": [0, 1], "nice": false, "zero": false}
+    }
+  },
+  "layer": [
+    {
+      "transform": [{"filter": "datum.part === 'line'"}],
+      "mark": {
+        "type": "line",
+        "stroke": {"x-eas:slot": "color"},
+        "strokeWidth": 1.01,
+        "strokeOpacity": {"x-eas:slot": "opacity"}
+      },
+      "encoding": {"detail": {"field": "index", "type": "nominal"}}
+    },
+    {
+      "transform": [{"filter": "datum.part === 'axis'"}],
+      "mark": {
+        "type": "rule",
+        "stroke": "#888",
+        "strokeWidth": 1,
+        "xOffset": 0.5,
+        "x2Offset": 0.5,
+        "yOffset": 0.5,
+        "y2Offset": 0.5
+      },
+      "encoding": {"y2": {"field": "norm2"}}
+    },
+    {
+      "transform": [{"filter": "datum.part === 'tick'"}],
+      "mark": {
+        "type": "rule",
+        "stroke": "#888",
+        "strokeWidth": 1,
+        "xOffset": -4.5,
+        "x2Offset": 0.5,
+        "yOffset": 0.5
+      },
+      "encoding": {"x2": {"field": "key"}}
+    },
+    {
+      "transform": [{"filter": "datum.part === 'tick'"}],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "middle",
+        "dx": -7,
+        "fontSize": 10,
+        "color": "#000"
+      },
+      "encoding": {"text": {"field": "label", "type": "nominal"}}
+    },
+    {
+      "transform": [{"filter": "datum.part === 'axis'"}],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "top",
+        "dx": -2,
+        "dy": 10,
+        "fontSize": 11,
+        "fontWeight": "bold",
+        "color": "#000"
+      },
+      "encoding": {"text": {"field": "key", "type": "nominal"}}
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

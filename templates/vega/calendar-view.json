@@ -1,0 +1,218 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "calendar-view",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A calendar of daily changes: one row of weeks per year, one square per day, months set apart, coloured by the change from the previous day.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "daily rows with a date and a value, e.g. a closing price"
+      },
+      "date": {
+        "type": "field",
+        "of": "data",
+        "default": "date",
+        "doc": "date column (ISO date or epoch ms)"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "close",
+        "doc": "column whose day-over-day relative change is coloured"
+      },
+      "scheme": {"type": "string", "default": "pinkyellowgreen", "doc": "diverging Vega colour scheme"},
+      "domain": {
+        "type": "array",
+        "items": "number",
+        "default": [-0.06, 0.06],
+        "doc": "changes at which the colour saturates, low and high"
+      },
+      "legend": {"type": "string", "default": "Daily Change, S&P 500", "doc": "colour legend title"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "A calendar of daily relative changes, one row per year.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/calendar-view.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "facet per year; week and month offsets computed in expressions, month and year labels as text; clamped diverging colours with a left-titled horizontal gradient legend; width 966 spans 53-week years",
+      "ratio": 0.0135
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "padding": 5,
+  "data": {"name": "data"},
+  "transform": [
+    {"calculate": {"x-eas:expr": "toDate(datum[{{date}}])"}, "as": "_t"},
+    {
+      "window": [{"op": "lag", "field": {"x-eas:slot": "value"}, "as": "_prev"}],
+      "sort": [{"field": "_t", "order": "ascending"}]
+    },
+    {
+      "calculate": {"x-eas:expr": "datum._prev ? (datum[{{value}}] - datum._prev) / datum._prev : 0"},
+      "as": "change"
+    },
+    {"calculate": "year(datum._t)", "as": "year"},
+    {"calculate": "day(datum._t)", "as": "weekday"},
+    {"calculate": "datetime(datum.year, 0, 1)", "as": "_jan1"},
+    {
+      "calculate": "round(((datum._t - day(datum._t) * 864e5) - (datum._jan1 - day(datum._jan1) * 864e5)) / 6048e5)",
+      "as": "week"
+    },
+    {"calculate": "datum.week * 16 + month(datum._t) * 10", "as": "px"},
+    {"calculate": "datum.px + 15", "as": "px2"}
+  ],
+  "facet": {
+    "row": {
+      "field": "year",
+      "type": "ordinal",
+      "sort": "descending",
+      "header": {"labels": false, "title": null}
+    }
+  },
+  "spacing": 16,
+  "spec": {
+    "width": 966,
+    "height": {"step": 16},
+    "layer": [
+      {
+        "mark": {"type": "rect", "cornerRadius": 2},
+        "encoding": {
+          "x": {
+            "field": "px",
+            "type": "quantitative",
+            "axis": null,
+            "scale": {"domain": [0, 966], "nice": false, "zero": false}
+          },
+          "x2": {"field": "px2"},
+          "y": {
+            "field": "weekday",
+            "type": "ordinal",
+            "title": null,
+            "scale": {"paddingInner": 0.0625, "paddingOuter": 0},
+            "axis": {
+              "ticks": false,
+              "domain": false,
+              "labelPadding": 8,
+              "labelExpr": "['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][datum.value]"
+            }
+          },
+          "color": {
+            "field": "change",
+            "type": "quantitative",
+            "scale": {
+              "scheme": {"x-eas:slot": "scheme"},
+              "domain": {"x-eas:slot": "domain"},
+              "domainMid": 0,
+              "clamp": true
+            },
+            "legend": {
+              "title": {"x-eas:slot": "legend"},
+              "titleFontSize": 12,
+              "titleOrient": "left",
+              "titlePadding": 20,
+              "offset": 15,
+              "orient": "top",
+              "direction": "horizontal",
+              "gradientLength": 250,
+              "gradientThickness": 10,
+              "format": "%"
+            }
+          },
+          "tooltip": [
+            {"field": "_t", "type": "temporal", "title": "date", "format": "%a %b %d, %Y"},
+            {"field": "change", "type": "quantitative", "format": "+.2%"}
+          ]
+        }
+      },
+      {
+        "transform": [
+          {
+            "aggregate": [{"op": "min", "field": "_jan1", "as": "_jan1"}],
+            "groupby": ["year", "week"]
+          },
+          {
+            "calculate": "datum._jan1 - day(datum._jan1) * 864e5 + datum.week * 6048e5 + 864e5",
+            "as": "_w0"
+          },
+          {"filter": "date(datum._w0) < 8"},
+          {"calculate": "datum.week * 16 + month(datum._w0) * 10", "as": "px"},
+          {"calculate": "timeFormat(datum._w0, '%b')", "as": "label"}
+        ],
+        "mark": {"type": "text", "align": "left", "baseline": "bottom", "fontSize": 10, "color": "#000"},
+        "encoding": {
+          "x": {"field": "px", "type": "quantitative"},
+          "y": {"value": -2},
+          "text": {"field": "label"}
+        }
+      },
+      {
+        "transform": [{"aggregate": [], "groupby": ["year"]}],
+        "mark": {
+          "type": "text",
+          "align": "right",
+          "baseline": "bottom",
+          "fontSize": 10,
+          "fontWeight": "bold",
+          "color": "#000"
+        },
+        "encoding": {"x": {"value": -8}, "y": {"value": -2}, "text": {"field": "year", "type": "ordinal"}}
+      }
+    ]
+  },
+  "resolve": {"scale": {"x": "shared"}},
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "arc": {"stroke": null},
+    "area": {"opacity": 1},
+    "axis": {
+      "domainColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "bar": {"cornerRadiusEnd": 0},
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "symbolSize": 100,
+      "symbolType": "circle",
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    },
+    "line": {"strokeCap": "butt", "strokeJoin": "miter"},
+    "mark": {"color": "#4c78a8"},
+    "point": {"filled": false, "size": 30},
+    "circle": {"size": 30},
+    "range": {
+      "category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]
+    },
+    "rect": {"stroke": null},
+    "title": {
+      "anchor": "middle",
+      "color": "#000",
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "offset": 4,
+      "subtitleColor": "#000",
+      "subtitleFontSize": 12
+    },
+    "view": {"stroke": null}
+  }
+}

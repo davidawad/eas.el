@@ -385,6 +385,12 @@ goldens and replays reproduce exactly."
     ("datetime" . ,(lambda (y &optional m d h mi s ms)
                      (eas-time-ms y (1+ (or m 0)) (or d 1) h mi s ms)))
     ("length" . ,(lambda (v) (length v)))
+    ;; JavaScript's indexOf on an array or a string: -1 when absent.
+    ("indexof" . ,(lambda (v x)
+                    (or (cond ((stringp v) (string-search (eas-expr--string x) v))
+                              ((vectorp v) (cl-position x v :test (lambda (a b) (if (and (numberp a) (numberp b)) (= a b)
+                                                                                (equal a b))))))
+                        -1)))
     ("upper" . ,(lambda (s) (upcase (eas-expr--string s))))
     ("lower" . ,(lambda (s) (downcase (eas-expr--string s))))
     ;; JavaScript's slice (negative ends count from the end) and substring.

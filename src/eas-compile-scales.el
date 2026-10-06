@@ -24,6 +24,8 @@
 (require 'eas-compile-sort)
 (require 'eas-color-names)
 (require 'eas-scale-discretize)
+(require 'eas-scale-sequential)
+(require 'eas-scale-round)
 
 (defun eas-compile--defs (units channel)
   "Return (UNIT . DEF) pairs for CHANNEL across UNITS with a data def."
@@ -152,6 +154,8 @@ PAIRS are the channel's (UNIT . DEF) pairs."
                                                    ;; Vega-Lite: sort descending reverses a continuous scale.
                                                    (equal (plist-get def :sort) "descending"))
                                                t :false))
+            ;; Vega's round: positions snap to whole pixels.
+            (and (eq (plist-get sp :round) t) (list :round t))
             (when-let* ((bins (and binned (not custom) (equal type "linear")
                                    (eas-bins-boundaries def (plist-get (caar pairs) :rows) lo hi))))
               (list :bins bins))
@@ -256,7 +260,8 @@ ZOOM is a [LO HI] domain from view state, or nil."
                             (cond ((and rect eas-compile-scales-text) 0)
                                   ((or rect tick) (/ inner 2.0)) (nested 0.2)))))
             (append (eas-scale-band type (eas-compile--discrete-domain pairs values) [0 1] inner outer)
-                    (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)))
+                    (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)
+                    (and (eq (plist-get sp :round) t) (list :round t))))
         (eas-compile--continuous type pairs channel values zoom)))))
 
 (defun eas-compile--field-missing-p (pairs)
@@ -302,16 +307,16 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                             (let ((nums (if (equal (plist-get def :type) "temporal")
                                             (delq nil (mapcar #'eas-time-parse values))
                                           (seq-filter #'numberp values))))
-                              (list :type "sequential"
-                                    ;; An explicit numeric domain sets the ends (its stops evenly spaced).
-                                    :domain (let ((d (plist-get sp :domain)))
-                                              (if (and (vectorp d) (> (length d) 1) (seq-every-p #'numberp d))
-                                                  (vector (aref d 0) (aref d (1- (length d))))
-                                                (vector (if nums (apply #'min nums) 0) (if nums (apply #'max nums) 1))))
+                              (eas-scale-sequential-clamp
+                               sp
+                               (list :type "sequential"
+                                    :domain (eas-scale-sequential-domain sp nums)
                                     :mid (plist-get sp :domainMid)
                                     ;; Vega-Lite interpolates an explicit range in HCL.
                                     :interpolate (and (vectorp (plist-get sp :range)) "hcl")
-                                    :range (or (and (vectorp (plist-get sp :range))
+                                    :range (eas-scale-sequential-range
+                                            sp
+                                            (or (and (vectorp (plist-get sp :range))
                                                     (vconcat (mapcar (lambda (c) (or (eas-color-hex c) c)) (plist-get sp :range))))
                                                (and (plist-get sp :scheme) (eas-scheme-ramp (plist-get sp :scheme)))
                                                (and (plist-get sp :domainMid)
@@ -321,8 +326,8 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
                                                              pairs)
                                                    (or (eas-compile--config-range config :heatmap)
                                                        eas-scale-yellowgreenblue)
-                                                 (or (eas-compile--config-range config :ramp) eas-scale-blues)))
-                                    :field (plist-get def :field)))))))))
+                                                 (or (eas-compile--config-range config :ramp) eas-scale-blues))))
+                                    :field (plist-get def :field))))))))))
 
 (defconst eas-compile-dash-range [[1 0] [4 2] [2 1] [1 1] [1 2 4 2]]
   "Vega-Lite's default strokeDash range (config.range.strokeDash).")
@@ -378,12 +383,14 @@ A continuous :padding P (pixels) widens the domain about its centre so
 the data spans the range less P on each side, like Vega's padDomain."
   (let ((range (if (eq (plist-get scale :reverse) t) (vector (aref range 1) (aref range 0)) range)))
     (if (member (plist-get scale :type) '("band" "point"))
-        (append (eas-scale-band (plist-get scale :type) (plist-get scale :domain) range
-                                  (plist-get scale :padding-inner) (plist-get scale :padding-outer))
-                (list :field (plist-get scale :field))
-                ;; Keep the paddings, so setting the range again keeps them too.
-                (cl-loop for key in '(:padding-inner :padding-outer)
-                         when (plist-get scale key) append (list key (plist-get scale key))))
+        (eas-scale-round-band
+         (append (eas-scale-band (plist-get scale :type) (plist-get scale :domain) range
+                                 (plist-get scale :padding-inner) (plist-get scale :padding-outer))
+                 (list :field (plist-get scale :field))
+                 ;; Keep the paddings, so setting the range again keeps them too.
+                 (cl-loop for key in '(:padding-inner :padding-outer)
+                          when (plist-get scale key) append (list key (plist-get scale key)))
+                 (and (eq (plist-get scale :round) t) (list :round t))))
       (let ((out (plist-put (copy-sequence scale) :range range))
             (pad (plist-get scale :padding))
             (span (abs (- (aref range 1) (aref range 0)))))

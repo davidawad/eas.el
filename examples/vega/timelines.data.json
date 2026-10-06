@@ -1,0 +1,15 @@
+{
+  "data": [
+    {"label": "Washington", "born": -7506057600000, "died": -5366196000000, "enter": -5701424400000, "leave": -5453884800000},
+    {"label": "Adams", "born": -7389766800000, "died": -4528285200000, "enter": -5453884800000, "leave": -5327740800000},
+    {"label": "Jefferson", "born": -7154586000000, "died": -4528285200000, "enter": -5327740800000, "leave": -5075280000000},
+    {"label": "Madison", "born": -6904544400000, "died": -4213184400000, "enter": -5075280000000, "leave": -4822819200000},
+    {"label": "Monroe", "born": -6679904400000, "died": -4370518800000, "enter": -4822819200000, "leave": -4570358400000}
+  ],
+  "events": [
+    {"name": "Decl. of Independence", "when": "1776-07-04T00:00:00"},
+    {"name": "U.S. Constitution", "when": "1789-03-04T00:00:00"},
+    {"name": "Louisiana Purchase", "when": "1803-04-30T00:00:00"},
+    {"name": "Monroe Doctrine", "when": "1823-12-02T00:00:00"}
+  ]
+}

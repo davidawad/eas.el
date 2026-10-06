@@ -245,6 +245,26 @@ and side (`arc_side`), and pushes labels on a side at least
 `labelHeight` apart. Output columns of a domain transform must not start
 with `x-eas`: resolve strips such keys.
 
+
+Two layout transforms draw what Vega does with its own scales and
+signals and Vega-Lite cannot express on one view (`eas-7r1.3`):
+
+```json
+{"x-eas:transform": "parallel-coordinates", "fields": ["Cylinders", "Horsepower"], "format": {"Year": "d"}}
+{"x-eas:transform": "serpentine", "field": "year", "domain": [1926, 2026], "diameter": 125, "arcs": 2.2}
+```
+
+`parallel-coordinates` (src/eas-parallel.el) folds each row into one
+row per field with `norm`, its 0..1 position on that field's own
+linear domain (niced as Vega nices it), and appends one `axis` row per
+field and one `tick` row per tick with Vega's tick values and labels,
+so a template draws lines, rules and text on one point x and one
+[0, 1] y. `serpentine` (src/eas-serpentine.el) lays a numeric domain
+along a path of straight runs joined by half circles: input rows
+become `milestone` rows, and the path (`serpentine`), its ticks and
+its two ends are appended, each with pixel `x`/`y`, the segment, the
+arc angle, `side` and a tangent `labelAngle`.
+
 ### L2 spec: chart/v1
 
 It is Vega-Lite (pinned to the version `bin/chart` pins, 6.4.1).
@@ -757,6 +777,33 @@ renders natively without it (`eas-spec-props.el`, fc-qx1.43).
 | a data source | one adapter entry with validator | describe, org-babel, CLI |
 | an action | one `eas-register-action` | drill on any mark |
 | Vega-Lite coverage | conformance spec + compile support | `supported.json`, check |
+
+Templates for the Vega gallery (https://vega.github.io/vega/examples/)
+live in `templates/vega/` under the namespace `vega` (`vega/heatmap`,
+since `heatmap` is already a template), with their bindings in
+`examples/vega/`; they are not in the default template directories
+(load them with `eas-template-add-directory`). Each records its
+verdict against `test/vega-examples/ref/NAME.png` in `x-eas.vega`
+(`status` pass, partial or unsupported, the measured `ratio`, a
+`note`, and `size` when it fits a container). The references were
+built by vg2svg without node-canvas, so Vega laid their text out with
+its estimate of 0.8 em a character: the comparison
+(`make test-gallery-vega`, test/eas/eas-vega-*-test.el) measures text
+that way too, in America/Chicago, and passes at a differing-pixel
+ratio of 0.03 within 8 px of the reference's size. What those
+templates added to the engine besides the two transforms:
+
+- A quantitative color scale honours `nice`, `zero`, an explicit
+  `domain`, `domainMin`/`domainMax`, `reverse` and `clamp`
+  (src/eas-scale-sequential.el); `round` snaps band, point and
+  continuous scales to whole pixels as Vega does (src/eas-scale-round.el).
+- Gradient legend labels take the ticks' precision under a `%` format
+  (`−6%`, not `−6.000000%`), and a horizontal gradient with
+  `titleOrient: "left"` puts its title beside the bar, cut to 180 px.
+- Axis tick formats `+%` sign their labels; the expression function
+  `indexof` exists.
+- A rotated text mark's turned box counts toward the canvas, and a
+  rule's `x2`/`y2` `{"value": N}` is pixels, as `x`/`y` already were.
 
 A domain package is only a template directory and a transform file.
 financial-chart.el and health-charts.el become exactly that, and new

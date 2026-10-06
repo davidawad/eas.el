@@ -17,6 +17,8 @@
 ;;   {"type": "key", "key": "+" | "-" | "0" | "left" | "right" | "up" | "down"
 ;;                        | "escape" | "[" | "]" | "z"}   (z zooms into the brush)
 ;;   {"type": "push", "rows": [ROW, ...], "window"?: N}  (keep the last N rows)
+;;   {"type": "push", "key": FIELD, "rows": [...]}  (replace rows by FIELD; a row
+;;                        with "_eas_delete": true removes its key, eas-keyed.el)
 ;;   {"type": "link", "param": NAME, "store": STORE | null, "from"?: VIEW}
 ;;                                     (a linked view's selection, eas-link.el)
 ;;   {"type": "param", "param": NAME, "value": V}  (a bound input widget: V as
@@ -86,7 +88,10 @@
                 (eas-event--invalid "rows" "push needs rows: [{...}, ...]"))
               (let ((window (plist-get event :window)))
                 (when (and window (not (and (natnump window) (> window 0))))
-                  (eas-event--invalid "window" "push window is a positive integer: the rows to keep")))))
+                  (eas-event--invalid "window" "push window is a positive integer: the rows to keep")))
+              (let ((key (plist-get event :key)))
+                (when (and key (not (and (stringp key) (> (length key) 0))))
+                  (eas-event--invalid "key" "push key is the name of the column rows replace by")))))
     event))
 
 (defun eas-event-describe (event)
@@ -99,7 +104,8 @@
                                  " ")))
     ("key" (format "key %s" (plist-get event :key)))
     ("param" (format "param %s = %s" (plist-get event :param) (eas-json-encode (plist-get event :value))))
-    ("push" (format "push %d rows%s" (length (plist-get event :rows))
+    ("push" (format "push %d rows%s%s" (length (plist-get event :rows))
+                    (if-let* ((k (plist-get event :key))) (format " by %s" k) "")
                     (if-let* ((w (plist-get event :window))) (format " (window %d)" w) "")))
     ("drag" (format "drag %s -> %s" (plist-get event :from) (plist-get event :to)))
     ("link" (let ((store (plist-get event :store)))

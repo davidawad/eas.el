@@ -60,7 +60,10 @@ are registered once and auto-discovered:
 Every adapter validates and fails as data: `{code, index, field, message}`.
 That is the same rule the existing `financial-chart-shapes` validators
 follow. Streaming is part of the contract (`eas-push VIEW ROWS`), so
-live data is not a separate code path.
+live data is not a separate code path. A keyed push (`eas-push VIEW ROWS
+:key FIELD`, eas-keyed.el) replaces rows by FIELD in place, appends new
+keys and deletes rows marked `"_eas_delete": true`, so a live table
+changes only the rows a delta names.
 
 ### L1 transforms
 
@@ -300,7 +303,7 @@ second language.
 | brush (`.4`) | `interval` selection with `encodings: ["x"]` | state.params[name] = range; selection verb |
 | linked views (`.6`) | the same param across `vconcat`/`hconcat` (top-level `params` with `views`), shared scale binds, `scale.domain: {"param": ...}` | one state per spec; cross-buffer views join a named param bus that delivers `link` events (spikes section 11) |
 | legend toggle (`.5`) | `point` selection with `bind: "legend"` | legend `:map` areas |
-| live data (`.7`) | `x-eas.stream` | `eas-push`, frame cap, pause while pointer/brush active |
+| live data (`.7`) | `x-eas.stream` | `eas-push` (keyed: latest row per key per frame), frame cap, pause while pointer/brush active |
 | values strip (`.34`) | none: always on, no mode | state.pointer column (else latest datum) -> a line under the plot; inspect `strip` |
 
 Hover is touch-only (`.34`): state.hover, tooltips and `pointermove`

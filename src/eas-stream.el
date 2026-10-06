@@ -18,6 +18,12 @@
 ;; catches up in a single frame.  The frame is an ordinary push event,
 ;; so the view log replays exactly what was drawn.
 ;;
+;; A keyed push (`eas-push' with :key, eas-keyed.el) queues into a
+;; batch that keeps only the latest row per key, so a frame carries one
+;; row per changed key however many deltas arrived, and a long pause
+;; holds a bounded queue.  Consecutive pushes with the same key (or
+;; none) share a batch; a frame dispatches one push event per batch.
+;;
 ;; The redraw itself stays idle-coalesced (eas-mode); the cap bounds
 ;; how often the scene is recompiled.  The default cap comes from the
 ;; measured cost of a push frame (docs/design/engine-spikes.md, section
@@ -30,6 +36,7 @@
 (require 'eas-template)
 (require 'eas-adapters)
 (require 'eas-view)
+(require 'eas-keyed)
 (require 'eas-describe)
 
 (defvar eas-stream-default-max-fps 5
@@ -55,6 +62,30 @@ Tests bind it to nil and call `eas-stream-tick' themselves.")
 (defconst eas-stream--pointer-events
   '("pointermove" "pointerdown" "pointerup" "click" "dblclick" "wheel")
   "Event types that mean the pointer is over the chart.")
+
+(cl-defstruct (eas-stream--batch (:constructor eas-stream--batch-make) (:copier nil))
+  "Queued rows of one kind: KEY nil appends PARTS (row vectors, newest
+first); a KEY column merges rows into TABLE, keys in ORDER newest first."
+  key parts table order)
+
+(defun eas-stream--batch-add (batch rows)
+  "Queue ROWS into BATCH."
+  (if-let* ((key (eas-stream--batch-key batch)))
+      (setf (eas-stream--batch-order batch)
+            (eas-keyed-merge (eas-stream--batch-table batch) (eas-stream--batch-order batch) rows key))
+    (push rows (eas-stream--batch-parts batch))))
+
+(defun eas-stream--batch-rows (batch)
+  "BATCH's queued rows as a vector, oldest first."
+  (if (eas-stream--batch-key batch)
+      (let ((table (eas-stream--batch-table batch)))
+        (vconcat (mapcar (lambda (k) (gethash k table)) (reverse (eas-stream--batch-order batch)))))
+    (apply #'vconcat (reverse (eas-stream--batch-parts batch)))))
+
+(defun eas-stream--batch-count (batch)
+  "How many rows BATCH would draw."
+  (if (eas-stream--batch-key batch) (hash-table-count (eas-stream--batch-table batch))
+    (apply #'+ (mapcar #'length (eas-stream--batch-parts batch)))))
 
 (cl-defstruct (eas-stream (:constructor eas-stream--make) (:copier nil))
   view object max-fps window pending (queued 0) last-frame pointer-at timer
@@ -158,15 +189,21 @@ STREAM overrides the config SOURCE declares; one of them must exist."
     0))
 
 (defun eas-stream--flush (stream now)
-  "Dispatch STREAM's queued rows as one windowed push at NOW."
-  (let* ((rows (apply #'vconcat (reverse (eas-stream-pending stream))))
-         (window (eas-stream-window stream))
-         (rows (if (and window (> (length rows) window)) (seq-subseq rows (- (length rows) window)) rows)))
+  "Dispatch STREAM's queued rows as one windowed push per batch at NOW."
+  (let ((batches (reverse (eas-stream-pending stream)))
+        (window (eas-stream-window stream)))
     (setf (eas-stream-pending stream) nil (eas-stream-queued stream) 0
           (eas-stream-last-frame stream) now)
     (cl-incf (eas-stream-frames stream))
-    (eas-dispatch (eas-stream-view stream)
-                    (append (list :type "push" :rows rows) (and window (list :window window))))))
+    (dolist (batch batches)
+      (let* ((key (eas-stream--batch-key batch))
+             (rows (eas-stream--batch-rows batch))
+             (rows (if (and window (not key) (> (length rows) window))
+                       (seq-subseq rows (- (length rows) window))
+                     rows)))
+        (eas-dispatch (eas-stream-view stream)
+                      (append (list :type "push" :rows rows) (and key (list :key key))
+                              (and window (list :window window))))))))
 
 (defun eas-stream--cancel (stream)
   "Cancel STREAM's pending timer."
@@ -203,11 +240,13 @@ is scheduled.  Returns non-nil when a frame was taken."
               ((< now next) (eas-stream--schedule stream next now) nil)
               (t (eas-stream--cancel stream) (eas-stream--flush stream now) t))))))
 
-(defun eas-stream-push (view rows)
+(defun eas-stream-push (view rows &optional key)
   "Queue ROWS for VIEW's stream and draw when the cap and interaction allow.
-ROWS are schema-checked now (SHAPE_INVALID, :index within ROWS).  A
-view whose template declares x-eas.stream is attached on first push;
-any other view gets the rows at once.  Returns `eas-inspect'."
+ROWS are schema-checked now (SHAPE_INVALID, :index within ROWS).  KEY
+makes the push keyed (`eas-push'); queued keyed rows keep the latest
+row per key.  A view whose template declares x-eas.stream is attached
+on first push; any other view gets the rows at once.  Returns
+`eas-inspect'."
   (let* ((view (eas-view-get view))
          (rows (vconcat rows))
          (stream (or (eas-stream-get view)
@@ -215,13 +254,19 @@ any other view gets the rows at once.  Returns `eas-inspect'."
                           (eas-stream-config (eas-view-template view))
                           (eas-stream-attach view)))))
     (if (not stream)
-        (eas-dispatch view (list :type "push" :rows rows))
-      (eas-data-append (list :schema (plist-get (eas-view-data view) :schema) :rows []) rows)
-      (when (> (length rows) 0)
-        (push rows (eas-stream-pending stream))
-        (cl-incf (eas-stream-queued stream) (length rows))
-        (cl-incf (eas-stream-pushes stream))
-        (eas-stream-tick view))
+        (eas-dispatch view (append (list :type "push" :rows rows) (and key (list :key key))))
+      (let ((rows (eas-keyed-check (eas-view-data view) rows key)))
+        (when (> (length rows) 0)
+          (let ((batch (car (eas-stream-pending stream))))
+            (unless (and batch (equal (eas-stream--batch-key batch) key))
+              (setq batch (eas-stream--batch-make
+                           :key key :table (and key (make-hash-table :test 'equal))))
+              (push batch (eas-stream-pending stream)))
+            (eas-stream--batch-add batch rows))
+          (setf (eas-stream-queued stream)
+                (apply #'+ (mapcar #'eas-stream--batch-count (eas-stream-pending stream))))
+          (cl-incf (eas-stream-pushes stream))
+          (eas-stream-tick view)))
       (eas-inspect view))))
 
 (defun eas-stream-flush (view)
@@ -270,8 +315,9 @@ The hook's OLD-STATE and OLD-SCENE arguments are ignored."
                       :keys (list :max-fps (format "frames per second; default %s, at most %d"
                                                    eas-stream-default-max-fps eas-stream-max-fps-limit)
                                   :window "rows kept, oldest dropped; default all")
+                      :keyed "eas-push :key FIELD replaces rows by FIELD; _eas_delete: true removes"
                       :hover-hold (or eas-stream-hover-hold :null)
-                      :verbs ["eas-push" "eas-stream-open" "eas-stream-attach"
+                      :verbs ["eas-push" "eas-push-delete" "eas-stream-open" "eas-stream-attach"
                               "eas-stream-flush" "eas-stream-inspect" "eas-stream-detach"])))
 
 (add-hook 'eas-describe-functions #'eas-stream--describe)

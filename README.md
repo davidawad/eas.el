@@ -114,6 +114,10 @@ from where `src/` is. To add your own, push directories onto
 ;; Live data: push rows into an open view.
 (eas-push view [(:date "2026-03-12" :value 111.2)])
 
+;; A keyed live table (an order book): replace, append or delete by key.
+(eas-push book [(:price 101.5 :size 7)] :key "price")
+(eas-push-delete book "price" '(101.0))
+
 ;; Every agent verb, returning the chart/v1 envelope as a plist.
 (require 'eas-agent)
 (eas-agent "render" "line" :data (eas-template-example "line") :backend "text")

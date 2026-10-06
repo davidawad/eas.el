@@ -25,6 +25,7 @@
 (require 'eas-reduce)
 (require 'eas-params)
 (require 'eas-adapters)
+(require 'eas-keyed)
 (require 'eas-chart)
 (require 'eas-tip)
 (require 'eas-strip)
@@ -48,7 +49,7 @@ taken, so a function may record data in VIEW's state (clicks, fc-qx1.1).")
 Hook functions with side effects (actions, echo) skip them then.")
 
 (defvar eas-push-function nil
-  "Function that takes over `eas-push' with VIEW and ROWS, or nil.
+  "Function that takes over `eas-push' with VIEW, ROWS and KEY, or nil.
 When non-nil, `eas-push' calls it instead of dispatching a push now.
 eas-stream sets it to coalesce live data.")
 
@@ -190,7 +191,7 @@ or data changed."
          (push (equal (plist-get event :type) "push")))
     (when push
       (setf (eas-view-data view)
-            (eas-view--window (eas-data-append (eas-view-data view) (vconcat (plist-get event :rows)))
+            (eas-view--window (eas-view--push-data (eas-view-data view) event)
                                 (plist-get event :window))))
     (setf (eas-view-state view) (eas-reduce old-state event (eas-view-scene view)))
     (eas-view--log view event)
@@ -201,6 +202,12 @@ or data changed."
       (run-hook-with-args 'eas-view-changed-functions view))
     (run-hook-with-args 'eas-view-dispatch-functions view event old-state old-scene)
     (eas-inspect view)))
+
+(defun eas-view--push-data (data event)
+  "DATA with push EVENT's rows appended, or merged by its key."
+  (let ((key (plist-get event :key)) (rows (vconcat (plist-get event :rows))))
+    (if (not key) (eas-data-append data rows)
+      (eas-keyed-apply data (eas-keyed-check data rows key) key))))
 
 (defun eas-view--window (data window)
   "DATA keeping only its last WINDOW rows (all when WINDOW is nil)."
@@ -222,11 +229,19 @@ LOG may be a vector or list, in order, or a view's own `eas-view-log'
     (dolist (entry entries result)
       (setq result (eas-dispatch view (or (plist-get entry :event) entry))))))
 
-(defun eas-push (view rows)
+(cl-defun eas-push (view rows &key key)
   "Append ROWS to VIEW's data (schema-checked) and redraw; return inspect.
-With `eas-push-function' set (eas-stream), the push may be coalesced."
-  (if eas-push-function (funcall eas-push-function view rows)
-    (eas-dispatch view (list :type "push" :rows (vconcat rows)))))
+With KEY (a column name) the push is keyed (eas-keyed.el): rows whose
+KEY matches replace the existing rows, new keys are appended and a row
+with :_eas_delete t removes its key.  With `eas-push-function' set
+\(eas-stream), the push may be coalesced."
+  (if eas-push-function (apply eas-push-function view rows (and key (list key)))
+    (eas-dispatch view (append (list :type "push" :rows (vconcat rows)) (and key (list :key key))))))
+
+(defun eas-push-delete (view key values)
+  "Delete the rows of VIEW whose column KEY equals one of VALUES.
+A keyed `eas-push' of delete rows; returns its inspect."
+  (eas-push view (seq-map (lambda (v) (list (eas-keyed-field key) v :_eas_delete t)) values) :key key))
 
 ;;; Inspect and selection
 

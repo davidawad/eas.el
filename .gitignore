@@ -15,3 +15,6 @@ eln-cache/
 # Test and tool output
 /test/**/out/
 node_modules/
+
+# Local task store (not published)
+.beads/

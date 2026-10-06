@@ -99,8 +99,12 @@ Signals PARSE_ERROR naming the position when STRING is not JSON."
      (signal (car err) (append (cdr err) (list :path file))))))
 
 (defun eas-json-encode (value)
-  "Encode the eas JSON VALUE as a compact JSON string."
-  (json-serialize value :null-object :null :false-object :false))
+  "Encode the eas JSON VALUE as a compact JSON string.
+The result holds characters, not UTF-8 bytes: `json-serialize' returns
+a unibyte string, which would turn into raw bytes once concatenated
+with text or printed."
+  (decode-coding-string
+   (json-serialize value :null-object :null :false-object :false) 'utf-8 t))
 
 (defun eas-json-pretty (value)
   "Encode VALUE as indented JSON with sorted keys and a trailing newline.

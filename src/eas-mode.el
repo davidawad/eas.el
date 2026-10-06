@@ -113,7 +113,13 @@ line numbers and, in a terminal, the column the truncation glyph takes
   (if (eq target 'svg)
       (cons (window-body-width window t)
             (- (window-body-height window t) 4 (with-selected-window window (default-line-height))))
-    (list :cols (max 20 (with-selected-window window (window-max-chars-per-line window)))
+    ;; A terminal window with a neighbour to its right also loses the
+    ;; vertical-border column: `window-max-chars-per-line' still counts it,
+    ;; so a full-width line ends in `$' (seen in neomacs -nw, 2026-10-05).
+    (list :cols (max 20 (- (with-selected-window window (window-max-chars-per-line window))
+                           (if (and (not (display-graphic-p (window-frame window)))
+                                    (window-right window))
+                               1 0)))
           :rows (max 6 (- (window-body-height window) 2)))))
 
 (defun eas-mode-redraw (&optional buffer)

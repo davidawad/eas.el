@@ -17,7 +17,7 @@
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},
-  "width": 400,
+  "width": "container",
   "height": 200,
   "data": {"name": "data"},
   "layer": [

@@ -15,7 +15,7 @@
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},
-  "width": 300,
+  "width": "container",
   "height": 200,
   "data": {"name": "data"},
   "mark": {"type": "bar"},

@@ -33,7 +33,7 @@
   "description": {
     "x-eas:slot": "description"
   },
-  "width": 400,
+  "width": "container",
   "height": 160,
   "data": {
     "name": "data"

@@ -383,10 +383,22 @@ That is when its mantissa is small given the number of TICKS and COUNT."
   "The time zone SCALE ticks and labels in: none (UTC) for utc scales."
   (unless (or (equal (plist-get scale :type) "utc") (eq (plist-get scale :utc) t)) eas-time-zone))
 
-(defun eas-scale-tick-format (scale count &optional format)
+(defun eas-scale-tick-format (scale count &optional format no-skip)
   "Return a function formatting SCALE's tick values at COUNT.
 FORMAT is a Vega-Lite format string; only d3 \",.Nf\"/\".N%\" style
-and strftime-style time formats are honored."
+and strftime-style time formats are honored.  A log SCALE labels only
+the ticks d3's log filter keeps, whatever FORMAT, unless NO-SKIP (as
+Vega does for explicit axis values)."
+  (let ((f (eas-scale--tick-format scale count format)))
+    (if (and format (not no-skip) (equal (plist-get scale :type) "log"))
+        (let ((ticks (eas-scale-ticks scale count)))
+          (lambda (v) (if (and (numberp v) (> v 0) (not (eas-scale-log-label-p v ticks count))) ""
+                        (funcall f v))))
+      f)))
+
+(defun eas-scale--tick-format (scale count format)
+  "Return a function formatting SCALE's tick values at COUNT with FORMAT.
+See `eas-scale-tick-format', which adds the log label filter."
   (pcase (plist-get scale :type)
     ((or "time" "utc")
      (let ((zone (eas-scale--zone scale)))

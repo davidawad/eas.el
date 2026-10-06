@@ -213,7 +213,8 @@ config."
                                           (eas-time-format v f))
                                       (format "%s" v))))
                     (let ((f (eas-scale-tick-format scale count (or (plist-get axis :format) (plist-get def :format)
-                                                                    (and (equal (plist-get def :stack) "normalize") ".0%")))))
+                                                                    (and (equal (plist-get def :stack) "normalize") ".0%"))
+                                                    (plist-get axis :values))))
                       ;; Every text log tick is labelled: thinning picks among them.
                       (if (and text-log (not (or (plist-get axis :format) (plist-get def :format))))
                           (lambda (v) (if (and (numberp v) (> v 0))

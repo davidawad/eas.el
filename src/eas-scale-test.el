@@ -71,6 +71,16 @@
     (should (equal (funcall (eas-scale-tick-format s 5 ".0%") 0.4) "40%")))
   (should (equal (eas-scale-format-number -12345.678 1) "−12,345.7")))
 
+(ert-deftest eas-scale-log-formats-keep-d3s-label-filter ()
+  ;; Vega labels a log axis through d3's filter whatever its format:
+  ;; over 5..1000 at count 10 only mantissas up to 4 keep a label.
+  (let* ((s (list :type "log" :domain [5 1000] :range [0 1]))
+         (labels (lambda (fmt &optional no-skip)
+                   (let ((f (eas-scale-tick-format s 10 fmt no-skip)))
+                     (seq-remove #'string-empty-p (mapcar f (eas-scale-ticks s 10)))))))
+    (should (equal (funcall labels "$,.0f") '("$10" "$20" "$30" "$40" "$100" "$200" "$300" "$400" "$1,000")))
+    (should (equal (length (funcall labels "$,.0f" t)) (length (eas-scale-ticks s 10))))))
+
 (ert-deftest eas-scale-time-ticks-match-d3 ()
   (cl-flet ((fmt (a b n) (mapcar #'eas-scale-time-multi-format
                                  (eas-scale-time-ticks (eas-time-parse a) (eas-time-parse b) n))))

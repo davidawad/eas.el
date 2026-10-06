@@ -38,6 +38,7 @@
 (require 'eas-axis-fit)
 (require 'eas-container)
 (require 'eas-legend-orient)
+(require 'eas-legend-text-orient)
 
 (declare-function eas-facet-layout-min-plot "eas-facet-layout")
 
@@ -167,20 +168,6 @@ AXES and LEGENDS are GROUP's models, placed under METRICS."
     (list :left (max 0 (ceiling (- (aref box 0)))) :top (max 0 (ceiling (- (aref box 1))))
           :right (max 0 (ceiling (- (aref box 2) w))) :bottom (max 0 (ceiling (- (aref box 3) h))))))
 
-(defun eas-place--text-legend-flow (sizes limit w metrics)
-  "Text legends of SIZES ((W . H) each) stacked from the plot's top-right.
-A legend that would end below LIMIT (a height, or nil) starts a new
-column to the right.  Return (OFFSETS RIGHT HEIGHT): offsets from the
-plot origin (W is the plot width), the chrome right of the plot and the
-tallest column."
-  (let ((x 0) (y 0) (col-w 0) (tallest 0) offsets)
-    (dolist (s sizes)
-      (when (and limit (> y 0) (> (+ y (cdr s)) limit))
-        (setq x (+ x col-w) y 0 col-w 0))
-      (push (cons (+ w (plist-get metrics :legend-offset) x) y) offsets)
-      (setq y (+ y (cdr s)) col-w (max col-w (car s)) tallest (max tallest y)))
-    (list (nreverse offsets) (+ x col-w) tallest)))
-
 (defun eas-place--rect-zindex (axis group channel metrics)
   "AXIS of GROUP's CHANNEL with Vega-Lite's default zindex under METRICS.
 A rect mark over a discrete (nominal or ordinal) field draws its axis
@@ -241,12 +228,19 @@ wins."
       (dolist (axis axes)
         (dolist (side (eas-layout-axis-extent axis metrics))
           (plist-put chrome (car side) (max (plist-get chrome (car side)) (cdr side)))))
+      ;; The plot's bottom edge is a row of its own, which a bottom axis's
+      ;; tick row provides; with the x axis on top (or none) a y axis
+      ;; would put its last tick past the grid.
+      (when (and (zerop (plist-get chrome :bottom))
+                 (seq-some (lambda (a) (member (plist-get a :orient) '("left" "right"))) axes))
+        (plist-put chrome :bottom (plist-get metrics :row)))
       (when legends
-        (let ((flow (eas-place--text-legend-flow (mapcar (lambda (l) (eas-legend-size l metrics)) legends)
-                                                 (plist-get group :legend-limit) (plist-get group :w) metrics)))
-          (plist-put group :legend-offsets (nth 0 flow))
-          (plist-put chrome :right (nth 1 flow))
-          (plist-put chrome :legend-h (nth 2 flow)))))
+        ;; Each legend on its orient's side (eas-legend-text-orient.el).
+        (let ((flow (eas-legend-text-orient-flow legends (plist-get group :w) (plist-get group :h) chrome
+                                                 (plist-get group :legend-limit) metrics)))
+          (setq legends (nth 0 flow) chrome (nth 2 flow))
+          (plist-put group :legend-offsets (nth 1 flow))
+          (plist-put chrome :legend-h (nth 3 flow)))))
     ;; A facet cell's header sits outside its axes.
     (when-let* ((header (plist-get group :header)))
       (let ((e (eas-facet-header-extent header metrics)))

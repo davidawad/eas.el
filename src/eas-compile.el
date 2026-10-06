@@ -49,6 +49,8 @@
 (require 'eas-compile-aux)
 (require 'eas-compile-channels)
 (require 'eas-params-init)
+(require 'eas-text-snap)
+(require 'eas-text-labels)
 
 (defvar eas-compile-gc-threshold (* 64 1024 1024)
   "GC threshold compile runs under; compile allocates many small plists.")
@@ -494,6 +496,9 @@ runtime keeps the plan so that a selection change can patch it
       (eas-shared-pos-prepare tree groups spec state)
       (let ((total (eas-place-layout tree metrics title-h size)))
         (dolist (g groups) (eas-compile--ranges g))
+        ;; Text: a y band takes whole rows (eas-text-snap.el).
+        (when (eas-layout-text-p metrics)
+          (dolist (g groups) (eas-text-snap-bands g metrics)))
         ;; Vega's canvas also holds whatever the marks overhang: measure
         ;; them, lay out again around them and move the items along.
         ;; Charts fitted to a size (Emacs windows) skip this; their
@@ -597,8 +602,10 @@ METRICS and STATE are as for `eas-compile--view'."
                                               (+ (eas-title--get spec metrics :fontSize :chart-title-size) 2)))))
                       (let ((color (plist-get (eas-title--object spec) :color)))
                         (when (stringp color) (list :color color)))) spec metrics))))
-     (list :views (vconcat (mapcar (lambda (v) (eas-axis-fit-text (eas-legend-fit-width v (car total) metrics)
-                                                                  (car total) metrics))
+     (list :views (vconcat (mapcar (lambda (v) (eas-text-labels-thin
+                                                (eas-axis-fit-text (eas-legend-fit-width v (car total) metrics)
+                                                                   (car total) metrics)
+                                                metrics))
                                    (eas-facet-title-add (mapcar (lambda (g) (eas-compile--view g metrics state)) groups)
                                                         groups metrics)))
            :params (vconcat (apply #'append (mapcar (lambda (g) (plist-get g :params)) groups)))))))

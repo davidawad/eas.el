@@ -1,16 +1,15 @@
-A   ■   Quantize x3      A   ●   Quantile     A  ●    Thres…
+        Quantize x3              Quantile             Thres…
         ■ < 43.0                 ▄▄ 82                ● < 40
-B   ■   ■ 43.0 – 67.0    B   ●   ▄▄           B  ●    ● 40 …
+        ■ 43.0 – 67.0            ▄▄                   ● 40 …
         ■ ≥ 67.0                 ▄▄ 59                ● 60 …
-C   ■                    C   ●   ▄▄ 40        C  ●    ● ≥ 80
-D   ■                    D   ●   ▄▄           D  ●
-
+                                 ▄▄ 40                ● ≥ 80
+A   ■                    A   ●   ▄▄           A  ●
+B   ■                    B   ●                B  ●
+C   ■                    C   ●                C  ●
+D   ■                    D   ●                D  ●
 E   ■                    E   ●                E  ●
 F   ■                    F   ●                F  ●
-
 G   ■                    G   ●                G  ●
-
 H   ■                    H   ●                H  ●
 I   ■                    I   ●                I  ●
-
 J   ■                    J   ●                J  ●

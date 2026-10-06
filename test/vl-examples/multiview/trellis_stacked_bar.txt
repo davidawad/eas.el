@@ -1,11 +1,11 @@
                  1931
 variety                       1932
-         Glabron┤█▌▋▊▉█▌█▋    ██▌▉█▍▊     site
-       Manchuria┤█▌▋▉███▉     █▎▏█▎▍▋     ■ Crookston
-         No. 457┤█▊██▎▍███▎   █▍▎█▋▋█▎    ■ Duluth
-         No. 462┤█▉█▉█▏▌██▏   █▏▊█▋▋█▍    ■ Grand Rapids
-         No. 475┤█▊█▊▋▌█▍     █▎██▋▊█▍    ■ Morris
-                │                         ■ University Farm
+                │                         site
+         Glabron┤█▌▋▊▉█▌█▋    ██▌▉█▍▊     ■ Crookston
+       Manchuria┤█▌▋▉███▉     █▎▏█▎▍▋     ■ Duluth
+         No. 457┤█▊██▎▍███▎   █▍▎█▋▋█▎    ■ Grand Rapids
+         No. 462┤█▉█▉█▏▌██▏   █▏▊█▋▋█▍    ■ Morris
+         No. 475┤█▊█▊▋▌█▍     █▎██▋▊█▍    ■ University Farm
         Peatland┤█▋▉█▏▍▋█▌    ██▏▎▉██▍    ■ Waseca
         Svansota┤█▌▌▋▋██▉     ▊▋▎▋▊█▏
            Trebi┤█▊█▏▎██▍█▊   █▋▊▋█▍▌█▍

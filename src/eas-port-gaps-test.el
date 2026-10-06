@@ -269,5 +269,94 @@
          (view (aref (vconcat (plist-get (eas-compile spec) :views)) 0)))
     (should (= (length (plist-get view :legends)) 1))))
 
+(defun eas-port-gaps-test--legend-spec (orient)
+  "A point chart whose color legend has ORIENT."
+  `(:data (:values [(:a 1 :b 2 :c "x") (:a 2 :b 3 :c "yy")]) :mark "point"
+    :encoding (:x (:field "a" :type "quantitative") :y (:field "b" :type "quantitative")
+               :color (:field "c" :type "nominal" :legend (:orient ,orient)))))
+
+(defun eas-port-gaps-test--lines (text)
+  "TEXT's lines, without trailing blanks."
+  (mapcar #'string-trim-right (split-string text "\n")))
+
+(ert-deftest eas-port-gaps-text-legend-honours-orient ()
+  (let ((bottom (eas-port-gaps-test--lines
+                 (eas-port-gaps-test--text (eas-port-gaps-test--legend-spec "bottom") 40 10)))
+        (top (eas-port-gaps-test--lines
+              (eas-port-gaps-test--text (eas-port-gaps-test--legend-spec "top") 40 10)))
+        (left (eas-port-gaps-test--lines
+               (eas-port-gaps-test--text (eas-port-gaps-test--legend-spec "left") 40 10)))
+        (right (eas-port-gaps-test--lines
+                (eas-port-gaps-test--text (eas-port-gaps-test--legend-spec "right") 40 10))))
+    ;; Bottom: a row under the x axis title; top: a row above the plot.
+    (should (equal (car (last bottom)) "  ● x  ● yy"))
+    (should (equal (nth 1 top) "  ● x  ● yy"))
+    (should (string-match-p "\\`  c\\'" (nth 0 top)))
+    ;; Left: stacked left of the y axis.
+    (should (seq-find (lambda (l) (string-prefix-p "● yy " l)) left))
+    ;; Right, as before.
+    (should (seq-find (lambda (l) (string-suffix-p "● yy" l)) right))
+    (should-not (seq-find (lambda (l) (string-prefix-p "●" l)) right))))
+
+(ert-deftest eas-port-gaps-text-top-axis-keeps-y-labels-on-their-rows ()
+  (let* ((spec '(:data (:values [(:a 1 :b 0) (:a 2 :b 3)]) :mark "point"
+                 :encoding (:x (:field "a" :type "quantitative" :axis (:orient "top"))
+                            :y (:field "b" :type "quantitative"))))
+         (lines (eas-port-gaps-test--lines (eas-port-gaps-test--text spec 40 12)))
+         (rows (lambda (label) (seq-position lines label (lambda (l lb) (string-prefix-p (concat lb "┤") l))))))
+    ;; Evenly spaced ticks, the last on the grid's last row.
+    (should (= (funcall rows "0") (1- (length lines))))
+    (should (= (- (funcall rows "0") (funcall rows "1")) (- (funcall rows "1") (funcall rows "2"))))))
+
+(ert-deftest eas-port-gaps-text-bands-take-whole-rows ()
+  (dolist (rows '(9 12 15))
+    (let* ((spec '(:data (:values [(:k "alpha" :v 3) (:k "beta" :v 5) (:k "gamma" :v 2) (:k "delta" :v 4)])
+                   :mark "bar" :encoding (:y (:field "k" :type "nominal") :x (:field "v" :type "quantitative"))))
+           (lines (eas-port-gaps-test--lines (eas-port-gaps-test--text spec 40 rows)))
+           (bars (seq-filter (lambda (l) (string-match-p "█" l)) lines))
+           (first (seq-position lines (car bars)))
+           (labelled (mapcar (lambda (k) (seq-position lines k (lambda (l k) (string-match-p (concat k "┤") l))))
+                             '("alpha" "beta" "delta" "gamma"))))
+      ;; Every band has the same number of rows, with no blank row between.
+      (should (= (% (length bars) 4) 0))
+      (should (equal (seq-subseq lines first (+ first (length bars))) bars))
+      (should (apply #'= (cl-mapcar #'- (cdr labelled) labelled)))
+      (should (= (length (delete-dups (copy-sequence (cl-mapcar #'- (cdr labelled) labelled)))) 1)))))
+
+(ert-deftest eas-port-gaps-text-translucent-rects-are-shaded ()
+  (let ((draw (lambda (opacity)
+                (eas-port-gaps-test--text
+                 `(:data (:values [(:k "a" :v 3) (:k "b" :v 5)]) :mark (:type "bar" :opacity ,opacity)
+                   :encoding (:x (:field "k" :type "nominal") :y (:field "v" :type "quantitative")))
+                 24 7))))
+    (should (string-match-p "█" (funcall draw 1)))
+    (should-not (string-match-p "█" (funcall draw 0.5)))
+    (should (string-match-p "▒" (funcall draw 0.5)))
+    (should (string-match-p "░" (funcall draw 0.2)))
+    (should (string-match-p "▓" (funcall draw 0.7)))
+    (should-not (string-match-p "▓" (funcall draw 0.85))))
+  (should (eq (eas-text--translucent ?▄ 0.5) ?▄)))
+
+(ert-deftest eas-port-gaps-text-labels-do-not-print-over-each-other ()
+  (let* ((spec '(:data (:values [(:k "a" :v 3) (:k "b" :v 5) (:k "c" :v 4)])
+                 :layer [(:mark "bar" :encoding (:x (:field "k" :type "nominal") :y (:field "v" :type "quantitative")))
+                         (:mark (:type "text" :dy -6)
+                          :encoding (:x (:field "k" :type "nominal") :y (:field "v" :type "quantitative")
+                                     :text (:field "v" :type "quantitative" :format ".3f")))
+                         (:mark (:type "text" :align "left" :x 0 :y 0 :dx 2)
+                          :encoding (:text (:value "annotation here")))]))
+         (scene (eas-compile spec :target 'text :size '(:cols 26 :rows 9)))
+         (texts (eas-port-gaps-test--marks scene "text"))
+         (note (aref (plist-get (nth 1 texts) :items) 0))
+         (text (eas-port-gaps-test--text spec 26 9)))
+    (should (equal (plist-get note :dropped) "overlap"))
+    (should (equal (plist-get note :opacity) 0))
+    (should (string-match-p "5\\.000" text))
+    (should-not (string-match-p "annotation" text))
+    ;; Room enough: both show, and svg keeps every label.
+    (should (string-match-p "annotation" (eas-port-gaps-test--text spec 80 20)))
+    (should-not (seq-some (lambda (m) (seq-some (lambda (i) (plist-get i :dropped)) (plist-get m :items)))
+                          (eas-port-gaps-test--marks (eas-compile spec) "text")))))
+
 (provide 'eas-port-gaps-test)
 ;;; eas-port-gaps-test.el ends here

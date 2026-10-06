@@ -1,6 +1,6 @@
                         Mean of Subject Ratings (95% CIs)
-  PoleStar vs Voyager     ────●────             ────●────
 
+  PoleStar vs Voyager     ────●────             ────●────
 PoleStar vs Voyager 2                ───●───       ───●────
                       ──────┬────────────┬───────────┬──────
                            −2           0            2

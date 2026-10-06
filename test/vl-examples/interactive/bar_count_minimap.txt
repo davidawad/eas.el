@@ -1,16 +1,16 @@
                           0       2        4       6
                           ┴───────┴────────┴────────┴
                ford pinto┤██████████████████████████▍ ██████
-         chevrolet malibu┤█████████████▏              ███▏
+         chevrolet malibu┤████████▊                   ██▎
   plymouth satellite (sw)┤████████▊                   ██▎
                          │████▍                       █▎
     toyota corona hardtop┤████▍                       █▎
             toyota carina┤████▍                       █▎
-                         │████▍                       █▎
    dodge coronet brougham┤████▍                       █▎
-           dodge colt m/m┤████▍                       █▎
                          │████▍                       █▎
+           dodge colt m/m┤████▍                       █▎
         pontiac lemans v6┤████▍                       █▎
       honda civic 1500 gl┤████▍                       █▎
-           dodge aries se┤████▍                       █▎
                          │████▍                       █▎
+           dodge aries se┤████▍                       █▎
+

@@ -30,6 +30,7 @@
 (declare-function eas-scale-discretize-entries "eas-scale-discretize")
 (declare-function eas-scale-discretize-gradient "eas-scale-discretize")
 (declare-function eas-legend-row-place "eas-legend-row")
+(declare-function eas-legend-text-orient-place-row "eas-legend-text-orient")
 
 (defconst eas-legend-default-color "#4c78a8"
   "Symbol color when the mark has no constant color of its own.")
@@ -375,7 +376,9 @@ METRICS are the layout's."
 METRICS are the layout's."
   (let ((metrics (eas-legend-style-metrics legend metrics)))
     (eas-legend-style-looks
-     (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
+     (cond ((and (eas-layout-text-p metrics) (plist-get legend :wrap-width))
+            (eas-legend-text-orient-place-row legend x y metrics))
+           ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
            ((eas-legend-extra-horizontal-p legend metrics) (eas-legend-extra-place-horizontal legend x y metrics))
            ((and (fboundp 'eas-legend-row-p)
                  (or (eas-legend-row-p legend metrics)

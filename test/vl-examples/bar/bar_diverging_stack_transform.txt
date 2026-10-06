@@ -1,15 +1,15 @@
 Question
-Question 1   ┃█▏█▋███████▉█▍    Response
+                                Response
                                 ■ Strongly disagree
-Question 2 ▐█████████████▏      ■ Disagree
-Question 3  ▐██▏█▊█████▎█▉      ■ Neither agree nor disagree
-                                ■ Agree
-Question 4    ▐█▉█████▊████▉    ■ Strongly agree
+                                ■ Disagree
+                                ■ Neither agree nor disagree
+Question 1   ┃█▏█▋███████▉█▍    ■ Agree
+Question 2 ▐█████████████▏      ■ Strongly agree
+Question 3  ▐██▏█▊█████▎█▉
+Question 4    ▐█▉█████▊████▉
 Question 5     ▋█▎████████▍█▋
-
 Question 6   ▕▊▋█▎██████▉██▌
 Question 7     ▐█▊██████████▋
-
 Question 8      ██████████████
            ─────┬──────┬──────┬
                 0     50   100

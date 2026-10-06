@@ -1,13 +1,13 @@
 variety
-         Glabron┤███▏█▊█▉██▉███▊████▎      site
-       Manchuria┤███▌████▋██▋██▏███▏       ■ Crookston
-         No. 457┤███▉██▌█████▌██▉████▋     ■ Duluth
-                │███▉██▌█████▌██▉████▋     ■ Grand Rapids
-         No. 462┤███▊██▎█▍███▏██▏████▍     ■ Morris
-         No. 475┤███▋██▌█▎██▌██▏███▎       ■ University Farm
-        Peatland┤███▎██▎██▎██▊██▋███▊      ■ Waseca
+                │                          site
+                │                          ■ Crookston
+         Glabron┤███▏█▊█▉██▉███▊████▎      ■ Duluth
+       Manchuria┤███▌████▋██▋██▏███▏       ■ Grand Rapids
+         No. 457┤███▉██▌█████▌██▉████▋     ■ Morris
+         No. 462┤███▊██▎█▍███▏██▏████▍     ■ University Farm
+         No. 475┤███▋██▌█▎██▌██▏███▎       ■ Waseca
+        Peatland┤███▎██▎██▎██▊██▋███▊
         Svansota┤██▉██▎█▌██▍██▍███▌
-                │████▎██▍█▊████▏██▎████▊
            Trebi┤████▎██▍█▊████▏██▎████▊
           Velvet┤███▌█▉██▌██▋██▉████▏
 Wisconsin No. 38┤████▏████▊███▍███▏████▊

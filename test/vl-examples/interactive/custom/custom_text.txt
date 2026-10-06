@@ -1,16 +1,15 @@
                        Cars by origin
 #
+
  1  chevrolet chevelle malibu
  2  buick skylark 320
  3  plymouth satellite
-
  4  amc rebel sst
  5  ford torino
  6  ford galaxie 500
  7  chevrolet impala
  8  plymouth fury iii
  9  pontiac catalina
-
 10  amc ambassador dpl
 11  chevrolet chevelle concours (sw)
 12  ford torino (sw)

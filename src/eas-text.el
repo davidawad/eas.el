@@ -344,7 +344,7 @@ cell holds anything else."
 A full block ranks first, then eighth blocks by size (they read to an
 eighth), then the coarse half and edge glyphs.  Stacked segments meet on
 the lower segment's eighth block, as stacked areas do."
-  (cond ((memq char '(?█ ?▒)) 2.0)
+  (cond ((memq char '(?█ ?▓ ?▒ ?░)) 2.0)
         ((seq-position eas-glyph-blocks char) (+ 1 (/ (seq-position eas-glyph-blocks char) 8.0)))
         ((seq-position eas-glyph-left-blocks char) (+ 1 (/ (seq-position eas-glyph-left-blocks char) 8.0)))
         ((memq char '(?▀ ?▐)) 0.5)
@@ -355,6 +355,16 @@ the lower segment's eighth block, as stacked areas do."
 Shaded where at least 3/8 of the cell is covered, its thin ends as they
 are."
   (if (memq char '(?█ ?▀ ?▐ ?▄ ?▅ ?▆ ?▇ ?▌ ?▋ ?▊ ?▉)) ?▒ char))
+
+(defun eas-text--translucent (char alpha)
+  "CHAR as a fill of opacity ALPHA (below 1) draws it.
+A full block becomes a shade block as light as ALPHA: light (░) to a
+quarter, medium (▒) to a half, dark (▓) to three quarters; a fill more
+opaque than that stays solid.  Eighth and half blocks keep their shape,
+which carries the bar's end."
+  (if (and alpha (<= alpha 0.75) (eq char ?█))
+      (cond ((<= alpha 0.25) ?░) ((<= alpha 0.5) ?▒) (t ?▓))
+    char))
 
 (defun eas-text--cells (p len size)
   "(FIRST . END) cells of SIZE pixels a span from P of LEN pixels rounds to.
@@ -375,7 +385,8 @@ A span narrower than a cell takes the cell holding its middle."
 A bar's ends take eighth or half blocks in the direction it grows, so
 its baseline and value land on their own cells.  A ranged bar whose
 second value lies below its first (:rise :false, a falling candle) is
-shaded, a rising one solid; color tells them apart too."
+shaded, a rising one solid; color tells them apart too.  A bar or
+rect less than opaque shades its full cells (`eas-text--translucent')."
   (let* ((cw (eas-text--grid-cw g)) (ch (eas-text--grid-ch g))
          (x (plist-get item :x)) (y (plist-get item :y)) (w (plist-get item :w)) (h (plist-get item :h))
          (orient (plist-get item :orient))
@@ -384,6 +395,8 @@ shaded, a rising one solid; color tells them apart too."
                   (eas-text--item-props view mark item (plist-get item :datum))))
          (vertical (equal orient "vertical")) (horizontal (equal orient "horizontal"))
          (falling (eq (plist-get item :rise) :false))
+         ;; A see-through fill (opacity < 1) shades its full cells.
+         (alpha (and (not brush) (* (or (plist-get item :opacity) 1) (or (plist-get item :fillOpacity) 1))))
          ;; The end standing on the scale's zero (the baseline) fills its
          ;; cell; only the value end shows a partial block.
          (zero (and (or vertical horizontal) (not (plist-get item :rise))
@@ -427,7 +440,8 @@ shaded, a rising one solid; color tells them apart too."
                                      (horizontal (eas-text--hglyph (if snap-lo 0.0 (max 0.0 (/ (- x (* col cw)) (float cw))))
                                                                    (if snap-hi 1.0 (min 1.0 (/ (- (+ x w) (* col cw)) (float cw))))))
                                      (t ?█))
-                         for glyph = (if (and char falling) (eas-text--falling char) char)
+                         for glyph = (cond ((and char falling) (eas-text--falling char))
+                                           (char (eas-text--translucent char alpha)))
                          do (cond
                              (glyph (eas-text--put g col row glyph props prio (eas-text--coverage glyph)))
                              ;; The brush shades its cells whatever they hold

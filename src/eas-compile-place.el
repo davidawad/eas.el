@@ -184,8 +184,9 @@ tallest column."
 (defun eas-place--rect-zindex (axis group channel metrics)
   "AXIS of GROUP's CHANNEL with Vega-Lite's default zindex under METRICS.
 A rect mark over a discrete (nominal or ordinal) field draws its axis
-in front, zindex 1, so heatmap cells do not hide the domain line; an
-axis or config zindex wins."
+in front, zindex 1, so heatmap cells do not hide the domain line, while
+its grid stays behind them (:grid-zindex 0); an axis or config zindex
+wins."
   (let* ((def (plist-get (plist-get group :axis-defs) channel))
          (explicit (let ((a (plist-get def :axis)))
                      (or (and (eas-object-p a) (plist-member a :zindex))
@@ -193,7 +194,7 @@ axis or config zindex wins."
     (if (and axis (not explicit) (not (plist-get axis :zindex))
              (member (plist-get def :type) '("nominal" "ordinal"))
              (equal (plist-get (plist-get (car (plist-get group :units)) :mark) :type) "rect"))
-        (plist-put (copy-sequence axis) :zindex 1)
+        (plist-put (plist-put (copy-sequence axis) :zindex 1) :grid-zindex 0)
       axis)))
 
 (defun eas-place-chrome (group metrics)

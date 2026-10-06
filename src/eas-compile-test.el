@@ -55,6 +55,8 @@
     (should (= (plist-get x :step) 4))
     (should (= (plist-get x :bandwidth) 2))
     (should (equal (mapcar (lambda (a) (plist-get a :zindex)) (plist-get view :axes)) '(1 1)))
+    ;; Their grids stay behind the cells.
+    (should (equal (mapcar (lambda (a) (plist-get a :grid-zindex)) (plist-get view :axes)) '(0 0)))
     (let ((view (aref (plist-get (eas-compile (funcall spec '(:zindex 0))) :views) 0)))
       (should (equal (mapcar (lambda (a) (plist-get a :zindex)) (plist-get view :axes)) '(0 1))))))
 

@@ -334,14 +334,22 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
             out))
     (nreverse out)))
 
-(defun eas-svg--axes (axes theme)
-  "SVG nodes for placed AXES under THEME, every grid beneath every axis.
-Vega-Lite puts the grids in axes of their own ahead of the others."
-  (let ((parts (mapcar (lambda (axis)
-                         (let ((n (seq-count (lambda (tk) (plist-get tk :grid)) (plist-get axis :ticks))))
-                           (let ((nodes (eas-svg--axis axis theme))) (cons (seq-take nodes n) (seq-drop nodes n)))))
-                       axes)))
-    (append (apply #'append (mapcar #'car parts)) (apply #'append (mapcar #'cdr parts)))))
+(defun eas-svg--axes (axes theme front)
+  "SVG nodes of AXES under THEME drawn behind the marks, or in FRONT of them.
+Every grid lies beneath every axis, as Vega-Lite puts the grids in axes
+of their own ahead of the others.  An axis's zindex above 0 draws it in
+front; its grid follows :grid-zindex when it has one."
+  (let* ((z (lambda (a key) (> (or (plist-get a key) 0) 0)))
+         (grid-front (lambda (a) (funcall z a (if (plist-member a :grid-zindex) :grid-zindex :zindex))))
+         (parts (mapcar (lambda (axis)
+                          (let ((n (seq-count (lambda (tk) (plist-get tk :grid)) (plist-get axis :ticks)))
+                                (nodes (eas-svg--axis axis theme)))
+                            (list axis (seq-take nodes n) (seq-drop nodes n))))
+                        axes)))
+    (append (apply #'append (mapcar (lambda (p) (and (eq (not (funcall grid-front (car p))) (not front)) (nth 1 p)))
+                                    parts))
+            (apply #'append (mapcar (lambda (p) (and (eq (not (funcall z (car p) :zindex)) (not front)) (nth 2 p)))
+                                    parts)))))
 
 (defun eas-svg--gradient-id (legend)
   "Stable id of LEGEND's gradient definition."
@@ -422,10 +430,7 @@ Vega-Lite puts the grids in axes of their own ahead of the others."
                                  :stroke-opacity (plist-get vc :strokeOpacity))
                   children)))
         ;; An axis with zindex above 0 draws over the marks.
-        (setq children (append (reverse (eas-svg--axes (seq-remove (lambda (a) (> (or (plist-get a :zindex) 0) 0))
-                                                                   (plist-get view :axes))
-                                                       theme))
-                               children))
+        (setq children (append (reverse (eas-svg--axes (plist-get view :axes) theme nil)) children))
         (when-let* ((h (plist-get view :header)))
           (push (eas-svg--text (plist-get h :text) (plist-get h :x) (plist-get h :y) (plist-get h :fontSize)
                                :align (plist-get h :align) :baseline (plist-get h :baseline)
@@ -442,10 +447,7 @@ Vega-Lite puts the grids in axes of their own ahead of the others."
                                                         (plist-get mark :items))))
                                     (plist-get view :marks))))
               children)
-        (setq children (append (reverse (eas-svg--axes (seq-filter (lambda (a) (> (or (plist-get a :zindex) 0) 0))
-                                                                   (plist-get view :axes))
-                                                       theme))
-                               children))
+        (setq children (append (reverse (eas-svg--axes (plist-get view :axes) theme t)) children))
         (seq-doseq (legend (plist-get view :legends))
           (when (plist-get legend :bar) (push (eas-svg--gradient-def legend) defs))
           (setq children (append (reverse (eas-svg--legend legend theme)) children)))))

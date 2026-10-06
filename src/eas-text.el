@@ -253,7 +253,9 @@ See `eas-text-band-resolve'.  Then forget the slices."
   (let* ((ch (eas-text--grid-ch g)) (cols (eas-text--grid-cols g)) (bands (eas-text--grid-bands g))
          (slack (/ ch 4.0)))
     (maphash (lambda (i segs)
-               (when (= (aref (eas-text--grid-prio g) i) prio)
+               ;; A slice can be recorded past the grid's edge; it draws nothing.
+               (when (and (< -1 i (length (eas-text--grid-prio g)))
+                          (= (aref (eas-text--grid-prio g) i) prio))
                  (pcase (let ((y0 (* (/ i cols) ch)))
                           ;; A slice ending just past the cell's edge meets this one.
                           (eas-text-band-resolve

@@ -64,7 +64,7 @@
         {
           "mark": {
             "type": "text",
-            "angle": -25,
+            "angle": 335,
             "fontSize": 10,
             "align": "left",
             "baseline": "alphabetic",

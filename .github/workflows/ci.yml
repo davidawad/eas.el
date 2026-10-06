@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs_version: ['30.1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+      - name: Compile (checkdoc, byte-compile with warnings as errors)
+        run: make compile
+      - name: Test
+        run: make test TEST_SKIP_LOG=$RUNNER_TEMP/skips.log
+      - name: Skipped tests
+        if: always()
+        run: cat $RUNNER_TEMP/skips.log 2>/dev/null || echo "no skips"
+
+  gallery:
+    # Optional: the official Vega-Lite gallery and the conformance oracle.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[gallery]')
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [area-circular, bar, calculations, distributions, interactive,
+                layered, line, multiview, scatter-table, conformance]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: '30.1'
+      - name: Install rsvg-convert (image oracle)
+        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin fonts-liberation
+      - name: Gallery group
+        run: make test-gallery-${{ matrix.group }}

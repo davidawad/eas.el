@@ -35,16 +35,16 @@ are never counted as passing the image oracle.
 | fc-qx1.32, .45 | multiview | 19 | 0 | 11 | 30 | 19 | 0 | 6 | 0 | 6 |
 | fc-qx1.27, .40 | scatter-table | 22 | 0 | 0 | 22 | 22 | 0 | 4 | 4 | 0 |
 | **total** | | **188** | **0** | **12** | **200** | **188** | **0** | **48** | **32** | **16** |
-| fc-qx1.49 | templates | | | | | 16 | 0 | | | |
+| fc-qx1.49 | templates | | | | | 8 | 0 | | | |
 
 188 of 200 pass; the 12 unsupported are the topojson maps (11 in
 multiview, `airport_connections` in interactive), out of scope: they need
 topojson data and geoshape, and bin/chart built no reference for them.
 Every non-map example passes on both backends.  All 48 customization
 specs check clean and hold their text goldens; the 32 with a reference
-pass the image oracle.  The templates (15 in `templates/`, plus
-`volume-profile` when financial-chart-eas is loaded) pass the text
-gallery at all three sizes.
+pass the image oracle.  The 8 templates in `templates/` pass the text
+gallery at all three sizes (the financial templates moved to
+financial-chart.el with the extraction, fc-qx1.11).
 
 Five pass under a per-example threshold above the default, each with a
 written `note` in its `status.json` (fc-qx1.48): distributions

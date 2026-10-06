@@ -208,19 +208,11 @@
   "templates": {
     "area": {"status": "pass"},
     "bars": {"status": "pass"},
-    "depth": {"status": "pass"},
-    "diverging-bars": {"status": "pass"},
-    "drawdown": {"status": "pass"},
     "heatmap": {"status": "pass"},
     "histogram": {"status": "pass"},
     "line": {"status": "pass"},
     "multi": {"status": "pass"},
-    "ohlc": {"status": "pass"},
-    "panes": {"status": "pass"},
-    "payoff": {"status": "pass"},
-    "payoff-curves": {"status": "pass"},
     "series-line": {"status": "pass"},
-    "sparkline": {"status": "pass"},
-    "volume-profile": {"status": "pass"}
+    "sparkline": {"status": "pass"}
   }
 }

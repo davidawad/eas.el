@@ -1,0 +1,17 @@
+# Byte-compiled and native-compiled Lisp
+*.elc
+*.eln
+eln-cache/
+
+# Package and autoload artifacts
+*-autoloads.el
+*-pkg.el
+
+# Editors
+*~
+\#*\#
+.#*
+
+# Test and tool output
+/test/**/out/
+node_modules/

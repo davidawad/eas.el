@@ -7,8 +7,8 @@
 # Exit 0 when ok, 1 otherwise.  Live verbs (views, inspect, dispatch, ...) go
 # through emacsclient --eval '(eas-agent-json "VERB" ...)'.  Set EMACS to pick
 # the binary.  "--" stops Emacs taking options such as --name for itself.
-# See src/eas/eas-agent.el.
+# See src/eas-agent.el.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec "${EMACS:-emacs}" -Q --batch -L "$here/src/eas" -l eas-agent-cli \
+exec "${EMACS:-emacs}" -Q --batch -L "$here/src" -l eas-agent-cli \
   -f eas-agent-cli-main -- "$@"

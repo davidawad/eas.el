@@ -1,7 +1,7 @@
 ;;; tooltips-click.el --- fc-qx1.1 demo: tooltips and click targets, headless -*- lexical-binding: t; -*-
 
 ;; Run from the repository root:
-;;   emacs -Q --batch -L src/eas -l scripts/eas-demos/tooltips-click.el
+;;   emacs -Q --batch -L src -l scripts/eas-demos/tooltips-click.el
 ;; It opens the ohlc and bars templates as text views, hovers and
 ;; clicks through `eas-dispatch' exactly as the buffer glue does, and
 ;; prints the chart, each hover tooltip and each click record.

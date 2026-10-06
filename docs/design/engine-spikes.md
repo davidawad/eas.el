@@ -713,7 +713,7 @@ frame is **unmeasured** on this box, which has no display. Re-run
 
 ### 10.5 The regression budget in CI
 
-`src/eas/bench-budget.json` holds this box's reference means, a
+`src/bench-budget.json` holds this box's reference means, a
 `tolerance` (2.5), a `floor-ms` (2) and the machine's calibration time
 (best of five runs of a fixed Lisp workload, 34.7 ms here). A stage
 fails when its mean is above

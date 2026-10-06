@@ -7,7 +7,7 @@
 
 ;; bin/eas runs
 ;;
-;;   Emacs -Q --batch -L src/eas -l eas-agent-cli -f eas-agent-cli-main -- VERB ARGS...
+;;   Emacs -Q --batch -L src -l eas-agent-cli -f eas-agent-cli-main -- VERB ARGS...
 ;;
 ;; ARGS are positionals then options: `--backend text', `--backend=text'
 ;; or a bare flag such as `--vl'.  An argument "-" reads stdin.  The

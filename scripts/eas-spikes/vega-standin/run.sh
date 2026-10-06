@@ -9,7 +9,7 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/../../.." && pwd)"
 out="$(realpath "${1:-/tmp/eas-standin}")"
 mkdir -p "$out"
-"${EMACS:-emacs}" -Q --batch -L "$root/src/eas" -l "$here/native-svgs.el" "$out"
+"${EMACS:-emacs}" -Q --batch -L "$root/src" -l "$here/native-svgs.el" "$out"
 for spec in "$root"/test/conformance/*.vl.json; do
   n=$(basename "$spec" .vl.json)
   node "$here/vl2svg.mjs" "$spec" "$out/$n.ref.svg"

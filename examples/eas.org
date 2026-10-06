@@ -1,6 +1,6 @@
 #+title: eas in org: one chart block type
 # Load once: (org-babel-do-load-languages 'org-babel-load-languages '((eas . t)))
-# with src/eas on load-path.  C-c C-c on a block runs it.
+# with src on load-path.  C-c C-c on a block runs it.
 
 #+name: tbl
 | time       |  open |  high |   low | close |

@@ -17,7 +17,7 @@ if ! xdotool getdisplaygeometry > /dev/null 2>&1; then
 fi
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-find "$root/src/eas" -name '*.el' ! -name '*-test.el' -exec cp {} "$tmp" \;
+find "$root/src" -name '*.el' ! -name '*-test.el' -exec cp {} "$tmp" \;
 mkdir -p "$tmp/templates" && cp "$root"/templates/*.json "$tmp/templates/" 2> /dev/null || true
 (cd "$tmp" && emacs -Q --batch -L . -f batch-byte-compile ./*.el > /dev/null 2>&1)
 out="$(realpath "${2:-$here/$(basename "$1" .el).out}")"

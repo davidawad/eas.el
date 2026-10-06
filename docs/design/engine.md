@@ -442,12 +442,16 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
 
 ## 10. Layout and extraction
 
-The engine lives in `src/eas/` with the `eas-` prefix, its own
-tests and no reference to financial-chart from the first commit.
-Templates live in `templates/`, conformance specs in `test/conformance/`.
-Extraction (`fc-qx1.11`) is then mechanical: move the directory to its
-own repo with package headers, register it in the package registry
-`projects/registry.json`, and load it via `external-packages.txt`.
+The engine lives in `src/` of its own repository (eas.el, extracted
+from financial-chart.el by `fc-qx1.11` with its history), with the
+`eas-` prefix, its tests beside the code (`src/*-test.el`) and shared
+test helpers and goldens in `test/eas/`. Templates live in
+`templates/` with their bindings in `examples/`, conformance specs in
+`test/conformance/`, the official Vega-Lite gallery in
+`test/vl-examples/`. The repository root is one level above `src/`
+(`eas-template--root`). financial-chart.el keeps its financial
+templates, the candle and linked-tickers demos and the indicator
+transform, and depends on eas.el.
 
 ## 11. Bead map
 

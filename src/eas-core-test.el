@@ -54,9 +54,9 @@
     (should (= (eas-time-ms 2026 14 1) (eas-time-parse "2027-02-01")))))
 
 (ert-deftest eas-has-no-references-to-its-host-package ()
-  "Extraction guard (fc-qx1.11): src/eas names no host package."
+  "Extraction guard (fc-qx1.11): src names no host package."
   (let ((needle (concat "financial" "-chart"))
-        (dir (eas-test-file "src/eas")))
+        (dir (eas-test-file "src")))
     (dolist (file (directory-files dir t "\\.el\\'"))
       (with-temp-buffer
         (insert-file-contents file)

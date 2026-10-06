@@ -35,7 +35,7 @@ run_layout() {
   local layout=$1 edges="$WORK/$1.edges" capture="$WORK/$1.txt"
   "${TMUX_EAS[@]}" kill-session -t "$SESSION" 2>/dev/null || true
   "${TMUX_EAS[@]}" new-session -d -s "$SESSION" -x "$COLS" -y "$ROWS" \
-    "TERM=xterm-256color $EMACS -nw -Q -L src -L src/eas -L examples -L scripts -l eas-tty-check \
+    "TERM=xterm-256color $EMACS -nw -Q -L src -L examples -L scripts -l eas-tty-check \
        --eval '(setq eas-tty-check-edges-file \"$edges\")' -f eas-tty-check-$layout"
   for _ in $(seq 1 100); do
     [ -s "$edges" ] && break

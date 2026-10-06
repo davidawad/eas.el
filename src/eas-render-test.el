@@ -104,7 +104,7 @@
 
 (ert-deftest eas-renderers-read-only-the-scene ()
   "Renderers depend on no spec, template or compile layer."
-  (dolist (file '("src/eas/eas-svg.el" "src/eas/eas-text.el"))
+  (dolist (file '("src/eas-svg.el" "src/eas-text.el"))
     (with-temp-buffer
       (insert-file-contents (eas-test-file file))
       (dolist (layer '("eas-compile" "eas-spec" "eas-template" "eas-resolve" "eas-marks"))

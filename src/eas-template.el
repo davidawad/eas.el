@@ -31,10 +31,8 @@
 (defconst eas-template--root
   (file-name-directory
    (directory-file-name
-    (file-name-directory
-     (directory-file-name
-      (file-name-directory (or load-file-name buffer-file-name default-directory))))))
-  "The repository root (two levels above src/eas/).")
+    (file-name-directory (or load-file-name buffer-file-name default-directory))))
+  "The repository root (one level above src/).")
 
 (defvar eas-template-directories
   (list (expand-file-name "templates" eas-template--root))

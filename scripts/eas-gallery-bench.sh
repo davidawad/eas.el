@@ -12,13 +12,13 @@ reps="${2:-10}"
 baseline="${3:-}"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/src/eas"
-find "$root/src/eas" -maxdepth 1 \( -name '*.el' ! -name '*-test.el' -o -name '*.json' \) \
-  -exec cp {} "$tmp/src/eas" \;
+mkdir -p "$tmp/src"
+find "$root/src" -maxdepth 1 \( -name '*.el' ! -name '*-test.el' -o -name '*.json' \) \
+  -exec cp {} "$tmp/src" \;
 ln -s "$root/templates" "$tmp/templates"
 ln -s "$root/test" "$tmp/test"
-(cd "$tmp/src/eas" && "${EMACS:-emacs}" -Q --batch -L . -f batch-byte-compile ./*.el > /dev/null 2>&1)
-"${EMACS:-emacs}" -Q --batch -L "$tmp/src/eas" -l eas -l eas-vl-gallery-bench --eval "
+(cd "$tmp/src" && "${EMACS:-emacs}" -Q --batch -L . -f batch-byte-compile ./*.el > /dev/null 2>&1)
+"${EMACS:-emacs}" -Q --batch -L "$tmp/src" -l eas -l eas-vl-gallery-bench --eval "
 (let* ((base (and (> (length \"$baseline\") 0) \"$baseline\"))
        (out (getenv \"BENCH_OUT\")))
   (if out

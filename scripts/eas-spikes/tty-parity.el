@@ -1,5 +1,5 @@
 ;;; tty-parity.el --- drive a live eas chart in emacs -nw (fc-qx1.8) -*- lexical-binding: t; -*-
-(add-to-list 'load-path (expand-file-name "../../src/eas" (file-name-directory load-file-name)))
+(add-to-list 'load-path (expand-file-name "../../src" (file-name-directory load-file-name)))
 (require 'eas)
 (defvar e2e-out (getenv "E2E_OUT"))
 (defconst e2e-spec

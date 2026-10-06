@@ -1,5 +1,5 @@
 ;;; native-svgs.el --- write eas's native SVG for each gallery spec -*- lexical-binding: t; -*-
-;; Usage: emacs -Q --batch -L src/eas -l native-svgs.el OUT-DIR
+;; Usage: emacs -Q --batch -L src -l native-svgs.el OUT-DIR
 (require 'eas)
 (setq eas-spec-supported-function nil)
 (let ((out (car command-line-args-left)))

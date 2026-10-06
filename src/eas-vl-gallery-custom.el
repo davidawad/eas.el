@@ -16,7 +16,7 @@
 ;;   - both backends render, without overlap at the gallery's three
 ;;     pixel and three cell sizes;
 ;;   - the text rendering equals the golden custom/NAME.txt
-;;     (EAS_UPDATE_GOLDEN=1 or FINANCIAL_CHART_UPDATE_GOLDEN=1 rewrites it);
+;;     (EAS_UPDATE_GOLDEN=1 rewrites it);
 ;;   - the native SVG is within the threshold of bin/chart's image.
 ;;     The harness builds custom/ref/NAME.png with bin/chart when it is
 ;;     on PATH; without it a committed reference is compared wherever a
@@ -108,7 +108,7 @@ holds).  An image that cannot be verified here is no problem."
              (golden (eas-vl-gallery-custom-file group name ".txt"))
              (image (eas-vl-gallery-custom-image group name spec svg))
              problems)
-        (when (or (getenv "EAS_UPDATE_GOLDEN") (getenv "FINANCIAL_CHART_UPDATE_GOLDEN"))
+        (when (getenv "EAS_UPDATE_GOLDEN")
           (with-temp-file golden (set-buffer-file-coding-system 'utf-8-unix) (insert text)))
         (cond ((not (file-exists-p golden)) (push (format "%s: no text golden %s" name golden) problems))
               ((not (equal text (with-temp-buffer (insert-file-contents golden) (buffer-string))))

@@ -18,15 +18,15 @@ LOAD := -L src -L test/eas
 BATCH := $(EMACS) -Q --batch $(LOAD) --eval '(setq load-prefer-newer t)'
 
 LIB := $(filter-out %-test.el,$(wildcard src/*.el))
-TESTS := $(wildcard src/*-test.el)
+TESTS := $(wildcard src/*-test.el test/eas/*-test.el)
 
 GALLERY_GROUPS := area-circular bar calculations distributions interactive \
                   layered line multiview scatter-table
 GALLERY_TARGETS := $(addprefix test-gallery-,$(GALLERY_GROUPS))
 
-# Load every test file, then run the tests SELECTOR picks.
+# Load every test file (src/ and test/eas/), then run the tests SELECTOR picks.
 define run-tests
-$(BATCH) --eval '(dolist (f (directory-files "src" t "-test\\.el\\'"'"'")) (load f nil t))' \
+$(BATCH) --eval '(dolist (f (append (directory-files "src" t "-test\\.el\\'"'"'") (directory-files "test/eas" t "-test\\.el\\'"'"'"))) (load f nil t))' \
   --eval '(ert-run-tests-batch-and-exit (quote $(1)))'
 endef
 

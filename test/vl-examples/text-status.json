@@ -213,6 +213,7 @@
     "line": {"status": "pass"},
     "multi": {"status": "pass"},
     "series-line": {"status": "pass"},
-    "sparkline": {"status": "pass"}
+    "sparkline": {"status": "pass"},
+    "word-cloud": {"status": "pass"}
   }
 }

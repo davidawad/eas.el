@@ -41,8 +41,10 @@
   "The repository root (one level above src/).")
 
 (defvar eas-template-directories
-  (list (expand-file-name "templates" eas-template--root))
-  "Directories whose *.json files are eas templates.")
+  (list (expand-file-name "templates" eas-template--root)
+        (expand-file-name "templates/vega" eas-template--root))
+  "Directories whose *.json files are eas templates.
+templates/vega holds the Vega example gallery's templates.")
 
 (defvar eas-template-namespaces nil
   "Alist of (DIRECTORY . NAMESPACE) for `eas-template-directories'.

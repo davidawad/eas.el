@@ -82,6 +82,41 @@ financial-chart's 28 indicators become transforms instead of chart
 kinds. This is the main accretion win: one new indicator is available
 to every template.
 
+Two Vega transforms with no Vega-Lite counterpart are domain
+transforms too (`eas-7r1.8`, the word-cloud template):
+
+```json
+{"x-eas:transform": "countpattern", "field": "abstract", "case": "upper",
+ "pattern": "[\\w']{3,}", "stopwords": "(the|and)"}
+{"x-eas:transform": "wordcloud", "size": [800, 400], "text": "text",
+ "fontSize": {"field": "count"}, "fontSizeRange": [12, 56],
+ "rotate": [-45, 0, 45], "padding": 2, "seed": 1}
+```
+
+`countpattern` (eas-countpattern.el) counts regexp matches into
+`{text, count}` rows in order of first appearance; patterns are
+JavaScript regexps, stopwords match whole words in any case.
+`wordcloud` (eas-wordcloud.el) is d3-cloud's layout: sizes on a sqrt
+scale onto `fontSizeRange`, largest word first, each walked along an
+archimedean (or rectangular) spiral from a random start until it fits.
+It adds `x`, `y` (the centred, alphabetic-baseline anchor), `font`,
+`fontSize`, `fontStyle`, `fontWeight` and `angle`; a word with no room
+gets null `x`/`y` and is not drawn. Per-word parameters take a
+constant, `{"field"}` or `{"expr"}`, and `rotate` also an array to pick
+from. Two deliberate differences from Vega: the start points,
+directions and picked angles come from a generator seeded by `seed`,
+so a cloud is the same on every run; and words collide as their
+measured boxes (`eas-font-text-width` advance, ascent and descent from
+the glyphs, turned and grown by `padding`), rasterized onto d3-cloud's
+occupancy bitmap, not as glyph sprites (batch Emacs has no canvas). A
+cloud is a little looser than Vega's, never overlapping. The geometry
+is word-agnostic: `eas-wordcloud-text-box`, `eas-wordcloud-box` and
+`eas-wordcloud-overlap-p` (exact separating-axis test of two turned
+boxes) suit any rotated-text collision. Two candidates exist: the
+gallery's label check (`eas-vl-gallery--rotated-box` only compares
+parallel labels) and hover on text (`eas-intersect` reaches half a font
+size around the anchor, so the ends of a long or turned word miss).
+
 ### L2 spec: chart/v1
 
 It is Vega-Lite (pinned to the version `bin/chart` pins, 6.4.1).
@@ -121,7 +156,12 @@ content-hashed (the same hash scheme as `bin/chart describe`).
 
 Templates are JSON files in `templates/`, one per kind, each with a
 golden fixture. Adding a kind means writing one file. Lisp code is
-needed only if the kind needs a new transform.
+needed only if the kind needs a new transform. `templates/vega/` holds
+one template per Vega gallery example (`eas-7r1`, target
+`test/vega-examples/`), its bindings in `examples/vega/` (the template
+names them as `../examples/vega/NAME.data.json`), and its `x-eas.vega`
+records `{"status": "pass|partial|unsupported", "note"}` against the
+vendored reference.
 
 A slot that holds an array can expand into views:
 `{"x-eas:each": SLOT, "spec": X}` in any array becomes one X per item,

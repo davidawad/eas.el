@@ -46,7 +46,9 @@
 
 (defconst eas-conformance-extensions
   '(:transform/x-eas "Domain transforms are materialized by resolve (ERT: eas-resolve-materializes-domain-transforms)."
-    :mark/slot "Template slot placeholders are substituted by resolve (ERT: eas-template-enum-and-array-items).")
+    :mark/slot "Template slot placeholders are substituted by resolve (ERT: eas-template-enum-and-array-items)."
+    :transform/x-eas/countpattern "Vega's countpattern: regexp matches counted into text/count rows (ERT: eas-vega-wordcloud-countpattern-counts-words)."
+    :transform/x-eas/wordcloud "Vega's wordcloud: seeded spiral placement of measured, rotated words (ERT: eas-vega-wordcloud-places-without-overlap).")
   "Features outside Vega-Lite proper, proven by ERT rather than the gallery.")
 
 (defvar eas-conformance-gallery-functions nil

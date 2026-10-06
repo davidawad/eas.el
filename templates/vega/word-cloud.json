@@ -1,0 +1,67 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "word-cloud",
+    "version": "1.0.0",
+    "doc": "A word cloud: the words of a text field, counted, sized by count and packed along a spiral (Vega's word-cloud example).",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows holding text, one document per row"},
+      "text": {"type": "field", "of": "data", "default": "text", "doc": "the column of text whose words are counted"},
+      "pattern": {"type": "string", "default": "[\\w']{3,}", "doc": "JavaScript regexp one word matches"},
+      "case": {"enum": ["upper", "lower", "mixed"], "default": "upper", "doc": "case the words are folded to before counting"},
+      "stopwords": {"type": "string", "default": "(i|me|my|myself|we|us|our|ours|ourselves|you|your|yours|yourself|yourselves|he|him|his|himself|she|her|hers|herself|it|its|itself|they|them|their|theirs|themselves|what|which|who|whom|whose|this|that|these|those|am|is|are|was|were|be|been|being|have|has|had|having|do|does|did|doing|will|would|should|can|could|ought|i'm|you're|he's|she's|it's|we're|they're|i've|you've|we've|they've|i'd|you'd|he'd|she'd|we'd|they'd|i'll|you'll|he'll|she'll|we'll|they'll|isn't|aren't|wasn't|weren't|hasn't|haven't|hadn't|doesn't|don't|didn't|won't|wouldn't|shan't|shouldn't|can't|cannot|couldn't|mustn't|let's|that's|who's|what's|here's|there's|when's|where's|why's|how's|a|an|the|and|but|if|or|because|as|until|while|of|at|by|for|with|about|against|between|into|through|during|before|after|above|below|to|from|up|upon|down|in|out|on|off|over|under|again|further|then|once|here|there|when|where|why|how|all|any|both|each|few|more|most|other|some|such|no|nor|not|only|own|same|so|than|too|very|say|says|said|shall)", "doc": "regexp of whole words left out, any case"},
+      "emphasis": {"type": "string", "default": "", "doc": "a word drawn in a heavier weight (600, the others 300)"},
+      "angles": {"type": "array", "items": "number", "default": [-45, 0, 45], "doc": "angles a word is turned by, one picked per word"},
+      "fontSizeRange": {"type": "array", "items": "number", "default": [12, 56], "doc": "[min max] font size, px; counts scale by square root"},
+      "font": {"type": "string", "default": "Helvetica Neue, Arial", "doc": "font family"},
+      "colors": {"type": "array", "items": "string", "default": ["#d5a928", "#652c90", "#939597"], "doc": "colors the words cycle through"},
+      "width": {"type": "number", "default": 800, "doc": "canvas width, px"},
+      "height": {"type": "number", "default": 400, "doc": "canvas height, px"},
+      "padding": {"type": "number", "default": 2, "doc": "px kept clear around each word"},
+      "seed": {"type": "integer", "default": 1, "doc": "seed of the placement and the picked angles"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "A word cloud: the words of a text field, counted, sized by count and packed along a spiral (Vega's word-cloud example).", "doc": "the takeaway; alt text and table-view fallback"}
+    },
+    "example": "../examples/vega/word-cloud.data.json",
+    "vega": {
+      "status": "partial",
+      "note": "Reproduces the example's pipeline natively: countpattern with Vega's pattern and stopwords, sqrt font sizes 12-56px, angles picked from -45/0/45, VEGA in weight 600, the three-color ordinal range in data order, and hover fading the word by half (a white copy at opacity 0.5 over it, as fillOpacity 0.5 looks on white). The reference PNG is blank (vg2svg has no canvas to measure text, so Vega placed no word), and Vega places words with Math.random, so no pixel comparison is meaningful: the layout is checked structurally instead (no two padded word boxes overlap, all inside 800x400). Placement is seeded and collides measured text boxes rather than glyph sprites, so it is looser: 135 of 194 words fit. The canvas is 805x400, Vega-style text bounds overhanging the 800px plot."
+    }
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": 0,
+  "view": {"stroke": null},
+  "data": {"name": "data"},
+  "transform": [
+    {"x-eas:transform": "countpattern", "field": {"x-eas:slot": "text"}, "case": {"x-eas:slot": "case"}, "pattern": {"x-eas:slot": "pattern"}, "stopwords": {"x-eas:slot": "stopwords"}, "as": ["text", "count"]},
+    {"x-eas:transform": "wordcloud", "size": [{"x-eas:slot": "width"}, {"x-eas:slot": "height"}], "text": "text", "font": {"x-eas:slot": "font"}, "fontSize": {"field": "count"}, "fontSizeRange": {"x-eas:slot": "fontSizeRange"}, "fontWeight": {"expr": {"x-eas:expr": "if(datum.text == {{emphasis}}, 600, 300)"}}, "rotate": {"x-eas:slot": "angles"}, "padding": {"x-eas:slot": "padding"}, "seed": {"x-eas:slot": "seed"}}
+  ],
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative", "axis": null, "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+    "y": {"field": "y", "type": "quantitative", "axis": null, "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}},
+    "text": {"field": "text", "type": "nominal"},
+    "size": {"field": "fontSize", "type": "quantitative", "legend": null, "scale": {"domain": [0, 1000], "range": [0, 1000], "zero": false, "nice": false}},
+    "angle": {"field": "angle", "type": "quantitative", "scale": {"domain": [0, 360], "range": [0, 360]}},
+    "color": {"field": "text", "type": "nominal", "sort": null, "legend": null, "scale": {"range": {"x-eas:slot": "colors"}}},
+    "tooltip": [{"field": "text", "type": "nominal", "title": "word"}, {"field": "count", "type": "quantitative"}]
+  },
+  "layer": [
+    {
+      "transform": [{"filter": "datum.fontWeight < 600"}],
+      "layer": [
+        {"params": [{"name": "hover", "select": {"type": "point", "on": "pointermove", "fields": ["text"]}}], "mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 300}},
+        {"transform": [{"filter": {"param": "hover", "empty": false}}], "mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 300, "color": "white", "opacity": 0.5}, "encoding": {"color": null, "tooltip": null}}
+      ]
+    },
+    {
+      "transform": [{"filter": "datum.fontWeight >= 600"}],
+      "layer": [
+        {"mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 600}},
+        {"transform": [{"filter": {"param": "hover", "empty": false}}], "mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 600, "color": "white", "opacity": 0.5}, "encoding": {"color": null, "tooltip": null}}
+      ]
+    }
+  ]
+}

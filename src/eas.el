@@ -47,6 +47,8 @@
 (require 'eas-expr)
 (require 'eas-transform)
 (require 'eas-lttb)
+(require 'eas-countpattern)
+(require 'eas-wordcloud)
 (require 'eas-spec)
 (require 'eas-spec-props)
 (require 'eas-vl-lower)

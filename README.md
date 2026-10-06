@@ -233,6 +233,41 @@ still load. Inside a template body:
 A template may hold a facet, and a wrapped `concat` (`"columns"`) whose
 views an `x-eas:each` expands.
 
+## Fonts
+
+The SVG backend honours Vega-Lite's font properties: `config.font`,
+`title.font`, `axis.labelFont` and `titleFont`, legend fonts and a text
+mark's `font`. Layout measures chart titles, axis labels and text
+marks in their own font, and all other text in `config.font`. Arial, Times New Roman and the monospace families are built in. For
+any other family, register its font file, TrueType (`.ttf`) or
+OpenType (`.otf`), and eas measures it with the file's own advance
+widths:
+
+```elisp
+(eas-font-register "~/fonts/Inter-Regular.ttf")              ; family "Inter", from the file
+(eas-font-register "~/fonts/Inter-Bold.ttf" :weight 700)
+```
+
+A chart can carry its fonts. Resolve registers them, and the exported
+Vega-Lite keeps only the family names. A relative `src` is found
+beside the template file:
+
+```json
+{"x-eas": {"fonts": [{"src": "fonts/Inter-Regular.ttf"}]},
+ "config": {"font": "Inter"}, "...": "..."}
+```
+
+The SVG gets an `@font-face` rule for every registered font the chart
+names. `eas-svg-font-embed` decides how: `url` (the default) links the
+file, `data` inlines it so an exported SVG stands alone, and nil writes
+no rule. Emacs draws SVG with librsvg, which ignores `@font-face` and
+finds fonts through fontconfig. An Emacs frame therefore draws a
+registered family only when the font is also installed (for example in
+`~/.local/share/fonts`). Layout is measured from the file either way.
+
+Font settings apply to SVG only. The text backend draws every glyph in
+one cell of the frame's own faces, so a terminal chart ignores them.
+
 ## Vega-Lite coverage
 
 The native subset is measured against the official Vega-Lite 6.4.1

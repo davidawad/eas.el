@@ -353,6 +353,13 @@ renders natively without it (`eas-spec-props.el`, fc-qx1.43).
   vendored in `test/conformance/bin-chart-default-theme.json` and
   checked against bin/chart when it is installed); a spec's `config`
   and a caller's theme override it.
+- Text is measured in the font it is drawn in: built-in Arial, Times
+  and monospace tables (`eas-font.el`), or the advance widths of a
+  registered user font file (`eas-font-file.el`; `eas-font-register`
+  or a chart's `x-eas.fonts`, registered at resolve). The scene's
+  `:fonts` lists the registered faces a chart names, and the SVG
+  renderer writes their `@font-face` rules from it. The text backend
+  has one cell per glyph and ignores fonts.
 - `supported.json` is generated from the passing gallery. It is the
   machine-readable answer to "can the native engine draw this?", and
   `check` and `describe` read it. A feature is supported only if a

@@ -114,6 +114,40 @@ count it tries.")
       (setq tick (eas-scale-time--offset unit tick)))
     (if reverse ticks (nreverse ticks))))
 
+(defconst eas-scale-time--units
+  '(millisecond second minute hour day week month year)
+  "The time intervals a tickCount may name, as Vega's TimeInterval.")
+
+(defun eas-scale-time-tick-interval (tick-count)
+  "Return (UNIT . STEP) when axis TICK-COUNT names a time interval, else nil.
+TICK-COUNT is \"month\" or {\"interval\": \"month\", \"step\": 3}."
+  (let* ((obj (and (consp tick-count) (keywordp (car tick-count))))
+         (name (if obj (plist-get tick-count :interval) tick-count))
+         (step (if obj (plist-get tick-count :step) 1))
+         (unit (and (stringp name) (intern-soft name))))
+    (and unit (memq unit eas-scale-time--units)
+         (cons unit (if (and (natnump step) (> step 0)) step 1)))))
+
+(defun eas-scale-time--every-field (unit ms)
+  "The field d3's UNIT.every(step) filters on at MS (weeks count from epoch)."
+  (if (eq unit 'week) (floor (+ ms (* 4 86400000)) 604800000)
+    (eas-scale-time--field unit ms)))
+
+(defun eas-scale-time-every-ticks (start stop interval)
+  "Tick times (epoch ms) from START to STOP every INTERVAL, (UNIT . STEP).
+These are d3's UNIT.every(STEP).range, as Vega's interval tickCount."
+  (let* ((unit (car interval)) (step (cdr interval))
+         (reverse (< stop start))
+         (lo (min start stop)) (hi (max start stop))
+         (tick (eas-scale-time--floor unit lo))
+         ticks)
+    (when (< tick lo) (setq tick (eas-scale-time--offset unit tick)))
+    (while (and (<= tick hi) (< (length ticks) 1000))
+      (when (zerop (mod (eas-scale-time--every-field unit tick) step))
+        (push tick ticks))
+      (setq tick (eas-scale-time--offset unit tick)))
+    (if reverse ticks (nreverse ticks))))
+
 (defun eas-scale-time-multi-format (ms)
   "Format epoch MS the way Vega's default time axis does."
   (eas-scale-time--memo #'eas-scale-time--multi-format (list ms)))

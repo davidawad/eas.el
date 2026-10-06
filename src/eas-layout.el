@@ -188,7 +188,10 @@ config."
              (text-log (and (eas-layout-text-p metrics) (equal (plist-get scale :type) "log")
                             (not (plist-get axis :values)) (not (plist-get axis :tickCount))))
              (spacing (plist-get metrics (if (eq channel :x) :x-tick-spacing :y-tick-spacing)))
-             (count (or (plist-get axis :tickCount)
+             ;; tickCount "month" or {"interval": "month", "step": 3} on a time axis.
+             (every (and (member (plist-get scale :type) '("time" "utc"))
+                         (eas-scale-time-tick-interval (plist-get axis :tickCount))))
+             (count (or (let ((n (plist-get axis :tickCount))) (and (numberp n) n))
                         ;; Vega-Lite leaves log axes at Vega's default count.
                         (and (equal (plist-get scale :type) "log") (not (eas-layout-text-p metrics)) 10)
                         (if (eas-layout-text-p metrics) (max 2 (ceiling (/ plot-size (float spacing))))
@@ -227,6 +230,8 @@ config."
                             (mapcar (lambda (v) (if (and (not (numberp v)) (member (plist-get scale :type) '("time" "utc")))
                                                     (or (eas-time-parse v) v) v))
                                     (plist-get axis :values)))
+                           (every (let ((d (plist-get scale :domain)) (eas-time-zone (eas-scale--zone scale)))
+                                    (eas-scale-time-every-ticks (aref d 0) (aref d 1) every)))
                            ((plist-get scale :bins) (append (plist-get scale :bins) nil))
                            ((plist-get scale :bin-step)
                             (let ((d (plist-get scale :domain)) (step (plist-get scale :bin-step)))

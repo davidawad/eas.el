@@ -1,0 +1,370 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "pi-monte-carlo",
+    "version": "1.0.0",
+    "doc": "Estimating pi by random sampling: uniform points in the unit square, coloured by whether they fall inside the quarter circle, and the running estimate; a slider picks the sample size (Vega gallery: pi-monte-carlo).",
+    "slots": {
+      "points": {
+        "type": "integer",
+        "default": 1000,
+        "doc": "points sampled first"
+      },
+      "max_points": {
+        "type": "integer",
+        "default": 5000,
+        "doc": "largest sample the slider reaches"
+      },
+      "size": {
+        "type": "number",
+        "default": 380,
+        "doc": "width and height of each panel"
+      },
+      "inside": {
+        "type": "string",
+        "default": "#003f5c"
+      },
+      "outside": {
+        "type": "string",
+        "default": "#ffa600"
+      },
+      "description": {
+        "type": "string",
+        "default": "Estimating the value of π via random sampling methods."
+      }
+    },
+    "example": "../examples/vega/pi-monte-carlo.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "A slider picks the sample size; the left panel colours points inside the quarter circle and the right one plots the running estimate. eas random() is deterministic per row instead of Math.random, so the points differ from the reference and the ratio measures the scatter, not the layout. Pixel ratio against ref/pi-monte-carlo.png: 0.173.",
+      "ratio": 0.1731,
+      "threshold": 0.23
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "sequence": {
+      "start": 1,
+      "stop": 5001,
+      "as": "data"
+    }
+  },
+  "padding": 5,
+  "spacing": 70,
+  "bounds": "flush",
+  "params": [
+    {
+      "name": "num_points",
+      "value": {
+        "x-eas:slot": "points"
+      },
+      "bind": {
+        "input": "range",
+        "min": 10,
+        "max": {
+          "x-eas:slot": "max_points"
+        },
+        "step": 1
+      }
+    }
+  ],
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": "#ddd"
+    },
+    "title": {
+      "fontSize": 13,
+      "fontWeight": "bold",
+      "color": "#000",
+      "anchor": "middle",
+      "offset": 4
+    },
+    "axis": {
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "grid": true,
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    }
+  },
+  "transform": [
+    {
+      "filter": {
+        "x-eas:expr": "datum.data <= {{max_points}}"
+      }
+    },
+    {
+      "calculate": "[random(), random()]",
+      "as": "xy"
+    },
+    {
+      "calculate": "datum.xy[0]",
+      "as": "x"
+    },
+    {
+      "calculate": "datum.xy[1]",
+      "as": "y"
+    },
+    {
+      "filter": "datum.data <= num_points"
+    }
+  ],
+  "hconcat": [
+    {
+      "title": "In Points and Out Points",
+      "width": {
+        "x-eas:slot": "size"
+      },
+      "height": {
+        "x-eas:slot": "size"
+      },
+      "layer": [
+        {
+          "data": {
+            "sequence": {
+              "start": 0,
+              "stop": 91,
+              "as": "degree"
+            }
+          },
+          "transform": [
+            {
+              "calculate": "cos(datum.degree * PI / 180)",
+              "as": "x"
+            },
+            {
+              "calculate": "sin(datum.degree * PI / 180)",
+              "as": "y"
+            }
+          ],
+          "mark": {
+            "type": "line",
+            "color": "#888",
+            "strokeWidth": 1
+          },
+          "encoding": {
+            "x": {
+              "field": "x",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "y",
+              "type": "quantitative"
+            },
+            "order": {
+              "field": "degree",
+              "type": "quantitative"
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "point",
+            "filled": true,
+            "opacity": 0.6,
+            "size": 40
+          },
+          "encoding": {
+            "x": {
+              "field": "x",
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  1
+                ]
+              },
+              "axis": {
+                "title": "x",
+                "labelFlush": true
+              }
+            },
+            "y": {
+              "field": "y",
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  1
+                ]
+              },
+              "axis": {
+                "title": "y"
+              }
+            },
+            "color": {
+              "condition": {
+                "test": "sqrt(datum.x * datum.x + datum.y * datum.y) <= 1",
+                "value": {
+                  "x-eas:slot": "inside"
+                }
+              },
+              "value": {
+                "x-eas:slot": "outside"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "π Estimate",
+      "width": {
+        "x-eas:slot": "size"
+      },
+      "height": {
+        "x-eas:slot": "size"
+      },
+      "transform": [
+        {
+          "calculate": "sqrt(datum.x * datum.x + datum.y * datum.y) < 1 ? 1 : 0",
+          "as": "is_inside"
+        },
+        {
+          "window": [
+            {
+              "op": "sum",
+              "field": "is_inside",
+              "as": "num_inside"
+            }
+          ],
+          "sort": [
+            {
+              "field": "data"
+            }
+          ]
+        },
+        {
+          "calculate": "4 * datum.num_inside / datum.data",
+          "as": "estimate"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "point",
+            "filled": true,
+            "opacity": 0.7,
+            "size": 8,
+            "color": "#4c78a8"
+          },
+          "encoding": {
+            "x": {
+              "field": "data",
+              "type": "quantitative",
+              "scale": {
+                "nice": false
+              },
+              "axis": {
+                "title": "Number of Points",
+                "labelFlush": true
+              }
+            },
+            "y": {
+              "field": "estimate",
+              "type": "quantitative",
+              "scale": {
+                "nice": true,
+                "zero": false,
+                "domain": {
+                  "unionWith": [
+                    2,
+                    4
+                  ]
+                }
+              },
+              "axis": {
+                "title": "Estimated π Value"
+              }
+            }
+          }
+        },
+        {
+          "data": {
+            "values": [
+              {
+                "value": 3.141592653589793
+              }
+            ]
+          },
+          "layer": [
+            {
+              "mark": {
+                "type": "rule",
+                "color": "darkgrey"
+              },
+              "encoding": {
+                "y": {
+                  "field": "value",
+                  "type": "quantitative"
+                }
+              }
+            },
+            {
+              "mark": {
+                "type": "text",
+                "align": "left",
+                "baseline": "alphabetic",
+                "x": 10,
+                "dy": -5,
+                "color": "black"
+              },
+              "encoding": {
+                "y": {
+                  "field": "value",
+                  "type": "quantitative"
+                },
+                "text": {
+                  "value": "Real PI: 3.1415..."
+                }
+              }
+            }
+          ]
+        },
+        {
+          "transform": [
+            {
+              "filter": "datum.data == num_points"
+            },
+            {
+              "calculate": "'Estimate: ' + format(datum.estimate, ',.3f')",
+              "as": "label"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "right",
+            "baseline": "alphabetic",
+            "x": {
+              "x-eas:slot": "size"
+            },
+            "dx": -5,
+            "dy": -5,
+            "color": "black"
+          },
+          "encoding": {
+            "y": {
+              "field": "estimate",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": "label",
+              "type": "nominal"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

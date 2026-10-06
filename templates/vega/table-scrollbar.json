@@ -1,0 +1,531 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "table-scrollbar",
+    "version": "1.0.0",
+    "doc": "A striped one-column table showing a window of rows, with a scrollbar; the arrows, page keys, home and end scroll it (Vega gallery: table-scrollbar).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "the table's rows, in order"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "label",
+        "doc": "the column each row shows"
+      },
+      "rows": {
+        "type": "integer",
+        "default": 10,
+        "doc": "rows visible at once"
+      },
+      "width": {
+        "type": "number",
+        "default": 300
+      },
+      "title": {
+        "type": "string",
+        "default": "Scrollbar Example"
+      },
+      "font": {
+        "type": "string",
+        "default": "Tahoma, Verdana, sans-serif"
+      },
+      "description": {
+        "type": "string",
+        "default": "An example of a simple table with a scrollbar"
+      },
+      "height": {
+        "type": "number",
+        "default": 400,
+        "doc": "height of the visible rows (rows of height / rows pixels)"
+      }
+    },
+    "example": "../examples/vega/table-scrollbar.data.json",
+    "on": [
+      {
+        "events": "key:down",
+        "param": "scroll",
+        "update": {
+          "x-eas:expr": "min(scroll + 1, max(1, event.rows - {{rows}} + 1))"
+        }
+      },
+      {
+        "events": "key:up",
+        "param": "scroll",
+        "update": "max(scroll - 1, 1)"
+      },
+      {
+        "events": "key:pagedown",
+        "param": "scroll",
+        "update": {
+          "x-eas:expr": "min(scroll + {{rows}}, max(1, event.rows - {{rows}} + 1))"
+        }
+      },
+      {
+        "events": "key:pageup",
+        "param": "scroll",
+        "update": {
+          "x-eas:expr": "max(scroll - {{rows}}, 1)"
+        }
+      },
+      {
+        "events": "key:home",
+        "param": "scroll",
+        "update": "1"
+      },
+      {
+        "events": "key:end",
+        "param": "scroll",
+        "update": {
+          "x-eas:expr": "max(1, event.rows - {{rows}} + 1)"
+        }
+      }
+    ],
+    "vega": {
+      "status": "pass",
+      "note": "The arrows, page up/down, home and end scroll the window of rows (x-eas.on key handlers) and the scrollbar thumb follows. Vega also scrolls with the wheel and by dragging the thumb, which are not bound. Pixel ratio against ref/table-scrollbar.png: 0.056.",
+      "ratio": 0.0557,
+      "threshold": 0.08
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "title": {
+    "text": {
+      "x-eas:slot": "title"
+    }
+  },
+  "data": {
+    "name": "data"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "params": [
+    {
+      "name": "scroll",
+      "value": 1
+    }
+  ],
+  "config": {
+    "background": "#FFFFFF",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "title": {
+      "font": {
+        "x-eas:slot": "font"
+      },
+      "fontSize": 18,
+      "fontWeight": "bold",
+      "color": "#000",
+      "anchor": "middle"
+    },
+    "text": {
+      "font": {
+        "x-eas:slot": "font"
+      },
+      "fontSize": 16,
+      "color": "#000"
+    }
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "row"
+        }
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "count",
+          "as": "row_count"
+        }
+      ]
+    }
+  ],
+  "layer": [
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum.row >= scroll && datum.row < scroll + {{rows}}"
+          }
+        },
+        {
+          "calculate": "datum.row % 2 == 0",
+          "as": "stripe"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "(datum.row - scroll) * {{height}} / {{rows}}"
+          },
+          "as": "row_top"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "datum.row_top + {{height}} / {{rows}}"
+          },
+          "as": "row_bottom"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "datum.row_top + {{height}} / {{rows}} / 2"
+          },
+          "as": "row_middle"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{width}} - 15"
+          },
+          "as": "cell_right"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "rect"
+          },
+          "encoding": {
+            "x": {
+              "datum": 0,
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "range": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "nice": false,
+                "zero": false
+              },
+              "axis": null
+            },
+            "x2": {
+              "field": "cell_right"
+            },
+            "fill": {
+              "field": "stripe",
+              "type": "nominal",
+              "legend": null,
+              "scale": {
+                "domain": [
+                  false,
+                  true
+                ],
+                "range": [
+                  "transparent",
+                  "#EAEAEA"
+                ]
+              }
+            },
+            "y": {
+              "field": "row_top",
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "height"
+                  }
+                ],
+                "nice": false,
+                "zero": false,
+                "reverse": true
+              },
+              "axis": null
+            },
+            "y2": {
+              "field": "row_bottom"
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "middle",
+            "dx": 5
+          },
+          "encoding": {
+            "x": {
+              "datum": 0,
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "range": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "nice": false,
+                "zero": false
+              },
+              "axis": null
+            },
+            "text": {
+              "field": {
+                "x-eas:slot": "label"
+              },
+              "type": "nominal"
+            },
+            "y": {
+              "field": "row_middle",
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "height"
+                  }
+                ],
+                "nice": false,
+                "zero": false,
+                "reverse": true
+              },
+              "axis": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "count",
+              "as": "n"
+            }
+          ]
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "min(max({{height}} * {{rows}} / datum.n, 30), 600)"
+          },
+          "as": "thumb"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "max(1, datum.n - {{rows}} + 1)"
+          },
+          "as": "last"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "datum.last > 1 ? (min(scroll, datum.last) - 1) / (datum.last - 1) * ({{height}} - datum.thumb - 1) : 0"
+          },
+          "as": "top"
+        },
+        {
+          "calculate": "datum.top + datum.thumb",
+          "as": "bottom"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{width}} - 14"
+          },
+          "as": "track_left"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{width}} - 13"
+          },
+          "as": "thumb_left"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{width}} - 1"
+          },
+          "as": "thumb_right"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{height}}"
+          },
+          "as": "track_bottom"
+        }
+      ],
+      "encoding": {},
+      "layer": [
+        {
+          "mark": {
+            "type": "rule",
+            "color": "black",
+            "strokeWidth": 0.2
+          },
+          "encoding": {
+            "x": {
+              "field": "track_left",
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "range": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "nice": false,
+                "zero": false
+              },
+              "axis": null
+            },
+            "y": {
+              "datum": 0,
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "height"
+                  }
+                ],
+                "nice": false,
+                "zero": false,
+                "reverse": true
+              },
+              "axis": null
+            },
+            "y2": {
+              "field": "track_bottom"
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "rule",
+            "color": "black",
+            "strokeWidth": 0.2
+          },
+          "encoding": {
+            "x": {
+              "datum": {
+                "x-eas:slot": "width"
+              },
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "range": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "nice": false,
+                "zero": false
+              },
+              "axis": null
+            },
+            "y": {
+              "datum": 0,
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "height"
+                  }
+                ],
+                "nice": false,
+                "zero": false,
+                "reverse": true
+              },
+              "axis": null
+            },
+            "y2": {
+              "field": "track_bottom"
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "rect",
+            "color": "#666666",
+            "opacity": 0.2
+          },
+          "encoding": {
+            "x": {
+              "field": "thumb_left",
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "range": [
+                  0,
+                  {
+                    "x-eas:slot": "width"
+                  }
+                ],
+                "nice": false,
+                "zero": false
+              },
+              "axis": null
+            },
+            "x2": {
+              "field": "thumb_right"
+            },
+            "y": {
+              "field": "top",
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  {
+                    "x-eas:slot": "height"
+                  }
+                ],
+                "nice": false,
+                "zero": false,
+                "reverse": true
+              },
+              "axis": null
+            },
+            "y2": {
+              "field": "bottom"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

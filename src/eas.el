@@ -84,6 +84,7 @@
 (require 'eas-crosshair)
 (require 'eas-brush)
 (require 'eas-stream)
+(require 'eas-play)
 (require 'eas-link-bus)
 (require 'eas-tty)
 (require 'eas-parity)

@@ -1,0 +1,201 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "hypothetical-outcome-plots",
+    "version": "1.0.0",
+    "doc": "An animated bar chart: every second each bar is redrawn as a random sample around its expected value, conveying uncertainty (Vega gallery: hypothetical-outcome-plots).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per bar, in order"
+      },
+      "category": {
+        "type": "field",
+        "of": "data",
+        "default": "month"
+      },
+      "mean": {
+        "type": "field",
+        "of": "data",
+        "default": "mean",
+        "doc": "each bar's expected value"
+      },
+      "noise": {
+        "type": "number",
+        "default": 2,
+        "doc": "half-width of the uniform sampling noise"
+      },
+      "trend": {
+        "type": "number",
+        "default": 0,
+        "doc": "slope added across the bars"
+      },
+      "y_max": {
+        "type": "number",
+        "default": 10
+      },
+      "interval": {
+        "type": "number",
+        "default": 1000,
+        "doc": "milliseconds between samples"
+      },
+      "width": {
+        "type": "number",
+        "default": 300
+      },
+      "height": {
+        "type": "number",
+        "default": 200
+      },
+      "description": {
+        "type": "string",
+        "default": "A hypothetical outcome plot that uses animated samples to convey uncertainty."
+      }
+    },
+    "example": "../examples/vega/hypothetical-outcome-plots.data.json",
+    "timer": {
+      "interval": 1000
+    },
+    "on": [
+      {
+        "events": "timer",
+        "param": "sample",
+        "update": "sample + 1"
+      }
+    ],
+    "vega": {
+      "status": "pass",
+      "note": "Every second (x-eas.timer) each bar becomes a new sample: its mean plus trend plus uniform noise hashed from the bar and the sample counter; noise and trend are sliders. Vega samples with Math.random, so the ratio measures the random heights. Pixel ratio against ref/hypothetical-outcome-plots.png: 0.124.",
+      "ratio": 0.1239,
+      "threshold": 0.17
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "params": [
+    {
+      "name": "sample",
+      "value": 1
+    },
+    {
+      "name": "noise",
+      "value": {
+        "x-eas:slot": "noise"
+      },
+      "bind": {
+        "input": "range",
+        "min": 0,
+        "max": 4,
+        "step": 0.1
+      }
+    },
+    {
+      "name": "trend",
+      "value": {
+        "x-eas:slot": "trend"
+      },
+      "bind": {
+        "input": "range",
+        "min": -1,
+        "max": 1,
+        "step": 0.1
+      }
+    }
+  ],
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "axis": {
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "grid": false,
+      "title": null
+    }
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "index"
+        }
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "count",
+          "as": "bars"
+        }
+      ]
+    },
+    {
+      "calculate": "abs(sin(datum.index * 12.9898 + sample * 78.233) * 43758.5453) % 1",
+      "as": "u"
+    },
+    {
+      "calculate": {
+        "x-eas:expr": "min(max(datum[{{mean}}] - 0.5 * trend * ((datum.bars + 1) / 2 - datum.index) + noise * (2 * datum.u - 1), 0), {{y_max}})"
+      },
+      "as": "value"
+    }
+  ],
+  "mark": {
+    "type": "bar",
+    "color": "steelblue"
+  },
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "category"
+      },
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "paddingInner": 0.04,
+        "paddingOuter": 0
+      },
+      "axis": {
+        "labelAngle": 0
+      }
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "scale": {
+        "domain": [
+          0,
+          {
+            "x-eas:slot": "y_max"
+          }
+        ],
+        "nice": false
+      },
+      "axis": {
+        "tickCount": 10
+      }
+    }
+  }
+}

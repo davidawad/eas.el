@@ -1,0 +1,165 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "overview-plus-detail",
+    "version": "1.0.0",
+    "doc": "A detail area chart over an overview area chart; brushing the overview zooms the detail (Vega gallery: overview-plus-detail).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with a date and a value column"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "date",
+        "doc": "the temporal column"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "price",
+        "doc": "the quantitative column"
+      },
+      "width": {
+        "type": "number",
+        "default": 720
+      },
+      "height": {
+        "type": "number",
+        "default": 390,
+        "doc": "height of the detail view"
+      },
+      "overview_height": {
+        "type": "number",
+        "default": 70
+      },
+      "color": {
+        "type": "string",
+        "default": "steelblue"
+      },
+      "description": {
+        "type": "string",
+        "default": "Area charts of stock prices, with an interactive overview and filtered detail views."
+      }
+    },
+    "example": "../examples/vega/overview-plus-detail.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "Brushing the overview (a Vega-Lite interval selection) sets the detail view's x domain. Vega's firebrick brush edges are drawn as the brush's stroke once a brush exists, not as a line at the left edge before one does. Pixel ratio against ref/overview-plus-detail.png: 0.020.",
+      "ratio": 0.0197,
+      "threshold": 0.04
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "padding": 5,
+  "spacing": 20,
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "area": {
+      "opacity": 1
+    },
+    "axis": {
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "grid": false,
+      "title": null
+    }
+  },
+  "vconcat": [
+    {
+      "width": {
+        "x-eas:slot": "width"
+      },
+      "height": {
+        "x-eas:slot": "height"
+      },
+      "mark": {
+        "type": "area",
+        "color": {
+          "x-eas:slot": "color"
+        },
+        "clip": true
+      },
+      "encoding": {
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "temporal",
+          "scale": {
+            "domain": {
+              "param": "brush"
+            }
+          }
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "width": {
+        "x-eas:slot": "width"
+      },
+      "height": {
+        "x-eas:slot": "overview_height"
+      },
+      "params": [
+        {
+          "name": "brush",
+          "select": {
+            "type": "interval",
+            "encodings": [
+              "x"
+            ],
+            "mark": {
+              "fill": "#333",
+              "fillOpacity": 0.2,
+              "stroke": "firebrick",
+              "strokeWidth": 1
+            }
+          }
+        }
+      ],
+      "mark": {
+        "type": "area",
+        "color": {
+          "x-eas:slot": "color"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "temporal"
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative",
+          "axis": null
+        }
+      }
+    }
+  ]
+}

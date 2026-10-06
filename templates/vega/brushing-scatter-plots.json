@@ -1,0 +1,1184 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "x-eas": {
+  "template": "brushing-scatter-plots",
+  "version": "1.0.0",
+  "doc": "A 4x4 scatter plot matrix with one brush linked across every cell (Vega gallery: brushing-scatter-plots).",
+  "slots": {
+   "data": {
+    "shape": "plist",
+    "required": true,
+    "doc": "rows with four quantitative columns and a category"
+   },
+   "fields": {
+    "type": "array",
+    "items": "string",
+    "default": [
+     "Beak Length (mm)",
+     "Beak Depth (mm)",
+     "Flipper Length (mm)",
+     "Body Mass (g)"
+    ],
+    "doc": "the four quantitative columns, left to right and bottom to top"
+   },
+   "color": {
+    "type": "field",
+    "of": "data",
+    "default": "Species",
+    "doc": "the category column colouring the points"
+   },
+   "size": {
+    "type": "number",
+    "default": 120,
+    "doc": "width and height of each cell"
+   },
+   "description": {
+    "type": "string",
+    "default": "A scatter plot matrix of penguin data with interactive linked selections."
+   }
+  },
+  "example": "../examples/vega/brushing-scatter-plots.data.json",
+  "vega": {
+   "status": "pass",
+   "note": "One interval brush shared by the 16 cells (a top-level param with views) greys the points outside it in every cell. Vega lays the cells on a fixed 140px grid; Vega-Lite concatenation spaces rows around their axis labels, so rows sit a few pixels off. Pixel ratio against ref/brushing-scatter-plots.png: 0.051.",
+   "ratio": 0.0514,
+   "threshold": 0.08
+  }
+ },
+ "description": {
+  "x-eas:slot": "description"
+ },
+ "data": {
+  "name": "data"
+ },
+ "transform": [
+  {
+   "filter": {
+    "x-eas:expr": "isValid(datum[{{fields.0}}])"
+   }
+  }
+ ],
+ "padding": 10,
+ "spacing": 13,
+ "params": [
+  {
+   "name": "brush",
+   "views": [
+    "cell_0_0",
+    "cell_0_1",
+    "cell_0_2",
+    "cell_0_3",
+    "cell_1_0",
+    "cell_1_1",
+    "cell_1_2",
+    "cell_1_3",
+    "cell_2_0",
+    "cell_2_1",
+    "cell_2_2",
+    "cell_2_3",
+    "cell_3_0",
+    "cell_3_1",
+    "cell_3_2",
+    "cell_3_3"
+   ],
+   "select": {
+    "type": "interval",
+    "resolve": "global",
+    "mark": {
+     "fill": "#eee",
+     "fillOpacity": 1,
+     "stroke": null
+    }
+   }
+  }
+ ],
+ "config": {
+  "background": "transparent",
+  "font": "sans-serif",
+  "view": {
+   "stroke": "#ddd"
+  },
+  "range": {
+   "category": [
+    "#4c78a8",
+    "#f58518",
+    "#e45756",
+    "#72b7b2",
+    "#54a24b",
+    "#eeca3b",
+    "#b279a2",
+    "#ff9da6",
+    "#9d755d",
+    "#bab0ac"
+   ]
+  },
+  "axis": {
+   "domainColor": "#888",
+   "tickColor": "#ccc",
+   "labelColor": "#000",
+   "labelFontSize": 10,
+   "labelPadding": 2,
+   "tickSize": 5,
+   "grid": false,
+   "titleColor": "#000",
+   "titleFontSize": 11,
+   "titleFontWeight": "bold",
+   "titlePadding": 4
+  },
+  "legend": {
+   "labelColor": "#000",
+   "labelFontSize": 10,
+   "titleColor": "#000",
+   "titleFontSize": 11,
+   "titleFontWeight": "bold",
+   "symbolSize": 100,
+   "symbolType": "circle"
+  }
+ },
+ "vconcat": [
+  {
+   "bounds": "flush",
+   "spacing": 20,
+   "hconcat": [
+    {
+     "name": "cell_0_0",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "0"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "3"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": {
+        "title": {
+         "x-eas:slot": "fields",
+         "key": "3"
+        },
+        "tickCount": 5,
+        "domain": false,
+        "labelFlush": true
+       }
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_0_1",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "1"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "3"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_0_2",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "2"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "3"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_0_3",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "3"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "3"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "bounds": "flush",
+   "spacing": 20,
+   "hconcat": [
+    {
+     "name": "cell_1_0",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "0"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "2"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": {
+        "title": {
+         "x-eas:slot": "fields",
+         "key": "2"
+        },
+        "tickCount": 5,
+        "domain": false,
+        "labelFlush": true
+       }
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_1_1",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "1"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "2"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_1_2",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "2"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "2"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_1_3",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "3"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "2"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "bounds": "flush",
+   "spacing": 20,
+   "hconcat": [
+    {
+     "name": "cell_2_0",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "0"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "1"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": {
+        "title": {
+         "x-eas:slot": "fields",
+         "key": "1"
+        },
+        "tickCount": 5,
+        "domain": false,
+        "labelFlush": true
+       }
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_2_1",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "1"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "1"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_2_2",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "2"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "1"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_2_3",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "3"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "1"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "bounds": "flush",
+   "spacing": 20,
+   "hconcat": [
+    {
+     "name": "cell_3_0",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "0"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": {
+        "title": {
+         "x-eas:slot": "fields",
+         "key": "0"
+        },
+        "tickCount": 5,
+        "domain": false
+       }
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "0"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": {
+        "title": {
+         "x-eas:slot": "fields",
+         "key": "0"
+        },
+        "tickCount": 5,
+        "domain": false,
+        "labelFlush": true
+       }
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_3_1",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "1"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": {
+        "title": {
+         "x-eas:slot": "fields",
+         "key": "1"
+        },
+        "tickCount": 5,
+        "domain": false
+       }
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "0"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_3_2",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "2"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": {
+        "title": {
+         "x-eas:slot": "fields",
+         "key": "2"
+        },
+        "tickCount": 5,
+        "domain": false
+       }
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "0"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    },
+    {
+     "name": "cell_3_3",
+     "width": {
+      "x-eas:slot": "size"
+     },
+     "height": {
+      "x-eas:slot": "size"
+     },
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "size": 36,
+      "opacity": 0.5,
+      "clip": true
+     },
+     "encoding": {
+      "x": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "3"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": {
+        "title": {
+         "x-eas:slot": "fields",
+         "key": "3"
+        },
+        "tickCount": 5,
+        "domain": false
+       }
+      },
+      "y": {
+       "field": {
+        "x-eas:slot": "fields",
+        "key": "0"
+       },
+       "type": "quantitative",
+       "scale": {
+        "zero": false,
+        "nice": true
+       },
+       "axis": null
+      },
+      "color": {
+       "condition": {
+        "param": "brush",
+        "field": {
+         "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "legend": {
+         "title": {
+          "x-eas:slot": "color"
+         },
+         "offset": 0,
+         "symbolOpacity": 0.5,
+         "symbolStrokeWidth": 0
+        }
+       },
+       "value": "#ddd"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

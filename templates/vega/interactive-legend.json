@@ -1,0 +1,217 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "interactive-legend",
+    "version": "1.0.0",
+    "doc": "A scatter plot of open circles: clicking a legend entry (shift adds more) and brushing along x fade the other points (Vega gallery: interactive-legend).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with two quantitative columns and a category"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "Horsepower"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "Miles_per_Gallon"
+      },
+      "color": {
+        "type": "field",
+        "of": "data",
+        "default": "Origin",
+        "doc": "the category column of the legend"
+      },
+      "width": {
+        "type": "number",
+        "default": 200
+      },
+      "height": {
+        "type": "number",
+        "default": 200
+      },
+      "description": {
+        "type": "string",
+        "default": "A scatter plot example with interactive legend and x-axis."
+      }
+    },
+    "example": "../examples/vega/interactive-legend.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "Clicking a legend entry (shift adds more) and brushing along x fade the other points, through a legend-bound point param and an interval param. Pixel ratio against ref/interactive-legend.png: 0.035.",
+      "ratio": 0.0351,
+      "threshold": 0.06
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "transform": [
+    {
+      "filter": {
+        "x-eas:expr": "isValid(datum[{{x}}]) && isValid(datum[{{y}}]) && isValid(datum[{{color}}])"
+      }
+    }
+  ],
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "domain": false,
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "axisX": {
+      "grid": true
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    }
+  },
+  "params": [
+    {
+      "name": "brush",
+      "select": {
+        "type": "interval",
+        "encodings": [
+          "x"
+        ],
+        "mark": {
+          "fill": "#ddd",
+          "fillOpacity": 0.2,
+          "stroke": "firebrick",
+          "strokeWidth": 1
+        }
+      }
+    },
+    {
+      "name": "origin",
+      "select": {
+        "type": "point",
+        "fields": [
+          {
+            "x-eas:slot": "color"
+          }
+        ]
+      },
+      "bind": "legend"
+    }
+  ],
+  "mark": {
+    "type": "point",
+    "shape": "circle",
+    "filled": false,
+    "strokeWidth": 2,
+    "size": 64
+  },
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "quantitative",
+      "scale": {
+        "nice": true,
+        "zero": true
+      },
+      "axis": {
+        "tickCount": 5,
+        "title": {
+          "x-eas:slot": "x"
+        }
+      }
+    },
+    "y": {
+      "field": {
+        "x-eas:slot": "y"
+      },
+      "type": "quantitative",
+      "scale": {
+        "nice": true,
+        "zero": true
+      },
+      "axis": {
+        "title": {
+          "x-eas:slot": "y"
+        },
+        "titlePadding": 5,
+        "grid": true,
+        "tickCount": 10
+      }
+    },
+    "color": {
+      "condition": {
+        "test": {
+          "and": [
+            {
+              "param": "brush"
+            },
+            {
+              "param": "origin"
+            }
+          ]
+        },
+        "field": {
+          "x-eas:slot": "color"
+        },
+        "type": "nominal",
+        "sort": null,
+        "scale": {
+          "scheme": "category10"
+        },
+        "legend": {
+          "symbolStrokeWidth": 2,
+          "symbolSize": 64,
+          "symbolOpacity": 0.7,
+          "symbolFillColor": "transparent"
+        }
+      },
+      "value": "#ccc"
+    },
+    "opacity": {
+      "condition": {
+        "test": {
+          "and": [
+            {
+              "param": "brush"
+            },
+            {
+              "param": "origin"
+            }
+          ]
+        },
+        "value": 0.7
+      },
+      "value": 0.15
+    }
+  }
+}

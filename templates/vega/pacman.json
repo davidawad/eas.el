@@ -1,0 +1,1319 @@
+{
+ "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+ "x-eas": {
+  "template": "pacman",
+  "version": "1.0.0",
+  "doc": "A playable maze game: the arrow keys steer the eater through a maze of gums every half second while ghosts chase it (Vega gallery: pacman).",
+  "slots": {
+   "maze": {
+    "type": "array",
+    "items": "string",
+    "default": [
+     "b6666666666666e1",
+     "5325322532253251",
+     "5664666466646641",
+     "5353253225325351",
+     "5646151005174641",
+     "2225156174153220",
+     "0005644644641000",
+     "6664355045356660",
+     "2225156664153220",
+     "0005122532051000",
+     "7664666466646661",
+     "5322532222532251",
+     "5617466176461741",
+     "3564325153256431",
+     "f4446646466444e1",
+     "2222222222222220"
+    ],
+    "doc": "16 rows of 16 hex digits, one per cell: 1 a wall on its left edge, 2 on its top edge, 4 a gum, 8 a power gum"
+   },
+   "size": {
+    "type": "number",
+    "default": 600,
+    "doc": "width and height in pixels (15 cells a side)"
+   },
+   "radius": {
+    "type": "number",
+    "default": 16,
+    "doc": "the eater's radius in pixels"
+   },
+   "description": {
+    "type": "string",
+    "default": "A playable pacman game with ghosts and gums."
+   }
+  },
+  "example": "../examples/vega/pacman.data.json",
+  "timer": {
+   "interval": 500
+  },
+  "on": [
+   {
+    "events": "key:left",
+    "param": "dir",
+    "update": "'left'"
+   },
+   {
+    "events": "key:right",
+    "param": "dir",
+    "update": "'right'"
+   },
+   {
+    "events": "key:up",
+    "param": "dir",
+    "update": "'up'"
+   },
+   {
+    "events": "key:down",
+    "param": "dir",
+    "update": "'down'"
+   },
+   {
+    "events": "timer",
+    "param": "open",
+    "update": "!open"
+   },
+   {
+    "events": "timer",
+    "param": "pac",
+    "update": "{x: dir == 'right' && !test(regexp('[13579bdf]'), maze[pac.y][(pac.x) + 1]) ? ((pac.x + 1) + 15) % 15 : dir == 'left' && !test(regexp('[13579bdf]'), maze[pac.y][pac.x]) ? ((pac.x - 1) + 15) % 15 : pac.x, y: dir == 'down' && !test(regexp('[2367abef]'), maze[(pac.y) + 1][pac.x]) ? ((pac.y + 1) + 15) % 15 : dir == 'up' && !test(regexp('[2367abef]'), maze[pac.y][pac.x]) ? ((pac.y - 1) + 15) % 15 : pac.y}"
+   },
+   {
+    "events": "timer",
+    "param": "r0",
+    "update": "floor(random() * 4)"
+   },
+   {
+    "events": "timer",
+    "param": "r1",
+    "update": "floor(random() * 4)"
+   },
+   {
+    "events": "timer",
+    "param": "r2",
+    "update": "floor(random() * 4)"
+   },
+   {
+    "events": "timer",
+    "param": "r3",
+    "update": "floor(random() * 4)"
+   },
+   {
+    "events": "timer",
+    "param": "caught",
+    "update": "(ghosts[0].x == pac.x && ghosts[0].y == pac.y) || (ghosts[1].x == pac.x && ghosts[1].y == pac.y) || (ghosts[2].x == pac.x && ghosts[2].y == pac.y) || (ghosts[3].x == pac.x && ghosts[3].y == pac.y)"
+   },
+   {
+    "events": "timer",
+    "param": "ghosts",
+    "update": "caught ? ghosts : [{x: ((abs((pac.x - ghosts[0].x)) >= abs((pac.y - ghosts[0].y))) && ((pac.x - ghosts[0].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[0].y][(ghosts[0].x) + 1]) : (pac.x - ghosts[0].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[0].y][ghosts[0].x]) : false)) || (!((pac.y - ghosts[0].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[0].y) + 1][ghosts[0].x]) : (pac.y - ghosts[0].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[0].y][ghosts[0].x]) : false) && ((pac.x - ghosts[0].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[0].y][(ghosts[0].x) + 1]) : (pac.x - ghosts[0].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[0].y][ghosts[0].x]) : false)) ? ((ghosts[0].x + ((pac.x - ghosts[0].x) > 0 ? 1 : -1)) + 15) % 15 : ((pac.y - ghosts[0].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[0].y) + 1][ghosts[0].x]) : (pac.y - ghosts[0].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[0].y][ghosts[0].x]) : false) ? ghosts[0].x : ((ghosts[0].x + (r0 == 1 && !test(regexp('[13579bdf]'), maze[ghosts[0].y][(ghosts[0].x) + 1]) ? 1 : r0 == 3 && !test(regexp('[13579bdf]'), maze[ghosts[0].y][ghosts[0].x]) ? -1 : 0)) + 15) % 15, y: ((abs((pac.x - ghosts[0].x)) >= abs((pac.y - ghosts[0].y))) && ((pac.x - ghosts[0].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[0].y][(ghosts[0].x) + 1]) : (pac.x - ghosts[0].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[0].y][ghosts[0].x]) : false)) || (!((pac.y - ghosts[0].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[0].y) + 1][ghosts[0].x]) : (pac.y - ghosts[0].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[0].y][ghosts[0].x]) : false) && ((pac.x - ghosts[0].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[0].y][(ghosts[0].x) + 1]) : (pac.x - ghosts[0].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[0].y][ghosts[0].x]) : false)) ? ghosts[0].y : ((pac.y - ghosts[0].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[0].y) + 1][ghosts[0].x]) : (pac.y - ghosts[0].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[0].y][ghosts[0].x]) : false) ? ((ghosts[0].y + ((pac.y - ghosts[0].y) > 0 ? 1 : -1)) + 15) % 15 : ((ghosts[0].y + (r0 == 2 && !test(regexp('[2367abef]'), maze[(ghosts[0].y) + 1][ghosts[0].x]) ? 1 : r0 == 0 && !test(regexp('[2367abef]'), maze[ghosts[0].y][ghosts[0].x]) ? -1 : 0)) + 15) % 15, color: ghosts[0].color}, {x: ((abs((pac.x - ghosts[1].x)) >= abs((pac.y - ghosts[1].y))) && ((pac.x - ghosts[1].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[1].y][(ghosts[1].x) + 1]) : (pac.x - ghosts[1].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[1].y][ghosts[1].x]) : false)) || (!((pac.y - ghosts[1].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[1].y) + 1][ghosts[1].x]) : (pac.y - ghosts[1].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[1].y][ghosts[1].x]) : false) && ((pac.x - ghosts[1].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[1].y][(ghosts[1].x) + 1]) : (pac.x - ghosts[1].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[1].y][ghosts[1].x]) : false)) ? ((ghosts[1].x + ((pac.x - ghosts[1].x) > 0 ? 1 : -1)) + 15) % 15 : ((pac.y - ghosts[1].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[1].y) + 1][ghosts[1].x]) : (pac.y - ghosts[1].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[1].y][ghosts[1].x]) : false) ? ghosts[1].x : ((ghosts[1].x + (r1 == 1 && !test(regexp('[13579bdf]'), maze[ghosts[1].y][(ghosts[1].x) + 1]) ? 1 : r1 == 3 && !test(regexp('[13579bdf]'), maze[ghosts[1].y][ghosts[1].x]) ? -1 : 0)) + 15) % 15, y: ((abs((pac.x - ghosts[1].x)) >= abs((pac.y - ghosts[1].y))) && ((pac.x - ghosts[1].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[1].y][(ghosts[1].x) + 1]) : (pac.x - ghosts[1].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[1].y][ghosts[1].x]) : false)) || (!((pac.y - ghosts[1].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[1].y) + 1][ghosts[1].x]) : (pac.y - ghosts[1].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[1].y][ghosts[1].x]) : false) && ((pac.x - ghosts[1].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[1].y][(ghosts[1].x) + 1]) : (pac.x - ghosts[1].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[1].y][ghosts[1].x]) : false)) ? ghosts[1].y : ((pac.y - ghosts[1].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[1].y) + 1][ghosts[1].x]) : (pac.y - ghosts[1].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[1].y][ghosts[1].x]) : false) ? ((ghosts[1].y + ((pac.y - ghosts[1].y) > 0 ? 1 : -1)) + 15) % 15 : ((ghosts[1].y + (r1 == 2 && !test(regexp('[2367abef]'), maze[(ghosts[1].y) + 1][ghosts[1].x]) ? 1 : r1 == 0 && !test(regexp('[2367abef]'), maze[ghosts[1].y][ghosts[1].x]) ? -1 : 0)) + 15) % 15, color: ghosts[1].color}, {x: ((abs((pac.x - ghosts[2].x)) >= abs((pac.y - ghosts[2].y))) && ((pac.x - ghosts[2].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[2].y][(ghosts[2].x) + 1]) : (pac.x - ghosts[2].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[2].y][ghosts[2].x]) : false)) || (!((pac.y - ghosts[2].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[2].y) + 1][ghosts[2].x]) : (pac.y - ghosts[2].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[2].y][ghosts[2].x]) : false) && ((pac.x - ghosts[2].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[2].y][(ghosts[2].x) + 1]) : (pac.x - ghosts[2].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[2].y][ghosts[2].x]) : false)) ? ((ghosts[2].x + ((pac.x - ghosts[2].x) > 0 ? 1 : -1)) + 15) % 15 : ((pac.y - ghosts[2].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[2].y) + 1][ghosts[2].x]) : (pac.y - ghosts[2].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[2].y][ghosts[2].x]) : false) ? ghosts[2].x : ((ghosts[2].x + (r2 == 1 && !test(regexp('[13579bdf]'), maze[ghosts[2].y][(ghosts[2].x) + 1]) ? 1 : r2 == 3 && !test(regexp('[13579bdf]'), maze[ghosts[2].y][ghosts[2].x]) ? -1 : 0)) + 15) % 15, y: ((abs((pac.x - ghosts[2].x)) >= abs((pac.y - ghosts[2].y))) && ((pac.x - ghosts[2].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[2].y][(ghosts[2].x) + 1]) : (pac.x - ghosts[2].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[2].y][ghosts[2].x]) : false)) || (!((pac.y - ghosts[2].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[2].y) + 1][ghosts[2].x]) : (pac.y - ghosts[2].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[2].y][ghosts[2].x]) : false) && ((pac.x - ghosts[2].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[2].y][(ghosts[2].x) + 1]) : (pac.x - ghosts[2].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[2].y][ghosts[2].x]) : false)) ? ghosts[2].y : ((pac.y - ghosts[2].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[2].y) + 1][ghosts[2].x]) : (pac.y - ghosts[2].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[2].y][ghosts[2].x]) : false) ? ((ghosts[2].y + ((pac.y - ghosts[2].y) > 0 ? 1 : -1)) + 15) % 15 : ((ghosts[2].y + (r2 == 2 && !test(regexp('[2367abef]'), maze[(ghosts[2].y) + 1][ghosts[2].x]) ? 1 : r2 == 0 && !test(regexp('[2367abef]'), maze[ghosts[2].y][ghosts[2].x]) ? -1 : 0)) + 15) % 15, color: ghosts[2].color}, {x: ((abs((pac.x - ghosts[3].x)) >= abs((pac.y - ghosts[3].y))) && ((pac.x - ghosts[3].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[3].y][(ghosts[3].x) + 1]) : (pac.x - ghosts[3].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[3].y][ghosts[3].x]) : false)) || (!((pac.y - ghosts[3].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[3].y) + 1][ghosts[3].x]) : (pac.y - ghosts[3].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[3].y][ghosts[3].x]) : false) && ((pac.x - ghosts[3].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[3].y][(ghosts[3].x) + 1]) : (pac.x - ghosts[3].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[3].y][ghosts[3].x]) : false)) ? ((ghosts[3].x + ((pac.x - ghosts[3].x) > 0 ? 1 : -1)) + 15) % 15 : ((pac.y - ghosts[3].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[3].y) + 1][ghosts[3].x]) : (pac.y - ghosts[3].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[3].y][ghosts[3].x]) : false) ? ghosts[3].x : ((ghosts[3].x + (r3 == 1 && !test(regexp('[13579bdf]'), maze[ghosts[3].y][(ghosts[3].x) + 1]) ? 1 : r3 == 3 && !test(regexp('[13579bdf]'), maze[ghosts[3].y][ghosts[3].x]) ? -1 : 0)) + 15) % 15, y: ((abs((pac.x - ghosts[3].x)) >= abs((pac.y - ghosts[3].y))) && ((pac.x - ghosts[3].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[3].y][(ghosts[3].x) + 1]) : (pac.x - ghosts[3].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[3].y][ghosts[3].x]) : false)) || (!((pac.y - ghosts[3].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[3].y) + 1][ghosts[3].x]) : (pac.y - ghosts[3].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[3].y][ghosts[3].x]) : false) && ((pac.x - ghosts[3].x) > 0 ? !test(regexp('[13579bdf]'), maze[ghosts[3].y][(ghosts[3].x) + 1]) : (pac.x - ghosts[3].x) < 0 ? !test(regexp('[13579bdf]'), maze[ghosts[3].y][ghosts[3].x]) : false)) ? ghosts[3].y : ((pac.y - ghosts[3].y) > 0 ? !test(regexp('[2367abef]'), maze[(ghosts[3].y) + 1][ghosts[3].x]) : (pac.y - ghosts[3].y) < 0 ? !test(regexp('[2367abef]'), maze[ghosts[3].y][ghosts[3].x]) : false) ? ((ghosts[3].y + ((pac.y - ghosts[3].y) > 0 ? 1 : -1)) + 15) % 15 : ((ghosts[3].y + (r3 == 2 && !test(regexp('[2367abef]'), maze[(ghosts[3].y) + 1][ghosts[3].x]) ? 1 : r3 == 0 && !test(regexp('[2367abef]'), maze[ghosts[3].y][ghosts[3].x]) ? -1 : 0)) + 15) % 15, color: ghosts[3].color}]"
+   },
+   {
+    "events": "timer",
+    "param": "caught",
+    "update": "caught || (ghosts[0].x == pac.x && ghosts[0].y == pac.y) || (ghosts[1].x == pac.x && ghosts[1].y == pac.y) || (ghosts[2].x == pac.x && ghosts[2].y == pac.y) || (ghosts[3].x == pac.x && ghosts[3].y == pac.y)"
+   },
+   {
+    "events": "timer",
+    "param": "score",
+    "update": "caught ? 0 : score + (test(regexp('[4567cdef]'), maze[pac.y][pac.x]) && !test(regexp(',' + (pac.x + '-' + pac.y) + ','), eaten) ? 10 : 0) + (test(regexp('[89abcdef]'), maze[pac.y][pac.x]) && !test(regexp(',' + (pac.x + '-' + pac.y) + ','), eaten) ? 50 : 0)"
+   },
+   {
+    "events": "timer",
+    "param": "eaten",
+    "update": "caught ? ',' : (test(regexp('[4567cdef]'), maze[pac.y][pac.x]) && !test(regexp(',' + (pac.x + '-' + pac.y) + ','), eaten) || test(regexp('[89abcdef]'), maze[pac.y][pac.x]) && !test(regexp(',' + (pac.x + '-' + pac.y) + ','), eaten)) ? eaten + (pac.x + '-' + pac.y) + ',' : eaten"
+   },
+   {
+    "events": "timer",
+    "param": "hi",
+    "update": "max(hi, score)"
+   },
+   {
+    "events": "timer",
+    "param": "pac",
+    "update": "caught ? {x: 7, y: 7} : pac"
+   },
+   {
+    "events": "timer",
+    "param": "dir",
+    "update": "caught ? '' : dir"
+   },
+   {
+    "events": "timer",
+    "param": "ghosts",
+    "update": "caught ? [{x: 0, y: 0, color: 'red'}, {x: 14, y: 0, color: 'steelblue'}, {x: 0, y: 14, color: 'green'}, {x: 14, y: 14, color: 'orange'}] : ghosts"
+   }
+  ],
+  "vega": {
+   "status": "partial",
+   "note": "The first frame matches. The arrows steer the eater on a 500 ms timer (x-eas.timer, x-eas.on); gums score 10 and power gums 50; ghosts chase along the longer axis and wander when blocked; a ghost on the eater restarts the game. Not ported: power mode (fleeing, edible ghosts), Vega's ghost decision tables and ghost shapes (drawn as discs). Pixel ratio against ref/pacman.png: 0.011.",
+   "ratio": 0.0114,
+   "threshold": 0.03
+  }
+ },
+ "description": {
+  "x-eas:slot": "description"
+ },
+ "width": {
+  "x-eas:slot": "size"
+ },
+ "height": {
+  "x-eas:slot": "size"
+ },
+ "padding": 0,
+ "params": [
+  {
+   "name": "maze",
+   "value": {
+    "x-eas:slot": "maze"
+   }
+  },
+  {
+   "name": "pac",
+   "value": {
+    "x": 7,
+    "y": 7
+   }
+  },
+  {
+   "name": "dir",
+   "value": ""
+  },
+  {
+   "name": "open",
+   "value": true
+  },
+  {
+   "name": "ghosts",
+   "value": [
+    {
+     "x": 0,
+     "y": 0,
+     "color": "red"
+    },
+    {
+     "x": 14,
+     "y": 0,
+     "color": "steelblue"
+    },
+    {
+     "x": 0,
+     "y": 14,
+     "color": "green"
+    },
+    {
+     "x": 14,
+     "y": 14,
+     "color": "orange"
+    }
+   ]
+  },
+  {
+   "name": "r0",
+   "value": 0
+  },
+  {
+   "name": "r1",
+   "value": 0
+  },
+  {
+   "name": "r2",
+   "value": 0
+  },
+  {
+   "name": "r3",
+   "value": 0
+  },
+  {
+   "name": "caught",
+   "value": false
+  },
+  {
+   "name": "eaten",
+   "value": ","
+  },
+  {
+   "name": "score",
+   "value": 0
+  },
+  {
+   "name": "hi",
+   "value": 0
+  }
+ ],
+ "config": {
+  "background": "black",
+  "font": "sans-serif",
+  "view": {
+   "stroke": null
+  },
+  "arc": {
+   "stroke": "black",
+   "strokeWidth": 1
+  }
+ },
+ "layer": [
+  {
+   "data": {
+    "values": [
+     {
+      "rows": {
+       "x-eas:slot": "maze"
+      }
+     }
+    ]
+   },
+   "transform": [
+    {
+     "flatten": [
+      "rows"
+     ],
+     "as": [
+      "row"
+     ]
+    },
+    {
+     "window": [
+      {
+       "op": "row_number",
+       "as": "y1"
+      }
+     ]
+    },
+    {
+     "calculate": "datum.y1 - 1",
+     "as": "y"
+    },
+    {
+     "calculate": "[{x: 0, c: slice(datum.row, 0, 1)}, {x: 1, c: slice(datum.row, 1, 2)}, {x: 2, c: slice(datum.row, 2, 3)}, {x: 3, c: slice(datum.row, 3, 4)}, {x: 4, c: slice(datum.row, 4, 5)}, {x: 5, c: slice(datum.row, 5, 6)}, {x: 6, c: slice(datum.row, 6, 7)}, {x: 7, c: slice(datum.row, 7, 8)}, {x: 8, c: slice(datum.row, 8, 9)}, {x: 9, c: slice(datum.row, 9, 10)}, {x: 10, c: slice(datum.row, 10, 11)}, {x: 11, c: slice(datum.row, 11, 12)}, {x: 12, c: slice(datum.row, 12, 13)}, {x: 13, c: slice(datum.row, 13, 14)}, {x: 14, c: slice(datum.row, 14, 15)}, {x: 15, c: slice(datum.row, 15, 16)}]",
+     "as": "cell"
+    },
+    {
+     "flatten": [
+      "cell"
+     ]
+    },
+    {
+     "calculate": "datum.cell.x",
+     "as": "x"
+    },
+    {
+     "calculate": "datum.cell.c",
+     "as": "c"
+    }
+   ],
+   "layer": [
+    {
+     "transform": [
+      {
+       "filter": {
+        "x-eas:expr": "test(regexp('[13579bdf]'), datum.c)"
+       }
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "datum.x * {{size}} / 15 + (datum.x == 0 ? 0 : datum.x == 15 ? -4 : -1)"
+       },
+       "as": "x0"
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "datum.x0 + {{size}} / 150"
+       },
+       "as": "x1"
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "min(datum.y, 14) * {{size}} / 15"
+       },
+       "as": "y0"
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "datum.y0 + {{size}} / 15"
+       },
+       "as": "y1"
+      }
+     ],
+     "mark": {
+      "type": "rect",
+      "color": "blue",
+      "stroke": null
+     },
+     "encoding": {
+      "x": {
+       "field": "x0",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false
+       },
+       "axis": null
+      },
+      "x2": {
+       "field": "x1"
+      },
+      "y": {
+       "field": "y0",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false,
+        "reverse": true
+       },
+       "axis": null
+      },
+      "y2": {
+       "field": "y1"
+      }
+     }
+    },
+    {
+     "transform": [
+      {
+       "filter": {
+        "x-eas:expr": "test(regexp('[2367abef]'), datum.c)"
+       }
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "datum.y * {{size}} / 15 + (datum.y == 0 ? 0 : datum.y == 15 ? -4 : -1)"
+       },
+       "as": "y0"
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "datum.y0 + {{size}} / 150"
+       },
+       "as": "y1"
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "min(datum.x, 14) * {{size}} / 15"
+       },
+       "as": "x0"
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "datum.x0 + {{size}} / 15"
+       },
+       "as": "x1"
+      }
+     ],
+     "mark": {
+      "type": "rect",
+      "color": "blue",
+      "stroke": null
+     },
+     "encoding": {
+      "x": {
+       "field": "x0",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false
+       },
+       "axis": null
+      },
+      "x2": {
+       "field": "x1"
+      },
+      "y": {
+       "field": "y0",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false,
+        "reverse": true
+       },
+       "axis": null
+      },
+      "y2": {
+       "field": "y1"
+      }
+     }
+    },
+    {
+     "transform": [
+      {
+       "filter": {
+        "x-eas:expr": "test(regexp('[4567cdef]'), datum.c) && !test(regexp(',' + datum.x + '-' + datum.y + ','), eaten)"
+       }
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "(datum.x + 0.5) * {{size}} / 15"
+       },
+       "as": "cx"
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "(datum.y + 0.5) * {{size}} / 15"
+       },
+       "as": "cy"
+      }
+     ],
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "color": "grey",
+      "size": 64,
+      "opacity": 1
+     },
+     "encoding": {
+      "x": {
+       "field": "cx",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false
+       },
+       "axis": null
+      },
+      "y": {
+       "field": "cy",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false,
+        "reverse": true
+       },
+       "axis": null
+      }
+     }
+    },
+    {
+     "transform": [
+      {
+       "filter": {
+        "x-eas:expr": "test(regexp('[89abcdef]'), datum.c) && !test(regexp(',' + datum.x + '-' + datum.y + ','), eaten)"
+       }
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "(datum.x + 0.5) * {{size}} / 15"
+       },
+       "as": "cx"
+      },
+      {
+       "calculate": {
+        "x-eas:expr": "(datum.y + 0.5) * {{size}} / 15"
+       },
+       "as": "cy"
+      }
+     ],
+     "mark": {
+      "type": "point",
+      "filled": true,
+      "color": "white",
+      "size": 200,
+      "opacity": 1
+     },
+     "encoding": {
+      "x": {
+       "field": "cx",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false
+       },
+       "axis": null
+      },
+      "y": {
+       "field": "cy",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false,
+        "reverse": true
+       },
+       "axis": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "data": {
+    "values": [
+     {
+      "text": "score"
+     }
+    ]
+   },
+   "transform": [
+    {
+     "calculate": {
+      "x-eas:expr": "7.5 * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "3.5 * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "mark": {
+    "type": "text",
+    "align": "center",
+    "baseline": "middle",
+    "color": "yellow",
+    "fontSize": 14
+   },
+   "encoding": {
+    "x": {
+     "field": "cx",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false
+     },
+     "axis": null
+    },
+    "y": {
+     "field": "cy",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false,
+      "reverse": true
+     },
+     "axis": null
+    },
+    "text": {
+     "field": "text",
+     "type": "nominal"
+    }
+   }
+  },
+  {
+   "data": {
+    "values": [
+     {}
+    ]
+   },
+   "transform": [
+    {
+     "calculate": {
+      "x-eas:expr": "'' + score"
+     },
+     "as": "label"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "7.5 * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "4 * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "mark": {
+    "type": "text",
+    "align": "center",
+    "baseline": "middle",
+    "color": "yellow",
+    "fontSize": 25
+   },
+   "encoding": {
+    "x": {
+     "field": "cx",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false
+     },
+     "axis": null
+    },
+    "y": {
+     "field": "cy",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false,
+      "reverse": true
+     },
+     "axis": null
+    },
+    "text": {
+     "field": "label",
+     "type": "nominal"
+    }
+   }
+  },
+  {
+   "data": {
+    "values": [
+     {
+      "text": "high score",
+      "dx": 5.5,
+      "align": "left"
+     },
+     {
+      "text": "",
+      "dx": 8.5,
+      "align": "center"
+     }
+    ]
+   },
+   "transform": [
+    {
+     "filter": "hi > 0"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "datum.text == '' ? '' + hi : datum.text"
+     },
+     "as": "label"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "datum.dx * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "11.5 * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "mark": {
+    "type": "text",
+    "align": "left",
+    "baseline": "middle",
+    "color": "lightblue",
+    "fontSize": 14
+   },
+   "encoding": {
+    "x": {
+     "field": "cx",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false
+     },
+     "axis": null
+    },
+    "y": {
+     "field": "cy",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false,
+      "reverse": true
+     },
+     "axis": null
+    },
+    "text": {
+     "field": "label",
+     "type": "nominal"
+    }
+   }
+  },
+  {
+   "data": {
+    "values": [
+     {}
+    ]
+   },
+   "transform": [
+    {
+     "filter": "open && (dir == 'right' || dir == '')"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.x + 0.5) * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.y + 0.5) * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "mark": {
+    "type": "arc",
+    "radius": {
+     "x-eas:slot": "radius"
+    },
+    "theta": 2.0944,
+    "theta2": 7.3304,
+    "fill": "yellow",
+    "stroke": "black"
+   },
+   "encoding": {
+    "x": {
+     "field": "cx",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false
+     },
+     "axis": null
+    },
+    "y": {
+     "field": "cy",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false,
+      "reverse": true
+     },
+     "axis": null
+    }
+   }
+  },
+  {
+   "data": {
+    "values": [
+     {}
+    ]
+   },
+   "transform": [
+    {
+     "filter": "open && (dir == 'left')"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.x + 0.5) * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.y + 0.5) * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "mark": {
+    "type": "arc",
+    "radius": {
+     "x-eas:slot": "radius"
+    },
+    "theta": 5.236,
+    "theta2": 10.472,
+    "fill": "yellow",
+    "stroke": "black"
+   },
+   "encoding": {
+    "x": {
+     "field": "cx",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false
+     },
+     "axis": null
+    },
+    "y": {
+     "field": "cy",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false,
+      "reverse": true
+     },
+     "axis": null
+    }
+   }
+  },
+  {
+   "data": {
+    "values": [
+     {}
+    ]
+   },
+   "transform": [
+    {
+     "filter": "open && (dir == 'up')"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.x + 0.5) * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.y + 0.5) * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "mark": {
+    "type": "arc",
+    "radius": {
+     "x-eas:slot": "radius"
+    },
+    "theta": 0.5236,
+    "theta2": 5.7596,
+    "fill": "yellow",
+    "stroke": "black"
+   },
+   "encoding": {
+    "x": {
+     "field": "cx",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false
+     },
+     "axis": null
+    },
+    "y": {
+     "field": "cy",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false,
+      "reverse": true
+     },
+     "axis": null
+    }
+   }
+  },
+  {
+   "data": {
+    "values": [
+     {}
+    ]
+   },
+   "transform": [
+    {
+     "filter": "open && (dir == 'down')"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.x + 0.5) * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.y + 0.5) * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "mark": {
+    "type": "arc",
+    "radius": {
+     "x-eas:slot": "radius"
+    },
+    "theta": 3.6652,
+    "theta2": 8.9012,
+    "fill": "yellow",
+    "stroke": "black"
+   },
+   "encoding": {
+    "x": {
+     "field": "cx",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false
+     },
+     "axis": null
+    },
+    "y": {
+     "field": "cy",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false,
+      "reverse": true
+     },
+     "axis": null
+    }
+   }
+  },
+  {
+   "data": {
+    "values": [
+     {}
+    ]
+   },
+   "transform": [
+    {
+     "filter": "!open"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.x + 0.5) * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(pac.y + 0.5) * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "mark": {
+    "type": "arc",
+    "radius": {
+     "x-eas:slot": "radius"
+    },
+    "theta": 0,
+    "theta2": 6.2832,
+    "fill": "yellow",
+    "stroke": "black"
+   },
+   "encoding": {
+    "x": {
+     "field": "cx",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false
+     },
+     "axis": null
+    },
+    "y": {
+     "field": "cy",
+     "type": "quantitative",
+     "scale": {
+      "domain": [
+       0,
+       {
+        "x-eas:slot": "size"
+       }
+      ],
+      "nice": false,
+      "zero": false,
+      "reverse": true
+     },
+     "axis": null
+    }
+   }
+  },
+  {
+   "data": {
+    "values": [
+     {
+      "i": 0
+     },
+     {
+      "i": 1
+     },
+     {
+      "i": 2
+     },
+     {
+      "i": 3
+     }
+    ]
+   },
+   "transform": [
+    {
+     "calculate": {
+      "x-eas:expr": "ghosts[datum.i].color"
+     },
+     "as": "color"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(ghosts[datum.i].x + 0.5) * {{size}} / 15"
+     },
+     "as": "cx"
+    },
+    {
+     "calculate": {
+      "x-eas:expr": "(ghosts[datum.i].y + 0.5) * {{size}} / 15"
+     },
+     "as": "cy"
+    }
+   ],
+   "layer": [
+    {
+     "mark": {
+      "type": "point",
+      "shape": "circle",
+      "filled": true,
+      "size": 500,
+      "opacity": 1
+     },
+     "encoding": {
+      "x": {
+       "field": "cx",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false
+       },
+       "axis": null
+      },
+      "y": {
+       "field": "cy",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false,
+        "reverse": true
+       },
+       "axis": null
+      },
+      "color": {
+       "field": "color",
+       "type": "nominal",
+       "scale": null,
+       "legend": null
+      }
+     }
+    },
+    {
+     "mark": {
+      "type": "point",
+      "shape": "circle",
+      "filled": true,
+      "size": 30,
+      "color": "white",
+      "xOffset": -5,
+      "yOffset": -3,
+      "opacity": 1
+     },
+     "encoding": {
+      "x": {
+       "field": "cx",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false
+       },
+       "axis": null
+      },
+      "y": {
+       "field": "cy",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false,
+        "reverse": true
+       },
+       "axis": null
+      }
+     }
+    },
+    {
+     "mark": {
+      "type": "point",
+      "shape": "circle",
+      "filled": true,
+      "size": 30,
+      "color": "white",
+      "xOffset": 5,
+      "yOffset": -3,
+      "opacity": 1
+     },
+     "encoding": {
+      "x": {
+       "field": "cx",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false
+       },
+       "axis": null
+      },
+      "y": {
+       "field": "cy",
+       "type": "quantitative",
+       "scale": {
+        "domain": [
+         0,
+         {
+          "x-eas:slot": "size"
+         }
+        ],
+        "nice": false,
+        "zero": false,
+        "reverse": true
+       },
+       "axis": null
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

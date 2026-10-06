@@ -46,9 +46,12 @@
   "Directories whose *.json files are eas templates.
 templates/vega holds the Vega example gallery's templates.")
 
-(defvar eas-template-namespaces nil
+(defvar eas-template-namespaces
+  (list (cons (file-name-as-directory (expand-file-name "templates/vega" eas-template--root))
+              "vega"))
   "Alist of (DIRECTORY . NAMESPACE) for `eas-template-directories'.
-A template loaded from DIRECTORY registers as \"NAMESPACE/NAME\".")
+A template loaded from DIRECTORY registers as \"NAMESPACE/NAME\".
+The Vega gallery's templates (templates/vega) register as \"vega/NAME\".")
 
 (defvar eas--templates nil
   "Loaded templates: alist of (NAME . PLIST) with :spec :meta :path.

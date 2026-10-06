@@ -1,0 +1,318 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "stock-index-chart",
+    "version": "1.0.0",
+    "doc": "Series indexed to the date under the pointer: each line shows its return relative to that date (Vega gallery: stock-index-chart).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with a date, a series and a value column"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "date"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "price"
+      },
+      "series": {
+        "type": "field",
+        "of": "data",
+        "default": "symbol"
+      },
+      "index": {
+        "type": "object",
+        "default": {
+          "year": 2005,
+          "month": 1,
+          "date": 1
+        },
+        "doc": "the date the series start indexed to (a Vega-Lite date-time)"
+      },
+      "width": {
+        "type": "number",
+        "default": 555,
+        "doc": "plot width (Vega fits a 650x300 canvas, which leaves a 555x268 plot)"
+      },
+      "height": {
+        "type": "number",
+        "default": 268
+      },
+      "description": {
+        "type": "string",
+        "default": "An interactive line chart of stock prices, with returns shown relative to a selected date."
+      }
+    },
+    "example": "../examples/vega/stock-index-chart.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "The index date follows the pointer (a nearest point selection on x) and every series is indexed to it. Vega fits a 650x300 canvas; the default width and height are the plot size that leaves. Pixel ratio against ref/stock-index-chart.png: 0.035.",
+      "ratio": 0.0345,
+      "threshold": 0.06
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "domain": true,
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "title": null
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "temporal",
+      "axis": null,
+      "scale": {
+        "nice": false
+      }
+    }
+  },
+  "layer": [
+    {
+      "params": [
+        {
+          "name": "index",
+          "value": [
+            {
+              "x": {
+                "x-eas:slot": "index"
+              }
+            }
+          ],
+          "select": {
+            "type": "point",
+            "encodings": [
+              "x"
+            ],
+            "on": "pointermove",
+            "nearest": true
+          }
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "opacity": 0
+      }
+    },
+    {
+      "transform": [
+        {
+          "lookup": {
+            "x-eas:slot": "series"
+          },
+          "from": {
+            "param": "index",
+            "key": {
+              "x-eas:slot": "series"
+            }
+          }
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "datum.index && datum.index[{{y}}] > 0 ? (datum[{{y}}] - datum.index[{{y}}]) / datum.index[{{y}}] : 0"
+          },
+          "as": "indexed"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "line",
+            "strokeWidth": 2
+          },
+          "encoding": {
+            "y": {
+              "field": "indexed",
+              "type": "quantitative",
+              "scale": {
+                "nice": true,
+                "zero": true
+              },
+              "axis": {
+                "format": "%",
+                "grid": true,
+                "tickCount": 10
+              }
+            },
+            "color": {
+              "field": {
+                "x-eas:slot": "series"
+              },
+              "type": "nominal",
+              "sort": null,
+              "legend": null
+            }
+          }
+        },
+        {
+          "transform": [
+            {
+              "joinaggregate": [
+                {
+                  "op": "max",
+                  "field": {
+                    "x-eas:slot": "x"
+                  },
+                  "as": "last_date"
+                }
+              ],
+              "groupby": [
+                {
+                  "x-eas:slot": "series"
+                }
+              ]
+            },
+            {
+              "filter": {
+                "x-eas:expr": "time(datum[{{x}}]) == time(datum.last_date)"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "middle",
+            "dx": 2
+          },
+          "encoding": {
+            "y": {
+              "field": "indexed",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": {
+                "x-eas:slot": "series"
+              },
+              "type": "nominal"
+            },
+            "color": {
+              "field": {
+                "x-eas:slot": "series"
+              },
+              "type": "nominal",
+              "sort": null,
+              "legend": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "zero": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "color": "black",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": null,
+        "y": {
+          "field": "zero",
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "param": "index"
+          }
+        },
+        {
+          "aggregate": [],
+          "groupby": [
+            {
+              "x-eas:slot": "x"
+            }
+          ]
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "timeFormat(datum[{{x}}], '%b %Y')"
+          },
+          "as": "index_label"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "rule",
+            "color": "firebrick",
+            "strokeWidth": 1
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "top",
+            "color": "firebrick",
+            "y": {
+              "x-eas:slot": "height"
+            },
+            "dy": 4
+          },
+          "encoding": {
+            "text": {
+              "field": "index_label",
+              "type": "nominal"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

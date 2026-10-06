@@ -1,0 +1,270 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "zoomable-binned-plot",
+    "version": "1.0.0",
+    "doc": "Points over a 2D binned density heatmap; drag pans and the wheel zooms both layers (Vega gallery: zoomable-binned-plot).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with two quantitative columns"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "u"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "v"
+      },
+      "maxbins": {
+        "type": "number",
+        "default": 12,
+        "doc": "most bins per axis"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "yellowgreenblue",
+        "doc": "colour scheme of the counts"
+      },
+      "width": {
+        "type": "number",
+        "default": 500
+      },
+      "height": {
+        "type": "number",
+        "default": 300
+      },
+      "size": {
+        "type": "number",
+        "default": 18,
+        "doc": "point area in square pixels"
+      },
+      "description": {
+        "type": "string",
+        "default": "An interactive scatter plot example with binned aggregation supporting pan and zoom."
+      }
+    },
+    "example": "../examples/vega/zoomable-binned-plot.data.json",
+    "vega": {
+      "status": "partial",
+      "note": "The density heatmap and the points pan and zoom together (a param bound to scales), but the bins stay those of the full extent: Vega re-bins the visible domain while zooming, which Vega-Lite cannot express. Pixel ratio against ref/zoomable-binned-plot.png: 0.032.",
+      "ratio": 0.0317,
+      "threshold": 0.05
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "domain": false,
+      "tickSize": 3,
+      "tickColor": "#888",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "labelFont": "Monaco, Courier New, monospace",
+      "grid": false,
+      "title": null
+    }
+  },
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": false
+      },
+      "axis": {
+        "orient": "bottom",
+        "tickCount": 10
+      }
+    },
+    "y": {
+      "field": {
+        "x-eas:slot": "y"
+      },
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": false
+      },
+      "axis": {
+        "orient": "left",
+        "tickCount": 10
+      }
+    }
+  },
+  "layer": [
+    {
+      "transform": [
+        {
+          "bin": {
+            "maxbins": {
+              "x-eas:slot": "maxbins"
+            }
+          },
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "as": [
+            "bx0",
+            "bx1"
+          ]
+        },
+        {
+          "bin": {
+            "maxbins": {
+              "x-eas:slot": "maxbins"
+            }
+          },
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "as": [
+            "by0",
+            "by1"
+          ]
+        },
+        {
+          "joinaggregate": [
+            {
+              "op": "min",
+              "field": {
+                "x-eas:slot": "x"
+              },
+              "as": "xmin"
+            },
+            {
+              "op": "max",
+              "field": {
+                "x-eas:slot": "x"
+              },
+              "as": "xmax"
+            },
+            {
+              "op": "min",
+              "field": {
+                "x-eas:slot": "y"
+              },
+              "as": "ymin"
+            },
+            {
+              "op": "max",
+              "field": {
+                "x-eas:slot": "y"
+              },
+              "as": "ymax"
+            }
+          ]
+        },
+        {
+          "aggregate": [
+            {
+              "op": "count",
+              "as": "count"
+            }
+          ],
+          "groupby": [
+            "bx0",
+            "bx1",
+            "by0",
+            "by1",
+            "xmin",
+            "xmax",
+            "ymin",
+            "ymax"
+          ]
+        },
+        {
+          "calculate": "max(datum.bx0, datum.xmin)",
+          "as": "x0"
+        },
+        {
+          "calculate": "min(datum.bx1, datum.xmax)",
+          "as": "x1"
+        },
+        {
+          "calculate": "max(datum.by0, datum.ymin)",
+          "as": "y0"
+        },
+        {
+          "calculate": "min(datum.by1, datum.ymax)",
+          "as": "y1"
+        }
+      ],
+      "mark": {
+        "type": "rect",
+        "clip": true
+      },
+      "encoding": {
+        "x": {
+          "field": "x0",
+          "type": "quantitative"
+        },
+        "x2": {
+          "field": "x1"
+        },
+        "y": {
+          "field": "y0",
+          "type": "quantitative"
+        },
+        "y2": {
+          "field": "y1"
+        },
+        "color": {
+          "field": "count",
+          "type": "quantitative",
+          "legend": null,
+          "scale": {
+            "scheme": {
+              "x-eas:slot": "scheme"
+            },
+            "zero": false
+          }
+        }
+      }
+    },
+    {
+      "params": [
+        {
+          "name": "grid",
+          "select": "interval",
+          "bind": "scales"
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "color": "black",
+        "opacity": 0.6,
+        "size": {
+          "x-eas:slot": "size"
+        },
+        "clip": true
+      }
+    }
+  ]
+}

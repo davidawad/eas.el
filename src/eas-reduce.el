@@ -355,6 +355,9 @@ Views sharing a param bound to scales move together (`eas-link-scales')."
              (eas-reduce--release s scene (plist-get event :to)))))
       ("brush" (eas-reduce--brush-event state scene event))
       ("param" (eas-params-set state scene (plist-get event :param) (plist-get event :value)))
+      ("params" (cl-loop for (k v) on (plist-get event :values) by #'cddr
+                         do (setq state (eas-params-set state scene (eas-key-name k) v))
+                         finally return state))
       ("key" (eas-reduce--key state scene (plist-get event :key)))
       ("link" (eas-link-reduce state event scene))
       ("push" (eas-reduce--put state :stream-cursor

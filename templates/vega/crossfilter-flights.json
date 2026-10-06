@@ -1,0 +1,540 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "crossfilter-flights",
+    "version": "1.0.0",
+    "doc": "Three cross-filtered histograms: brushing one filters the other two (Vega gallery: crossfilter-flights).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with three quantitative columns"
+      },
+      "first": {
+        "type": "field",
+        "of": "data",
+        "default": "delay",
+        "doc": "column of the first histogram"
+      },
+      "second": {
+        "type": "field",
+        "of": "data",
+        "default": "time",
+        "doc": "column of the second histogram"
+      },
+      "third": {
+        "type": "field",
+        "of": "data",
+        "default": "distance",
+        "doc": "column of the third histogram"
+      },
+      "first_title": {
+        "type": "string",
+        "default": "Arrival Delay (min)"
+      },
+      "second_title": {
+        "type": "string",
+        "default": "Local Departure Time (hour)"
+      },
+      "third_title": {
+        "type": "string",
+        "default": "Travel Distance (miles)"
+      },
+      "first_extent": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          -60,
+          180
+        ],
+        "doc": "[lo, hi] of the first histogram's bins"
+      },
+      "second_extent": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          0,
+          24
+        ]
+      },
+      "third_extent": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          0,
+          2400
+        ]
+      },
+      "first_step": {
+        "type": "number",
+        "default": 10,
+        "doc": "bin width of the first histogram"
+      },
+      "second_step": {
+        "type": "number",
+        "default": 1
+      },
+      "third_step": {
+        "type": "number",
+        "default": 100
+      },
+      "width": {
+        "type": "number",
+        "default": 500
+      },
+      "description": {
+        "type": "string",
+        "default": "Interactive cross-filtering among histograms of flight statistics."
+      }
+    },
+    "example": "../examples/vega/crossfilter-flights.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "Each histogram carries a Vega-Lite interval brush; brushing one filters the other two (crossfilter). The example binds every tenth row of flights-200k.json (20,000 flights), so bar heights differ by sampling. Vega's bin-step sliders and wheel zoom of a brush are not ported. Pixel ratio against ref/crossfilter-flights.png: 0.065.",
+      "ratio": 0.0645,
+      "threshold": 0.1
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "transform": [
+    {
+      "bin": {
+        "extent": {
+          "x-eas:slot": "first_extent"
+        },
+        "step": {
+          "x-eas:slot": "first_step"
+        }
+      },
+      "field": {
+        "x-eas:slot": "first"
+      },
+      "as": [
+        "bin_first",
+        "bin_first_end"
+      ]
+    },
+    {
+      "bin": {
+        "extent": {
+          "x-eas:slot": "second_extent"
+        },
+        "step": {
+          "x-eas:slot": "second_step"
+        }
+      },
+      "field": {
+        "x-eas:slot": "second"
+      },
+      "as": [
+        "bin_second",
+        "bin_second_end"
+      ]
+    },
+    {
+      "bin": {
+        "extent": {
+          "x-eas:slot": "third_extent"
+        },
+        "step": {
+          "x-eas:slot": "third_step"
+        }
+      },
+      "field": {
+        "x-eas:slot": "third"
+      },
+      "as": [
+        "bin_third",
+        "bin_third_end"
+      ]
+    }
+  ],
+  "spacing": 15,
+  "padding": {
+    "left": 17,
+    "top": 5,
+    "right": 5,
+    "bottom": 5
+  },
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null,
+      "fill": "#fcfcfc"
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "title": {
+      "anchor": "start",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "color": "black",
+      "offset": 5,
+      "frame": "group"
+    },
+    "axis": {
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "grid": false,
+      "title": null
+    }
+  },
+  "vconcat": [
+    {
+      "title": {
+        "x-eas:slot": "first_title"
+      },
+      "width": {
+        "x-eas:slot": "width"
+      },
+      "height": 100,
+      "layer": [
+        {
+          "params": [
+            {
+              "name": "brush_first",
+              "select": {
+                "type": "interval",
+                "encodings": [
+                  "x"
+                ]
+              }
+            }
+          ],
+          "transform": [
+            {
+              "filter": {
+                "param": "brush_second",
+                "empty": true
+              }
+            },
+            {
+              "filter": {
+                "param": "brush_third",
+                "empty": true
+              }
+            },
+            {
+              "filter": {
+                "x-eas:expr": "datum[{{first}}] >= {{first_extent}}[0] && datum[{{first}}] <= {{first_extent}}[1]"
+              }
+            },
+            {
+              "aggregate": [
+                {
+                  "op": "count",
+                  "as": "count"
+                }
+              ],
+              "groupby": [
+                "bin_first",
+                "bin_first_end"
+              ]
+            }
+          ],
+          "mark": {
+            "type": "bar",
+            "color": "steelblue",
+            "x2Offset": -1
+          },
+          "encoding": {
+            "x": {
+              "field": "bin_first",
+              "type": "quantitative",
+              "scale": {
+                "domain": {
+                  "x-eas:slot": "first_extent"
+                },
+                "nice": false,
+                "zero": false
+              }
+            },
+            "x2": {
+              "field": "bin_first_end"
+            },
+            "y": {
+              "field": "count",
+              "type": "quantitative",
+              "axis": null,
+              "scale": {
+                "nice": false
+              }
+            }
+          }
+        },
+        {
+          "data": {
+            "values": [
+              {
+                "edge": 0
+              },
+              {
+                "edge": 1
+              }
+            ]
+          },
+          "transform": [
+            {
+              "calculate": {
+                "x-eas:expr": "datum.edge == 0 ? {{first_extent}}[0] : {{first_extent}}[1]"
+              },
+              "as": "at"
+            }
+          ],
+          "mark": {
+            "type": "rule",
+            "color": "firebrick",
+            "strokeWidth": 1
+          },
+          "encoding": {
+            "x": {
+              "field": "at",
+              "type": "quantitative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": {
+        "x-eas:slot": "second_title"
+      },
+      "width": {
+        "x-eas:slot": "width"
+      },
+      "height": 100,
+      "layer": [
+        {
+          "params": [
+            {
+              "name": "brush_second",
+              "select": {
+                "type": "interval",
+                "encodings": [
+                  "x"
+                ]
+              }
+            }
+          ],
+          "transform": [
+            {
+              "filter": {
+                "param": "brush_first",
+                "empty": true
+              }
+            },
+            {
+              "filter": {
+                "param": "brush_third",
+                "empty": true
+              }
+            },
+            {
+              "filter": {
+                "x-eas:expr": "datum[{{second}}] >= {{second_extent}}[0] && datum[{{second}}] <= {{second_extent}}[1]"
+              }
+            },
+            {
+              "aggregate": [
+                {
+                  "op": "count",
+                  "as": "count"
+                }
+              ],
+              "groupby": [
+                "bin_second",
+                "bin_second_end"
+              ]
+            }
+          ],
+          "mark": {
+            "type": "bar",
+            "color": "steelblue",
+            "x2Offset": -1
+          },
+          "encoding": {
+            "x": {
+              "field": "bin_second",
+              "type": "quantitative",
+              "scale": {
+                "domain": {
+                  "x-eas:slot": "second_extent"
+                },
+                "nice": false,
+                "zero": false
+              }
+            },
+            "x2": {
+              "field": "bin_second_end"
+            },
+            "y": {
+              "field": "count",
+              "type": "quantitative",
+              "axis": null,
+              "scale": {
+                "nice": false
+              }
+            }
+          }
+        },
+        {
+          "data": {
+            "values": [
+              {
+                "edge": 0
+              },
+              {
+                "edge": 1
+              }
+            ]
+          },
+          "transform": [
+            {
+              "calculate": {
+                "x-eas:expr": "datum.edge == 0 ? {{second_extent}}[0] : {{second_extent}}[1]"
+              },
+              "as": "at"
+            }
+          ],
+          "mark": {
+            "type": "rule",
+            "color": "firebrick",
+            "strokeWidth": 1
+          },
+          "encoding": {
+            "x": {
+              "field": "at",
+              "type": "quantitative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": {
+        "x-eas:slot": "third_title"
+      },
+      "width": {
+        "x-eas:slot": "width"
+      },
+      "height": 100,
+      "layer": [
+        {
+          "params": [
+            {
+              "name": "brush_third",
+              "select": {
+                "type": "interval",
+                "encodings": [
+                  "x"
+                ]
+              }
+            }
+          ],
+          "transform": [
+            {
+              "filter": {
+                "param": "brush_first",
+                "empty": true
+              }
+            },
+            {
+              "filter": {
+                "param": "brush_second",
+                "empty": true
+              }
+            },
+            {
+              "filter": {
+                "x-eas:expr": "datum[{{third}}] >= {{third_extent}}[0] && datum[{{third}}] <= {{third_extent}}[1]"
+              }
+            },
+            {
+              "aggregate": [
+                {
+                  "op": "count",
+                  "as": "count"
+                }
+              ],
+              "groupby": [
+                "bin_third",
+                "bin_third_end"
+              ]
+            }
+          ],
+          "mark": {
+            "type": "bar",
+            "color": "steelblue",
+            "x2Offset": -1
+          },
+          "encoding": {
+            "x": {
+              "field": "bin_third",
+              "type": "quantitative",
+              "scale": {
+                "domain": {
+                  "x-eas:slot": "third_extent"
+                },
+                "nice": false,
+                "zero": false
+              }
+            },
+            "x2": {
+              "field": "bin_third_end"
+            },
+            "y": {
+              "field": "count",
+              "type": "quantitative",
+              "axis": null,
+              "scale": {
+                "nice": false
+              }
+            }
+          }
+        },
+        {
+          "data": {
+            "values": [
+              {
+                "edge": 0
+              },
+              {
+                "edge": 1
+              }
+            ]
+          },
+          "transform": [
+            {
+              "calculate": {
+                "x-eas:expr": "datum.edge == 0 ? {{third_extent}}[0] : {{third_extent}}[1]"
+              },
+              "as": "at"
+            }
+          ],
+          "mark": {
+            "type": "rule",
+            "color": "firebrick",
+            "strokeWidth": 1
+          },
+          "encoding": {
+            "x": {
+              "field": "at",
+              "type": "quantitative"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

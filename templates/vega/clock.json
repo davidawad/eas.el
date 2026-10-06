@@ -1,0 +1,533 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "clock",
+    "version": "1.0.0",
+    "doc": "An analog clock face whose hands follow the current time, ticking every second while shown (Vega gallery: clock).",
+    "slots": {
+      "time": {
+        "type": "number",
+        "default": 0,
+        "doc": "the time shown before the first tick, as epoch ms read in UTC (event.local)"
+      },
+      "size": {
+        "type": "number",
+        "default": 400,
+        "doc": "width and height of the face"
+      },
+      "ring_outer": {
+        "type": "number",
+        "default": 171.2,
+        "doc": "outer radius of the bezel"
+      },
+      "ring_inner": {
+        "type": "number",
+        "default": 160,
+        "doc": "inner radius of the bezel"
+      },
+      "face_radius": {
+        "type": "number",
+        "default": 152
+      },
+      "cap_radius": {
+        "type": "number",
+        "default": 4.8
+      },
+      "font_size": {
+        "type": "number",
+        "default": 20
+      },
+      "description": {
+        "type": "string",
+        "default": "A circular clock visualization showing the current time."
+      }
+    },
+    "example": "../examples/vega/clock.data.json",
+    "timer": {
+      "interval": 1000
+    },
+    "on": [
+      {
+        "events": "timer",
+        "param": "now",
+        "update": "event.local"
+      }
+    ],
+    "vega": {
+      "status": "pass",
+      "note": "Ticks every second while shown (x-eas.timer, event.local); the hands are tapered trails through Vega's hand outlines and the hour marks rotated triangles. The example pins the reference's time. Pixel ratio against ref/clock.png: 0.049.",
+      "ratio": 0.0486,
+      "threshold": 0.08
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "size"
+  },
+  "height": {
+    "x-eas:slot": "size"
+  },
+  "padding": 0,
+  "params": [
+    {
+      "name": "now",
+      "value": {
+        "x-eas:slot": "time"
+      }
+    }
+  ],
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    }
+  },
+  "data": {
+    "values": [
+      {}
+    ]
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "radius": {
+          "x-eas:slot": "ring_outer"
+        },
+        "radius2": {
+          "x-eas:slot": "ring_inner"
+        },
+        "theta": 0,
+        "theta2": 6.2832,
+        "fill": "#333",
+        "stroke": "grey"
+      }
+    },
+    {
+      "mark": {
+        "type": "arc",
+        "radius": {
+          "x-eas:slot": "face_radius"
+        },
+        "theta": 0,
+        "theta2": 6.2832,
+        "fill": "#FCFCFC",
+        "opacity": 0.6,
+        "stroke": "black"
+      }
+    },
+    {
+      "data": {
+        "sequence": {
+          "start": 0,
+          "stop": 60,
+          "as": "minute"
+        }
+      },
+      "transform": [
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 + sin((datum.minute * 6) * PI / 180) * (({{size}} * 0.4 - ({{size}} * 0.4 - ({{size}} * 0.4 - 10 * {{size}} * 0.8 / 400)) / 2) - 4 * {{size}} * 0.8 / 400 / 0.8)"
+          },
+          "as": "x1"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 - cos((datum.minute * 6) * PI / 180) * (({{size}} * 0.4 - ({{size}} * 0.4 - ({{size}} * 0.4 - 10 * {{size}} * 0.8 / 400)) / 2) - 4 * {{size}} * 0.8 / 400 / 0.8)"
+          },
+          "as": "y1"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 + sin((datum.minute * 6) * PI / 180) * (({{size}} * 0.4 - ({{size}} * 0.4 - ({{size}} * 0.4 - 10 * {{size}} * 0.8 / 400)) / 2) + 4 * {{size}} * 0.8 / 400 / 0.8)"
+          },
+          "as": "x2"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 - cos((datum.minute * 6) * PI / 180) * (({{size}} * 0.4 - ({{size}} * 0.4 - ({{size}} * 0.4 - 10 * {{size}} * 0.8 / 400)) / 2) + 4 * {{size}} * 0.8 / 400 / 0.8)"
+          },
+          "as": "y2"
+        }
+      ],
+      "mark": {
+        "type": "rule",
+        "color": "black",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x1",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "size"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          },
+          "axis": null
+        },
+        "y": {
+          "field": "y1",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "size"
+              }
+            ],
+            "nice": false,
+            "zero": false,
+            "reverse": true
+          },
+          "axis": null
+        },
+        "x2": {
+          "field": "x2"
+        },
+        "y2": {
+          "field": "y2"
+        }
+      }
+    },
+    {
+      "data": {
+        "sequence": {
+          "start": 0,
+          "stop": 12,
+          "as": "hour"
+        }
+      },
+      "transform": [
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 + sin((datum.hour * 30) * PI / 180) * (({{size}} * 0.4 - ({{size}} * 0.4 - ({{size}} * 0.4 - 10 * {{size}} * 0.8 / 400)) / 2))"
+          },
+          "as": "x"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 - cos((datum.hour * 30) * PI / 180) * (({{size}} * 0.4 - ({{size}} * 0.4 - ({{size}} * 0.4 - 10 * {{size}} * 0.8 / 400)) / 2))"
+          },
+          "as": "y"
+        },
+        {
+          "calculate": "datum.hour * 30",
+          "as": "turn"
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "shape": "triangle-down",
+        "filled": true,
+        "color": "black",
+        "size": 30
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "size"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          },
+          "axis": null
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "size"
+              }
+            ],
+            "nice": false,
+            "zero": false,
+            "reverse": true
+          },
+          "axis": null
+        },
+        "angle": {
+          "field": "turn",
+          "type": "quantitative",
+          "scale": null
+        }
+      }
+    },
+    {
+      "data": {
+        "sequence": {
+          "start": 0,
+          "stop": 12,
+          "as": "hour"
+        }
+      },
+      "transform": [
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 + sin((datum.hour * 30) * PI / 180) * (({{size}} * 0.4 - 10 * {{size}} * 0.8 / 400) - 25 * max({{size}} * 0.8 / 400, 0.4))"
+          },
+          "as": "x"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 - cos((datum.hour * 30) * PI / 180) * (({{size}} * 0.4 - 10 * {{size}} * 0.8 / 400) - 25 * max({{size}} * 0.8 / 400, 0.4))"
+          },
+          "as": "y"
+        },
+        {
+          "calculate": "datum.hour === 0 ? 12 : datum.hour",
+          "as": "label"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "middle",
+        "color": "black",
+        "fontSize": {
+          "x-eas:slot": "font_size"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "size"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          },
+          "axis": null
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "size"
+              }
+            ],
+            "nice": false,
+            "zero": false,
+            "reverse": true
+          },
+          "axis": null
+        },
+        "text": {
+          "field": "label",
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "hand": "1 hour",
+            "seq": 0,
+            "rho": 0,
+            "w": 6
+          },
+          {
+            "hand": "1 hour",
+            "seq": 1,
+            "rho": 30,
+            "w": 14
+          },
+          {
+            "hand": "1 hour",
+            "seq": 2,
+            "rho": 110,
+            "w": 0
+          },
+          {
+            "hand": "2 minute",
+            "seq": 0,
+            "rho": 0,
+            "w": 4
+          },
+          {
+            "hand": "2 minute",
+            "seq": 1,
+            "rho": 30,
+            "w": 14
+          },
+          {
+            "hand": "2 minute",
+            "seq": 2,
+            "rho": 150,
+            "w": 0
+          },
+          {
+            "hand": "3 second",
+            "seq": 0,
+            "rho": 0,
+            "w": 2
+          },
+          {
+            "hand": "3 second",
+            "seq": 1,
+            "rho": 160,
+            "w": 0
+          }
+        ]
+      },
+      "transform": [
+        {
+          "calculate": {
+            "x-eas:expr": "hours(now) + minutes(now) / 60"
+          },
+          "as": "h"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "minutes(now) + seconds(now) / 60"
+          },
+          "as": "m"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "seconds(now)"
+          },
+          "as": "s"
+        },
+        {
+          "calculate": "datum.hand == '1 hour' ? datum.h * 30 : datum.hand == '2 minute' ? datum.m * 6 : datum.s * 6",
+          "as": "turn"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 + sin((datum.turn) * PI / 180) * (datum.rho * {{size}} * 0.8 / 400)"
+          },
+          "as": "x"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{size}} / 2 - cos((datum.turn) * PI / 180) * (datum.rho * {{size}} * 0.8 / 400)"
+          },
+          "as": "y"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "datum.w * {{size}} * 0.8 / 400"
+          },
+          "as": "width"
+        }
+      ],
+      "mark": {
+        "type": "trail"
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "size"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          },
+          "axis": null
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "size"
+              }
+            ],
+            "nice": false,
+            "zero": false,
+            "reverse": true
+          },
+          "axis": null
+        },
+        "detail": {
+          "field": "hand",
+          "type": "nominal"
+        },
+        "order": {
+          "field": "seq",
+          "type": "quantitative"
+        },
+        "size": {
+          "field": "width",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              100
+            ],
+            "range": [
+              0,
+              100
+            ],
+            "zero": true,
+            "nice": false
+          },
+          "legend": null
+        },
+        "color": {
+          "field": "hand",
+          "type": "nominal",
+          "legend": null,
+          "scale": {
+            "domain": [
+              "1 hour",
+              "2 minute",
+              "3 second"
+            ],
+            "range": [
+              "black",
+              "black",
+              "red"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "arc",
+        "radius": {
+          "x-eas:slot": "cap_radius"
+        },
+        "theta": 0,
+        "theta2": 6.2832,
+        "fill": "black",
+        "stroke": "grey"
+      }
+    }
+  ]
+}

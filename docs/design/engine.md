@@ -214,6 +214,16 @@ binds the gallery's data. Those references were drawn by vg2svg
 without node-canvas, so Vega padded their canvas by estimated text
 widths: the comparison aligns the plot origins first.
 
+The Vega gallery's examples (`test/vega-examples/`, epic `eas-7r1`)
+are templates in `templates/vega/`, registered under the `vega`
+namespace (`vega/clock`), each with its binding in `examples/vega/`
+(the template's `example` is `../examples/vega/NAME.data.json`).
+`x-eas.vega` records the verdict against the Vega reference PNG:
+`{"status": "pass"|"partial"|"unsupported", "note", "ratio",
+"threshold"}`, where ratio is `eas-png-compare`'s differing-pixel
+ratio and the `:gallery` test holds each example within its
+threshold.
+
 A slot that holds an array can expand into views:
 `{"x-eas:each": SLOT, "spec": X}` in any array becomes one X per item,
 and inside X `{"x-eas:item": KEY, "default": D}` reads the item (`"."`
@@ -320,7 +330,37 @@ streaming cursor. Events are data:
 {"type": "wheel", "view": "price", "px": [311, 140], "delta": -3}
 {"type": "brush", "view": "price", "x": ["2026-03-01", "2026-03-15"]}
 {"type": "key", "key": "+"}
+{"type": "params", "values": {"pac": {"x": 7, "y": 6}, "score": 10}}
 ```
+
+A `params` event sets several params in one step (one redraw); a
+`param` event sets one, as a bound input widget does.
+
+Timers and keys that drive params (`eas-7r1.9`, eas-play.el) follow
+Vega's signal `on` handlers. A template declares
+
+```json
+"x-eas": {"timer": {"interval": 1000},
+          "on": [{"events": "timer", "param": "now", "update": "event.local"},
+                 {"events": ["key:down", "key:j"], "param": "row",
+                  "update": "min(row + 1, event.rows)"}]}
+```
+
+Each handler names a top-level param and a Vega expression for its
+next value; it sees every param by name and `event` (`type`, `key`,
+`n`, `time`, `local`, `rows`), and `random()` is deterministic per
+handler and play event. The handlers an event matches run in order, each seeing
+what the earlier ones set, and their changed values reach the view as
+one `param`/`params` event, so the reducer stays pure and a replay of
+the log redraws the animation without a timer. `eas-play-tick` and
+`eas-play-key` fire them headlessly. `eas-show` starts the timer (at
+least `eas-play-min-interval`, 50 ms), which skips ticks while no
+visible window shows the buffer and stops with it, and binds the
+handlers' keys (`eas-play-keys-mode`, ahead of the view mode's arrows;
+names are `kbd` keys plus up, down, left, right, home, end, pageup,
+pagedown and space). Emacs reports no key release, so a held key is
+its auto-repeat. `supported.json` lists both as the extensions
+`x-eas/timer` and `x-eas/on`.
 
 Reducers are pure: `(state, event, scene) -> state'`. Then
 `compile + render` runs only if the visible output changed. GUI and
@@ -477,6 +517,7 @@ second language.
 | legend toggle (`.5`) | `point` selection with `bind: "legend"` | legend `:map` areas |
 | live data (`.7`) | `x-eas.stream` | `eas-push` (keyed: latest row per key per frame), frame cap, pause while pointer/brush active |
 | values strip (`.34`) | none: always on, no mode | state.pointer column (else latest datum) -> a line under the plot; inspect `strip` |
+| timers and keys (`eas-7r1.9`) | variable params + `x-eas.timer`, `x-eas.on` | eas-play: handlers -> `param`/`params` events; paused while not visible |
 
 Hover is touch-only (`.34`): state.hover, tooltips and `pointermove`
 selections without `nearest` need the pointer on a drawn mark (within

@@ -1,0 +1,415 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "global-development",
+    "version": "1.0.0",
+    "doc": "Countries by fertility and life expectancy for one year, picked with a slider; hovering a country draws its path through the years (Vega gallery: global-development).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per entity and year"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "fertility"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "life_expect"
+      },
+      "year": {
+        "type": "field",
+        "of": "data",
+        "default": "year",
+        "doc": "the step column the slider picks"
+      },
+      "entity": {
+        "type": "field",
+        "of": "data",
+        "default": "country",
+        "doc": "the column naming each point"
+      },
+      "group": {
+        "type": "field",
+        "of": "data",
+        "default": "cluster",
+        "doc": "an integer column indexing groups"
+      },
+      "groups": {
+        "type": "array",
+        "items": "string",
+        "default": [
+          "South Asia",
+          "Europe & Central Asia",
+          "Sub-Saharan Africa",
+          "America",
+          "East Asia & Pacific",
+          "Middle East & North Africa"
+        ],
+        "doc": "group names by index"
+      },
+      "start": {
+        "type": "number",
+        "default": 1980,
+        "doc": "the year shown first"
+      },
+      "min_year": {
+        "type": "number",
+        "default": 1955
+      },
+      "max_year": {
+        "type": "number",
+        "default": 2005
+      },
+      "step_year": {
+        "type": "number",
+        "default": 5
+      },
+      "x_title": {
+        "type": "string",
+        "default": "Fertility"
+      },
+      "y_title": {
+        "type": "string",
+        "default": "Life Expectancy"
+      },
+      "legend_title": {
+        "type": "string",
+        "default": "Region"
+      },
+      "width": {
+        "type": "number",
+        "default": 800
+      },
+      "height": {
+        "type": "number",
+        "default": 600
+      },
+      "description": {
+        "type": "string",
+        "default": "An interactive scatter plot of global health statistics by country and year."
+      }
+    },
+    "example": "../examples/vega/global-development.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "A Year slider picks the year (Vega drags a country along its path instead); hovering a country draws its path through the years and its name. Pixel ratio against ref/global-development.png: 0.003.",
+      "ratio": 0.0034,
+      "threshold": 0.02
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "domainColor": "#888",
+      "tickColor": "#888",
+      "gridColor": "#ddd",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "labelPadding": 2,
+      "tickSize": 5,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "titlePadding": 4
+    },
+    "axisX": {
+      "grid": true
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#000",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold",
+      "symbolSize": 100,
+      "symbolType": "circle"
+    },
+    "range": {
+      "category": [
+        "#4c78a8",
+        "#f58518",
+        "#e45756",
+        "#72b7b2",
+        "#54a24b",
+        "#eeca3b",
+        "#b279a2",
+        "#ff9da6",
+        "#9d755d",
+        "#bab0ac"
+      ]
+    }
+  },
+  "params": [
+    {
+      "name": "year",
+      "value": {
+        "x-eas:slot": "start"
+      },
+      "bind": {
+        "input": "range",
+        "min": {
+          "x-eas:slot": "min_year"
+        },
+        "max": {
+          "x-eas:slot": "max_year"
+        },
+        "step": {
+          "x-eas:slot": "step_year"
+        },
+        "name": "Year"
+      }
+    }
+  ],
+  "transform": [
+    {
+      "calculate": {
+        "x-eas:expr": "{{groups}}[datum[{{group}}]]"
+      },
+      "as": "group_name"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "x"
+      },
+      "type": "quantitative",
+      "scale": {
+        "nice": true,
+        "zero": true
+      },
+      "axis": {
+        "tickCount": 5,
+        "title": {
+          "x-eas:slot": "x_title"
+        }
+      }
+    },
+    "y": {
+      "field": {
+        "x-eas:slot": "y"
+      },
+      "type": "quantitative",
+      "scale": {
+        "nice": true,
+        "zero": false
+      },
+      "axis": {
+        "tickCount": 5,
+        "title": {
+          "x-eas:slot": "y_title"
+        },
+        "grid": true
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "point",
+        "opacity": 0
+      },
+      "encoding": {
+        "tooltip": null
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{year}}] == year"
+          }
+        },
+        {
+          "aggregate": [],
+          "groupby": [
+            {
+              "x-eas:slot": "year"
+            }
+          ]
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "x": 300,
+        "y": 300,
+        "align": "left",
+        "baseline": "alphabetic",
+        "fontSize": 100,
+        "color": "grey",
+        "opacity": 0.25
+      },
+      "encoding": {
+        "x": null,
+        "y": null,
+        "text": {
+          "field": {
+            "x-eas:slot": "year"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "param": "hovered",
+            "empty": false
+          }
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "color": "#bbb",
+        "strokeWidth": 5,
+        "opacity": 0.5
+      },
+      "encoding": {
+        "order": {
+          "field": {
+            "x-eas:slot": "year"
+          },
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "param": "hovered",
+            "empty": false
+          }
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "dx": 5,
+        "color": "#555",
+        "opacity": 0.6
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "year"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "params": [
+        {
+          "name": "hovered",
+          "select": {
+            "type": "point",
+            "fields": [
+              {
+                "x-eas:slot": "entity"
+              }
+            ],
+            "on": "pointerover",
+            "toggle": false
+          }
+        }
+      ],
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{year}}] == year"
+          }
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 150
+      },
+      "encoding": {
+        "color": {
+          "field": "group_name",
+          "type": "nominal",
+          "sort": null,
+          "title": {
+            "x-eas:slot": "legend_title"
+          },
+          "legend": {
+            "symbolOpacity": 0.5
+          }
+        },
+        "opacity": {
+          "condition": {
+            "param": "hovered",
+            "empty": false,
+            "value": 1
+          },
+          "value": 0.5
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "entity"
+            },
+            "type": "nominal"
+          }
+        ]
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "datum[{{year}}] == year"
+          }
+        },
+        {
+          "filter": {
+            "param": "hovered",
+            "empty": false
+          }
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "bottom",
+        "dy": -7,
+        "fontSize": 14,
+        "fontWeight": "bold",
+        "color": "#333",
+        "opacity": 0.8
+      },
+      "encoding": {
+        "text": {
+          "field": {
+            "x-eas:slot": "entity"
+          },
+          "type": "nominal"
+        }
+      }
+    }
+  ]
+}

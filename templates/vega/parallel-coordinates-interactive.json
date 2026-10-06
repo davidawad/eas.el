@@ -1,0 +1,419 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "parallel-coordinates-interactive",
+    "version": "1.0.0",
+    "doc": "Parallel coordinates: one line per row across an axis per dimension, each axis with its own nice scale, coloured by one dimension; clicking a line highlights it (Vega gallery: parallel-coordinates-interactive).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with numeric columns"
+      },
+      "dimensions": {
+        "type": "array",
+        "items": "string",
+        "default": [
+          "Cylinders",
+          "Displacement",
+          "Weight_in_lbs",
+          "Horsepower",
+          "Acceleration",
+          "Miles_per_Gallon",
+          "Year"
+        ],
+        "doc": "the numeric columns, one axis each, left to right"
+      },
+      "color": {
+        "type": "field",
+        "of": "data",
+        "default": "Horsepower",
+        "doc": "the column colouring the lines"
+      },
+      "plain": {
+        "type": "string",
+        "default": "^Year$",
+        "doc": "regular expression matching the dimensions whose labels have no thousands separator"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "turbo"
+      },
+      "scheme_extent": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          0.05,
+          1.3
+        ],
+        "doc": "the part of the scheme the colours span"
+      },
+      "width": {
+        "type": "number",
+        "default": 700
+      },
+      "height": {
+        "type": "number",
+        "default": 400
+      },
+      "description": {
+        "type": "string",
+        "default": "An interactive parallel coordinates chart."
+      }
+    },
+    "example": "../examples/vega/parallel-coordinates-interactive.data.json",
+    "vega": {
+      "status": "partial",
+      "note": "Every dimension gets its own nice axis, computed in transforms (fold, normalize, ticks flattened per axis), coloured by Horsepower on Vega's turbo extent. Clicking a line highlights it; Vega's per-axis brushes and draggable axes are not expressible in Vega-Lite and are not ported. Pixel ratio against ref/parallel-coordinates-interactive.png: 0.062.",
+      "ratio": 0.0619,
+      "threshold": 0.09
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 25,
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "legend": {
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleColor": "#454545",
+      "titleFontSize": 11,
+      "titleFontWeight": "bold"
+    }
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "id"
+        }
+      ]
+    },
+    {
+      "fold": {
+        "x-eas:slot": "dimensions"
+      },
+      "as": [
+        "key",
+        "value"
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "min",
+          "field": "value",
+          "as": "vmin"
+        },
+        {
+          "op": "max",
+          "field": "value",
+          "as": "vmax"
+        }
+      ],
+      "groupby": [
+        "key"
+      ]
+    },
+    {
+      "calculate": "pow(10, floor(log(max(datum.vmax - datum.vmin, 1e-12) / 10) / log(10)))",
+      "as": "step0"
+    },
+    {
+      "calculate": "(datum.vmax - datum.vmin) / 10 / datum.step0",
+      "as": "err"
+    },
+    {
+      "calculate": "datum.step0 * (datum.err >= 7.0710678 ? 10 : datum.err >= 3.1622777 ? 5 : datum.err >= 1.4142136 ? 2 : 1)",
+      "as": "step"
+    },
+    {
+      "calculate": "floor(datum.vmin / datum.step) * datum.step",
+      "as": "lo"
+    },
+    {
+      "calculate": "ceil(datum.vmax / datum.step) * datum.step",
+      "as": "hi"
+    },
+    {
+      "calculate": "(datum.value - datum.lo) / max(datum.hi - datum.lo, 1e-12)",
+      "as": "norm"
+    }
+  ],
+  "layer": [
+    {
+      "params": [
+        {
+          "name": "pick",
+          "select": {
+            "type": "point",
+            "fields": [
+              "id"
+            ]
+          }
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "strokeWidth": 1.2
+      },
+      "encoding": {
+        "x": {
+          "field": "key",
+          "type": "ordinal",
+          "sort": {
+            "x-eas:slot": "dimensions"
+          },
+          "scale": {
+            "type": "point",
+            "padding": 0
+          },
+          "axis": null
+        },
+        "y": {
+          "field": "norm",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ],
+            "nice": false,
+            "zero": false
+          },
+          "axis": null
+        },
+        "detail": {
+          "field": "id",
+          "type": "nominal"
+        },
+        "color": {
+          "condition": {
+            "param": "pick",
+            "field": {
+              "x-eas:slot": "color"
+            },
+            "type": "quantitative",
+            "scale": {
+              "scheme": {
+                "name": {
+                  "x-eas:slot": "scheme"
+                },
+                "extent": {
+                  "x-eas:slot": "scheme_extent"
+                }
+              }
+            },
+            "legend": {
+              "title": {
+                "x-eas:slot": "color"
+              },
+              "gradientLength": {
+                "x-eas:slot": "height"
+              }
+            }
+          },
+          "value": "#dedede"
+        },
+        "opacity": {
+          "condition": {
+            "param": "pick",
+            "value": 0.5
+          },
+          "value": 1
+        },
+        "tooltip": [
+          {
+            "field": "key",
+            "type": "nominal"
+          },
+          {
+            "field": "value",
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "min",
+              "field": "lo",
+              "as": "lo"
+            },
+            {
+              "op": "min",
+              "field": "hi",
+              "as": "hi"
+            },
+            {
+              "op": "min",
+              "field": "step",
+              "as": "step"
+            }
+          ],
+          "groupby": [
+            "key"
+          ]
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "rule",
+            "color": "#888"
+          },
+          "encoding": {
+            "x": {
+              "field": "key",
+              "type": "ordinal",
+              "sort": {
+                "x-eas:slot": "dimensions"
+              },
+              "scale": {
+                "type": "point",
+                "padding": 0
+              },
+              "axis": null
+            },
+            "y": {
+              "datum": 0,
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  1
+                ],
+                "nice": false,
+                "zero": false
+              },
+              "axis": null
+            },
+            "y2": {
+              "datum": 1
+            }
+          }
+        },
+        {
+          "transform": [
+            {
+              "calculate": "[datum.lo, datum.lo + 1 * datum.step, datum.lo + 2 * datum.step, datum.lo + 3 * datum.step, datum.lo + 4 * datum.step, datum.lo + 5 * datum.step, datum.lo + 6 * datum.step, datum.lo + 7 * datum.step, datum.lo + 8 * datum.step, datum.lo + 9 * datum.step, datum.lo + 10 * datum.step, datum.lo + 11 * datum.step, datum.lo + 12 * datum.step, datum.lo + 13 * datum.step, datum.lo + 14 * datum.step, datum.lo + 15 * datum.step, datum.lo + 16 * datum.step, datum.lo + 17 * datum.step, datum.lo + 18 * datum.step, datum.lo + 19 * datum.step, datum.lo + 20 * datum.step, datum.lo + 21 * datum.step, datum.lo + 22 * datum.step, datum.lo + 23 * datum.step, datum.lo + 24 * datum.step, datum.lo + 25 * datum.step]",
+              "as": "tick"
+            },
+            {
+              "flatten": [
+                "tick"
+              ]
+            },
+            {
+              "filter": "datum.tick <= datum.hi + datum.step * 1e-6"
+            },
+            {
+              "calculate": "(datum.tick - datum.lo) / max(datum.hi - datum.lo, 1e-12)",
+              "as": "tick_norm"
+            },
+            {
+              "calculate": {
+                "x-eas:expr": "test(regexp({{plain}}), datum.key) ? format(datum.tick, 'd') : format(datum.tick, ',')"
+              },
+              "as": "label"
+            }
+          ],
+          "layer": [
+            {
+              "mark": {
+                "type": "text",
+                "align": "right",
+                "baseline": "middle",
+                "dx": -7,
+                "fontSize": 10,
+                "color": "#000"
+              },
+              "encoding": {
+                "x": {
+                  "field": "key",
+                  "type": "ordinal",
+                  "sort": {
+                    "x-eas:slot": "dimensions"
+                  },
+                  "scale": {
+                    "type": "point",
+                    "padding": 0
+                  },
+                  "axis": null
+                },
+                "y": {
+                  "field": "tick_norm",
+                  "type": "quantitative",
+                  "scale": {
+                    "domain": [
+                      0,
+                      1
+                    ],
+                    "nice": false,
+                    "zero": false
+                  },
+                  "axis": null
+                },
+                "text": {
+                  "field": "label",
+                  "type": "nominal"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "top",
+            "dy": 10,
+            "fontSize": 11,
+            "fontWeight": "bold",
+            "color": "#454545",
+            "y": {
+              "x-eas:slot": "height"
+            }
+          },
+          "encoding": {
+            "x": {
+              "field": "key",
+              "type": "ordinal",
+              "sort": {
+                "x-eas:slot": "dimensions"
+              },
+              "scale": {
+                "type": "point",
+                "padding": 0
+              },
+              "axis": null
+            },
+            "text": {
+              "field": "key",
+              "type": "nominal"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

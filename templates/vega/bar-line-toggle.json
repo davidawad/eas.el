@@ -1,0 +1,271 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "bar-line-toggle",
+    "version": "1.0.0",
+    "doc": "The first N points of a series, as labelled columns up to a threshold and as a smooth line beyond it; a slider picks N (Vega gallery: bar-line-toggle).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows with an integer position and a value"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "id",
+        "doc": "integer position, from 1"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "value"
+      },
+      "points": {
+        "type": "integer",
+        "default": 25,
+        "doc": "points shown first"
+      },
+      "min_points": {
+        "type": "integer",
+        "default": 25
+      },
+      "max_points": {
+        "type": "integer",
+        "default": 200
+      },
+      "threshold": {
+        "type": "integer",
+        "default": 50,
+        "doc": "most points drawn as columns"
+      },
+      "y_max": {
+        "type": "number",
+        "default": 100
+      },
+      "color": {
+        "type": "string",
+        "default": "#4682b4"
+      },
+      "font": {
+        "type": "string",
+        "default": "Tahoma, Verdana, sans-serif"
+      },
+      "width": {
+        "type": "number",
+        "default": 800
+      },
+      "height": {
+        "type": "number",
+        "default": 400
+      },
+      "description": {
+        "type": "string",
+        "default": "An example of Vega visualization that automatically switches between a column chart and a line chart depending on the number of data points"
+      }
+    },
+    "example": "../examples/vega/bar-line-toggle.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "The DataPoints slider switches between labelled columns (up to 50 points) and a basis-interpolated line. The example's first 25 values are the reference's (Vega draws them with Math.random), the rest are seeded. Vega's line-mode y axis is not drawn. Pixel ratio against ref/bar-line-toggle.png: 0.046.",
+      "ratio": 0.0457,
+      "threshold": 0.07
+    }
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 35,
+  "params": [
+    {
+      "name": "points",
+      "value": {
+        "x-eas:slot": "points"
+      },
+      "bind": {
+        "input": "range",
+        "min": {
+          "x-eas:slot": "min_points"
+        },
+        "max": {
+          "x-eas:slot": "max_points"
+        },
+        "step": 5,
+        "name": "DataPoints"
+      }
+    }
+  ],
+  "config": {
+    "background": "transparent",
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "text": {
+      "font": {
+        "x-eas:slot": "font"
+      },
+      "fontSize": 14,
+      "color": "#000000"
+    },
+    "bar": {
+      "cornerRadiusEnd": 0
+    },
+    "axis": {
+      "domain": false,
+      "tickColor": "#888",
+      "tickSize": 5,
+      "labelFont": {
+        "x-eas:slot": "font"
+      },
+      "labelFontSize": 12,
+      "labelColor": "gray",
+      "labelPadding": 2,
+      "grid": false,
+      "title": null
+    }
+  },
+  "transform": [
+    {
+      "filter": {
+        "x-eas:expr": "datum[{{x}}] <= points"
+      }
+    },
+    {
+      "calculate": {
+        "x-eas:expr": "datum[{{x}}] - 0.475"
+      },
+      "as": "col_left"
+    },
+    {
+      "calculate": {
+        "x-eas:expr": "datum[{{x}}] + 0.475"
+      },
+      "as": "col_right"
+    }
+  ],
+  "encoding": {
+    "y": {
+      "field": {
+        "x-eas:slot": "y"
+      },
+      "type": "quantitative",
+      "axis": null,
+      "scale": {
+        "domain": [
+          0,
+          {
+            "x-eas:slot": "y_max"
+          }
+        ],
+        "nice": false
+      }
+    }
+  },
+  "layer": [
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "points <= {{threshold}}"
+          }
+        }
+      ],
+      "encoding": {
+        "x": {
+          "field": "col_left",
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": false,
+            "padding": 10
+          },
+          "axis": {
+            "tickCount": 25,
+            "format": "d"
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "color": {
+              "x-eas:slot": "color"
+            }
+          },
+          "encoding": {
+            "x2": {
+              "field": "col_right"
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "middle",
+            "dy": -8
+          },
+          "encoding": {
+            "x": {
+              "field": {
+                "x-eas:slot": "x"
+              },
+              "type": "quantitative"
+            },
+            "text": {
+              "field": {
+                "x-eas:slot": "y"
+              },
+              "type": "quantitative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "x-eas:expr": "points > {{threshold}}"
+          }
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "color": {
+          "x-eas:slot": "color"
+        },
+        "strokeWidth": 2,
+        "interpolate": "basis"
+      },
+      "encoding": {
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": false,
+            "padding": 10
+          },
+          "axis": {
+            "tickCount": 10,
+            "format": "d"
+          }
+        }
+      }
+    }
+  ]
+}

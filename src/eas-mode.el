@@ -357,6 +357,11 @@ with another buffer current."
   (add-hook 'window-size-change-functions #'eas-mode--follow-window nil t)
   (add-hook 'window-buffer-change-functions #'eas-mode--follow-window nil t))
 
+(defvar eas-show-functions nil
+  "Hook run with VIEW and its BUFFER after `eas-show' drew VIEW.
+Runtime extensions start there what needs a shown view (eas-play's
+timer and keys).")
+
 (defun eas-show (view &optional target)
   "Show VIEW (an id or view) in its buffer; TARGET overrides svg/text.
 The target defaults to svg in graphic frames with SVG support, else text."
@@ -371,6 +376,7 @@ The target defaults to svg in graphic frames with SVG support, else text."
     (with-current-buffer buffer
       (eas-view-resize view (eas-mode--window-size (get-buffer-window buffer) target) target)
       (eas-mode-redraw buffer))
+    (run-hook-with-args 'eas-show-functions view buffer)
     buffer))
 
 (provide 'eas-mode)

@@ -214,6 +214,23 @@
     "multi": {"status": "pass"},
     "series-line": {"status": "pass"},
     "sparkline": {"status": "pass"},
-    "word-cloud": {"status": "pass"}
+    "word-cloud": {"status": "pass"},
+    "vega/bar-line-toggle": {"status": "pass"},
+    "vega/brushing-scatter-plots": {"status": "pass"},
+    "vega/clock": {"status": "pass"},
+    "vega/crossfilter-flights": {"status": "pass"},
+    "vega/global-development": {"status": "pass"},
+    "vega/hypothetical-outcome-plots": {"status": "pass"},
+    "vega/interactive-legend": {"status": "pass"},
+    "vega/overview-plus-detail": {"status": "pass"},
+    "vega/pacman": {"status": "pass"},
+    "vega/parallel-coordinates-interactive": {"status": "pass"},
+    "vega/pi-monte-carlo": {"status": "pass"},
+    "vega/platformer": {"status": "pass"},
+    "vega/stock-index-chart": {"status": "pass"},
+    "vega/table-scrollbar": {"status": "pass"},
+    "vega/watch": {"status": "pass"},
+    "vega/zoomable-binned-plot": {"status": "pass"},
+    "vega/zoomable-scatter-plot": {"status": "pass"}
   }
 }

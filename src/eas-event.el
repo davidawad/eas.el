@@ -23,6 +23,8 @@
 ;;                                     (a linked view's selection, eas-link.el)
 ;;   {"type": "param", "param": NAME, "value": V}  (a bound input widget: V as
 ;;                        Vega-Lite writes the param's value; [] empties a selection)
+;;   {"type": "params", "values": {NAME: V, ...}}  (several params at once, one
+;;                        redraw; eas-play's timer and key handlers send it)
 ;;
 ;; Pixel coordinates are scene pixels.  `eas-event-parse' validates
 ;; and signals EVENT_INVALID naming the offending field.
@@ -33,7 +35,7 @@
 
 (defconst eas-event-types
   '("pointermove" "pointerdown" "pointerup" "pointerleave" "click" "dblclick"
-    "wheel" "drag" "brush" "key" "push" "link" "param")
+    "wheel" "drag" "brush" "key" "push" "link" "param" "params")
   "Types of event/v1.")
 
 (defconst eas-event-keys '("+" "=" "-" "0" "left" "right" "up" "down" "escape" "[" "]" "z")
@@ -84,6 +86,10 @@
                  (eas-event--invalid "param" "param needs the param's name"))
                (unless (plist-member event :value)
                  (eas-event--invalid "value" "param needs a value (null or [] clears a selection)")))
+      ("params" (let ((values (plist-get event :values)))
+                  (unless (and (eas-object-p values) values
+                               (cl-loop for (k _) on values by #'cddr always (keywordp k)))
+                    (eas-event--invalid "values" "params needs values: {NAME: VALUE, ...}"))))
       ("push" (unless (or (vectorp (plist-get event :rows)) (listp (plist-get event :rows)))
                 (eas-event--invalid "rows" "push needs rows: [{...}, ...]"))
               (let ((window (plist-get event :window)))
@@ -104,6 +110,9 @@
                                  " ")))
     ("key" (format "key %s" (plist-get event :key)))
     ("param" (format "param %s = %s" (plist-get event :param) (eas-json-encode (plist-get event :value))))
+    ("params" (format "params %s" (mapconcat (lambda (k) (format "%s = %s" (eas-key-name k)
+                                                                  (eas-json-encode (plist-get (plist-get event :values) k))))
+                                             (eas-plist-keys (plist-get event :values)) ", ")))
     ("push" (format "push %d rows%s%s" (length (plist-get event :rows))
                     (if-let* ((k (plist-get event :key))) (format " by %s" k) "")
                     (if-let* ((w (plist-get event :window))) (format " (window %d)" w) "")))

@@ -66,6 +66,14 @@
   (should (> (eas-font-text-width "Bold" 12 600) (eas-font-text-width "Bold" 12)))
   (should (= (eas-font-text-width "" 11) 0)))
 
+(ert-deftest eas-font-measures-times-for-serif ()
+  ;; Times's digits are 1024/2048 em: "100" at 11px is 16.5px.
+  (dolist (family '("serif" "Times New Roman"))
+    (let ((eas-font-family family))
+      (should (< (abs (- (eas-font-text-width "100" 11) 16.5)) 0.001))))
+  (let ((eas-font-family "sans-serif"))
+    (should (< (abs (- (eas-font-text-width "100" 11) 18.353)) 0.001))))
+
 (ert-deftest eas-layout-text-bounds-follow-vega ()
   (let ((m (eas-layout-metrics 'svg)))
     ;; Middle baseline at 11px: round(0.3*11) - round(0.8*11) = -6 above, 5 below.

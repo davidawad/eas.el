@@ -127,15 +127,17 @@ ENV gives the param values expressions see."
 
 (defun eas-compile--merge-encoding (parent encoding)
   "ENCODING over a layer's PARENT encoding, as Vega-Lite's mergeEncoding:
-a child field or datum def inherits the parent def's other properties."
+a child field or datum def inherits the parent def's other properties.
+A child channel set to null removes the channel it would inherit."
   (let ((enc parent))
     (cl-loop for (ch d) on encoding by #'cddr
              for p = (plist-get parent ch)
-             do (setq enc (eas-plist-put
+             do (setq enc (if (eq d :null) (eas--plist-without enc ch)
+                            (eas-plist-put
                            enc ch (if (and (consp d) (keywordp (car d)) (consp p) (keywordp (car p))
                                            (or (plist-get d :field) (plist-member d :datum)))
                                       (let ((m p)) (cl-loop for (k v) on d by #'cddr do (setq m (eas-plist-put m k v))) m)
-                                    d))))
+                                    d)))))
     enc))
 
 (defun eas-compile--point-overlay (node)

@@ -274,8 +274,12 @@ come back as (:invalid MESSAGE :path P)."
                                   do (walk-def d (format "%s/%d" cpath i)))
                        (walk-def def cpath))))))))
          (walk-def (def path)
-           (if (not (eas-object-p def))
-               (bad "An encoding channel must be an object (or an array for tooltip)" path)
+           (cond
+            ;; A null channel cancels the one a layer inherits.
+            ((eq def :null))
+            ((not (eas-object-p def))
+             (bad "An encoding channel must be an object (or an array for tooltip)" path))
+            (t
              (check-keys def eas-spec--channel-def-keys path)
              (when-let* ((type (plist-get def :type)))
                (unless (or (member type eas-spec--types) (eas-spec--placeholder-p type))
@@ -294,7 +298,7 @@ come back as (:invalid MESSAGE :path P)."
                  (when-let* ((type (plist-get scale :type))
                              ((not (eas-spec--placeholder-p type))))
                    (add (concat "scale/" type) (concat path "/scale/type")
-                        :unknown (not (member type eas-spec--scale-types))))))))
+                        :unknown (not (member type eas-spec--scale-types)))))))))
          (walk-transforms (transforms path)
            (when transforms
              (if (not (vectorp transforms))

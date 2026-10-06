@@ -28,9 +28,10 @@
   "Composite mark types `eas-composite-expand' rewrites.")
 
 (defun eas-composite--merge (a b)
-  "Encoding A with B's channels laid over it."
+  "Encoding A with B's channels laid over it (a null channel of B drops A's)."
   (let ((out a))
-    (cl-loop for (k v) on b by #'cddr do (setq out (eas-plist-put out k v)))
+    (cl-loop for (k v) on b by #'cddr
+             do (setq out (if (eq v :null) (eas--plist-without out k) (eas-plist-put out k v))))
     out))
 
 (defun eas-composite--continuous (encoding)

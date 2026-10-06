@@ -21,11 +21,13 @@
 (defun eas-layer-drop-empty (encoding)
   "ENCODING without definitions that encode nothing.
 A layer's inherited {\"type\": ..., \"scale\": ...} with no field, datum,
-value, condition or aggregate is dropped, as Vega-Lite drops it."
+value, condition or aggregate is dropped, as Vega-Lite drops it, and
+so is a channel set to null."
   (cl-loop for (ch d) on encoding by #'cddr
-           unless (and (eas-object-p d) (not (vectorp d))
+           unless (or (eq d :null)
+                      (and (eas-object-p d) (not (vectorp d))
                        (not (or (plist-get d :field) (plist-member d :datum) (plist-member d :value)
-                                (plist-get d :condition) (plist-get d :aggregate))))
+                                (plist-get d :condition) (plist-get d :aggregate)))))
            append (list ch d)))
 
 (defun eas-layer-coerce (rows encoding)

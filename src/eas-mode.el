@@ -317,7 +317,15 @@ with another buffer current."
                (size (eas-mode--window-size window target)))
           (unless (equal size (eas-view-size eas-mode--view))
             (eas-view-resize eas-mode--view size)
-            (eas-mode-redraw)))))))
+            ;; This hook runs inside redisplay: text changed here is not
+            ;; shown until the next redisplay, which with no further input
+            ;; never comes (a stale half-width chart after
+            ;; `delete-other-windows').  Redraw from a timer instead, which
+            ;; is followed by a redisplay.
+            (let ((buffer (current-buffer)))
+              (run-at-time 0 nil (lambda ()
+                                   (when (buffer-live-p buffer)
+                                     (eas-mode-redraw buffer)))))))))))
 
 (defvar eas-view-mode-map
   (let ((map (make-sparse-keymap)))

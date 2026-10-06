@@ -5,7 +5,7 @@
 
 ;;; Commentary:
 
-;; bin/chart (chart-runtime) renders any resolved Vega-Lite
+;; bin/chart (any Vega-Lite CLI renderer, e.g. one built on vl-convert) renders any resolved Vega-Lite
 ;; spec statically.  It is never a runtime dependency: eas draws every
 ;; chart in Lisp.  bin/chart is (a) the conformance oracle, dev/CI
 ;; only (its builds are the committed reference images), and (b) the
@@ -58,7 +58,7 @@ already exists (`make-temp-file' creates it), hence --force.")
 (defun eas-chart-missing-reason ()
   "Why the static door is unavailable, or nil."
   (cond ((not (executable-find eas-chart-program))
-         (format "bin/chart (%s) is not on PATH; install bin/chart" eas-chart-program))
+         (format "bin/chart (%s) is not on PATH; install a Vega-Lite CLI renderer or set `eas-chart-program'" eas-chart-program))
         (t nil)))
 
 (defun eas-static-fallback-error (err)

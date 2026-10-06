@@ -11,7 +11,7 @@ Emacs pipes data into it and draws it in the buffer, as an image in a
 GUI frame or as text in a terminal. You can work with it in place:
 hover, crosshair, zoom, pan, brush, drill, linked views, live updates.
 The document is a subset of Vega-Lite, so every chart also renders
-statically through `bin/chart` door into SVG, PNG, PDF or
+statically through a Vega-Lite command-line renderer into SVG, PNG, PDF or
 reports with no translation step. Domain packages such as
 financial-chart.el and health-charts.el stop drawing anything. They
 ship templates (chart JSON with typed data slots) and transforms
@@ -398,7 +398,7 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
 
 ## 8. Where it sits in the wider system
 
-- `bin/chart` (chart-runtime): the static export door and
+- `bin/chart` (any Vega-Lite CLI renderer, e.g. one built on vl-convert): the static export door and
   conformance oracle, never a runtime dependency (section 6). Same IR,
   same envelope, same reason codes.
 - financial-chart.el: its public API (`financial-chart-plot`, kinds,
@@ -413,7 +413,7 @@ domains (research indicators, KPIs, sales pipeline) start the same way.
   template" model with Vega-Lite and gnuplot templates. It converges on
   eas templates (`fc-qx1.20`). The deferred medical presets (`fc-8yx`)
   are health-charts.el's kinds and are not re-invented here.
-- org (artifact-system "org is the workbench"):
+- org ("org is the workbench"):
   `#+begin_src eas :template ohlc :data tbl` shows an interactive
   chart inline. The same block exports through ob-vega or `bin/chart`.
   There is one block type, not two.

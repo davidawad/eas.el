@@ -60,7 +60,7 @@ With TEST_SKIP_LOG set, also append \"TEST: REASON\" to that file."
 (defun eas-test-require-chart ()
   "Skip the current test, with a visible reason, unless bin/chart is on PATH."
   (unless (executable-find eas-test-chart-program)
-    (eas-test-skip (format "bin/chart (%s) not on PATH; install bin/chart to run this oracle check"
+    (eas-test-skip (format "bin/chart (%s) not on PATH; install a Vega-Lite CLI renderer (eas-chart-program) to run this oracle check"
                              eas-test-chart-program))))
 
 (provide 'eas-test-support)

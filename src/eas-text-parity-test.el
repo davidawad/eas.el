@@ -45,7 +45,7 @@
         (cl-incf col)))
     (delete-dups out)))
 
-;;; The defects seen live (live session, 515bfd3)
+;;; The defects seen live in a terminal Emacs
 
 (ert-deftest eas-text-parity-candlestick-draws-bodies ()
   "Bodies win over wicks drawn before them; rising solid, falling shaded."

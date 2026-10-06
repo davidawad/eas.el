@@ -20,6 +20,19 @@ scope. The same 188 also pass on the text backend.
 
 ## Screenshots
 
+Live views in a terminal Emacs, a 3×3 grid of official Vega-Lite gallery
+examples per workspace, every one drawn by eas's text backend:
+
+![Multi-view charts: facets, concat, repeat, population pyramid, scatter-plot matrix, map projection](docs/screenshots/composites/multiview.png)
+
+![Scatter and table charts: bubbles, punch card, heatmap, wind vectors, custom ticks](docs/screenshots/composites/scatter-table.png)
+
+More: every gallery group as a composite in
+[docs/screenshots/composites](docs/screenshots/composites) and each chart
+on its own in [docs/screenshots/charts](docs/screenshots/charts).
+
+### SVG backend
+
 These come from the native SVG renderer (`scripts/eas-screenshots.sh`,
 rasterized for this page) drawing examples from the official gallery:
 

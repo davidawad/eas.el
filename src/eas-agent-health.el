@@ -178,7 +178,7 @@ Without SOURCE, the fixed ladder at 1k, 10k and 100k points."
     (if (eas-chart-available-p)
         (eas-agent--row "bin/chart" "pass" (executable-find eas-chart-program))
       (eas-agent--row "bin/chart" "skip" (eas-chart-missing-reason)
-                        "Optional: put bin/chart on PATH for static export, conformance refs and opt-in eas-static-fallback"))
+                        "Optional: put a Vega-Lite CLI renderer (`eas-chart-program', e.g. built on vl-convert) on PATH for static export, conformance refs and opt-in eas-static-fallback"))
     (if (executable-find eas-chart-rsvg-program)
         (eas-agent--row "rsvg-convert" "pass" (executable-find eas-chart-rsvg-program))
       (eas-agent--row "rsvg-convert" "skip" (format "%s not on PATH" eas-chart-rsvg-program)

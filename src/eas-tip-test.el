@@ -75,7 +75,8 @@ A template name opens with its example bindings."
 
 (ert-deftest eas-tip-hot-spots-and-text-cells-carry-help-echo ()
   (eas-tip-test--with-view v "bars"
-    (let ((areas (eas-svg-hot-spots (eas-view-scene v))))
+    (let ((areas (seq-filter (lambda (a) (string-prefix-p "eas:" (symbol-name (nth 1 a))))
+                             (eas-svg-hot-spots (eas-view-scene v)))))
       (should (= (length areas) 5))
       (should (equal (plist-get (nth 2 (car areas)) 'help-echo) "category: Mon\nvalue: 8200"))))
   (eas-tip-test--with-view v "bars"

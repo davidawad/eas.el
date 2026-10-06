@@ -503,9 +503,13 @@ follows :grid-zindex when it has one."
   "Render TOOLTIP pairs as \"title: value\" lines."
   (mapconcat (lambda (p) (format "%s: %s" (plist-get p :title) (plist-get p :value))) tooltip "\n"))
 
+(defvar eas-svg-hot-spot-functions nil
+  "Functions (SCENE) giving more :map areas, after the items and legends.")
+
 (defun eas-svg-hot-spots (scene)
   "Image :map areas for SCENE's discrete items and legend entries.
-Each area id is a symbol eas:VIEW|MARK|ITEM (or eas-legend:VIEW|CHANNEL|I)."
+Each area id is a symbol eas:VIEW|MARK|ITEM (or eas-legend:VIEW|CHANNEL|I).
+`eas-svg-hot-spot-functions' add theirs last."
   (let (areas)
     (seq-doseq (view (plist-get scene :views))
       (seq-doseq (mark (plist-get view :marks))
@@ -536,7 +540,7 @@ Each area id is a symbol eas:VIEW|MARK|ITEM (or eas-legend:VIEW|CHANNEL|I)."
                          (list 'help-echo (plist-get e :label) 'pointer 'hand))
                    areas)))
          (plist-get legend :entries))))
-    (nreverse areas)))
+    (append (nreverse areas) (seq-mapcat (lambda (f) (funcall f scene)) eas-svg-hot-spot-functions))))
 
 (defun eas-svg--scale-map (map scale)
   "MAP with every coordinate multiplied by SCALE."

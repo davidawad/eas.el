@@ -72,6 +72,7 @@
 (require 'eas-action)
 (require 'eas-action-org)
 (require 'eas-action-drill)
+(require 'eas-action-callback)
 (require 'eas-mode)
 (require 'eas-mode-tip)
 (require 'eas-crosshair)

@@ -39,6 +39,13 @@
 ;; NOT_FOUND with :action.
 ;; Set `eas-action-inhibit' to record the action without running it;
 ;; `eas-replay' never re-runs actions.
+;;
+;; eas-action-callback.el (eas-7r1.10) adds callbacks set up ahead of
+;; time: a BINDING may also be a function, (:fn FN ...), carry a :when
+;; predicate, or be a list of such tried in order; global bindings
+;; (`eas-action-default-bindings') sit beside the view's and the
+;; template's; and axis, title and plot background clicks become
+;; targets (:area) when something is bound to them.
 
 ;;; Code:
 
@@ -67,6 +74,24 @@
 
 (defvar eas-action--bindings (make-hash-table :test 'eq :weakness 'key)
   "Per-view action bindings: view -> plist of (KEY BINDING).")
+
+(defvar eas-action-pick-function nil
+  "Function (BINDING VIEW TARGET) choosing among BINDING's candidates.
+It returns the one binding whose :when holds for TARGET, or nil; nil
+means every BINDING is a single, unconditional one.")
+
+(defvar eas-action-default-tables-function nil
+  "Function (VIEW SPECIFIC) giving global binding tables for VIEW.
+SPECIFIC non-nil asks for the tables keyed by VIEW's template, which
+rank above the template's own actions; nil for those of any view,
+which rank below them.  Each table is a plist like a view's.")
+
+(defvar eas-action-area-target-functions nil
+  "Functions (VIEW PX SCENE) giving the area target a click at PX made.
+Tried in order when the click hit no datum and no legend entry.")
+
+(defvar eas-action-target-extend-functions nil
+  "Functions (VIEW TARGET SCENE) whose plists extend a click TARGET.")
 
 (cl-defun eas-register-action (name &key fn doc)
   "Register action NAME (a string): :fn FN is called with target and view.
@@ -101,10 +126,28 @@ name replaces it."
                   :action name)))
 
 (defun eas-action--binding (binding)
-  "BINDING (a name, or an object with :action) as (NAME . ARGS), or nil."
-  (cond ((stringp binding) (list binding))
-        ((and (eas-object-p binding) (stringp (plist-get binding :action)))
-         (cons (plist-get binding :action) (eas--plist-without binding :action)))))
+  "BINDING (a name, or an object with :action) as (NAME . ARGS), or nil.
+A function, or an object with :fn, gives (FN . ARGS); :when and :doc
+are not args."
+  (cl-flet ((args (b) (eas--plist-without (eas--plist-without b :when) :doc)))
+    (cond ((stringp binding) (list binding))
+          ((and binding (functionp binding) (not (eas-object-p binding))) (list binding))
+          ((and (eas-object-p binding) (stringp (plist-get binding :action)))
+           (cons (plist-get binding :action) (args (eas--plist-without binding :action))))
+          ((and (eas-object-p binding) (functionp (plist-get binding :fn)))
+           (cons (plist-get binding :fn) (args (eas--plist-without binding :fn)))))))
+
+(defun eas-action--pick (binding view target)
+  "BINDING's candidate for TARGET in VIEW as (NAME . ARGS), or nil."
+  (eas-action--binding (if eas-action-pick-function
+                           (funcall eas-action-pick-function binding view target)
+                         binding)))
+
+(defun eas-action-label (name)
+  "NAME of a binding as recorded: a string, or a function's name."
+  (cond ((stringp name) name)
+        ((and (symbolp name) name) (symbol-name name))
+        (t "lambda")))
 
 (defun eas-action-bind (view key action)
   "Make clicks on mark or param KEY (or \"*\") in VIEW run ACTION.
@@ -113,9 +156,14 @@ reach the action as :args.  nil removes the binding.  Returns VIEW's
 bindings."
   (let ((view (eas-view-get view)))
     (when action
-      (eas-action--check (or (car (eas-action--binding action))
-                               (eas-signal "INVALID_INPUT" "An action binding is a name or (:action NAME ...)"
-                                             :action action))))
+      (dolist (b (if (or (vectorp action) (and (consp action) (consp (car action))))
+                     (append action nil)
+                   (list action)))
+        (let ((name (or (car (eas-action--binding b))
+                        (eas-signal "INVALID_INPUT"
+                                      "An action binding is a name, a function, (:action NAME ...) or (:fn FN ...)"
+                                      :action (if (functionp b) (eas-action-label b) b)))))
+          (when (stringp name) (eas-action--check name)))))
     (puthash view (if action
                       (eas-plist-put (gethash view eas-action--bindings) (eas-key key) action)
                     (eas--plist-without (gethash view eas-action--bindings) (eas-key key)))
@@ -128,9 +176,15 @@ bindings."
 
 (defun eas-action--keys (view target)
   "Binding keys TARGET in VIEW answers to, most specific first."
-  (if (plist-get target :legend)
-      (list (plist-get target :param) "legend")
-    (eas-action--datum-keys view target)))
+  (cond ((plist-get target :legend) (list (plist-get target :param) "legend"))
+        ((plist-get target :area) (eas-action--area-keys target))
+        (t (eas-action--datum-keys view target))))
+
+(defun eas-action--area-keys (target)
+  "Binding keys an area TARGET (axis, title, background) answers to."
+  (pcase (plist-get target :area)
+    ("axis" (list (format "axis:%s" (plist-get target :axis)) "axis"))
+    (area (list area))))
 
 (defun eas-action--datum-keys (view target)
   "Binding keys a datum TARGET in VIEW answers to, most specific first."
@@ -145,15 +199,19 @@ bindings."
 
 (defun eas-action-binding-for (view target)
   "The action a click on TARGET in VIEW triggers, as (NAME . ARGS), or nil."
-  (let ((tables (list (gethash view eas-action--bindings)
-                      (eas-action--template-actions view))))
+  (let ((tables (append (list (gethash view eas-action--bindings))
+                        (and eas-action-default-tables-function
+                             (funcall eas-action-default-tables-function view t))
+                        (list (eas-action--template-actions view))
+                        (and eas-action-default-tables-function
+                             (funcall eas-action-default-tables-function view nil)))))
     (or (cl-loop for key in (eas-action--keys view target)
                  thereis (cl-loop for table in tables
-                                  thereis (and key (eas-action--binding (plist-get table (eas-key key))))))
+                                  thereis (and key (eas-action--pick (plist-get table (eas-key key)) view target))))
         (and (stringp (plist-get target :href)) (list "open-href")))))
 
 (defun eas-action-for (view target)
-  "The action NAME a click on TARGET in VIEW triggers, or nil."
+  "The action NAME (or function) a click on TARGET in VIEW triggers, or nil."
   (car (eas-action-binding-for view target)))
 
 (defun eas-action-run (view target)
@@ -162,21 +220,23 @@ bindings."
          (name (car binding))
          (target (if (cdr binding) (append target (list :args (cdr binding))) target)))
     (append target
-            (list :action (or name :null))
+            (list :action (if name (eas-action-label name) :null))
             (cond
              ((null name) nil)
              ((or eas-action-inhibit eas-view-replaying) (list :ran :false))
              (t (condition-case err
-                    (progn (eas-action--check name)
-                           (let ((result (funcall (plist-get (alist-get name eas-actions nil nil #'equal) :fn)
+                    (progn (when (stringp name) (eas-action--check name))
+                           (let ((result (funcall (if (stringp name)
+                                                      (plist-get (alist-get name eas-actions nil nil #'equal) :fn)
+                                                    name)
                                                   target view)))
                              (append (list :ran t) (when (or (stringp result) (numberp result))
                                                      (list :result result)))))
                   (eas-error (list :ran :false :error (eas-error-plist err)))
                   (error (list :ran :false
-                               :error (list :code "ENGINE_FAILED" :action name
+                               :error (list :code "ENGINE_FAILED" :action (eas-action-label name)
                                             :message (format "Action %s failed: %s; fix the action function"
-                                                             name (error-message-string err)))))))))))
+                                                             (eas-action-label name) (error-message-string err)))))))))))
 
 (defun eas-action-legend-hit (scene px)
   "The symbol legend entry of SCENE at PX bound to a selection, or nil.
@@ -222,10 +282,16 @@ for an entry of a legend whose view has a bind: \"legend\" param."
 A click on empty space clears :click; other events leave it alone."
   (when-let* ((px (eas-tip-click-px event old-state)))
     (let* ((datum (eas-tip-click-target event old-state old-scene (eas-view-plan view)))
-           (target (if datum
-                       (append datum (when-let* ((n (eas-action--source-row old-scene datum)))
-                                       (list :source-row n)))
-                     (eas-action--legend-target view px old-scene))))
+           (target (cond (datum
+                          (append datum (when-let* ((n (eas-action--source-row old-scene datum)))
+                                          (list :source-row n))))
+                         ((eas-action--legend-target view px old-scene))
+                         (t (run-hook-with-args-until-success 'eas-action-area-target-functions
+                                                              view px old-scene))))
+           (target (and target
+                        (apply #'append target
+                               (mapcar (lambda (f) (funcall f view target old-scene))
+                                       eas-action-target-extend-functions)))))
       (setf (eas-view-state view)
             (eas-plist-put (eas-view-state view) :click (and target (eas-action-run view target)))))))
 

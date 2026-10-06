@@ -282,6 +282,26 @@ The log is a bounded ring. It is how an agent learns what the human
 just did ("brushed Mar 1 to Mar 15 on TSM price") without a
 screenshot.
 
+Clicks become click targets (eas-action.el): a datum, a legend entry,
+and (eas-action-callback.el, eas-7r1.10) an axis label or tick
+(`:area "axis" :axis CH :value V`), an axis title, the chart title, a
+facet header, or the empty plot background (`:area "background"` with
+data-space `:x`/`:y` through the view's scale inverses). Each target
+runs at most one binding, looked up by key (mark id, click or legend
+param, `legend`, `axis:CH`, `axis`, `title`, `background`, `*`) in, from
+the most specific: the view's `eas-action-bind`, global
+`eas-action-default-bindings` entries for the view's template, the
+template's `x-eas.actions`, global entries for any view. A binding is
+a registered action name, a function, or `(:action|:fn ... :when P)`;
+a list of bindings runs the first whose `:when` (a Vega expression on
+the datum, or an elisp predicate on the target) holds. Area geometry
+is computed from the scene for its target (font-measured for SVG, the
+renderer's own cells for text), and the SVG image gets the same areas
+as `:map` hot spots, so GUI clicks, terminal `RET` and agent click
+events land on the same target. Areas never answer `*`, and an area
+click is recorded only when something is bound to it. Callback errors
+are recorded on the target as `:error`; dispatch never fails.
+
 ### L7 surfaces
 
 The same verbs are available everywhere, and all of them return the
@@ -337,7 +357,7 @@ second language.
 | feature (bead) | Vega-Lite construct | engine mechanism |
 |---|---|---|
 | tooltip (`.1`) | `encoding.tooltip` | item `tooltip` -> help-echo / `:map` / echo area |
-| click target (`.1`, `.5`) | `encoding.href` + `x-eas.actions` | action registry keyed by mark or param; `RET` in text |
+| click target (`.1`, `.5`, `7r1.10`) | `encoding.href` + `x-eas.actions` | action registry keyed by mark, param, axis, title or background; global callbacks with `:when`; `RET` in text |
 | crosshair (`.2`) | `point` selection, `on: pointermove`, `nearest: true`, plus a rule layer filtered by it | hit-test index -> datum -> state.hover |
 | zoom/pan (`.3`) | `interval` selection with `bind: "scales"` | reducer edits scale domains; wheel, drag, keys |
 | brush (`.4`) | `interval` selection with `encodings: ["x"]` | state.params[name] = range; selection verb |

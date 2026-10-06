@@ -100,7 +100,10 @@
          (map (plist-get (cdr image) :map)))
     (should (eq (car image) 'image))
     (should (eq (plist-get (cdr image) :type) 'svg))
-    (should (= (length map) (+ 4 4 2)))
+    ;; Items and legend entries; axis, title and background areas follow.
+    (should (= (cl-count-if (lambda (a) (string-match-p "\\`eas\\(?:-legend\\)?:" (symbol-name (nth 1 a)))) map)
+               (+ 4 4 2)))
+    (should (seq-find (lambda (a) (string-prefix-p "eas-axis:" (symbol-name (nth 1 a)))) map))
     (should (assq 'eas:vconcat_0|vconcat_0/0|0 (mapcar (lambda (a) (cons (nth 1 a) a)) map)))
     (should (seq-find (lambda (a) (string-prefix-p "eas-legend:" (symbol-name (nth 1 a)))) map))
     (let ((area (seq-find (lambda (a) (eq (car (car a)) 'rect)) map)))

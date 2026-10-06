@@ -237,6 +237,67 @@ still load. Inside a template body:
 A template may hold a facet, and a wrapped `concat` (`"columns"`) whose
 views an `x-eas:each` expands.
 
+## Callbacks
+
+A click on a chart (mouse-1 in a GUI frame, `RET` at point in a
+terminal, or a `click` event an agent dispatches) runs a callback you
+set up ahead of time, typically in `init.el` before any chart exists:
+
+```elisp
+(with-eval-after-load 'eas
+  ;; Bars of the "bars" template: big days and the rest differ.
+  (eas-define-callback "bars" "main/0"
+    (lambda (target _view)
+      (message "Big day: %s" (plist-get (plist-get target :row) :category)))
+    :when "datum.value > 7000"
+    :doc "Announce big days.")
+  (eas-define-callback "bars" "main/0" #'eas-copy-row-callback)
+  ;; Any chart: an x-axis label, the title, the empty plot.
+  (eas-define-callback nil "axis:x"
+    (lambda (target _view) (message "Column %s" (plist-get target :value))))
+  (eas-define-callback nil "title"
+    (lambda (target _view) (message "Title: %s" (plist-get target :title))))
+  (eas-define-callback nil "background"
+    (lambda (target _view)
+      (message "x=%s y=%s" (plist-get target :x) (plist-get target :y)))))
+
+(defun eas-copy-row-callback (target _view)
+  "Copy the clicked row as JSON."
+  (kill-new (eas-json-encode (plist-get target :row))))
+```
+
+`eas-define-callback TEMPLATE KEY FN &key when doc args` adds an entry
+to `eas-action-default-bindings` (TEMPLATE nil means any view;
+re-evaluating the same template, key and `:when` replaces it).
+`eas-remove-callback` takes it out. KEY is what the click landed on:
+
+| key | target | the target plist holds |
+|---|---|---|
+| a mark id (`main/0`) or click param name | a datum | `:view :mark :datum :row :tooltip :href :px`, data-space `:x :y`, `:fields` |
+| `legend` or the legend param's name | a legend entry | `:legend CHANNEL :value :label :param :selected` |
+| `axis:x`, `axis` | an axis label or tick, or the axis title | `:area "axis" :axis :part "label"\|"title" :value :label :title` |
+| `title` | the chart title, subtitle or a facet header | `:area "title" :part :title` |
+| `background` | the empty plot | `:area "background" :view :x :y :fields` |
+| `*` | any datum (never legends or areas) | |
+
+FN is called with the target and the view; a string or number it
+returns is recorded as the click's `:result`, and an error as `:error`
+(the click never breaks). `:when` is a Vega expression evaluated on the
+datum (the row; for areas, the target itself, so `datum.value` or
+`datum.x`; `target` names the whole target) or a predicate function of
+target and view. Several entries for one key are tried in order, so
+regions of one mark can run different callbacks. FN may also be a
+registered action name (`echo`, `copy-row`, `drill`, ...).
+
+Per view, `(eas-action-bind VIEW KEY BINDING)` takes the same bindings:
+an action name, a function, `(:fn FN :when P ARG V ...)`,
+`(:action NAME ...)`, or a vector of them. A template binds them in
+JSON: `"x-eas": {"actions": {"main/0": [{"action": "echo", "when":
+"datum.v > 2"}]}}`. For each key the view's binding wins, then global
+entries for its template, then the template's actions, then global
+entries for any view. `eas-inspect` shows the last click with the
+action it ran.
+
 ## Fonts
 
 The SVG backend honours Vega-Lite's font properties: `config.font`,

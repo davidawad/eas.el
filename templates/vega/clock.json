@@ -40,6 +40,11 @@
       "description": {
         "type": "string",
         "default": "A circular clock visualization showing the current time."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/clock.data.json",
@@ -59,6 +64,9 @@
       "ratio": 0.0486,
       "threshold": 0.08
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

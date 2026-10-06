@@ -62,6 +62,11 @@
       "description": {
         "type": "string",
         "default": "An example of Vega visualization that automatically switches between a column chart and a line chart depending on the number of data points"
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/bar-line-toggle.data.json",
@@ -71,6 +76,9 @@
       "ratio": 0.0457,
       "threshold": 0.07
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

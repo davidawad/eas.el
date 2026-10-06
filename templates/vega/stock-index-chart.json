@@ -46,6 +46,11 @@
       "description": {
         "type": "string",
         "default": "An interactive line chart of stock prices, with returns shown relative to a selected date."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/stock-index-chart.data.json",
@@ -55,6 +60,9 @@
       "ratio": 0.0345,
       "threshold": 0.06
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"
@@ -101,18 +109,6 @@
       ]
     }
   },
-  "encoding": {
-    "x": {
-      "field": {
-        "x-eas:slot": "x"
-      },
-      "type": "temporal",
-      "axis": null,
-      "scale": {
-        "nice": false
-      }
-    }
-  },
   "layer": [
     {
       "params": [
@@ -138,6 +134,18 @@
       "mark": {
         "type": "point",
         "opacity": 0
+      },
+      "encoding": {
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "temporal",
+          "axis": null,
+          "scale": {
+            "nice": false
+          }
+        }
       }
     },
     {
@@ -241,7 +249,19 @@
             }
           }
         }
-      ]
+      ],
+      "encoding": {
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "temporal",
+          "axis": null,
+          "scale": {
+            "nice": false
+          }
+        }
+      }
     },
     {
       "data": {
@@ -257,7 +277,6 @@
         "strokeWidth": 1
       },
       "encoding": {
-        "x": null,
         "y": {
           "field": "zero",
           "type": "quantitative"
@@ -312,7 +331,19 @@
             }
           }
         }
-      ]
+      ],
+      "encoding": {
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "temporal",
+          "axis": null,
+          "scale": {
+            "nice": false
+          }
+        }
+      }
     }
   ]
 }

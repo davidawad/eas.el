@@ -44,6 +44,11 @@
       "description": {
         "type": "string",
         "default": "An interactive scatter plot example supporting pan and zoom."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/zoomable-scatter-plot.data.json",
@@ -53,6 +58,9 @@
       "ratio": 0.0121,
       "threshold": 0.03
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

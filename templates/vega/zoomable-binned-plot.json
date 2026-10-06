@@ -46,6 +46,11 @@
       "description": {
         "type": "string",
         "default": "An interactive scatter plot example with binned aggregation supporting pan and zoom."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/zoomable-binned-plot.data.json",
@@ -55,6 +60,9 @@
       "ratio": 0.0317,
       "threshold": 0.05
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

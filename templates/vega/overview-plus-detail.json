@@ -42,6 +42,11 @@
       "description": {
         "type": "string",
         "default": "Area charts of stock prices, with an interactive overview and filtered detail views."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/overview-plus-detail.data.json",
@@ -51,6 +56,9 @@
       "ratio": 0.0197,
       "threshold": 0.04
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

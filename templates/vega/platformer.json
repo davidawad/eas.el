@@ -1,395 +1,403 @@
 {
- "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
- "x-eas": {
-  "template": "platformer",
-  "version": "1.0.0",
-  "doc": "A side-scrolling platform game over pixel terrain: the arrows run and jump, z dashes, gravity pulls the player onto the ground (Vega gallery: platformer).",
-  "slots": {
-   "data": {
-    "shape": "plist",
-    "required": true,
-    "doc": "terrain blocks: integer x and y cells and a fill colour"
-   },
-   "fill": {
-    "type": "field",
-    "of": "data",
-    "default": "fill"
-   },
-   "solid": {
-    "type": "array",
-    "items": "string",
-    "required": true,
-    "doc": "the terrain as rows of '0' (air) and '1' (solid), one character per cell, rows top to bottom"
-   },
-   "view": {
-    "type": "number",
-    "default": 128,
-    "doc": "cells visible across and down"
-   },
-   "size": {
-    "type": "number",
-    "default": 400,
-    "doc": "width and height in pixels"
-   },
-   "start_x": {
-    "type": "number",
-    "default": 5
-   },
-   "start_y": {
-    "type": "number",
-    "default": 15
-   },
-   "background": {
-    "type": "string",
-    "default": "rgb(8, 3, 15)"
-   },
-   "description": {
-    "type": "string",
-    "default": "A small platformer game over pixel terrain."
-   }
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "platformer",
+    "version": "1.0.0",
+    "doc": "A side-scrolling platform game over pixel terrain: the arrows run and jump, z dashes, gravity pulls the player onto the ground (Vega gallery: platformer).",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "terrain blocks: integer x and y cells and a fill colour"
+      },
+      "fill": {
+        "type": "field",
+        "of": "data",
+        "default": "fill"
+      },
+      "solid": {
+        "type": "array",
+        "items": "string",
+        "required": true,
+        "doc": "the terrain as rows of '0' (air) and '1' (solid), one character per cell, rows top to bottom"
+      },
+      "view": {
+        "type": "number",
+        "default": 128,
+        "doc": "cells visible across and down"
+      },
+      "size": {
+        "type": "number",
+        "default": 400,
+        "doc": "width and height in pixels"
+      },
+      "start_x": {
+        "type": "number",
+        "default": 5
+      },
+      "start_y": {
+        "type": "number",
+        "default": 15
+      },
+      "background": {
+        "type": "string",
+        "default": "rgb(8, 3, 15)"
+      },
+      "description": {
+        "type": "string",
+        "default": "A small platformer game over pixel terrain."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
+      }
+    },
+    "example": "../examples/vega/platformer.data.json",
+    "timer": {
+      "interval": 50
+    },
+    "on": [
+      {
+        "events": "key:left",
+        "param": "dir",
+        "update": "-1"
+      },
+      {
+        "events": "key:left",
+        "param": "hold",
+        "update": "6"
+      },
+      {
+        "events": "key:right",
+        "param": "dir",
+        "update": "1"
+      },
+      {
+        "events": "key:right",
+        "param": "hold",
+        "update": "6"
+      },
+      {
+        "events": "key:up",
+        "param": "jump",
+        "update": "true"
+      },
+      {
+        "events": "key:z",
+        "param": "dash",
+        "update": "can_dash ? 6 : dash"
+      },
+      {
+        "events": "key:z",
+        "param": "can_dash",
+        "update": "false"
+      },
+      {
+        "events": "timer",
+        "param": "frame",
+        "update": "frame + 1"
+      },
+      {
+        "events": "timer",
+        "param": "ground",
+        "update": "(solid[round(py) + 4][round(px) + 0] == '1' || solid[round(py) + 4][round(px) + 1] == '1' || solid[round(py) + 4][round(px) + 2] == '1' || solid[round(py) + 4][round(px) + 3] == '1')"
+      },
+      {
+        "events": "timer",
+        "param": "can_dash",
+        "update": "ground ? true : can_dash"
+      },
+      {
+        "events": "timer",
+        "param": "vy",
+        "update": "dash > 0 ? -0.6 : jump && ground ? -2 : ground && vy >= 0 ? 0 : min(2.5, vy + 0.15)"
+      },
+      {
+        "events": "timer",
+        "param": "jump",
+        "update": "false"
+      },
+      {
+        "events": "timer",
+        "param": "vx",
+        "update": "dash > 0 ? 2 * dir : hold > 0 ? dir : 0"
+      },
+      {
+        "events": "timer",
+        "param": "hold",
+        "update": "max(0, hold - 1)"
+      },
+      {
+        "events": "timer",
+        "param": "dash",
+        "update": "max(0, dash - 1)"
+      },
+      {
+        "events": "timer",
+        "param": "px",
+        "update": "(vx > 0 && (solid[round(py) + 0][round(px) + 4] == '1' || solid[round(py) + 1][round(px) + 4] == '1' || solid[round(py) + 2][round(px) + 4] == '1')) || (vx < 0 && (solid[round(py) + 0][round(px) - 1] == '1' || solid[round(py) + 1][round(px) - 1] == '1' || solid[round(py) + 2][round(px) - 1] == '1')) ? px : max(0, min(270, px + vx))"
+      },
+      {
+        "events": "timer",
+        "param": "py",
+        "update": "vy > 0 ? ((solid[round(py) + 4][round(px) + 0] == '1' || solid[round(py) + 4][round(px) + 1] == '1' || solid[round(py) + 4][round(px) + 2] == '1' || solid[round(py) + 4][round(px) + 3] == '1') ? py : (solid[round(py) + 5][round(px) + 0] == '1' || solid[round(py) + 5][round(px) + 1] == '1' || solid[round(py) + 5][round(px) + 2] == '1' || solid[round(py) + 5][round(px) + 3] == '1') ? round(py) + 1 : (solid[round(py) + 6][round(px) + 0] == '1' || solid[round(py) + 6][round(px) + 1] == '1' || solid[round(py) + 6][round(px) + 2] == '1' || solid[round(py) + 6][round(px) + 3] == '1') ? round(py) + 2 : py + vy) : vy < 0 && (solid[round(py) - 1][round(px) + 0] == '1' || solid[round(py) - 1][round(px) + 1] == '1' || solid[round(py) - 1][round(px) + 2] == '1' || solid[round(py) - 1][round(px) + 3] == '1') ? py : max(0, min(124, py + vy))"
+      },
+      {
+        "events": "timer",
+        "param": "vy",
+        "update": "vy < 0 && (solid[round(py) - 1][round(px) + 0] == '1' || solid[round(py) - 1][round(px) + 1] == '1' || solid[round(py) - 1][round(px) + 2] == '1' || solid[round(py) - 1][round(px) + 3] == '1') ? 0 : vy"
+      },
+      {
+        "events": "timer",
+        "param": "scroll",
+        "update": "min(max(px - 32, 0), 146)"
+      }
+    ],
+    "vega": {
+      "status": "partial",
+      "note": "The first frame matches (the binding precomputes Vega's hsl terrain colours and a solid-cell grid). Gravity, landing, running (left, right), jumping (up) and dashing (z) run on a 50 ms timer; Emacs reports no key release, so a press runs for 6 frames. Not ported: the background image, the dash trail, Vega's exact collision response and its 17 ms frames. Pixel ratio against ref/platformer.png: 0.000.",
+      "ratio": 0.0,
+      "threshold": 0.01
+    }
   },
-  "example": "../examples/vega/platformer.data.json",
-  "timer": {
-   "interval": 50
+  "title": {
+    "x-eas:slot": "title"
   },
-  "on": [
-   {
-    "events": "key:left",
-    "param": "dir",
-    "update": "-1"
-   },
-   {
-    "events": "key:left",
-    "param": "hold",
-    "update": "6"
-   },
-   {
-    "events": "key:right",
-    "param": "dir",
-    "update": "1"
-   },
-   {
-    "events": "key:right",
-    "param": "hold",
-    "update": "6"
-   },
-   {
-    "events": "key:up",
-    "param": "jump",
-    "update": "true"
-   },
-   {
-    "events": "key:z",
-    "param": "dash",
-    "update": "can_dash ? 6 : dash"
-   },
-   {
-    "events": "key:z",
-    "param": "can_dash",
-    "update": "false"
-   },
-   {
-    "events": "timer",
-    "param": "frame",
-    "update": "frame + 1"
-   },
-   {
-    "events": "timer",
-    "param": "ground",
-    "update": "(solid[round(py) + 4][round(px) + 0] == '1' || solid[round(py) + 4][round(px) + 1] == '1' || solid[round(py) + 4][round(px) + 2] == '1' || solid[round(py) + 4][round(px) + 3] == '1')"
-   },
-   {
-    "events": "timer",
-    "param": "can_dash",
-    "update": "ground ? true : can_dash"
-   },
-   {
-    "events": "timer",
-    "param": "vy",
-    "update": "dash > 0 ? -0.6 : jump && ground ? -2 : ground && vy >= 0 ? 0 : min(2.5, vy + 0.15)"
-   },
-   {
-    "events": "timer",
-    "param": "jump",
-    "update": "false"
-   },
-   {
-    "events": "timer",
-    "param": "vx",
-    "update": "dash > 0 ? 2 * dir : hold > 0 ? dir : 0"
-   },
-   {
-    "events": "timer",
-    "param": "hold",
-    "update": "max(0, hold - 1)"
-   },
-   {
-    "events": "timer",
-    "param": "dash",
-    "update": "max(0, dash - 1)"
-   },
-   {
-    "events": "timer",
-    "param": "px",
-    "update": "(vx > 0 && (solid[round(py) + 0][round(px) + 4] == '1' || solid[round(py) + 1][round(px) + 4] == '1' || solid[round(py) + 2][round(px) + 4] == '1')) || (vx < 0 && (solid[round(py) + 0][round(px) - 1] == '1' || solid[round(py) + 1][round(px) - 1] == '1' || solid[round(py) + 2][round(px) - 1] == '1')) ? px : max(0, min(270, px + vx))"
-   },
-   {
-    "events": "timer",
-    "param": "py",
-    "update": "vy > 0 ? ((solid[round(py) + 4][round(px) + 0] == '1' || solid[round(py) + 4][round(px) + 1] == '1' || solid[round(py) + 4][round(px) + 2] == '1' || solid[round(py) + 4][round(px) + 3] == '1') ? py : (solid[round(py) + 5][round(px) + 0] == '1' || solid[round(py) + 5][round(px) + 1] == '1' || solid[round(py) + 5][round(px) + 2] == '1' || solid[round(py) + 5][round(px) + 3] == '1') ? round(py) + 1 : (solid[round(py) + 6][round(px) + 0] == '1' || solid[round(py) + 6][round(px) + 1] == '1' || solid[round(py) + 6][round(px) + 2] == '1' || solid[round(py) + 6][round(px) + 3] == '1') ? round(py) + 2 : py + vy) : vy < 0 && (solid[round(py) - 1][round(px) + 0] == '1' || solid[round(py) - 1][round(px) + 1] == '1' || solid[round(py) - 1][round(px) + 2] == '1' || solid[round(py) - 1][round(px) + 3] == '1') ? py : max(0, min(124, py + vy))"
-   },
-   {
-    "events": "timer",
-    "param": "vy",
-    "update": "vy < 0 && (solid[round(py) - 1][round(px) + 0] == '1' || solid[round(py) - 1][round(px) + 1] == '1' || solid[round(py) - 1][round(px) + 2] == '1' || solid[round(py) - 1][round(px) + 3] == '1') ? 0 : vy"
-   },
-   {
-    "events": "timer",
-    "param": "scroll",
-    "update": "min(max(px - 32, 0), 146)"
-   }
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "width": {
+    "x-eas:slot": "size"
+  },
+  "height": {
+    "x-eas:slot": "size"
+  },
+  "padding": 0,
+  "params": [
+    {
+      "name": "solid",
+      "value": {
+        "x-eas:slot": "solid"
+      }
+    },
+    {
+      "name": "px",
+      "value": {
+        "x-eas:slot": "start_x"
+      }
+    },
+    {
+      "name": "py",
+      "value": {
+        "x-eas:slot": "start_y"
+      }
+    },
+    {
+      "name": "vx",
+      "value": 0
+    },
+    {
+      "name": "vy",
+      "value": 0
+    },
+    {
+      "name": "dir",
+      "value": 1
+    },
+    {
+      "name": "hold",
+      "value": 0
+    },
+    {
+      "name": "jump",
+      "value": false
+    },
+    {
+      "name": "dash",
+      "value": 0
+    },
+    {
+      "name": "can_dash",
+      "value": true
+    },
+    {
+      "name": "ground",
+      "value": false
+    },
+    {
+      "name": "frame",
+      "value": 0
+    },
+    {
+      "name": "scroll",
+      "value": 0
+    }
   ],
-  "vega": {
-   "status": "partial",
-   "note": "The first frame matches (the binding precomputes Vega's hsl terrain colours and a solid-cell grid). Gravity, landing, running (left, right), jumping (up) and dashing (z) run on a 50 ms timer; Emacs reports no key release, so a press runs for 6 frames. Not ported: the background image, the dash trail, Vega's exact collision response and its 17 ms frames. Pixel ratio against ref/platformer.png: 0.000.",
-   "ratio": 0.0,
-   "threshold": 0.01
-  }
- },
- "description": {
-  "x-eas:slot": "description"
- },
- "data": {
-  "name": "data"
- },
- "width": {
-  "x-eas:slot": "size"
- },
- "height": {
-  "x-eas:slot": "size"
- },
- "padding": 0,
- "params": [
-  {
-   "name": "solid",
-   "value": {
-    "x-eas:slot": "solid"
-   }
-  },
-  {
-   "name": "px",
-   "value": {
-    "x-eas:slot": "start_x"
-   }
-  },
-  {
-   "name": "py",
-   "value": {
-    "x-eas:slot": "start_y"
-   }
-  },
-  {
-   "name": "vx",
-   "value": 0
-  },
-  {
-   "name": "vy",
-   "value": 0
-  },
-  {
-   "name": "dir",
-   "value": 1
-  },
-  {
-   "name": "hold",
-   "value": 0
-  },
-  {
-   "name": "jump",
-   "value": false
-  },
-  {
-   "name": "dash",
-   "value": 0
-  },
-  {
-   "name": "can_dash",
-   "value": true
-  },
-  {
-   "name": "ground",
-   "value": false
-  },
-  {
-   "name": "frame",
-   "value": 0
-  },
-  {
-   "name": "scroll",
-   "value": 0
-  }
- ],
- "config": {
-  "background": {
-   "x-eas:slot": "background"
-  },
-  "font": "sans-serif",
-  "view": {
-   "stroke": null
-  }
- },
- "layer": [
-  {
-   "transform": [
-    {
-     "calculate": "datum.x - scroll",
-     "as": "sx"
+  "config": {
+    "background": {
+      "x-eas:slot": "background"
     },
-    {
-     "filter": {
-      "x-eas:expr": "datum.sx > -1 && datum.sx < {{view}}"
-     }
-    },
-    {
-     "calculate": "datum.sx + 1",
-     "as": "sx2"
-    },
-    {
-     "calculate": "datum.y + 1",
-     "as": "y2"
+    "font": "sans-serif",
+    "view": {
+      "stroke": null
     }
-   ],
-   "mark": {
-    "type": "rect",
-    "stroke": null,
-    "clip": true
-   },
-   "encoding": {
-    "x": {
-     "field": "sx",
-     "type": "quantitative",
-     "scale": {
-      "domain": [
-       0,
-       {
-        "x-eas:slot": "view"
-       }
-      ],
-      "nice": false,
-      "zero": false
-     },
-     "axis": null
-    },
-    "x2": {
-     "field": "sx2"
-    },
-    "y": {
-     "field": "y",
-     "type": "quantitative",
-     "scale": {
-      "domain": [
-       0,
-       {
-        "x-eas:slot": "view"
-       }
-      ],
-      "nice": false,
-      "zero": false,
-      "reverse": true
-     },
-     "axis": null
-    },
-    "y2": {
-     "field": "y2"
-    },
-    "color": {
-     "field": {
-      "x-eas:slot": "fill"
-     },
-     "type": "nominal",
-     "scale": null,
-     "legend": null
-    }
-   }
   },
-  {
-   "data": {
-    "values": [
-     {}
-    ]
-   },
-   "transform": [
+  "layer": [
     {
-     "calculate": "px - scroll",
-     "as": "x0"
-    },
-    {
-     "calculate": "datum.x0 + 4",
-     "as": "x1"
-    },
-    {
-     "calculate": "py",
-     "as": "y0"
-    },
-    {
-     "calculate": "py + 4",
-     "as": "y1"
-    },
-    {
-     "calculate": "can_dash ? 'rgb(167, 66, 60)' : 'rgb(110, 184, 248)'",
-     "as": "c"
-    }
-   ],
-   "mark": {
-    "type": "rect",
-    "stroke": null,
-    "clip": true
-   },
-   "encoding": {
-    "x": {
-     "field": "x0",
-     "type": "quantitative",
-     "scale": {
-      "domain": [
-       0,
-       {
-        "x-eas:slot": "view"
-       }
+      "transform": [
+        {
+          "calculate": "datum.x - scroll",
+          "as": "sx"
+        },
+        {
+          "filter": {
+            "x-eas:expr": "datum.sx > -1 && datum.sx < {{view}}"
+          }
+        },
+        {
+          "calculate": "datum.sx + 1",
+          "as": "sx2"
+        },
+        {
+          "calculate": "datum.y + 1",
+          "as": "y2"
+        }
       ],
-      "nice": false,
-      "zero": false
-     },
-     "axis": null
+      "mark": {
+        "type": "rect",
+        "stroke": null,
+        "clip": true
+      },
+      "encoding": {
+        "x": {
+          "field": "sx",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "view"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          },
+          "axis": null
+        },
+        "x2": {
+          "field": "sx2"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "view"
+              }
+            ],
+            "nice": false,
+            "zero": false,
+            "reverse": true
+          },
+          "axis": null
+        },
+        "y2": {
+          "field": "y2"
+        },
+        "color": {
+          "field": {
+            "x-eas:slot": "fill"
+          },
+          "type": "nominal",
+          "scale": null,
+          "legend": null
+        }
+      }
     },
-    "x2": {
-     "field": "x1"
-    },
-    "y": {
-     "field": "y0",
-     "type": "quantitative",
-     "scale": {
-      "domain": [
-       0,
-       {
-        "x-eas:slot": "view"
-       }
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "transform": [
+        {
+          "calculate": "px - scroll",
+          "as": "x0"
+        },
+        {
+          "calculate": "datum.x0 + 4",
+          "as": "x1"
+        },
+        {
+          "calculate": "py",
+          "as": "y0"
+        },
+        {
+          "calculate": "py + 4",
+          "as": "y1"
+        },
+        {
+          "calculate": "can_dash ? 'rgb(167, 66, 60)' : 'rgb(110, 184, 248)'",
+          "as": "c"
+        }
       ],
-      "nice": false,
-      "zero": false,
-      "reverse": true
-     },
-     "axis": null
-    },
-    "y2": {
-     "field": "y1"
-    },
-    "color": {
-     "field": "c",
-     "type": "nominal",
-     "scale": null,
-     "legend": null
+      "mark": {
+        "type": "rect",
+        "stroke": null,
+        "clip": true
+      },
+      "encoding": {
+        "x": {
+          "field": "x0",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "view"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          },
+          "axis": null
+        },
+        "x2": {
+          "field": "x1"
+        },
+        "y": {
+          "field": "y0",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "view"
+              }
+            ],
+            "nice": false,
+            "zero": false,
+            "reverse": true
+          },
+          "axis": null
+        },
+        "y2": {
+          "field": "y1"
+        },
+        "color": {
+          "field": "c",
+          "type": "nominal",
+          "scale": null,
+          "legend": null
+        }
+      }
     }
-   }
-  }
- ]
+  ]
 }

@@ -42,6 +42,11 @@
       "description": {
         "type": "string",
         "default": "A watch face clock visualization showing the current time."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/watch.data.json",
@@ -61,6 +66,9 @@
       "ratio": 0.0184,
       "threshold": 0.04
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

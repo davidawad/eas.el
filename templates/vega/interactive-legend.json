@@ -37,6 +37,11 @@
       "description": {
         "type": "string",
         "default": "A scatter plot example with interactive legend and x-axis."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/interactive-legend.data.json",
@@ -46,6 +51,9 @@
       "ratio": 0.0351,
       "threshold": 0.06
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

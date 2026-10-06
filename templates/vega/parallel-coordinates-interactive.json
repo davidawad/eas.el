@@ -59,6 +59,11 @@
       "description": {
         "type": "string",
         "default": "An interactive parallel coordinates chart."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/parallel-coordinates-interactive.data.json",
@@ -68,6 +73,9 @@
       "ratio": 0.0619,
       "threshold": 0.09
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

@@ -85,6 +85,11 @@
       "description": {
         "type": "string",
         "default": "Interactive cross-filtering among histograms of flight statistics."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/crossfilter-flights.data.json",
@@ -94,6 +99,9 @@
       "ratio": 0.0645,
       "threshold": 0.1
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

@@ -31,6 +31,11 @@
       "description": {
         "type": "string",
         "default": "Estimating the value of π via random sampling methods."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/pi-monte-carlo.data.json",
@@ -40,6 +45,9 @@
       "ratio": 0.1731,
       "threshold": 0.23
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

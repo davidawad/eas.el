@@ -51,6 +51,11 @@
       "description": {
         "type": "string",
         "default": "A hypothetical outcome plot that uses animated samples to convey uncertainty."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/hypothetical-outcome-plots.data.json",
@@ -70,6 +75,9 @@
       "ratio": 0.1239,
       "threshold": 0.17
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"

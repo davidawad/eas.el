@@ -91,6 +91,11 @@
       "description": {
         "type": "string",
         "default": "An interactive scatter plot of global health statistics by country and year."
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title (the gallery example has none)"
       }
     },
     "example": "../examples/vega/global-development.data.json",
@@ -100,6 +105,9 @@
       "ratio": 0.0034,
       "threshold": 0.02
     }
+  },
+  "title": {
+    "x-eas:slot": "title"
   },
   "description": {
     "x-eas:slot": "description"
@@ -261,8 +269,12 @@
         "opacity": 0.25
       },
       "encoding": {
-        "x": null,
-        "y": null,
+        "x": {
+          "value": 300
+        },
+        "y": {
+          "value": 300
+        },
         "text": {
           "field": {
             "x-eas:slot": "year"

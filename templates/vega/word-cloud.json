@@ -53,14 +53,14 @@
       "transform": [{"filter": "datum.fontWeight < 600"}],
       "layer": [
         {"params": [{"name": "hover", "select": {"type": "point", "on": "pointermove", "fields": ["text"]}}], "mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 300}},
-        {"transform": [{"filter": {"param": "hover", "empty": false}}], "mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 300, "color": "white", "opacity": 0.5}, "encoding": {"color": null, "tooltip": null}}
+        {"transform": [{"filter": {"param": "hover", "empty": false}}], "mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 300, "opacity": 0.5}, "encoding": {"color": {"value": "white"}, "tooltip": null}}
       ]
     },
     {
       "transform": [{"filter": "datum.fontWeight >= 600"}],
       "layer": [
         {"mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 600}},
-        {"transform": [{"filter": {"param": "hover", "empty": false}}], "mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 600, "color": "white", "opacity": 0.5}, "encoding": {"color": null, "tooltip": null}}
+        {"transform": [{"filter": {"param": "hover", "empty": false}}], "mark": {"type": "text", "align": "center", "baseline": "alphabetic", "font": {"x-eas:slot": "font"}, "fontWeight": 600, "opacity": 0.5}, "encoding": {"color": {"value": "white"}, "tooltip": null}}
       ]
     }
   ]

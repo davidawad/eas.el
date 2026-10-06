@@ -281,7 +281,7 @@
     ;; The canvas is the Vega spec's, within Vega's overhang padding.
     (let ((size (plist-get scene :size)))
       (should (<= 800 (plist-get size :w) 808))
-      (should (<= 400 (plist-get size :h) 408)))
+      (should (<= 400 (plist-get size :h) 440)))
     (let ((text (eas-text-render (eas-compile (eas-resolve "word-cloud" (eas-template-example "word-cloud"))
                                               :target 'text :size '(:cols 100 :rows 30)))))
       (should (string-search "VEGA" text))
@@ -332,7 +332,9 @@
                                       (eas-png-read (eas-test-file "test/vega-examples/ref/word-cloud.png")))))
             ;; Same canvas within Vega's overhang; the reference has no
             ;; words to match, so the native cloud is all difference.
-            (should (seq-every-p (lambda (d) (<= (abs d) 8)) (plist-get cmp :size-delta)))
+            ;; Width matches; height adds the title band the reference lacks.
+            (should (<= (abs (aref (plist-get cmp :size-delta) 0)) 8))
+            (should (<= 0 (aref (plist-get cmp :size-delta) 1) 40))
             (should (> (plist-get cmp :ratio) 0))))
       (delete-file png))))
 

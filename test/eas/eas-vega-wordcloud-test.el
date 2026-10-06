@@ -312,13 +312,20 @@
 
 ;;; Against the reference
 
-(ert-deftest eas-vega-wordcloud-reference-is-blank ()
-  ;; vg2svg has no canvas to measure text with, so Vega's wordcloud
-  ;; placed no word: the reference is an empty, transparent 800x400.
+(defun eas-vega-wordcloud-ink (png)
+  "Share of PNG's pixels that are visibly inked: opaque and not near white."
+  (let ((rgba (plist-get png :rgba)) (n 0))
+    (cl-loop for i from 0 below (length rgba) by 4
+             when (and (> (aref rgba (+ i 3)) 127)
+                       (< (min (aref rgba i) (aref rgba (+ i 1)) (aref rgba (+ i 2))) 200))
+             do (cl-incf n))
+    (/ (float n) (* (plist-get png :w) (plist-get png :h)))))
+
+(ert-deftest eas-vega-wordcloud-reference-has-words ()
+  ;; vg2png measures text with node-canvas, so Vega placed its words.
   (let ((ref (eas-png-read (eas-test-file "test/vega-examples/ref/word-cloud.png"))))
     (should (equal (list (plist-get ref :w) (plist-get ref :h)) '(800 400)))
-    (should (cl-loop for i from 3 below (length (plist-get ref :rgba)) by 4
-                     always (zerop (aref (plist-get ref :rgba) i))))))
+    (should (> (eas-vega-wordcloud-ink ref) 0.02))))
 
 (ert-deftest eas-vega-wordcloud-png-against-the-reference ()
   (unless (executable-find eas-chart-rsvg-program)
@@ -330,12 +337,16 @@
           (eas-chart-rasterize (eas-svg-render (eas-vega-wordcloud-scene)) png)
           (let ((cmp (eas-png-compare (eas-png-read png)
                                       (eas-png-read (eas-test-file "test/vega-examples/ref/word-cloud.png")))))
-            ;; Same canvas within Vega's overhang; the reference has no
-            ;; words to match, so the native cloud is all difference.
+            ;; Both place words at random along the spiral, so pixels
+            ;; cannot match; the canvases and the amount of ink can.
             ;; Width matches; height adds the title band the reference lacks.
             (should (<= (abs (aref (plist-get cmp :size-delta) 0)) 8))
             (should (<= 0 (aref (plist-get cmp :size-delta) 1) 40))
-            (should (> (plist-get cmp :ratio) 0))))
+            (should (> (plist-get cmp :ratio) 0))
+            (let ((native (eas-vega-wordcloud-ink (eas-png-read png)))
+                  (ref (eas-vega-wordcloud-ink
+                        (eas-png-read (eas-test-file "test/vega-examples/ref/word-cloud.png")))))
+              (should (< 0.5 (/ native ref) 2.0)))))
       (delete-file png))))
 
 (provide 'eas-vega-wordcloud-test)

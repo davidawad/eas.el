@@ -1,13 +1,13 @@
 {
  "source": "https://vega.github.io/vega/examples/ (vega/vega docs/examples, BSD-3-Clause)",
- "vega": "6.x (vg2svg + rsvg-convert)",
+ "vega": "6.x (vg2png with node-canvas)",
  "examples": [
   {
    "name": "bar-chart",
    "category": "Bar Charts",
    "spec": "specs/bar-chart.vg.json",
    "ref": "ref/bar-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -16,7 +16,7 @@
    "category": "Bar Charts",
    "spec": "specs/stacked-bar-chart.vg.json",
    "ref": "ref/stacked-bar-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -25,7 +25,7 @@
    "category": "Bar Charts",
    "spec": "specs/grouped-bar-chart.vg.json",
    "ref": "ref/grouped-bar-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -34,7 +34,7 @@
    "category": "Bar Charts",
    "spec": "specs/nested-bar-chart.vg.json",
    "ref": "ref/nested-bar-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -43,7 +43,7 @@
    "category": "Bar Charts",
    "spec": "specs/population-pyramid.vg.json",
    "ref": "ref/population-pyramid.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -52,7 +52,7 @@
    "category": "Line & Area Charts",
    "spec": "specs/line-chart.vg.json",
    "ref": "ref/line-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -61,7 +61,7 @@
    "category": "Line & Area Charts",
    "spec": "specs/area-chart.vg.json",
    "ref": "ref/area-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -70,7 +70,7 @@
    "category": "Line & Area Charts",
    "spec": "specs/stacked-area-chart.vg.json",
    "ref": "ref/stacked-area-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -79,7 +79,7 @@
    "category": "Line & Area Charts",
    "spec": "specs/horizon-graph.vg.json",
    "ref": "ref/horizon-graph.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -88,7 +88,7 @@
    "category": "Line & Area Charts",
    "spec": "specs/job-voyager.vg.json",
    "ref": "ref/job-voyager.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -97,7 +97,7 @@
    "category": "Circular Charts",
    "spec": "specs/pie-chart.vg.json",
    "ref": "ref/pie-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -106,7 +106,7 @@
    "category": "Circular Charts",
    "spec": "specs/donut-chart.vg.json",
    "ref": "ref/donut-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -115,7 +115,7 @@
    "category": "Circular Charts",
    "spec": "specs/donut-chart-labelled.vg.json",
    "ref": "ref/donut-chart-labelled.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -124,7 +124,7 @@
    "category": "Circular Charts",
    "spec": "specs/radial-plot.vg.json",
    "ref": "ref/radial-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -133,7 +133,7 @@
    "category": "Circular Charts",
    "spec": "specs/radar-chart.vg.json",
    "ref": "ref/radar-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -142,7 +142,7 @@
    "category": "Scatter Plots",
    "spec": "specs/scatter-plot.vg.json",
    "ref": "ref/scatter-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -151,7 +151,7 @@
    "category": "Scatter Plots",
    "spec": "specs/scatter-plot-null-values.vg.json",
    "ref": "ref/scatter-plot-null-values.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -160,7 +160,7 @@
    "category": "Scatter Plots",
    "spec": "specs/connected-scatter-plot.vg.json",
    "ref": "ref/connected-scatter-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -169,7 +169,7 @@
    "category": "Scatter Plots",
    "spec": "specs/error-bars.vg.json",
    "ref": "ref/error-bars.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -178,7 +178,7 @@
    "category": "Scatter Plots",
    "spec": "specs/barley-trellis-plot.vg.json",
    "ref": "ref/barley-trellis-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -187,7 +187,7 @@
    "category": "Scatter Plots",
    "spec": "specs/regression.vg.json",
    "ref": "ref/regression.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -196,7 +196,7 @@
    "category": "Scatter Plots",
    "spec": "specs/loess-regression.vg.json",
    "ref": "ref/loess-regression.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -205,7 +205,7 @@
    "category": "Scatter Plots",
    "spec": "specs/labeled-scatter-plot.vg.json",
    "ref": "ref/labeled-scatter-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -214,7 +214,7 @@
    "category": "Distributions",
    "spec": "specs/top-k-plot.vg.json",
    "ref": "ref/top-k-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -223,7 +223,7 @@
    "category": "Distributions",
    "spec": "specs/top-k-plot-with-others.vg.json",
    "ref": "ref/top-k-plot-with-others.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -232,7 +232,7 @@
    "category": "Distributions",
    "spec": "specs/histogram.vg.json",
    "ref": "ref/histogram.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -241,7 +241,7 @@
    "category": "Distributions",
    "spec": "specs/histogram-null-values.vg.json",
    "ref": "ref/histogram-null-values.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -250,7 +250,7 @@
    "category": "Distributions",
    "spec": "specs/dot-plot.vg.json",
    "ref": "ref/dot-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -259,7 +259,7 @@
    "category": "Distributions",
    "spec": "specs/probability-density.vg.json",
    "ref": "ref/probability-density.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -268,7 +268,7 @@
    "category": "Distributions",
    "spec": "specs/box-plot.vg.json",
    "ref": "ref/box-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -277,7 +277,7 @@
    "category": "Distributions",
    "spec": "specs/violin-plot.vg.json",
    "ref": "ref/violin-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -286,7 +286,7 @@
    "category": "Distributions",
    "spec": "specs/binned-scatter-plot.vg.json",
    "ref": "ref/binned-scatter-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -295,7 +295,7 @@
    "category": "Distributions",
    "spec": "specs/contour-plot.vg.json",
    "ref": "ref/contour-plot.png",
-   "ref_kind": "site-thumbnail",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -304,7 +304,7 @@
    "category": "Distributions",
    "spec": "specs/wheat-plot.vg.json",
    "ref": "ref/wheat-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -313,7 +313,7 @@
    "category": "Distributions",
    "spec": "specs/quantile-quantile-plot.vg.json",
    "ref": "ref/quantile-quantile-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -322,7 +322,7 @@
    "category": "Distributions",
    "spec": "specs/quantile-dot-plot.vg.json",
    "ref": "ref/quantile-dot-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -331,7 +331,7 @@
    "category": "Distributions",
    "spec": "specs/hypothetical-outcome-plots.vg.json",
    "ref": "ref/hypothetical-outcome-plots.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -340,7 +340,7 @@
    "category": "Distributions",
    "spec": "specs/time-units.vg.json",
    "ref": "ref/time-units.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -349,7 +349,7 @@
    "category": "Geographic Maps",
    "spec": "specs/county-unemployment.vg.json",
    "ref": "ref/county-unemployment.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -358,7 +358,7 @@
    "category": "Geographic Maps",
    "spec": "specs/dorling-cartogram.vg.json",
    "ref": "ref/dorling-cartogram.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -367,7 +367,7 @@
    "category": "Geographic Maps",
    "spec": "specs/world-map.vg.json",
    "ref": "ref/world-map.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -376,7 +376,7 @@
    "category": "Geographic Maps",
    "spec": "specs/earthquakes.vg.json",
    "ref": "ref/earthquakes.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -394,7 +394,7 @@
    "category": "Geographic Maps",
    "spec": "specs/zoomable-world-map.vg.json",
    "ref": "ref/zoomable-world-map.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -403,7 +403,7 @@
    "category": "Geographic Maps",
    "spec": "specs/distortion-comparison.vg.json",
    "ref": "ref/distortion-comparison.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -412,7 +412,7 @@
    "category": "Geographic Maps",
    "spec": "specs/volcano-contours.vg.json",
    "ref": "ref/volcano-contours.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -421,7 +421,7 @@
    "category": "Geographic Maps",
    "spec": "specs/wind-vectors.vg.json",
    "ref": "ref/wind-vectors.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -430,7 +430,7 @@
    "category": "Geographic Maps",
    "spec": "specs/annual-precipitation.vg.json",
    "ref": "ref/annual-precipitation.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -439,7 +439,7 @@
    "category": "Tree Diagrams",
    "spec": "specs/tree-layout.vg.json",
    "ref": "ref/tree-layout.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -448,7 +448,7 @@
    "category": "Tree Diagrams",
    "spec": "specs/radial-tree-layout.vg.json",
    "ref": "ref/radial-tree-layout.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -457,7 +457,7 @@
    "category": "Tree Diagrams",
    "spec": "specs/treemap.vg.json",
    "ref": "ref/treemap.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -466,7 +466,7 @@
    "category": "Tree Diagrams",
    "spec": "specs/circle-packing.vg.json",
    "ref": "ref/circle-packing.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -475,7 +475,7 @@
    "category": "Tree Diagrams",
    "spec": "specs/sunburst.vg.json",
    "ref": "ref/sunburst.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -484,7 +484,7 @@
    "category": "Network Diagrams",
    "spec": "specs/edge-bundling.vg.json",
    "ref": "ref/edge-bundling.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -493,7 +493,7 @@
    "category": "Network Diagrams",
    "spec": "specs/force-directed-layout.vg.json",
    "ref": "ref/force-directed-layout.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -502,7 +502,7 @@
    "category": "Network Diagrams",
    "spec": "specs/reorderable-matrix.vg.json",
    "ref": "ref/reorderable-matrix.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -511,7 +511,7 @@
    "category": "Network Diagrams",
    "spec": "specs/arc-diagram.vg.json",
    "ref": "ref/arc-diagram.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -520,7 +520,7 @@
    "category": "Network Diagrams",
    "spec": "specs/airport-connections.vg.json",
    "ref": "ref/airport-connections.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -529,7 +529,7 @@
    "category": "Other Chart Types",
    "spec": "specs/heatmap.vg.json",
    "ref": "ref/heatmap.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -538,7 +538,7 @@
    "category": "Other Chart Types",
    "spec": "specs/density-heatmaps.vg.json",
    "ref": "ref/density-heatmaps.png",
-   "ref_kind": "site-thumbnail",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -547,7 +547,7 @@
    "category": "Other Chart Types",
    "spec": "specs/parallel-coordinates.vg.json",
    "ref": "ref/parallel-coordinates.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -556,7 +556,7 @@
    "category": "Other Chart Types",
    "spec": "specs/parallel-coordinates-interactive.vg.json",
    "ref": "ref/parallel-coordinates-interactive.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -565,7 +565,7 @@
    "category": "Other Chart Types",
    "spec": "specs/word-cloud.vg.json",
    "ref": "ref/word-cloud.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -574,7 +574,7 @@
    "category": "Other Chart Types",
    "spec": "specs/beeswarm-plot.vg.json",
    "ref": "ref/beeswarm-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -583,7 +583,7 @@
    "category": "Other Chart Types",
    "spec": "specs/calendar-view.vg.json",
    "ref": "ref/calendar-view.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -592,7 +592,7 @@
    "category": "Other Chart Types",
    "spec": "specs/packed-bubble-chart.vg.json",
    "ref": "ref/packed-bubble-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -601,7 +601,7 @@
    "category": "Custom Designs",
    "spec": "specs/budget-forecasts.vg.json",
    "ref": "ref/budget-forecasts.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -610,7 +610,7 @@
    "category": "Custom Designs",
    "spec": "specs/wheat-and-wages.vg.json",
    "ref": "ref/wheat-and-wages.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -619,7 +619,7 @@
    "category": "Custom Designs",
    "spec": "specs/falkensee-population.vg.json",
    "ref": "ref/falkensee-population.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -628,7 +628,7 @@
    "category": "Custom Designs",
    "spec": "specs/annual-temperature.vg.json",
    "ref": "ref/annual-temperature.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -637,7 +637,7 @@
    "category": "Custom Designs",
    "spec": "specs/weekly-temperature.vg.json",
    "ref": "ref/weekly-temperature.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -646,7 +646,7 @@
    "category": "Custom Designs",
    "spec": "specs/flight-passengers.vg.json",
    "ref": "ref/flight-passengers.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -655,7 +655,7 @@
    "category": "Custom Designs",
    "spec": "specs/timelines.vg.json",
    "ref": "ref/timelines.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -664,7 +664,7 @@
    "category": "Custom Designs",
    "spec": "specs/u-district-cuisine.vg.json",
    "ref": "ref/u-district-cuisine.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -673,7 +673,7 @@
    "category": "Custom Designs",
    "spec": "specs/clock.vg.json",
    "ref": "ref/clock.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -682,7 +682,7 @@
    "category": "Custom Designs",
    "spec": "specs/watch.vg.json",
    "ref": "ref/watch.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -691,7 +691,7 @@
    "category": "Custom Designs",
    "spec": "specs/warming-stripes.vg.json",
    "ref": "ref/warming-stripes.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -700,7 +700,7 @@
    "category": "Custom Designs",
    "spec": "specs/earthquakes-globe.vg.json",
    "ref": "ref/earthquakes-globe.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -709,7 +709,7 @@
    "category": "Custom Designs",
    "spec": "specs/serpentine-timeline.vg.json",
    "ref": "ref/serpentine-timeline.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -718,7 +718,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/crossfilter-flights.vg.json",
    "ref": "ref/crossfilter-flights.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -727,7 +727,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/overview-plus-detail.vg.json",
    "ref": "ref/overview-plus-detail.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -736,7 +736,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/brushing-scatter-plots.vg.json",
    "ref": "ref/brushing-scatter-plots.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -745,7 +745,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/zoomable-scatter-plot.vg.json",
    "ref": "ref/zoomable-scatter-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -754,7 +754,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/zoomable-binned-plot.vg.json",
    "ref": "ref/zoomable-binned-plot.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -763,7 +763,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/global-development.vg.json",
    "ref": "ref/global-development.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -772,7 +772,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/interactive-legend.vg.json",
    "ref": "ref/interactive-legend.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -781,7 +781,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/stock-index-chart.vg.json",
    "ref": "ref/stock-index-chart.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -790,7 +790,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/pi-monte-carlo.vg.json",
    "ref": "ref/pi-monte-carlo.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -799,7 +799,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/zoomable-circle-packing.vg.json",
    "ref": "ref/zoomable-circle-packing.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -808,7 +808,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/table-scrollbar.vg.json",
    "ref": "ref/table-scrollbar.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -817,7 +817,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/bar-line-toggle.vg.json",
    "ref": "ref/bar-line-toggle.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -826,7 +826,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/map-with-tooltip.vg.json",
    "ref": "ref/map-with-tooltip.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -835,7 +835,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/pacman.vg.json",
    "ref": "ref/pacman.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   },
@@ -844,7 +844,7 @@
    "category": "Interaction Techniques",
    "spec": "specs/platformer.vg.json",
    "ref": "ref/platformer.png",
-   "ref_kind": "vg2svg",
+   "ref_kind": "vg2png",
    "template": null,
    "status": "todo"
   }

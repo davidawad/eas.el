@@ -302,14 +302,16 @@ their own pointer, and a key pressed after them keeps the mouse's hover."
 Run from `window-size-change-functions' and `window-buffer-change-functions'
 \(buffer-locally), so a chart always fills its window: after
 `delete-other-windows', a split, a resized frame or a window switched
-to the buffer."
-  (when (and eas-mode--view (window-live-p window) (eq (window-buffer window) (current-buffer))
-             (eas-view-interactive eas-mode--view))
-    (let* ((target (eas-view-target eas-mode--view))
-           (size (eas-mode--window-size window target)))
-      (unless (equal size (eas-view-size eas-mode--view))
-        (eas-view-resize eas-mode--view size)
-        (eas-mode-redraw)))))
+to the buffer.  WINDOW's buffer is made current: the hook may run
+with another buffer current."
+  (when (window-live-p window)
+    (with-current-buffer (window-buffer window)
+      (when (and eas-mode--view (eas-view-interactive eas-mode--view))
+        (let* ((target (eas-view-target eas-mode--view))
+               (size (eas-mode--window-size window target)))
+          (unless (equal size (eas-view-size eas-mode--view))
+            (eas-view-resize eas-mode--view size)
+            (eas-mode-redraw)))))))
 
 (defvar eas-view-mode-map
   (let ((map (make-sparse-keymap)))

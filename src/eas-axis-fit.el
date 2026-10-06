@@ -13,7 +13,8 @@
 ;; cut to its step with an ellipsis, as labelLimit cuts it, so every
 ;; category keeps a readable label.  Thinned axes (labelOverlap) and
 ;; rotated labels are left alone, and so is the text target, which lays
-;; its labels out on the character grid.
+;; its labels out on the character grid: there `eas-axis-fit-text'
+;; blanks a label that would print over, or run into, one before it.
 
 ;;; Code:
 
@@ -68,6 +69,61 @@ strategy, as continuous axes already do (fc-qx1.38)."
                                                         (eas-layout-truncate metrics label size limit))))
                                          (plist-get axis :ticks))))))))
      axes)))
+
+;;; Text: labels a cell apart
+
+(defun eas-axis-fit--text-spans (tk cols cw ch)
+  "Cell spans (ROW START . END) of tick TK's label lines on a COLS-wide grid.
+As the text renderer places them: a label running off a side is moved in."
+  (seq-map-indexed
+   (lambda (line i)
+     (let* ((len (string-width line)) (x (/ (plist-get tk :lx) (float cw)))
+            (start (pcase (plist-get tk :align) ("left" (round x)) ("right" (- (round x) len))
+                          (_ (round (- x (/ len 2.0))))))
+            (start (if (<= len cols) (max 0 (min start (- cols len))) start)))
+       (cons (+ i (floor (/ (plist-get tk :ly) (float ch)))) (cons start (+ start len)))))
+   (split-string (plist-get tk :label) "\n")))
+
+(defun eas-axis-fit--text-clash-p (spans kept)
+  "Non-nil when a span of SPANS overlaps or touches a span of KEPT on its row."
+  (seq-some (lambda (a) (seq-some (lambda (b) (and (= (car a) (car b))
+                                                    (< (cadr a) (1+ (cddr b))) (< (cadr b) (1+ (cddr a)))))
+                                  kept))
+            spans))
+
+(defun eas-axis-fit-text (view width metrics)
+  "VIEW with its axes' tick labels thinned on a text canvas WIDTH pixels
+wide under METRICS; VIEW itself when METRICS is not text.
+Labels the renderer would print over, or run into, one kept before
+them are blanked (:full keeps the text), so a squeezed plot reads
+\"0  1,000\" as one label at most, never \"01,000\", and the scene says
+what the terminal shows.  An axis whose spec sets labelOverlap false
+keeps every label (fc-qx1.52)."
+  (if (not (and (eas-layout-text-p metrics) (plist-get view :axes)))
+      view
+    (let* ((cw (aref (plist-get metrics :cell) 0)) (ch (aref (plist-get metrics :cell) 1))
+           (cols (round (/ (float width) cw))))
+      (eas-plist-put
+       view :axes
+       (vconcat
+        (mapcar (lambda (axis)
+                  (if (plist-get axis :label-overlap-off) axis
+                    (let (kept)
+                      (eas-plist-put
+                       axis :ticks
+                       (vconcat
+                        (mapcar (lambda (tk)
+                                  (let ((label (plist-get tk :label)))
+                                    (if (not (and (stringp label) (not (string-empty-p label))
+                                                  (numberp (plist-get tk :lx)) (numberp (plist-get tk :ly))))
+                                        tk
+                                      (let ((spans (eas-axis-fit--text-spans tk cols cw ch)))
+                                        (if (eas-axis-fit--text-clash-p spans kept)
+                                            (eas-plist-put (eas-plist-put tk :label "") :full label)
+                                          (setq kept (append spans kept))
+                                          tk)))))
+                                (plist-get axis :ticks)))))))
+                (plist-get view :axes)))))))
 
 (provide 'eas-axis-fit)
 ;;; eas-axis-fit.el ends here

@@ -59,7 +59,11 @@
             (eas-mode--follow-window (get-buffer-window buffer))
             (should (equal (eas-view-size view) size))
             (let ((lines (split-string (buffer-string) "\n")))
-              (should (= (apply #'max (mapcar #'string-width lines)) 189)))))
+              (should (= (apply #'max (mapcar #'string-width lines)) 189))))
+          ;; The hook may run with another buffer current.
+          (setq size '(:cols 94 :rows 27))
+          (with-temp-buffer (eas-mode--follow-window (get-buffer-window buffer)))
+          (should (equal (eas-view-size view) size)))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 ;;; 2. Ink on a dark terminal

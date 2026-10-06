@@ -58,6 +58,18 @@
       (should-not (plist-get (plist-get scene :size) :cut))
       (should (<= (eas-fit-test--width (eas-text-render scene)) 60)))))
 
+(ert-deftest eas-fit-squeezed-axis-labels-keep-a-cell-apart ()
+  ;; Squeezed plots lose their label floor: a label that would print
+  ;; over, or run into, the one before it is blanked in the scene.
+  (let ((scene (eas-fit-test--scene "multiview" "concat_marginal_histograms" '(:cols 60 :rows 16))))
+    (should-not (string-match-p "01,000" (eas-text-render scene)))
+    (should (seq-some (lambda (v) (seq-some (lambda (a) (seq-some (lambda (tk) (equal (plist-get tk :full) "1,000"))
+                                                                  (plist-get a :ticks)))
+                                            (plist-get v :axes)))
+                      (plist-get scene :views))))
+  (dolist (gn '(("line" "trail_comet") ("multiview" "concat_marginal_histograms")))
+    (should-not (eas-vl-gallery-overlaps (eas-fit-test--scene (car gn) (cadr gn) '(:cols 50 :rows 14))))))
+
 (ert-deftest eas-fit-cut-canvas-is-recorded-and-legends-ellipsize ()
   (let* ((spec (eas-vl-gallery-custom-spec "multiview" "scales_discretize_custom"))
          (narrow (eas-vl-gallery--native (eas-compile spec :target 'text :size '(:cols 50 :rows 14))))

@@ -1,0 +1,394 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "contour-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A scatter plot overlaid with a 2D kernel density estimate per group: a density heatmap and contour lines.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per point, with two numeric fields and a group field"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "Horsepower",
+        "doc": "quantitative x"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "Miles_per_Gallon",
+        "doc": "quantitative y"
+      },
+      "group": {
+        "type": "field",
+        "of": "data",
+        "default": "Origin",
+        "doc": "one density and color per value"
+      },
+      "levels": {
+        "type": "integer",
+        "default": 3,
+        "doc": "contour levels per density"
+      },
+      "resolve": {
+        "enum": [
+          "shared",
+          "independent"
+        ],
+        "default": "shared",
+        "doc": "shared: levels and heatmap opacity over every group's maximum"
+      },
+      "counts": {
+        "type": "boolean",
+        "default": true,
+        "doc": "densities as points per square pixel, not probabilities"
+      },
+      "bandwidth": {
+        "type": "number",
+        "default": -1,
+        "doc": "kernel bandwidth in pixels; -1 estimates it (Scott's rule)"
+      },
+      "cellSize": {
+        "type": "integer",
+        "default": 4,
+        "doc": "density grid cell size in pixels"
+      },
+      "width": {
+        "type": "integer",
+        "default": 500
+      },
+      "height": {
+        "type": "integer",
+        "default": 400
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A contour plot example, overlaying a density estimate on scatter plot points.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/contour-plot.data.json",
+    "vega": {
+      "status": "pass",
+      "ratio": 0.0147,
+      "threshold": 0.03,
+      "compare": {
+        "width": 360
+      },
+      "note": "kde2d per Origin on the scales' nice zero domains (grids match Vega's to Float32 precision), a heatmap image per group (tableau10 by Origin, opacity value/max shared) and 3 shared isocontour levels as lines in data units cut to the grid: ratio 0.0147 against the 360 px site thumbnail. Vega's resolve/bandwidth/counts widgets are template slots.",
+      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "encoding": {
+    "x": {
+      "type": "quantitative",
+      "axis": {
+        "grid": true,
+        "domain": false,
+        "tickCount": 5
+      }
+    },
+    "y": {
+      "type": "quantitative",
+      "axis": {
+        "grid": true,
+        "domain": false,
+        "titlePadding": 5
+      }
+    }
+  },
+  "layer": [
+    {
+      "name": "points",
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "filter": {
+            "and": [
+              {
+                "field": {
+                  "x-eas:slot": "x"
+                },
+                "valid": true
+              },
+              {
+                "field": {
+                  "x-eas:slot": "y"
+                },
+                "valid": true
+              }
+            ]
+          }
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 4,
+        "color": "#ccc",
+        "opacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": {
+            "x-eas:slot": "x"
+          },
+          "type": "quantitative"
+        },
+        "y": {
+          "field": {
+            "x-eas:slot": "y"
+          },
+          "type": "quantitative"
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "group"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "x"
+            },
+            "type": "quantitative"
+          },
+          {
+            "field": {
+              "x-eas:slot": "y"
+            },
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "name": "density",
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "kde2d",
+          "x": {
+            "x-eas:slot": "x"
+          },
+          "y": {
+            "x-eas:slot": "y"
+          },
+          "groupby": [
+            {
+              "x-eas:slot": "group"
+            }
+          ],
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ],
+          "bandwidth": [
+            {
+              "x-eas:slot": "bandwidth"
+            },
+            {
+              "x-eas:slot": "bandwidth"
+            }
+          ],
+          "cellSize": {
+            "x-eas:slot": "cellSize"
+          },
+          "counts": {
+            "x-eas:slot": "counts"
+          }
+        },
+        {
+          "x-eas:transform": "heatmap",
+          "field": "grid",
+          "resolve": {
+            "x-eas:slot": "resolve"
+          },
+          "color": {
+            "field": {
+              "x-eas:slot": "group"
+            },
+            "scheme": "tableau10",
+            "sort": "descending"
+          }
+        }
+      ],
+      "mark": {
+        "type": "image",
+        "width": {
+          "x-eas:slot": "width"
+        },
+        "height": {
+          "x-eas:slot": "height"
+        },
+        "align": "left",
+        "baseline": "top",
+        "aspect": false
+      },
+      "encoding": {
+        "x": {
+          "field": "grid_x0",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "grid_y1",
+          "type": "quantitative"
+        },
+        "url": {
+          "field": "image",
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "name": "contours",
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "kde2d",
+          "x": {
+            "x-eas:slot": "x"
+          },
+          "y": {
+            "x-eas:slot": "y"
+          },
+          "groupby": [
+            {
+              "x-eas:slot": "group"
+            }
+          ],
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ],
+          "bandwidth": [
+            {
+              "x-eas:slot": "bandwidth"
+            },
+            {
+              "x-eas:slot": "bandwidth"
+            }
+          ],
+          "cellSize": {
+            "x-eas:slot": "cellSize"
+          },
+          "counts": {
+            "x-eas:slot": "counts"
+          }
+        },
+        {
+          "x-eas:transform": "isocontour",
+          "field": "grid",
+          "levels": {
+            "x-eas:slot": "levels"
+          },
+          "resolve": {
+            "x-eas:slot": "resolve"
+          }
+        },
+        {
+          "x-eas:transform": "geopoints",
+          "field": "contour",
+          "clip": [
+            "grid_x0",
+            "grid_y0",
+            "grid_x1",
+            "grid_y1"
+          ]
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "strokeWidth": 1,
+        "clip": true
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "title": {
+            "x-eas:slot": "x"
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "title": {
+            "x-eas:slot": "y"
+          }
+        },
+        "detail": {
+          "field": "ring",
+          "type": "nominal"
+        },
+        "order": {
+          "field": "order",
+          "type": "quantitative"
+        },
+        "stroke": {
+          "field": {
+            "x-eas:slot": "group"
+          },
+          "type": "nominal",
+          "sort": "descending",
+          "title": null,
+          "legend": {
+            "symbolType": "stroke"
+          },
+          "scale": {
+            "scheme": "tableau10"
+          }
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "group"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": "threshold",
+            "type": "quantitative",
+            "title": "density",
+            "format": ".4f"
+          }
+        ]
+      }
+    }
+  ]
+}

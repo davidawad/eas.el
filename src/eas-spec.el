@@ -64,6 +64,8 @@
     :cornerRadiusTopLeft :cornerRadiusTopRight :cornerRadiusBottomLeft :cornerRadiusBottomRight
     ;; scatter and table plots (fc-qx1.27)
     :shape :angle :url
+    ;; image (eas-7r1.7): aspect false stretches the picture to its box
+    :aspect
     ;; calculations (fc-qx1.30)
     :x :y :x2 :y2 :xOffset :x2Offset :yOffset :y2Offset :font :fontStyle :limit
     ;; interactive (fc-qx1.33)

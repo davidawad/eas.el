@@ -79,8 +79,11 @@ the mark, for the size range's ends."
                                (eas-scale-discretize--steps (or (plist-get sp :rangeMin) (if (member mark-type '("bar" "tick")) 2 4))
                                                             (or (plist-get sp :rangeMax) 361) n))))))
            (n (length range))
-           (lo (if (> (length nums) 0) (aref nums 0) 0))
-           (hi (if (> (length nums) 0) (aref nums (1- (length nums))) 1))
+           ;; A quantize scale's explicit [lo hi] domain wins over the data's.
+           (fixed (let ((d (plist-get sp :domain)))
+                    (and (equal type "quantize") (vectorp d) (= (length d) 2) (seq-every-p #'numberp d) d)))
+           (lo (cond (fixed (aref fixed 0)) ((> (length nums) 0) (aref nums 0)) (t 0)))
+           (hi (cond (fixed (aref fixed 1)) ((> (length nums) 0) (aref nums (1- (length nums)))) (t 1)))
            (lo (if (eq (plist-get sp :zero) t) (min 0 lo) lo))
            (hi (if (eq (plist-get sp :zero) t) (max 0 hi) hi))
            ;; An explicit [min, max] domain is what a quantize scale cuts.

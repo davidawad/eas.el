@@ -1,0 +1,297 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "annual-precipitation",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Filled contours of a global longitude/latitude grid (annual precipitation) over country shapes, on a world map projection.",
+    "slots": {
+      "data": {
+        "shape": "grid",
+        "required": true,
+        "doc": "the grid: a Vega grid object {width, height, values, scale, translate} in degrees, or tidy cell rows"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "x",
+        "doc": "cell longitude"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "y",
+        "doc": "cell latitude"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "value",
+        "doc": "cell value"
+      },
+      "world": {
+        "shape": "topojson",
+        "required": true,
+        "doc": "base map: a TopoJSON topology, or {topology, object} naming the object to draw"
+      },
+      "thresholds": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          500,
+          1000,
+          1500,
+          2000,
+          2500
+        ],
+        "doc": "contour levels, ascending"
+      },
+      "maximum": {
+        "type": "number",
+        "default": 3000,
+        "doc": "top of the color scale"
+      },
+      "levels": {
+        "type": "integer",
+        "default": 6,
+        "doc": "color steps of the quantized scale over 0..maximum"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "bluepurple"
+      },
+      "opacity": {
+        "type": "number",
+        "default": 0.5,
+        "doc": "contour fill opacity"
+      },
+      "projection": {
+        "enum": [
+          "naturalEarth1",
+          "equalEarth",
+          "equirectangular",
+          "mercator"
+        ],
+        "default": "naturalEarth1"
+      },
+      "scale": {
+        "type": "number",
+        "default": 110,
+        "doc": "projection scale"
+      },
+      "translate": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          300,
+          150
+        ],
+        "doc": "pixel position of longitude 0, latitude 0"
+      },
+      "legendTitle": {
+        "type": "string",
+        "default": "Annual Precipitation (mm)"
+      },
+      "width": {
+        "type": "integer",
+        "default": 600
+      },
+      "height": {
+        "type": "integer",
+        "default": 300
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A plot of 2016 annual global precipitation data from the NOAA Climate Forecast System (CFS) v2.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/annual-precipitation.data.json",
+    "vega": {
+      "status": "partial",
+      "ratio": 0.0323,
+      "threshold": 0.05,
+      "note": "Countries from TopoJSON and isocontours of the lon/lat grid (500..2500 mm) through geopath under naturalEarth1 (scale 110, translate [300 150]), quantized bluepurple legend labelled 500..2,500 with its title on the left: the map is pixel-identical to ref/annual-precipitation.png with the legend masked (ratio 0.0), 0.032 overall because Vega centres the legend (config.legend.layout, which Vega-Lite cannot express) and truncates its title at titleLimit; legend titleAnchor is reported unsupported.",
+      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 0,
+  "encoding": {
+    "x": {
+      "value": 0
+    },
+    "y": {
+      "value": 0
+    },
+    "size": {
+      "value": 4
+    },
+    "shape": {
+      "field": "path",
+      "type": "nominal",
+      "scale": null
+    }
+  },
+  "layer": [
+    {
+      "name": "world",
+      "data": {
+        "name": "world"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "geopath",
+          "field": "geometry",
+          "projection": {
+            "type": {
+              "x-eas:slot": "projection"
+            },
+            "scale": {
+              "x-eas:slot": "scale"
+            },
+            "translate": {
+              "x-eas:slot": "translate"
+            }
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "opacity": 1,
+        "clip": true,
+        "fill": "#ddd",
+        "stroke": "#eee",
+        "strokeWidth": 1
+      }
+    },
+    {
+      "name": "contours",
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "isocontour",
+          "x": {
+            "x-eas:slot": "x"
+          },
+          "y": {
+            "x-eas:slot": "y"
+          },
+          "value": {
+            "x-eas:slot": "value"
+          },
+          "thresholds": {
+            "x-eas:slot": "thresholds"
+          }
+        },
+        {
+          "x-eas:transform": "geopath",
+          "field": "contour",
+          "projection": {
+            "type": {
+              "x-eas:slot": "projection"
+            },
+            "scale": {
+              "x-eas:slot": "scale"
+            },
+            "translate": {
+              "x-eas:slot": "translate"
+            }
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "opacity": 1,
+        "clip": true,
+        "fillOpacity": {
+          "x-eas:slot": "opacity"
+        },
+        "strokeWidth": 0
+      },
+      "encoding": {
+        "fill": {
+          "field": "threshold",
+          "type": "quantitative",
+          "title": {
+            "x-eas:slot": "legendTitle"
+          },
+          "scale": {
+            "type": "quantize",
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "maximum"
+              }
+            ],
+            "scheme": {
+              "name": {
+                "x-eas:slot": "scheme"
+              },
+              "count": {
+                "x-eas:slot": "levels"
+              }
+            }
+          },
+          "legend": {
+            "orient": "bottom",
+            "direction": "horizontal",
+            "gradientLength": 300,
+            "gradientThickness": 12,
+            "offset": 5,
+            "titlePadding": 10,
+            "titleOrient": "left",
+            "titleAnchor": "end"
+          }
+        },
+        "tooltip": [
+          {
+            "field": "threshold",
+            "type": "quantitative",
+            "title": "at least (mm)"
+          }
+        ]
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

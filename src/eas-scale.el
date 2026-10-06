@@ -385,7 +385,10 @@ That is when its mantissa is small given the number of TICKS and COUNT."
 (defun eas-scale-tick-decimals (scale count)
   "Return the decimals of d3's tickFormat for SCALE's ticks at COUNT."
   (let ((domain (plist-get scale :domain)))
-    (if (not (member (plist-get scale :type) '("linear" "sqrt" "pow"))) 0
+    (if (or (not (member (plist-get scale :type) '("linear" "sqrt" "pow")))
+            ;; A one-value domain has no step (d3 ticks it as itself).
+            (= (aref domain 0) (aref domain 1)))
+        0
       (let ((step (abs (eas-scale-tick-increment (aref domain 0) (aref domain 1) count))))
         (if (zerop step) 0
           (let ((step (if (< (eas-scale-tick-increment (aref domain 0) (aref domain 1) count) 0)

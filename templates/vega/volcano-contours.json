@@ -1,0 +1,214 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "volcano-contours",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Filled contours of a value grid (an elevation model): marching-squares isocontours at thresholds, colored by threshold.",
+    "slots": {
+      "data": {
+        "shape": "grid",
+        "required": true,
+        "doc": "the grid: a Vega grid object {width, height, values} or tidy cell rows"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "x",
+        "doc": "cell column coordinate"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "y",
+        "doc": "cell row coordinate (rows run down the chart)"
+      },
+      "value": {
+        "type": "field",
+        "of": "data",
+        "default": "value",
+        "doc": "cell value"
+      },
+      "thresholds": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          90,
+          95,
+          100,
+          105,
+          110,
+          115,
+          120,
+          125,
+          130,
+          135,
+          140,
+          145,
+          150,
+          155,
+          160,
+          165,
+          170,
+          175,
+          180,
+          185,
+          190
+        ],
+        "doc": "contour levels, ascending"
+      },
+      "smooth": {
+        "type": "boolean",
+        "default": true,
+        "doc": "interpolate contour vertices between cells"
+      },
+      "domain": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          90,
+          190
+        ],
+        "doc": "values at the two ends of the color scheme"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "blueorange",
+        "doc": "continuous color scheme of the levels"
+      },
+      "stroke": {
+        "type": "string",
+        "default": "#ccc",
+        "doc": "contour line color"
+      },
+      "width": {
+        "type": "integer",
+        "default": 960,
+        "doc": "plot width in pixels"
+      },
+      "height": {
+        "type": "integer",
+        "default": 673,
+        "doc": "plot height; the grid keeps its aspect inside it"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A contour plot of the Maungawhau volcano in New Zealand.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/volcano-contours.data.json",
+    "vega": {
+      "status": "pass",
+      "ratio": 0.0036,
+      "threshold": 0.03,
+      "note": "isocontour (marching squares, linear smoothing) of the grid at 90..190 step 5, geopath under an identity projection fitted to the plot, drawn as path-shaped points: ratio 0.0036 against ref/volcano-contours.png (2 px size delta). The paths are pixels of the template's width and height, so the chart keeps that size (as Vega's autosize none).",
+      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 0,
+  "data": {
+    "name": "data"
+  },
+  "transform": [
+    {
+      "x-eas:transform": "isocontour",
+      "x": {
+        "x-eas:slot": "x"
+      },
+      "y": {
+        "x-eas:slot": "y"
+      },
+      "value": {
+        "x-eas:slot": "value"
+      },
+      "thresholds": {
+        "x-eas:slot": "thresholds"
+      },
+      "smooth": {
+        "x-eas:slot": "smooth"
+      }
+    },
+    {
+      "x-eas:transform": "geopath",
+      "field": "contour",
+      "projection": {
+        "type": "identity"
+      },
+      "size": [
+        {
+          "x-eas:slot": "width"
+        },
+        {
+          "x-eas:slot": "height"
+        }
+      ]
+    }
+  ],
+  "mark": {
+    "type": "point",
+    "filled": true,
+    "opacity": 1,
+    "stroke": {
+      "x-eas:slot": "stroke"
+    },
+    "strokeWidth": 1
+  },
+  "encoding": {
+    "x": {
+      "value": 0
+    },
+    "y": {
+      "value": 0
+    },
+    "size": {
+      "value": 4
+    },
+    "shape": {
+      "field": "path",
+      "type": "nominal",
+      "scale": null
+    },
+    "fill": {
+      "field": "threshold",
+      "type": "quantitative",
+      "legend": null,
+      "scale": {
+        "domain": {
+          "x-eas:slot": "domain"
+        },
+        "scheme": {
+          "x-eas:slot": "scheme"
+        }
+      }
+    },
+    "tooltip": [
+      {
+        "field": "threshold",
+        "type": "quantitative",
+        "title": "level"
+      }
+    ]
+  },
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

@@ -147,7 +147,9 @@ The spec's domain and range, else the data's values onto
 `eas-bins-shapes'."
   (when-let* ((pairs (cl-loop for u in units
                               for d = (plist-get (plist-get u :encoding) :shape)
-                              when (and (eas-object-p d) d (plist-get d :field)) collect (cons u d))))
+                              ;; scale: null draws the field's values as the shapes themselves.
+                              when (and (eas-object-p d) d (plist-get d :field) (not (eq (plist-get d :scale) :null)))
+                              collect (cons u d))))
     (let* ((def (cdar pairs)) (sp (plist-get def :scale)) (key (eas-key (plist-get def :field))))
       (append (eas-scale-ordinal (or (and (vectorp (plist-get sp :domain)) (plist-get sp :domain))
                                      (vconcat (delete-dups (cl-loop for p in pairs

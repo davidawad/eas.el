@@ -16,7 +16,12 @@
     "transform/x-eas:arc-label": "Pie label layout, materialized by resolve (ERT: eas-vega-std-basic-arc-label-separates-each-side).",
     "transform/x-eas:label": "Point label layout, materialized by resolve (ERT: eas-vega-std-basic-label-keeps-labels-apart).",
     "transform/x-eas/parallel-coordinates": "Fields folded and scaled on their own niced domains, with axis tick rows (ERT: eas-vega-other-custom-parallel-coordinates-scales-each-field).",
-    "transform/x-eas/serpentine": "A domain laid along a serpentine path, in pixels (ERT: eas-vega-other-custom-serpentine-lays-out-the-path)."
+    "transform/x-eas/serpentine": "A domain laid along a serpentine path, in pixels (ERT: eas-vega-other-custom-serpentine-lays-out-the-path).",
+    "transform/x-eas:geopath": "Vega's geopath: GeoJSON to SVG path data in pixels, identity or naturalEarth1/equalEarth/mercator/equirectangular (ERT: eas-vega-contour-geopath-writes-svg-path-data).",
+    "transform/x-eas:geopoints": "GeoJSON vertices as line rows, cut to a box (ERT: eas-vega-contour-geopoints-cut-lines-to-the-box).",
+    "transform/x-eas:heatmap": "Vega's heatmap: a value grid as a PNG data: URL for the image mark (ERT: eas-vega-contour-heatmap-colors-and-opacity).",
+    "transform/x-eas:isocontour": "Vega's isocontour: d3-contour marching squares, smoothing, thresholds and levels (ERT: eas-vega-contour-marching-squares-match-d3).",
+    "transform/x-eas:kde2d": "Vega's kde2d: 2D kernel density grids on the chart's nice zero domains (ERT: eas-vega-contour-kde2d-matches-vega)."
   },
   "features": {
     "bind/input": {

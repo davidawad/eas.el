@@ -56,6 +56,8 @@ are registered once and auto-discovered:
 | `org-table` | table at point, named table, or babel result |
 | `bar/v1` | market-data.el OHLCV bars (financial-chart's shape) |
 | `series`, `labeled`, `matrix`, `order-book`, ... | financial-chart's existing shapes, lowered to rows |
+| `grid` | a Vega value grid `{width, height, values[, scale, translate]}`, as tidy `{x, y, value}` cell rows |
+| `topojson` | a TopoJSON topology (or `{topology, object}`): one row per geometry, its GeoJSON as text |
 
 Every adapter validates and fails as data: `{code, index, field, message}`.
 That is the same rule the existing `financial-chart-shapes` validators
@@ -265,6 +267,28 @@ become `milestone` rows, and the path (`serpentine`), its ticks and
 its two ends are appended, each with pixel `x`/`y`, the segment, the
 arc angle, `side` and a tangent `labelAngle`.
 
+
+Vega's contour and raster transforms are domain transforms too
+(`eas-7r1.7`, `eas-contour.el`), so templates reach them from plain
+Vega-Lite marks:
+
+| transform | does |
+|---|---|
+| `kde2d` | Vega's kde2d (`eas-kde2d.el`): per group, points binned into a `size` pixel raster by `cellSize` and box-blurred three times per axis (bandwidth by Scott's rule when -1), as probabilities or `counts`. Resolve has no scales, so it places points on the domains Vega-Lite's scales will take (the data's extent with zero, nice), writes them as `AS_x0 AS_x1 AS_y0 AS_y1`, and maps the grid back into data units |
+| `isocontour` | Vega's isocontour (`eas-contour-iso.el`): d3-contour's marching squares with linear smoothing, rings to polygons and holes, at `thresholds` or `levels` (resolve `shared` over every grid's maximum); a GeoJSON MultiPolygon per grid and threshold plus a flat `threshold` |
+| `heatmap` | Vega's heatmap (`eas-contour-heatmap.el`): a grid as a PNG `data:` URL for the image mark, colored by a constant, a scheme at value/max or a category per row, opacity value/max by default; the PNG is encoded natively (stored deflate) |
+| `geopath` | Vega's geopath (`eas-contour-geo.el`): a geometry as SVG path data in pixels under a projection (identity, naturalEarth1, equalEarth, mercator, equirectangular; scale, translate, center, rotation, or fitted to the rows) |
+| `geopoints` | a geometry's vertices as rows (ring id, order, x, y), cut to a box, for line marks on the chart's own scales |
+
+Grids travel as tidy cell rows (rows stay flat) or in a domain
+transform's own field. A path is drawn as a point's shape with
+`"shape": {"field": "path", "scale": null}` at `x = y = 0`, size 4:
+Vega-Lite scales a custom symbol by sqrt(size)/2 = 1, so the path
+stands where the projection put it, and the chart keeps the size the
+paths were made for. The templates in `templates/vega/` (namespace
+`vega`) use them for the Vega gallery's contour plot, density
+heatmaps, volcano contours and annual precipitation.
+
 ### L2 spec: chart/v1
 
 It is Vega-Lite (pinned to the version `bin/chart` pins, 6.4.1).
@@ -439,7 +463,10 @@ LTTB decimation when a series has more points than pixel columns.
   tiers (fills, strokes, symbols); a stroke drawn before an opaque fill
   sits under it (a wick under its body). Tick labels that would
   overwrite one another are dropped, text runs back onto the canvas,
-  and wide characters take two cells. Text cannot rotate, so axis
+  and wide characters take two cells. A point whose shape is SVG path
+  data (geopath's) fills the cells whose centres it holds, and an image
+  of PNG data (heatmap's) colors each cell with the pixel under its
+  centre (`eas-contour-text.el`). Text cannot rotate, so axis
   labels run along their axis whatever their labelAngle; a log axis
   offers 1, 2, 3 and 5 per decade, kept by rank as rows allow. A
   gradient legend draws its ramp in half blocks; a brush shades every

@@ -1,0 +1,226 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "wind-vectors",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A flow map of a vector field on a regular grid: one wedge per cell, turned to its direction, sized by speed, colored by direction.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per grid cell: longitude, latitude, direction (degrees) and speed"
+      },
+      "longitude": {
+        "type": "field",
+        "of": "data",
+        "default": "longitude",
+        "doc": "grid column (a point scale, ascending)"
+      },
+      "latitude": {
+        "type": "field",
+        "of": "data",
+        "default": "latitude",
+        "doc": "grid row (north at the top)"
+      },
+      "direction": {
+        "type": "field",
+        "of": "data",
+        "default": "dir",
+        "doc": "direction the wind blows from, degrees"
+      },
+      "speed": {
+        "type": "field",
+        "of": "data",
+        "default": "speed",
+        "doc": "speed; symbol area is proportional to it"
+      },
+      "shape": {
+        "enum": [
+          "wedge",
+          "arrow"
+        ],
+        "default": "wedge",
+        "doc": "the vector symbol"
+      },
+      "maxSize": {
+        "type": "number",
+        "default": 250,
+        "doc": "symbol area of the fastest cell, in square pixels"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "rainbow",
+        "doc": "cyclic color scheme over 0..360 degrees"
+      },
+      "background": {
+        "type": "string",
+        "default": "#111"
+      },
+      "width": {
+        "type": "integer",
+        "default": 790
+      },
+      "height": {
+        "type": "integer",
+        "default": 590
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A flow map of wind direction and speed over northwest Europe.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "../examples/vega/wind-vectors.data.json",
+    "vega": {
+      "status": "pass",
+      "ratio": 0.0001,
+      "threshold": 0.03,
+      "note": "Point scales over longitude and latitude (north up), wedge symbols turned by direction + 180 and sized by speed, rainbow over 0..360: ratio 0.00003 against ref/wind-vectors.png (5 px size delta). No new transform needed.",
+      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "background": {
+    "x-eas:slot": "background"
+  },
+  "data": {
+    "name": "data"
+  },
+  "transform": [
+    {
+      "calculate": {
+        "x-eas:expr": "datum[{{direction}}] + 180"
+      },
+      "as": "eas_angle"
+    }
+  ],
+  "mark": {
+    "type": "point",
+    "shape": {
+      "x-eas:slot": "shape"
+    },
+    "filled": true,
+    "opacity": 1,
+    "strokeWidth": 0
+  },
+  "encoding": {
+    "x": {
+      "field": {
+        "x-eas:slot": "longitude"
+      },
+      "type": "ordinal",
+      "sort": "ascending",
+      "axis": null,
+      "scale": {
+        "type": "point",
+        "padding": 0.5
+      }
+    },
+    "y": {
+      "field": {
+        "x-eas:slot": "latitude"
+      },
+      "type": "ordinal",
+      "sort": "descending",
+      "axis": null,
+      "scale": {
+        "type": "point",
+        "padding": 0.5
+      }
+    },
+    "fill": {
+      "field": {
+        "x-eas:slot": "direction"
+      },
+      "type": "quantitative",
+      "legend": null,
+      "scale": {
+        "domain": [
+          0,
+          360
+        ],
+        "scheme": {
+          "x-eas:slot": "scheme"
+        }
+      }
+    },
+    "size": {
+      "field": {
+        "x-eas:slot": "speed"
+      },
+      "type": "quantitative",
+      "legend": null,
+      "scale": {
+        "zero": true,
+        "range": [
+          0,
+          {
+            "x-eas:slot": "maxSize"
+          }
+        ]
+      }
+    },
+    "angle": {
+      "field": "eas_angle",
+      "type": "quantitative",
+      "scale": {
+        "domain": [
+          0,
+          360
+        ],
+        "range": [
+          0,
+          360
+        ]
+      }
+    },
+    "tooltip": [
+      {
+        "field": {
+          "x-eas:slot": "longitude"
+        },
+        "type": "quantitative"
+      },
+      {
+        "field": {
+          "x-eas:slot": "latitude"
+        },
+        "type": "quantitative"
+      },
+      {
+        "field": {
+          "x-eas:slot": "direction"
+        },
+        "type": "quantitative"
+      },
+      {
+        "field": {
+          "x-eas:slot": "speed"
+        },
+        "type": "quantitative"
+      }
+    ]
+  },
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

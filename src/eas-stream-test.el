@@ -204,8 +204,11 @@
   (let ((eas-views (make-hash-table :test 'equal))
         (eas-streams (make-hash-table :test 'equal)))
     (let ((v (eas-stream-open eas-stream-test--spec :id "live" :stream '(:max-fps 20))))
-      (eas-push v (eas-stream-test--rows 3 3))
-      (eas-push v (eas-stream-test--rows 4 4))
+      ;; Both pushes must land within one 50 ms frame: a collection
+      ;; pause between them is not what this test measures.
+      (let ((gc-cons-threshold most-positive-fixnum))
+        (eas-push v (eas-stream-test--rows 3 3))
+        (eas-push v (eas-stream-test--rows 4 4)))
       (should (= (plist-get (eas-stream-inspect v) :queued) 1))
       (with-timeout (2 (ert-fail "the deferred frame never ran"))
         (while (> (plist-get (eas-stream-inspect v) :queued) 0) (sleep-for 0.01)))

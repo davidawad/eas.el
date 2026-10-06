@@ -1,0 +1,285 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "density-heatmaps",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Small multiples of 2D kernel density heatmaps, one per group, each normalized to its own (or the shared) maximum.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per point, with two numeric fields and a group field"
+      },
+      "x": {
+        "type": "field",
+        "of": "data",
+        "default": "Acceleration",
+        "doc": "quantitative x"
+      },
+      "y": {
+        "type": "field",
+        "of": "data",
+        "default": "Miles_per_Gallon",
+        "doc": "quantitative y"
+      },
+      "group": {
+        "type": "field",
+        "of": "data",
+        "default": "Origin",
+        "doc": "one heatmap per value, in ascending order"
+      },
+      "xTitle": {
+        "type": "string",
+        "default": "Acceleration"
+      },
+      "yTitle": {
+        "type": "string",
+        "default": "Miles per Gallon"
+      },
+      "resolve": {
+        "enum": [
+          "independent",
+          "shared"
+        ],
+        "default": "independent",
+        "doc": "normalize each heatmap by its own maximum, or by every group's"
+      },
+      "counts": {
+        "type": "boolean",
+        "default": false,
+        "doc": "densities as points per square pixel, not probabilities"
+      },
+      "bandwidth": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          -1,
+          -1
+        ],
+        "doc": "kernel bandwidths [x y] in pixels; -1 estimates (Scott's rule)"
+      },
+      "cellSize": {
+        "type": "integer",
+        "default": 4,
+        "doc": "density grid cell size in pixels"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "viridis",
+        "doc": "continuous color scheme of normalized density"
+      },
+      "legendTitle": {
+        "type": "string",
+        "default": "Local Density (Normalized)"
+      },
+      "size": {
+        "type": "integer",
+        "default": 250,
+        "doc": "width and height of each heatmap in pixels"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A small multiples view of 2D density heatmaps of automobile statistics.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      },
+      "legendLength": {
+        "type": "integer",
+        "default": 222,
+        "doc": "gradient legend length in pixels (Vega's: size - 28)"
+      }
+    },
+    "example": "../examples/vega/density-heatmaps.data.json",
+    "vega": {
+      "status": "partial",
+      "ratio": 0.0946,
+      "threshold": 0.12,
+      "compare": {
+        "height": 200
+      },
+      "note": "Faceted kde2d heatmaps (viridis of value/max per Origin, smoothed images), bold headers, axes and the 0..1 gradient legend match; the legend title is one line (Vega-Lite's array titles are not drawn natively), so the chart is about 60 px wider than Vega's: ratio 0.095 against the site thumbnail at its height, 0.031 at the scale that aligns the plots with the legend masked.",
+      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "data": {
+    "name": "data"
+  },
+  "transform": [
+    {
+      "x-eas:transform": "kde2d",
+      "x": {
+        "x-eas:slot": "x"
+      },
+      "y": {
+        "x-eas:slot": "y"
+      },
+      "groupby": [
+        {
+          "x-eas:slot": "group"
+        }
+      ],
+      "size": [
+        {
+          "x-eas:slot": "size"
+        },
+        {
+          "x-eas:slot": "size"
+        }
+      ],
+      "bandwidth": {
+        "x-eas:slot": "bandwidth"
+      },
+      "cellSize": {
+        "x-eas:slot": "cellSize"
+      },
+      "counts": {
+        "x-eas:slot": "counts"
+      }
+    },
+    {
+      "x-eas:transform": "heatmap",
+      "field": "grid",
+      "resolve": {
+        "x-eas:slot": "resolve"
+      },
+      "color": {
+        "scheme": {
+          "x-eas:slot": "scheme"
+        }
+      },
+      "opacity": 1
+    },
+    {
+      "calculate": "1",
+      "as": "density"
+    }
+  ],
+  "facet": {
+    "column": {
+      "field": {
+        "x-eas:slot": "group"
+      },
+      "type": "nominal",
+      "sort": "ascending",
+      "title": null,
+      "header": {
+        "labelFontWeight": "bold",
+        "labelFontSize": 12
+      }
+    }
+  },
+  "spacing": 10,
+  "spec": {
+    "width": {
+      "x-eas:slot": "size"
+    },
+    "height": {
+      "x-eas:slot": "size"
+    },
+    "layer": [
+      {
+        "name": "extent",
+        "mark": {
+          "type": "rect",
+          "opacity": 0
+        },
+        "encoding": {
+          "x": {
+            "field": "grid_x0",
+            "type": "quantitative",
+            "title": {
+              "x-eas:slot": "xTitle"
+            },
+            "axis": {
+              "domain": false,
+              "tickCount": 5,
+              "labelFlush": true
+            }
+          },
+          "x2": {
+            "field": "grid_x1"
+          },
+          "y": {
+            "field": "grid_y0",
+            "type": "quantitative",
+            "title": {
+              "x-eas:slot": "yTitle"
+            },
+            "axis": {
+              "domain": false,
+              "offset": 2
+            }
+          },
+          "y2": {
+            "field": "grid_y1"
+          },
+          "fill": {
+            "field": "density",
+            "type": "quantitative",
+            "title": {
+              "x-eas:slot": "legendTitle"
+            },
+            "scale": {
+              "domain": [
+                0,
+                1
+              ],
+              "scheme": {
+                "x-eas:slot": "scheme"
+              }
+            },
+            "legend": {
+              "gradientLength": {
+                "x-eas:slot": "legendLength"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "heatmap",
+        "mark": {
+          "type": "image",
+          "width": {
+            "x-eas:slot": "size"
+          },
+          "height": {
+            "x-eas:slot": "size"
+          },
+          "align": "left",
+          "baseline": "top",
+          "aspect": false
+        },
+        "encoding": {
+          "x": {
+            "field": "grid_x0",
+            "type": "quantitative"
+          },
+          "y": {
+            "field": "grid_y1",
+            "type": "quantitative"
+          },
+          "url": {
+            "field": "image",
+            "type": "nominal"
+          }
+        }
+      }
+    ]
+  },
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  }
+}

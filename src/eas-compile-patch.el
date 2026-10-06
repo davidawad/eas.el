@@ -147,7 +147,11 @@ Must run with selection hooks bound to NEW (`eas-params-with-state')."
                   (if (or (eas-patch--positional-p unit changed)
                           (member (plist-get (plist-get unit :mark) :type) '("line" "area" "trail" "geoshape"))
                           (null (plist-get unit :items))
-                          (seq-some (lambda (c) (plist-get c :test))
+                          ;; A test condition may read any param: rebuild every item.
+                          (seq-some (lambda (d) (let ((c (plist-get d :condition)))
+                                                  (or (plist-get d :test)
+                                                      (seq-some (lambda (x) (and (eas-object-p x) (plist-get x :test)))
+                                                                (cond ((vectorp c) c) (c (list c)))))))
                                     (cl-loop for (_ d) on (plist-get unit :encoding) by #'cddr
                                              when (eas-object-p d) collect d)))
                       (eas-plist-put (eas-plist-put unit :items nil) :env env)

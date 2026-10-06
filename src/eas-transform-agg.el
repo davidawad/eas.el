@@ -169,6 +169,19 @@ PATH is TR's JSON path, for errors."
                       (if desc (not lt) lt))
              finally return nil)))
 
+(defvar eas-agg--dense-ranks (make-hash-table :test 'eq :weakness 'key)
+  "Dense ranks of a sorted window partition, computed once for all its rows.")
+
+(defun eas-agg--dense-ranks (sorted key-fn n)
+  "Vector of the dense ranks (1, 2, 2, 3 ...) of the N rows of SORTED.
+KEY-FN gives a row's sort key; rows with equal keys share a rank."
+  (let ((ranks (make-vector n 0)) (rank 0) (prev (make-symbol "none")))
+    (dotimes (j n)
+      (let ((key (funcall key-fn (aref sorted j))))
+        (unless (equal key prev) (setq rank (1+ rank) prev key))
+        (aset ranks j rank)))
+    ranks))
+
 (defun eas-agg--rank-ops (op index sorted key-fn n param)
   "Return the value of ranking OP for position INDEX in SORTED (length N).
 KEY-FN gives a row's sort key, ties sharing a rank; PARAM is ntile's
@@ -183,8 +196,9 @@ bucket count (default 1)."
     (pcase op
       ("row_number" (1+ index))
       ("rank" (1+ first))
-      ("dense_rank" (1+ (length (delete-dups (cl-loop for j from 0 to index
-                                                      collect (funcall key-fn (aref sorted j)))))))
+      ("dense_rank" (aref (or (gethash sorted eas-agg--dense-ranks)
+                              (puthash sorted (eas-agg--dense-ranks sorted key-fn n) eas-agg--dense-ranks))
+                          index))
       ("percent_rank" (if (= n 1) 0 (/ (float first) (1- n))))
       ("cume_dist" (/ (float (1+ last)) n))
       ("ntile" (1+ (floor (* (or param 1) index) n))))))

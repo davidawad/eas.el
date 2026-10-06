@@ -199,6 +199,10 @@ outward direction (+1 or -1)."
                                         (eas-layout-text-bounds metrics title tsize (- (plist-get tm :x) 0.5)
                                                                 (- (plist-get tm :y) 0.5) (plist-get tm :align)
                                                                 (plist-get tm :baseline) (plist-get tm :angle) weight)))))
+      ;; Vega's minExtent: the axis claims at least this much room.
+      (when-let* ((m (plist-get axis :min-extent)) (e (+ a (* dir m))))
+        (setq ab (eas-layout-union ab (if horiz (vector x0 (min a e) x0 (max a e))
+                                        (vector (min a e) y0 (max a e) y0)))))
       (append (eas--plist-without axis :ticks)
               (list :ticks placed
                     :domain-line (unless (plist-get axis :no-domain)

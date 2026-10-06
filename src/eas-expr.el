@@ -28,6 +28,7 @@
 (require 'eas-time)
 (require 'eas-format)
 (require 'eas-expr-stats)
+(require 'eas-expr-dist)
 
 (defconst eas-expr--token-regexp
   (concat "[ \t\n]*\\(?:"
@@ -399,6 +400,13 @@ goldens and replays reproduce exactly."
     ("if" . ,(lambda (test a b) (if (eas-expr-truthy test) a b)))
     ("quantileUniform" . ,(eas-expr--num-fn #'eas-expr-stats-quantile-uniform))
     ("quantileNormal" . ,(eas-expr--num-fn #'eas-expr-stats-quantile-normal))
+    ("quantileLogNormal" . ,(eas-expr--num-fn #'eas-expr-dist-quantile-log-normal))
+    ("densityNormal" . ,(eas-expr--num-fn #'eas-expr-dist-density-normal))
+    ("cumulativeNormal" . ,(eas-expr--num-fn #'eas-expr-dist-cumulative-normal))
+    ("densityLogNormal" . ,(eas-expr--num-fn #'eas-expr-dist-density-log-normal))
+    ("cumulativeLogNormal" . ,(eas-expr--num-fn #'eas-expr-dist-cumulative-log-normal))
+    ("densityUniform" . ,(eas-expr--num-fn #'eas-expr-dist-density-uniform))
+    ("cumulativeUniform" . ,(eas-expr--num-fn #'eas-expr-dist-cumulative-uniform))
     ("format" . ,(lambda (v spec) (eas-format-number (eas-expr--string spec) v)))
     ;; Evaluated per datum by `eas-expr-eval' (`eas-expr--random').
     ("random" . ignore)

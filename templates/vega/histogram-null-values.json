@@ -1,0 +1,93 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "histogram-null-values",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Histogram of a numeric field that also counts its missing values, as a grey bar left of the bins.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a numeric column, which may be null or missing"},
+      "field": {"type": "field", "of": "data", "default": "IMDB Rating"},
+      "maxbins": {"type": "integer", "default": 10, "doc": "most bins (edges are rounded)"},
+      "null_label": {"type": "string", "default": "null", "doc": "axis label under the missing-value bar"},
+      "color": {"type": "string", "default": "steelblue"},
+      "hover_color": {"type": "string", "default": "firebrick", "doc": "fill of the bar under the pointer"},
+      "null_color": {"type": "string", "default": "#aaa"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Histogram of a numeric field with its missing values counted beside the bins.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 297, "doc": "width of the bins"},
+      "null_width": {"type": "number", "default": 33, "doc": "width of the missing-value bar"},
+      "gap": {"type": "number", "default": 10, "doc": "pixels between the missing-value bar and the bins"},
+      "height": {"type": "number", "default": 178},
+      "label_extent": {"type": "number", "default": null, "doc": "least room for the count labels in pixels; null fits them"}
+    },
+    "example": "../examples/vega/histogram-null-values.data.json",
+    "vega": {"status": "pass", "note": "The grey null bar beside the bins shares the y scale; hover fills a bar firebrick. The maxbins select is a slot. Ratio 0.0207 at best alignment with resvg here.", "ratio": 0.0207, "threshold": 0.05}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "data": {"name": "data"},
+  "spacing": {"x-eas:slot": "gap"},
+  "resolve": {"scale": {"y": "shared"}},
+  "hconcat": [
+    {
+      "name": "nulls",
+      "params": [{"name": "hover_null", "select": {"type": "point", "on": "pointermove", "fields": ["label"]}}],
+      "width": {"x-eas:slot": "null_width"},
+      "height": {"x-eas:slot": "height"},
+      "transform": [
+        {"filter": {"x-eas:expr": "!isValid(datum[{{field}}])"}},
+        {"aggregate": [{"op": "count", "as": "count"}]},
+        {"calculate": {"x-eas:expr": "{{null_label}}"}, "as": "label"}
+      ],
+      "mark": {"type": "bar"},
+      "encoding": {
+        "color": {"condition": {"param": "hover_null", "empty": false, "value": {"x-eas:slot": "hover_color"}},
+                  "value": {"x-eas:slot": "null_color"}},
+        "x": {"field": "label", "type": "nominal", "title": null,
+              "scale": {"paddingInner": 0, "paddingOuter": 0.015}, "axis": {"labelAngle": 0}},
+        "y": {"field": "count", "type": "quantitative", "title": null,
+              "axis": {"tickCount": 5, "offset": 5, "minExtent": {"x-eas:slot": "label_extent"}}},
+        "tooltip": [{"field": "count", "type": "quantitative", "title": "missing"}]
+      }
+    },
+    {
+      "name": "bins",
+      "params": [{"name": "hover", "select": {"type": "point", "on": "pointermove", "fields": ["bin0"]}}],
+      "width": {"x-eas:slot": "width"},
+      "height": {"x-eas:slot": "height"},
+      "transform": [
+        {"filter": {"x-eas:expr": "isValid(datum[{{field}}])"}},
+        {"bin": {"maxbins": {"x-eas:slot": "maxbins"}}, "field": {"x-eas:slot": "field"}, "as": ["bin0", "bin1"]},
+        {"aggregate": [{"op": "count", "as": "count"}], "groupby": ["bin0", "bin1"]}
+      ],
+      "mark": {"type": "bar", "binSpacing": 1},
+      "encoding": {
+        "color": {"condition": {"param": "hover", "empty": false, "value": {"x-eas:slot": "hover_color"}},
+                  "value": {"x-eas:slot": "color"}},
+        "x": {"field": "bin0", "type": "quantitative", "bin": "binned", "title": null},
+        "x2": {"field": "bin1"},
+        "y": {"field": "count", "type": "quantitative", "axis": null},
+        "tooltip": [
+          {"field": "bin0", "type": "quantitative", "title": "from"},
+          {"field": "bin1", "type": "quantitative", "title": "to"},
+          {"field": "count", "type": "quantitative"}
+        ]
+      }
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

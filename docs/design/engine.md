@@ -159,6 +159,28 @@ with slot `focus` set to the clicked node, which a `subtree` transform
 lays out alone: d3's layouts place every subtree independently, so
 that is the zoomed layout.
 
+
+Where Vega has a transform Vega-Lite lacks, the engine ports it as a
+domain transform (`eas-7r1.2`). `dotbin` (eas-dotbin.el) is Vega's
+DotBin, Wilkinson's dot plot binning: within each `groupby` group,
+sorted by `field`, a bin opens at a value and takes every value less
+than `step` above it, and each row gets its bin's center in `as`
+(default `bin`; `step` defaults to a thirtieth of the field's span,
+`smooth` evens out adjacent stacks as Vega does). A window
+`row_number` grouped by the bin then stacks the dots:
+
+```json
+{"x-eas:transform": "dotbin", "field": "minutes", "step": 1.25, "smooth": false, "as": "bin"}
+```
+
+Vega's distribution functions are in the expression subset too
+(eas-expr-dist.el, ported from vega-statistics): `densityNormal`,
+`cumulativeNormal`, `densityLogNormal`, `cumulativeLogNormal`,
+`quantileLogNormal`, `densityUniform` and `cumulativeUniform`, beside
+`quantileNormal` and `quantileUniform`. `density` takes Vega-Lite's
+`resolve`: `"independent"` samples each group over its own extent (a
+violin ends at its group's extremes), the default `"shared"` over one.
+
 ### L2 spec: chart/v1
 
 It is Vega-Lite (pinned to the version `bin/chart` pins, 6.4.1).
@@ -223,6 +245,19 @@ namespace (`vega/clock`), each with its binding in `examples/vega/`
 "threshold"}`, where ratio is `eas-png-compare`'s differing-pixel
 ratio and the `:gallery` test holds each example within its
 threshold.
+
+`templates/vega/` holds one template per example of the Vega gallery
+(vega.github.io/vega/examples, epic `eas-7r1`), namespaced `vega`
+(`vega/histogram`), each with its binding in `examples/vega/` that
+reproduces the gallery chart from `test/vega-examples/data`. A
+template's `x-eas.vega` records how close it comes to
+`test/vega-examples/ref/NAME.png`: `{"status": "pass"|"partial"|
+"unsupported", "note", "ratio", "threshold"}`, `ratio` being the
+differing-pixel ratio measured at the best alignment and `threshold`
+what `make test-gallery-vega` holds it to. The references were drawn
+by Vega with estimated text widths (0.8 em per character), so a
+binding may set `label_extent` (an axis `minExtent`) to keep the
+gallery's layout.
 
 A slot that holds an array can expand into views:
 `{"x-eas:each": SLOT, "spec": X}` in any array becomes one X per item,

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "top-k-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "The k categories with the largest aggregate of a value, as horizontal bars, largest first.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a category and a value column; rows missing either are left out"},
+      "category": {"type": "field", "of": "data", "default": "Director"},
+      "value": {"type": "field", "of": "data", "default": "Worldwide Gross"},
+      "op": {"enum": ["mean", "median", "sum"], "default": "mean", "doc": "how the values of a category aggregate"},
+      "k": {"type": "integer", "default": 20, "doc": "how many categories to show; a range input changes it live"},
+      "format": {"type": "string", "default": "$,d", "doc": "d3 format of the value axis"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "The k categories with the largest aggregate of a value, largest first.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 360},
+      "height": {"type": "number", "default": 370},
+      "label_extent": {"type": "number", "default": null, "doc": "least room for the category labels in pixels; null fits them"},
+      "padding": {"type": "number", "default": 5, "doc": "pixels around the chart"}
+    },
+    "example": "../examples/vega/top-k-plot.data.json",
+    "vega": {"status": "pass", "note": "Bars, band padding, $ axis and start-anchored title match. The k slider is a live range input (param k); the average/median/sum select is the op slot, as Vega-Lite aggregate ops are static. Vega laid the reference out with estimated text widths, so its canvas is 21px wider (label overhang). Ratio 0.0134 at best alignment with resvg here.", "ratio": 0.0134, "threshold": 0.03, "size": 25}
+  },
+  "title": {"text": {"x-eas:slot": "title"}, "frame": "group"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": {"x-eas:slot": "padding"},
+  "data": {"name": "data"},
+  "params": [
+    {"name": "k", "value": {"x-eas:slot": "k"}, "bind": {"input": "range", "min": 1, "max": 50, "step": 1}}
+  ],
+  "transform": [
+    {"filter": {"x-eas:expr": "isValid(datum[{{category}}]) && isValid(datum[{{value}}])"}},
+    {"aggregate": [{"op": {"x-eas:slot": "op"}, "field": {"x-eas:slot": "value"}, "as": "aggregate"}],
+     "groupby": [{"x-eas:slot": "category"}]},
+    {"window": [{"op": "row_number", "as": "rank"}], "sort": [{"field": "aggregate", "order": "descending"}]},
+    {"filter": "datum.rank <= k"}
+  ],
+  "mark": {"type": "bar"},
+  "encoding": {
+    "x": {"field": "aggregate", "type": "quantitative", "title": null,
+          "axis": {"format": {"x-eas:slot": "format"}, "tickCount": 5, "labelOverlap": false}},
+    "y": {"field": {"x-eas:slot": "category"}, "type": "nominal", "title": null, "sort": "-x",
+          "scale": {"padding": 0.1}, "axis": {"minExtent": {"x-eas:slot": "label_extent"}}},
+    "tooltip": [
+      {"field": {"x-eas:slot": "category"}, "type": "nominal"},
+      {"field": "aggregate", "type": "quantitative", "format": {"x-eas:slot": "format"}},
+      {"field": "rank", "type": "quantitative"}
+    ]
+  },
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "start", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

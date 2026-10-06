@@ -54,6 +54,7 @@
 (require 'eas-hierarchy-tile)
 (require 'eas-hierarchy-pack)
 (require 'eas-linkpath)
+(require 'eas-dotbin)
 (require 'eas-spec)
 (require 'eas-spec-props)
 (require 'eas-vl-lower)

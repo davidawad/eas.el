@@ -231,6 +231,19 @@
     "vega/table-scrollbar": {"status": "pass"},
     "vega/watch": {"status": "pass"},
     "vega/zoomable-binned-plot": {"status": "pass"},
-    "vega/zoomable-scatter-plot": {"status": "pass"}
+    "vega/zoomable-scatter-plot": {"status": "pass"},
+    "vega/binned-scatter-plot": {"status": "pass"},
+    "vega/box-plot": {"status": "pass"},
+    "vega/dot-plot": {"status": "pass"},
+    "vega/histogram": {"status": "pass"},
+    "vega/histogram-null-values": {"status": "pass"},
+    "vega/probability-density": {"status": "pass"},
+    "vega/quantile-dot-plot": {"status": "pass"},
+    "vega/quantile-quantile-plot": {"status": "pass"},
+    "vega/time-units": {"status": "pass"},
+    "vega/top-k-plot": {"status": "pass"},
+    "vega/top-k-plot-with-others": {"status": "pass"},
+    "vega/violin-plot": {"status": "pass"},
+    "vega/wheat-plot": {"status": "pass"}
   }
 }

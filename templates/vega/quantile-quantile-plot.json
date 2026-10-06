@@ -1,0 +1,85 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "quantile-quantile-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Quantile-quantile plots: the quantiles of a numeric field against those of the uniform and of the standard normal distribution.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a numeric column"},
+      "field": {"type": "field", "of": "data", "default": "u"},
+      "step": {"type": "number", "default": 0.009900990099009901, "doc": "probability step between the compared quantiles, which start at step/2; 1/101 compares 101"},
+      "y_domain": {"type": "array", "items": "number", "default": null, "doc": "[min, max] of the shared y axis; null fits the quantiles"},
+      "color": {"type": "string", "default": "steelblue"},
+      "y_title": {"type": "string", "default": "Empirical Data Quantiles"},
+      "uniform_title": {"type": "string", "default": "Theoretical Uniform Quantiles"},
+      "normal_title": {"type": "string", "default": "Theoretical Normal Quantiles"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "How the distribution of a field compares with the uniform and the normal distribution.", "doc": "the takeaway; alt text and table-view fallback"},
+      "size": {"type": "number", "default": 250, "doc": "width and height of each plot"},
+      "spacing": {"type": "number", "default": 10, "doc": "pixels between the two plots' axes"},
+      "label_extent": {"type": "number", "default": null, "doc": "least room for the y labels in pixels; null fits them"}
+    },
+    "example": "../examples/vega/quantile-quantile-plot.data.json",
+    "vega": {"status": "pass", "note": "Both Q-Q panels with a shared y scale match. The quantile-count slider is the step slot and the dataset select is the data slot. Ratio 0.0091 at best alignment with resvg here.", "ratio": 0.0091, "threshold": 0.03}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "data": {"name": "data"},
+  "transform": [
+    {"filter": {"x-eas:expr": "isValid(datum[{{field}}])"}},
+    {"quantile": {"x-eas:slot": "field"}, "step": {"x-eas:slot": "step"}, "as": ["prob", "value"]},
+    {"calculate": "quantileUniform(datum.prob)", "as": "quniform"},
+    {"calculate": "quantileNormal(datum.prob)", "as": "qnormal"}
+  ],
+  "spacing": {"x-eas:slot": "spacing"},
+  "resolve": {"scale": {"y": "shared"}},
+  "hconcat": [
+    {
+      "name": "uniform",
+      "width": {"x-eas:slot": "size"},
+      "height": {"x-eas:slot": "size"},
+      "mark": {"type": "point", "shape": "circle", "filled": true, "opacity": 1, "size": 16, "color": {"x-eas:slot": "color"}},
+      "encoding": {
+        "x": {"field": "quniform", "type": "quantitative", "title": {"x-eas:slot": "uniform_title"},
+              "scale": {"domain": [0, 1], "nice": false}, "axis": {"grid": true, "tickCount": 10}},
+        "y": {"field": "value", "type": "quantitative", "title": {"x-eas:slot": "y_title"},
+              "scale": {"domain": {"x-eas:slot": "y_domain"}, "nice": true, "zero": false},
+              "axis": {"grid": true, "tickCount": 10, "offset": 10, "minExtent": {"x-eas:slot": "label_extent"}}},
+        "tooltip": [{"field": "prob", "type": "quantitative", "title": "probability", "format": ".3f"},
+                    {"field": "value", "type": "quantitative", "title": {"x-eas:slot": "field"}, "format": ".3f"},
+                    {"field": "quniform", "type": "quantitative", "title": "uniform", "format": ".3f"}]
+      }
+    },
+    {
+      "name": "normal",
+      "width": {"x-eas:slot": "size"},
+      "height": {"x-eas:slot": "size"},
+      "mark": {"type": "point", "shape": "circle", "filled": true, "opacity": 1, "size": 16, "color": {"x-eas:slot": "color"}},
+      "encoding": {
+        "x": {"field": "qnormal", "type": "quantitative", "title": {"x-eas:slot": "normal_title"},
+              "scale": {"domain": [-3, 3], "nice": false}, "axis": {"grid": true, "tickCount": 10}},
+        "y": {"field": "value", "type": "quantitative", "title": null,
+              "scale": {"domain": {"x-eas:slot": "y_domain"}, "nice": true, "zero": false},
+              "axis": {"grid": true, "tickCount": 10, "domain": false, "ticks": false, "labels": false}},
+        "tooltip": [{"field": "prob", "type": "quantitative", "title": "probability", "format": ".3f"},
+                    {"field": "value", "type": "quantitative", "title": {"x-eas:slot": "field"}, "format": ".3f"},
+                    {"field": "qnormal", "type": "quantitative", "title": "normal", "format": ".3f"}]
+      }
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

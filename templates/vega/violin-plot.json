@@ -1,0 +1,104 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "violin-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "One horizontal violin per category: a mirrored kernel density estimate of a value, with its interquartile range and median marked.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a category and a numeric value; rows missing either are left out"},
+      "category": {"type": "field", "of": "data", "default": "Species"},
+      "value": {"type": "field", "of": "data", "default": "Body Mass (g)"},
+      "extent": {"type": "array", "items": "number", "default": null, "doc": "[min, max] every violin spans; null trims each to its category's extremes"},
+      "bandwidth": {"type": "number", "default": 0, "doc": "kernel bandwidth; 0 estimates it per category with Scott's rule"},
+      "domain_min": {"type": "number", "default": null, "doc": "lowest value the axis shows at least; null starts at the data"},
+      "violin_height": {"type": "number", "default": 60, "doc": "thickness of the widest violin in pixels"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Distribution of a value per category as mirrored density curves, with quartiles and median.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 500},
+      "height": {"type": "number", "default": 210, "doc": "plot height; each category gets an equal band of it"},
+      "label_extent": {"type": "number", "default": null, "doc": "least room for the category labels in pixels"}
+    },
+    "example": "../examples/vega/violin-plot.data.json",
+    "vega": {"status": "pass", "note": "Mirrored per-species KDE (density resolve independent, trimmed), quartile and median marks match. The category axis is drawn with rule, tick and text marks, as the violins sit on a numeric band index. Trim and bandwidth inputs are slots (extent, bandwidth). Ratio 0.0098 at best alignment with resvg here.", "ratio": 0.0098, "threshold": 0.03}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "data": {"name": "data"},
+  "transform": [
+    {"filter": {"x-eas:expr": "isValid(datum[{{category}}]) && isValid(datum[{{value}}])"}},
+    {"window": [{"op": "dense_rank", "as": "band"}], "sort": [{"field": {"x-eas:slot": "category"}}]},
+    {"joinaggregate": [{"op": "max", "field": "band", "as": "bands"}]}
+  ],
+  "encoding": {
+    "y": {"type": "quantitative", "title": null,
+          "axis": {"domain": false, "ticks": false, "labels": false, "grid": false, "minExtent": {"x-eas:slot": "label_extent"}},
+          "scale": {"zero": true, "nice": false, "reverse": true}}
+  },
+  "layer": [
+    {"name": "violin",
+     "transform": [
+       {"density": {"x-eas:slot": "value"}, "groupby": [{"x-eas:slot": "category"}, "band", "bands"],
+        "bandwidth": {"x-eas:slot": "bandwidth"}, "extent": {"x-eas:slot": "extent"}, "resolve": "independent"},
+       {"joinaggregate": [{"op": "max", "field": "density", "as": "peak"}]},
+       {"calculate": {"x-eas:expr": "datum.density / datum.peak * {{violin_height}} * datum.bands / {{height}} / 2"}, "as": "half"},
+       {"calculate": "datum.band - 0.5 - datum.half", "as": "lower"},
+       {"calculate": "datum.band - 0.5 + datum.half", "as": "upper"}
+     ],
+     "mark": {"type": "area", "orient": "vertical"},
+     "encoding": {
+       "x": {"field": "value", "type": "quantitative", "title": null,
+             "scale": {"domainMin": {"x-eas:slot": "domain_min"}, "zero": false, "nice": true}},
+       "y": {"field": "lower"},
+       "y2": {"field": "upper"},
+       "color": {"field": {"x-eas:slot": "category"}, "type": "nominal", "legend": null},
+       "tooltip": [{"field": {"x-eas:slot": "category"}, "type": "nominal"},
+                   {"field": "value", "type": "quantitative", "format": ".4~r"},
+                   {"field": "density", "type": "quantitative", "format": ".3~e"}]
+     }},
+    {"name": "quartiles",
+     "transform": [
+       {"aggregate": [
+         {"op": "q1", "field": {"x-eas:slot": "value"}, "as": "q1"},
+         {"op": "median", "field": {"x-eas:slot": "value"}, "as": "median"},
+         {"op": "q3", "field": {"x-eas:slot": "value"}, "as": "q3"}],
+        "groupby": [{"x-eas:slot": "category"}, "band"]},
+       {"calculate": "datum.band - 0.5", "as": "center"},
+       {"calculate": "datum.band - 1", "as": "top"}
+     ],
+     "layer": [
+       {"mark": {"type": "rule", "strokeWidth": 2, "color": "black"},
+        "encoding": {"x": {"field": "q1", "type": "quantitative"}, "x2": {"field": "q3"}, "y": {"field": "center"},
+                     "tooltip": [{"field": {"x-eas:slot": "category"}, "type": "nominal"},
+                                 {"field": "q1", "type": "quantitative"}, {"field": "median", "type": "quantitative"},
+                                 {"field": "q3", "type": "quantitative"}]}},
+       {"mark": {"type": "tick", "orient": "vertical", "thickness": 2, "size": 8, "color": "black", "opacity": 1},
+        "encoding": {"x": {"field": "median", "type": "quantitative"}, "y": {"field": "center"}}},
+       {"name": "category-axis",
+        "mark": {"type": "tick", "size": 5, "thickness": 1, "color": "#888", "opacity": 1, "yOffset": 0.5},
+        "encoding": {"x": {"value": -2.5}, "y": {"field": "top"}}},
+       {"mark": {"type": "tick", "size": 5, "thickness": 1, "color": "#888", "opacity": 1, "yOffset": 0.5},
+        "encoding": {"x": {"value": -2.5}, "y": {"field": "band"}}},
+       {"mark": {"type": "rule", "color": "#888"},
+        "encoding": {"x": {"value": 0.5}, "y": {"field": "top"}, "y2": {"field": "band"}}},
+       {"mark": {"type": "text", "align": "right", "baseline": "middle", "fontSize": 10, "color": "#000", "dx": -7},
+        "encoding": {"x": {"value": 0}, "y": {"field": "center"}, "text": {"field": {"x-eas:slot": "category"}}}}
+     ]}
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

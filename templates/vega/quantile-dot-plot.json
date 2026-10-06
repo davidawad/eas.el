@@ -1,0 +1,94 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "quantile-dot-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Quantile dot plot: n quantiles of an outcome stacked as dots, so k dots read as k/n chance; dots below a threshold turn red and a rule reads off the chance below it.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a numeric column: n evenly spaced quantiles of the outcome (or n draws)"},
+      "field": {"type": "field", "of": "data", "default": "minutes"},
+      "step": {"type": "number", "default": 1.25, "doc": "bin width in data units, which is also a dot's diameter"},
+      "extent": {"type": "array", "items": "number", "default": [0, 30], "doc": "[min, max] of the x axis"},
+      "threshold": {"type": "number", "default": 0, "doc": "dots in bins below it are highlighted; a range input moves it live; 0 hides the rule"},
+      "share": {"type": "string", "default": "datum.p + (threshold - datum.value) / (datum.next_value - datum.value) * (datum.next_p - datum.p)",
+                "doc": "Vega expression for the chance below threshold; the default interpolates between the quantile dots"},
+      "color": {"type": "string", "default": "steelblue"},
+      "highlight": {"type": "string", "default": "firebrick"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Uncertainty of an outcome as equally likely quantile dots.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 400},
+      "height": {"type": "number", "default": 90}
+    },
+    "example": "../examples/vega/quantile-dot-plot.data.json",
+    "vega": {"status": "pass", "note": "Twenty log-normal quantile dots via dotbin, the dots below the threshold in firebrick, the rule and its 5.0% readout match. The threshold is a live range input instead of click and drag; the quantile-count slider becomes the data slot. Ratio 0.0081 at best alignment with resvg here.", "ratio": 0.0081, "threshold": 0.03}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "data": {"name": "data"},
+  "params": [
+    {"name": "threshold", "value": {"x-eas:slot": "threshold"},
+     "bind": {"input": "range", "min": {"x-eas:slot": "extent", "key": "0"}, "max": {"x-eas:slot": "extent", "key": "1"}, "step": 0.1}}
+  ],
+  "transform": [
+    {"x-eas:transform": "dotbin", "field": {"x-eas:slot": "field"}, "step": {"x-eas:slot": "step"}, "as": "dotbin"},
+    {"filter": {"x-eas:expr": "isValid(datum[{{field}}])"}},
+    {"calculate": {"x-eas:expr": "datum[{{field}}]"}, "as": "value"},
+    {"window": [{"op": "row_number", "as": "rank"}], "sort": [{"field": "value"}]},
+    {"joinaggregate": [{"op": "count", "as": "n"}]},
+    {"calculate": "(datum.rank - 0.5) / datum.n", "as": "p"}
+  ],
+  "layer": [
+    {"name": "dots",
+     "transform": [
+       {"window": [{"op": "row_number", "as": "level"}], "groupby": ["dotbin"]},
+       {"calculate": {"x-eas:expr": "{{step}} * {{width}} / ({{extent.1}} - {{extent.0}})"}, "as": "diameter"},
+       {"calculate": "datum.diameter * datum.diameter", "as": "area"},
+       {"calculate": "(datum.level - 0.5) * datum.diameter", "as": "y"}
+     ],
+     "mark": {"type": "circle", "opacity": 1},
+     "encoding": {
+       "x": {"field": "dotbin", "type": "quantitative", "title": null,
+             "scale": {"domain": {"x-eas:slot": "extent"}, "nice": false}},
+       "y": {"field": "y", "type": "quantitative", "axis": null,
+             "scale": {"domain": [0, {"x-eas:slot": "height"}], "nice": false, "zero": false}},
+       "size": {"field": "area", "type": "quantitative", "legend": null,
+                "scale": {"domain": [0, 10000], "range": [0, 10000], "zero": true}},
+       "color": {"condition": {"test": "datum.dotbin < threshold", "value": {"x-eas:slot": "highlight"}},
+                 "value": {"x-eas:slot": "color"}},
+       "tooltip": [{"field": "value", "type": "quantitative", "title": {"x-eas:slot": "field"}, "format": ".1f"},
+                   {"field": "p", "type": "quantitative", "title": "quantile", "format": ".1%"}]
+     }},
+    {"name": "readout",
+     "transform": [
+       {"window": [{"op": "lead", "field": "value", "as": "next_value"}, {"op": "lead", "field": "p", "as": "next_p"}],
+        "sort": [{"field": "value"}]},
+       {"filter": "threshold > 0 && datum.value <= threshold && isValid(datum.next_value) && datum.next_value > threshold"},
+       {"calculate": "threshold", "as": "at"},
+       {"calculate": {"x-eas:text": "{{share}}"}, "as": "share"}
+     ],
+     "layer": [
+       {"mark": {"type": "rule", "color": "#ccc"},
+        "encoding": {"x": {"field": "at", "type": "quantitative"}}},
+       {"mark": {"type": "text", "align": "left", "baseline": "top", "dx": 3, "color": "#000", "fontSize": 11},
+        "encoding": {"x": {"field": "at", "type": "quantitative"}, "y": {"value": 2},
+                     "text": {"field": "share", "type": "quantitative", "format": ".1%"}}}
+     ]}
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

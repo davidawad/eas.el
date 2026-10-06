@@ -1,0 +1,83 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "box-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "One horizontal box plot per category: whiskers from min to max, a box from the first to the third quartile, a line at the median.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a category and a numeric value; rows missing either are left out"},
+      "category": {"type": "field", "of": "data", "default": "Species"},
+      "value": {"type": "field", "of": "data", "default": "Body Mass (g)"},
+      "domain_min": {"type": "number", "default": null, "doc": "lowest value the axis shows at least; null starts at the data"},
+      "color": {"type": "string", "default": "steelblue"},
+      "median_color": {"type": "string", "default": "aliceblue"},
+      "box_height": {"type": "number", "default": 30, "doc": "box thickness in pixels"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Minimum, quartiles, median and maximum of a value per category.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 500},
+      "height": {"type": "number", "default": 210},
+      "label_extent": {"type": "number", "default": null, "doc": "least room for the category labels in pixels; null fits them"}
+    },
+    "example": "../examples/vega/box-plot.data.json",
+    "vega": {"status": "pass", "note": "Whiskers, rounded quartile boxes and median lines per species match, band axis ticks at band edges included. Ratio 0.0100 at best alignment with resvg here.", "ratio": 0.01, "threshold": 0.03}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "data": {"name": "data"},
+  "transform": [
+    {"filter": {"x-eas:expr": "isValid(datum[{{category}}]) && isValid(datum[{{value}}])"}},
+    {"aggregate": [
+      {"op": "min", "field": {"x-eas:slot": "value"}, "as": "min"},
+      {"op": "q1", "field": {"x-eas:slot": "value"}, "as": "q1"},
+      {"op": "median", "field": {"x-eas:slot": "value"}, "as": "median"},
+      {"op": "q3", "field": {"x-eas:slot": "value"}, "as": "q3"},
+      {"op": "max", "field": {"x-eas:slot": "value"}, "as": "max"},
+      {"op": "count", "as": "count"}],
+     "groupby": [{"x-eas:slot": "category"}]}
+  ],
+  "encoding": {
+    "y": {"field": {"x-eas:slot": "category"}, "type": "nominal", "title": null,
+          "scale": {"paddingInner": 0, "paddingOuter": 0},
+          "axis": {"tickBand": "extent", "minExtent": {"x-eas:slot": "label_extent"}}},
+    "tooltip": [
+      {"field": {"x-eas:slot": "category"}, "type": "nominal"},
+      {"field": "min", "type": "quantitative"},
+      {"field": "q1", "type": "quantitative"},
+      {"field": "median", "type": "quantitative"},
+      {"field": "q3", "type": "quantitative"},
+      {"field": "max", "type": "quantitative"},
+      {"field": "count", "type": "quantitative"}
+    ]
+  },
+  "layer": [
+    {"name": "whisker",
+     "mark": {"type": "bar", "height": 1, "yOffset": -0.5, "color": "black"},
+     "encoding": {
+       "x": {"field": "min", "type": "quantitative", "title": null,
+             "scale": {"domainMin": {"x-eas:slot": "domain_min"}, "zero": false, "nice": true}},
+       "x2": {"field": "max"}}},
+    {"name": "box",
+     "mark": {"type": "bar", "height": {"x-eas:slot": "box_height"}, "cornerRadius": 4, "color": {"x-eas:slot": "color"}},
+     "encoding": {"x": {"field": "q1", "type": "quantitative"}, "x2": {"field": "q3"}}},
+    {"name": "median",
+     "mark": {"type": "tick", "orient": "vertical", "thickness": 2, "size": {"x-eas:slot": "box_height"}, "color": {"x-eas:slot": "median_color"}, "opacity": 1},
+     "encoding": {"x": {"field": "median", "type": "quantitative"}}}
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

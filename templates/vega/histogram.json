@@ -1,0 +1,81 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "histogram",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Distribution of one numeric field: counts in bins of a fixed step over a fixed extent, with a rug of every value beneath.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a numeric column"},
+      "field": {"type": "field", "of": "data", "default": "u"},
+      "extent": {"type": "array", "items": "number", "default": [-1, 1], "doc": "[min, max] of the bins and the x axis"},
+      "step": {"type": "number", "default": 0.1, "doc": "bin width in data units"},
+      "color": {"type": "string", "default": "steelblue"},
+      "hover_color": {"type": "string", "default": "firebrick", "doc": "fill of the bin under the pointer"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Distribution of a numeric field in fixed bins, with a rug of every value.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 500},
+      "height": {"type": "number", "default": 100},
+      "label_extent": {"type": "number", "default": null, "doc": "least room for the count labels in pixels; null fits them"}
+    },
+    "example": "../examples/vega/histogram.data.json",
+    "vega": {"status": "pass", "note": "Bins of step 0.1 over [-1, 1], rug and axes match; hover fills a bin firebrick. The bin step and offset sliders are slots (step, extent). Ratio 0.0244 at best alignment with resvg here.", "ratio": 0.0244, "threshold": 0.05}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "data": {"name": "data"},
+  "spacing": 7,
+  "vconcat": [
+    {
+      "name": "bins",
+      "params": [{"name": "hover", "select": {"type": "point", "on": "pointermove", "fields": ["bin0"]}}],
+      "width": {"x-eas:slot": "width"},
+      "height": {"x-eas:slot": "height"},
+      "transform": [
+        {"bin": {"extent": {"x-eas:slot": "extent"}, "step": {"x-eas:slot": "step"}, "nice": false},
+         "field": {"x-eas:slot": "field"}, "as": ["bin0", "bin1"]},
+        {"filter": "isValid(datum.bin0)"},
+        {"aggregate": [{"op": "count", "as": "count"}], "groupby": ["bin0", "bin1"]}
+      ],
+      "mark": {"type": "bar", "binSpacing": 0.5},
+      "encoding": {
+        "x": {"field": "bin0", "type": "quantitative", "bin": {"binned": true, "step": {"x-eas:slot": "step"}},
+              "scale": {"domain": {"x-eas:slot": "extent"}, "nice": false}, "title": null},
+        "x2": {"field": "bin1"},
+        "color": {"condition": {"param": "hover", "empty": false, "value": {"x-eas:slot": "hover_color"}},
+                  "value": {"x-eas:slot": "color"}},
+        "y": {"field": "count", "type": "quantitative", "title": null,
+              "axis": {"tickCount": 5, "minExtent": {"x-eas:slot": "label_extent"}}},
+        "tooltip": [
+          {"field": "bin0", "type": "quantitative", "title": "from"},
+          {"field": "bin1", "type": "quantitative", "title": "to"},
+          {"field": "count", "type": "quantitative"}
+        ]
+      }
+    },
+    {
+      "name": "rug",
+      "width": {"x-eas:slot": "width"},
+      "height": 5,
+      "mark": {"type": "tick", "orient": "vertical", "thickness": 1, "size": 5, "color": {"x-eas:slot": "color"}, "opacity": 0.4},
+      "encoding": {
+        "x": {"field": {"x-eas:slot": "field"}, "type": "quantitative",
+              "scale": {"domain": {"x-eas:slot": "extent"}, "nice": false}, "axis": null}
+      }
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "binned-scatter-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Scatter plot of two numeric fields binned into a grid: one circle per occupied cell, its area the count of rows in it.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with two numeric columns; rows missing either are left out"},
+      "x": {"type": "field", "of": "data", "default": "Horsepower"},
+      "y": {"type": "field", "of": "data", "default": "Miles_per_Gallon"},
+      "maxbins": {"type": "integer", "default": 10, "doc": "most bins per axis (edges are rounded)"},
+      "x_domain": {"type": "array", "items": "number", "default": null, "doc": "[min, max] of the x axis; null fits the bins"},
+      "y_domain": {"type": "array", "items": "number", "default": null, "doc": "[min, max] of the y axis; null fits the bins"},
+      "max_size": {"type": "number", "default": 360, "doc": "area in square pixels of the largest count"},
+      "color": {"type": "string", "default": "#4682b4"},
+      "legend_title": {"type": "string", "default": "Count"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "How many rows fall in each cell of a grid of two binned fields.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 200},
+      "height": {"type": "number", "default": 200},
+      "label_extent": {"type": "number", "default": null, "doc": "least room for the y labels in pixels; null fits them"}
+    },
+    "example": "../examples/vega/binned-scatter-plot.data.json",
+    "vega": {"status": "pass", "note": "Binned cells sized by count with a size legend match; Vega's legend format s reads as ~s here. Ratio 0.0293 at best alignment with resvg here.", "ratio": 0.0293, "threshold": 0.06}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "data": {"name": "data"},
+  "transform": [
+    {"filter": {"x-eas:expr": "isValid(datum[{{x}}]) && isValid(datum[{{y}}])"}},
+    {"bin": {"maxbins": {"x-eas:slot": "maxbins"}}, "field": {"x-eas:slot": "x"}, "as": ["x0", "x1"]},
+    {"bin": {"maxbins": {"x-eas:slot": "maxbins"}}, "field": {"x-eas:slot": "y"}, "as": ["y0", "y1"]},
+    {"aggregate": [{"op": "count", "as": "count"}], "groupby": ["x0", "x1", "y0", "y1"]},
+    {"calculate": "(datum.x0 + datum.x1) / 2", "as": "xc"},
+    {"calculate": "(datum.y0 + datum.y1) / 2", "as": "yc"}
+  ],
+  "mark": {"type": "circle", "opacity": 1, "color": {"x-eas:slot": "color"}},
+  "encoding": {
+    "x": {"field": "xc", "type": "quantitative", "title": {"x-eas:slot": "x"},
+          "scale": {"domain": {"x-eas:slot": "x_domain"}, "zero": true, "nice": true},
+          "axis": {"grid": true, "domain": false, "tickCount": 5}},
+    "y": {"field": "yc", "type": "quantitative", "title": {"x-eas:slot": "y"},
+          "scale": {"domain": {"x-eas:slot": "y_domain"}, "zero": true, "nice": true},
+          "axis": {"grid": true, "domain": false, "tickCount": 10, "titlePadding": 5, "minExtent": {"x-eas:slot": "label_extent"}}},
+    "size": {"field": "count", "type": "quantitative", "title": {"x-eas:slot": "legend_title"},
+             "scale": {"zero": true, "range": [0, {"x-eas:slot": "max_size"}]},
+             "legend": {"format": "~s", "symbolFillColor": {"x-eas:slot": "color"}, "symbolStrokeColor": "transparent", "symbolType": "circle"}},
+    "tooltip": [
+      {"field": "x0", "type": "quantitative", "title": {"x-eas:text": "{{x}} from"}},
+      {"field": "x1", "type": "quantitative", "title": "to"},
+      {"field": "y0", "type": "quantitative", "title": {"x-eas:text": "{{y}} from"}},
+      {"field": "y1", "type": "quantitative", "title": "to"},
+      {"field": "count", "type": "quantitative"}
+    ]
+  },
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

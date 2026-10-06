@@ -14,7 +14,8 @@
 ;;   bandwidth from Scott's rule as Vega estimates it, sampled on a
 ;;   shared domain (the data's extent unless `extent' is given) in a
 ;;   uniform grid of `steps' (200), as Vega-Lite's default "shared"
-;;   resolve does so that densities stack.  `counts' scales by group
+;;   resolve does so that densities stack; resolve "independent"
+;;   samples each group over its own extent.  `counts' scales by group
 ;;   size, `cumulative' integrates.
 
 ;;; Code:
@@ -137,10 +138,15 @@ charts reproducible.  nil when VALUES holds no numbers."
     (when all
       (let* ((extent (if (vectorp (plist-get tr :extent)) (plist-get tr :extent)
                        (vector (apply #'min all) (apply #'max all))))
-             (lo (float (aref extent 0))) (hi (float (aref extent 1))) (span (- hi lo)))
+             ;; resolve "independent": each group over its own extent.
+             (own (and (equal (plist-get tr :resolve) "independent")
+                       (not (vectorp (plist-get tr :extent))))))
         (apply #'append
                (mapcar (lambda (g)
                          (let* ((values (nreverse (cdr g)))
+                                (lo (float (if own (apply #'min values) (aref extent 0))))
+                                (hi (float (if own (apply #'max values) (aref extent 1))))
+                                (span (- hi lo))
                                 (bw (or (plist-get tr :bandwidth) (eas-density-bandwidth values)))
                                 (bw (if (and (numberp bw) (> bw 0)) bw (eas-density-bandwidth values)))
                                 (scale (if counts (length values) 1)))

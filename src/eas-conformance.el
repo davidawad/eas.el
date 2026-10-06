@@ -52,7 +52,8 @@
     :transform/x-eas:hierarchy "stratify, nest, tree (tidy, cluster), treemap, partition, pack, treelinks, treepath and formula match Vega's layouts (ERT: eas-vega-hierarchy-*)."
     :transform/x-eas:linkpath "linkpath draws Vega's line, arc, curve, diagonal and orthogonal links, radial too (ERT: eas-vega-hierarchy-linkpath-*)."
     :x-eas/timer "x-eas.timer ticks a shown view's timer handlers every interval while its buffer is visible (ERT: eas-vega-interaction-timer-drives-params)."
-    :x-eas/on "x-eas.on handlers turn timer ticks and keys into param events (ERT: eas-vega-interaction-keys-drive-params).")
+    :x-eas/on "x-eas.on handlers turn timer ticks and keys into param events (ERT: eas-vega-interaction-keys-drive-params)."
+    :transform/x-eas/dotbin "Vega's dotbin (Wilkinson dot plot bins) as a domain transform (ERT: eas-vega-distributions-dotbin-matches-vega).")
   "Features outside Vega-Lite proper, proven by ERT rather than the gallery.")
 
 (defvar eas-conformance-gallery-functions nil

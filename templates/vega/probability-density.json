@@ -1,0 +1,86 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "probability-density",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Kernel density estimate of a numeric field as an area, the normal curve of its mean and deviation as a line, and a rug of every value.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a numeric column"},
+      "field": {"type": "field", "of": "data", "default": "u"},
+      "extent": {"type": "array", "items": "number", "default": null, "doc": "[min, max] the densities are estimated over; null takes the data's extent"},
+      "bandwidth": {"type": "number", "default": 0, "doc": "kernel bandwidth; 0 estimates it with Scott's rule"},
+      "cumulative": {"type": "boolean", "default": false, "doc": "draw cumulative distributions instead of densities"},
+      "kde_label": {"type": "string", "default": "Kernel Density Estimate"},
+      "normal_label": {"type": "string", "default": "Normal Estimate"},
+      "color": {"type": "string", "default": "steelblue", "doc": "fill of the density estimate and the rug"},
+      "normal_color": {"type": "string", "default": "#444"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Kernel density estimate of a field against the normal distribution of its mean and deviation.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 500},
+      "height": {"type": "number", "default": 100}
+    },
+    "example": "../examples/vega/probability-density.data.json",
+    "vega": {"status": "pass", "note": "KDE area, normal-estimate line, rug and top-left legend match. KDE is sampled on 200 even steps where Vega samples adaptively; the legend label is not truncated as Vega's estimated width truncates it. Bandwidth and pdf/cdf inputs are slots (bandwidth, cumulative). Vega laid the reference out with estimated text widths, so its canvas is 11px wider (label overhang). Ratio 0.0223 at best alignment with resvg here.", "ratio": 0.0223, "threshold": 0.05, "size": 15}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "data": {"name": "data"},
+  "spacing": 7,
+  "resolve": {"legend": {"color": "independent"}},
+  "vconcat": [
+    {
+      "name": "density",
+      "width": {"x-eas:slot": "width"},
+      "height": {"x-eas:slot": "height"},
+      "transform": [
+        {"filter": {"x-eas:expr": "isValid(datum[{{field}}])"}},
+        {"joinaggregate": [{"op": "mean", "field": {"x-eas:slot": "field"}, "as": "mean"},
+                           {"op": "stdev", "field": {"x-eas:slot": "field"}, "as": "stdev"}]},
+        {"density": {"x-eas:slot": "field"}, "groupby": ["mean", "stdev"], "extent": {"x-eas:slot": "extent"},
+         "bandwidth": {"x-eas:slot": "bandwidth"}, "cumulative": {"x-eas:slot": "cumulative"}, "as": ["value", "density"]},
+        {"calculate": {"x-eas:expr": "{{cumulative}} ? cumulativeNormal(datum.value, datum.mean, datum.stdev) : densityNormal(datum.value, datum.mean, datum.stdev)"}, "as": "normal"}
+      ],
+      "encoding": {
+        "x": {"field": "value", "type": "quantitative", "title": null, "scale": {"domain": {"x-eas:slot": "extent"}}}
+      },
+      "layer": [
+        {"mark": {"type": "area"},
+         "encoding": {"y": {"field": "density", "type": "quantitative", "title": null, "axis": null, "scale": {"nice": false}},
+                      "color": {"datum": {"x-eas:slot": "kde_label"}, "type": "nominal", "title": null,
+                                "scale": {"domain": [{"x-eas:slot": "normal_label"}, {"x-eas:slot": "kde_label"}],
+                                          "range": [{"x-eas:slot": "normal_color"}, {"x-eas:slot": "color"}]},
+                                "legend": {"orient": "top-left", "offset": 0, "symbolType": "circle"}}}},
+        {"mark": {"type": "line", "strokeWidth": 2},
+         "encoding": {"y": {"field": "normal", "type": "quantitative"},
+                      "color": {"datum": {"x-eas:slot": "normal_label"}, "type": "nominal", "title": null,
+                                "scale": {"domain": [{"x-eas:slot": "normal_label"}, {"x-eas:slot": "kde_label"}],
+                                          "range": [{"x-eas:slot": "normal_color"}, {"x-eas:slot": "color"}]},
+                                "legend": {"orient": "top-left", "offset": 0, "symbolType": "circle"}}}}
+      ]
+    },
+    {
+      "name": "rug",
+      "width": {"x-eas:slot": "width"},
+      "height": 5,
+      "mark": {"type": "tick", "orient": "vertical", "thickness": 1, "size": 5, "color": {"x-eas:slot": "color"}, "opacity": 0.4},
+      "encoding": {
+        "x": {"field": {"x-eas:slot": "field"}, "type": "quantitative", "scale": {"domain": {"x-eas:slot": "extent"}}, "axis": null}
+      }
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

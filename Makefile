@@ -6,6 +6,7 @@
 #   make test-gallery     every gallery group, one Emacs each, in sequence
 #   make test-gallery-GROUP           one official Vega-Lite gallery group
 #   make test-gallery-conformance     the bin/chart conformance oracle
+#   make test-gallery-vega            templates/vega against test/vega-examples/ref
 #   make bench            the 1k/10k/100k ladder against bench-budget.json
 #   make bench-budget     re-measure the budget's references (review the diff)
 #   make tty-check        real-terminal check in tmux (private server -L eas)
@@ -31,7 +32,7 @@ $(BATCH) --eval '(dolist (f (append (directory-files "src" t "-test\\.el\\'"'"'"
 endef
 
 .PHONY: all test compile checkdoc test-gallery $(GALLERY_TARGETS) \
-        test-gallery-conformance bench bench-budget tty-check clean
+        test-gallery-conformance test-gallery-vega bench bench-budget tty-check clean
 
 all: compile test
 
@@ -45,13 +46,16 @@ compile: checkdoc
 checkdoc:
 	$(BATCH) -l scripts/eas-checkdoc.el -f eas-checkdoc-batch $(LIB)
 
-test-gallery: $(GALLERY_TARGETS) test-gallery-conformance
+test-gallery: $(GALLERY_TARGETS) test-gallery-conformance test-gallery-vega
 
 $(GALLERY_TARGETS): test-gallery-%:
 	EAS_GALLERY_GROUPS=$* $(call run-tests,(and (tag :gallery) (or "^eas-vl-gallery-groups-hold-their-status$$" "^eas-vl-gallery-groups-hold-their-text-status$$")))
 
 test-gallery-conformance:
 	$(call run-tests,(and (tag :gallery) (or "^eas-conformance-" "^eas-text-gallery-templates-" "^eas-vega-.*gallery")))
+
+test-gallery-vega:
+	$(call run-tests,(and (tag :gallery) "^eas-vega-"))
 
 bench:
 	scripts/eas-bench.sh

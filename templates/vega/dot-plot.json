@@ -1,0 +1,103 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "dot-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "One dot per value, stacked: a Wilkinson density dot plot beside a histogram dot plot of the same field.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a numeric column"},
+      "field": {"type": "field", "of": "data", "default": "hours"},
+      "step": {"type": "number", "default": 0.65, "doc": "bin width in data units, which is also a dot's diameter"},
+      "smooth": {"type": "boolean", "default": true, "doc": "even out the heights of adjacent density stacks"},
+      "offset": {"enum": ["zero", "center"], "default": "zero", "doc": "stacks rise from the axis, or center on the tallest"},
+      "extent": {"type": "array", "items": "number", "default": [0, 20], "doc": "[min, max] of the x axes"},
+      "color": {"type": "string", "default": "steelblue"},
+      "density_title": {"type": "string", "default": "Density Dot Plot"},
+      "histogram_title": {"type": "string", "default": "Histogram Dot Plot"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Distribution of a field as stacked dots, binned two ways.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 300, "doc": "width of each plot"},
+      "height": {"type": "number", "default": 68.25, "doc": "plot height; the tallest stack times the dot diameter in pixels fits it exactly"}
+    },
+    "example": "../examples/vega/dot-plot.data.json",
+    "vega": {"status": "pass", "note": "Density dot plot via the x-eas dotbin transform (Vega's dotbin, smoothed) beside the histogram dot plot. The step slider, offset radio and smooth checkbox are slots; height must fit the tallest stack. Ratio 0.0077 at best alignment with resvg here.", "ratio": 0.0077, "threshold": 0.03}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "data": {"name": "data"},
+  "transform": [
+    {"x-eas:transform": "dotbin", "field": {"x-eas:slot": "field"}, "step": {"x-eas:slot": "step"},
+     "smooth": {"x-eas:slot": "smooth"}, "as": "dotbin"},
+    {"filter": {"x-eas:expr": "isValid(datum[{{field}}])"}},
+    {"calculate": {"x-eas:expr": "{{step}} * {{width}} / ({{extent.1}} - {{extent.0}})"}, "as": "diameter"},
+    {"calculate": "datum.diameter * datum.diameter", "as": "area"}
+  ],
+  "spacing": 10,
+  "bounds": "flush",
+  "hconcat": [
+    {
+      "name": "density",
+      "width": {"x-eas:slot": "width"},
+      "height": {"x-eas:slot": "height"},
+      "transform": [
+        {"window": [{"op": "row_number", "as": "rank"}], "groupby": ["dotbin"]},
+        {"joinaggregate": [{"op": "count", "as": "stack"}], "groupby": ["dotbin"]},
+        {"joinaggregate": [{"op": "max", "field": "stack", "as": "tallest"}]},
+        {"calculate": {"x-eas:expr": "({{offset}} == 'center' ? (datum.tallest - datum.stack) / 2 : 0) + datum.rank - 0.5"}, "as": "level"},
+        {"calculate": "datum.level * datum.diameter", "as": "y"}
+      ],
+      "mark": {"type": "circle", "opacity": 1, "color": {"x-eas:slot": "color"}},
+      "encoding": {
+        "x": {"field": "dotbin", "type": "quantitative", "title": {"x-eas:slot": "density_title"},
+              "scale": {"domain": {"x-eas:slot": "extent"}, "nice": false}, "axis": {"tickCount": 5}},
+        "y": {"field": "y", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "height"}], "nice": false, "zero": false}},
+        "size": {"field": "area", "type": "quantitative", "legend": null,
+                 "scale": {"domain": [0, 10000], "range": [0, 10000], "zero": true}},
+        "tooltip": [{"field": {"x-eas:slot": "field"}, "type": "quantitative"},
+                    {"field": "dotbin", "type": "quantitative", "title": "bin", "format": ".3~f"}]
+      }
+    },
+    {
+      "name": "histogram",
+      "width": {"x-eas:slot": "width"},
+      "height": {"x-eas:slot": "height"},
+      "transform": [
+        {"bin": {"step": {"x-eas:slot": "step"}}, "field": {"x-eas:slot": "field"}, "as": ["bin0", "bin1"]},
+        {"calculate": "(datum.bin0 + datum.bin1) / 2", "as": "center"},
+        {"window": [{"op": "row_number", "as": "rank"}], "groupby": ["bin0"]},
+        {"joinaggregate": [{"op": "count", "as": "stack"}], "groupby": ["bin0"]},
+        {"joinaggregate": [{"op": "max", "field": "stack", "as": "tallest"}]},
+        {"calculate": {"x-eas:expr": "({{offset}} == 'center' ? (datum.tallest - datum.stack) / 2 : 0) + datum.rank - 0.5"}, "as": "level"},
+        {"calculate": "datum.level * datum.diameter", "as": "y"}
+      ],
+      "mark": {"type": "circle", "opacity": 1, "color": {"x-eas:slot": "color"}},
+      "encoding": {
+        "x": {"field": "center", "type": "quantitative", "title": {"x-eas:slot": "histogram_title"},
+              "scale": {"domain": {"x-eas:slot": "extent"}, "nice": false}, "axis": {"tickCount": 5}},
+        "y": {"field": "y", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "height"}], "nice": false, "zero": false}},
+        "size": {"field": "area", "type": "quantitative", "legend": null,
+                 "scale": {"domain": [0, 10000], "range": [0, 10000], "zero": true}},
+        "tooltip": [{"field": {"x-eas:slot": "field"}, "type": "quantitative"},
+                    {"field": "bin0", "type": "quantitative", "title": "from", "format": ".3~f"},
+                    {"field": "bin1", "type": "quantitative", "title": "to", "format": ".3~f"}]
+      }
+    }
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

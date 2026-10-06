@@ -1,0 +1,73 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "time-units",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Rows of a dated table aggregated by a time unit (year, month, day of month, weekday or hour): one bar per unit, its count or the mean of a measure.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a date column (ISO or yyyy/mm/dd hh:mm text, or epoch ms) and a numeric measure"},
+      "date": {"type": "field", "of": "data", "default": "date"},
+      "measure": {"type": "field", "of": "data", "default": "delay"},
+      "unit": {"enum": ["year", "month", "date", "day", "hours"], "default": "day", "doc": "the time unit bars aggregate by"},
+      "format": {"type": "string", "default": "%a", "doc": "d3 time format of the unit labels: %Y %b %d %a %H"},
+      "op": {"enum": ["mean", "count", "sum", "median", "max", "min"], "default": "mean", "doc": "how the measure aggregates per unit"},
+      "y_title": {"type": "string", "default": "Average Delay (min)"},
+      "color": {"type": "string", "default": "steelblue"},
+      "hover_color": {"type": "string", "default": "firebrick"},
+      "title": {"type": "string", "default": ""},
+      "subtitle": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "A measure of dated rows aggregated per time unit.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 549},
+      "height": {"type": "number", "default": 230},
+      "label_extent": {"type": "number", "default": null, "doc": "least room for the value labels in pixels; null fits them"}
+    },
+    "example": "../examples/vega/time-units.data.json",
+    "vega": {"status": "partial", "note": "Weekday bars, axis, title and italic subtitle match and hover fills a bar firebrick, but the band scale is not rounded (scale.round is not drawn natively), so bar edges sit up to a pixel off. The time unit and measure selects are slots (unit, format, op). Ratio 0.0355 at best alignment with resvg here.", "ratio": 0.0355, "threshold": 0.08}
+  },
+  "title": {"text": {"x-eas:slot": "title"}, "subtitle": {"x-eas:slot": "subtitle"}, "frame": "group",
+            "subtitleFontStyle": "italic", "subtitleColor": "#000", "subtitleFontSize": 12},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "data": {"name": "data"},
+  "params": [
+    {"name": "hover", "select": {"type": "point", "on": "pointermove", "fields": ["unit"]}}
+  ],
+  "transform": [
+    {"filter": {"x-eas:expr": "isValid(datum[{{date}}])"}},
+    {"timeUnit": {"x-eas:slot": "unit"}, "field": {"x-eas:slot": "date"}, "as": "unit"},
+    {"aggregate": [{"op": {"x-eas:slot": "op"}, "field": {"x-eas:slot": "measure"}, "as": "value"},
+                   {"op": "count", "as": "count"}],
+     "groupby": ["unit"]}
+  ],
+  "mark": {"type": "bar"},
+  "encoding": {
+    "x": {"field": "unit", "timeUnit": {"x-eas:slot": "unit"}, "type": "ordinal", "title": null,
+          "scale": {"paddingInner": 0.05, "paddingOuter": 0.05},
+          "axis": {"format": {"x-eas:slot": "format"}, "labelAngle": 0}},
+    "y": {"field": "value", "type": "quantitative", "title": {"x-eas:slot": "y_title"}, "axis": {"tickCount": 7, "minExtent": {"x-eas:slot": "label_extent"}}},
+    "color": {"condition": {"param": "hover", "empty": false, "value": {"x-eas:slot": "hover_color"}},
+              "value": {"x-eas:slot": "color"}},
+    "tooltip": [
+      {"field": "unit", "timeUnit": {"x-eas:slot": "unit"}, "type": "ordinal", "title": {"x-eas:slot": "unit"},
+       "format": {"x-eas:slot": "format"}},
+      {"field": "count", "type": "quantitative", "title": "rows", "format": ","},
+      {"field": "value", "type": "quantitative", "title": {"x-eas:slot": "y_title"}, "format": ".1f"}
+    ]
+  },
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "start", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 10},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

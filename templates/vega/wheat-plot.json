@@ -1,0 +1,82 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "wheat-plot",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Wheat plot: values binned like a histogram, stacked within each bin in value order, each drawn as a ring at its exact value.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a numeric column"},
+      "field": {"type": "field", "of": "data", "default": "u"},
+      "extent": {"type": "array", "items": "number", "default": [-1, 1], "doc": "[min, max] of the x axis; values outside are left out"},
+      "step": {"type": "number", "default": 0.075, "doc": "bin width in data units"},
+      "anchor": {"type": "number", "default": 0, "doc": "a bin boundary falls on this value"},
+      "diameter": {"type": "number", "default": 4, "doc": "ring diameter in pixels; rings stack one diameter plus a pixel apart"},
+      "color": {"type": "string", "default": "steelblue"},
+      "hover_color": {"type": "string", "default": "firebrick", "doc": "stroke of the ring under the pointer"},
+      "grid_color": {"type": "string", "default": "#ddd"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Distribution of a field as stacked rings, one per value, in bins.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 500},
+      "height": {"type": "number", "default": 455, "doc": "plot height; the tallest stack times (diameter + 1) fits it exactly"}
+    },
+    "example": "../examples/vega/wheat-plot.data.json",
+    "vega": {"status": "pass", "note": "Rings stacked per anchored bin at their exact values, with bin-edge grid lines, match; hover strokes a ring firebrick. The diameter, offset and step sliders are slots. Vega laid the reference out with estimated text widths, so its canvas is 11px wider (label overhang). Ratio 0.0221 at best alignment with resvg here.", "ratio": 0.0221, "threshold": 0.05, "size": 15}
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "encoding": {
+    "x": {"type": "quantitative", "title": null, "scale": {"domain": {"x-eas:slot": "extent"}, "nice": false, "zero": false}},
+    "y": {"type": "quantitative", "axis": null, "scale": {"domain": [0, {"x-eas:slot": "height"}], "nice": false, "zero": false}}
+  },
+  "layer": [
+    {"name": "bin-edges",
+     "data": {"sequence": {"start": 0, "stop": 2000, "as": "k"}},
+     "transform": [
+       {"calculate": {"x-eas:expr": "{{anchor}} + {{step}} * (floor(({{extent.0}} - {{anchor}}) / {{step}}) + datum.k)"}, "as": "edge"},
+       {"filter": {"x-eas:expr": "datum.edge >= {{extent.0}} && datum.edge <= {{extent.1}}"}}
+     ],
+     "mark": {"type": "rule", "color": {"x-eas:slot": "grid_color"}},
+     "encoding": {"x": {"field": "edge"}}},
+    {"name": "rings",
+     "data": {"name": "data"},
+     "params": [{"name": "hover", "select": {"type": "point", "on": "pointermove"}}],
+     "transform": [
+       {"filter": {"x-eas:expr": "isValid(datum[{{field}}]) && datum[{{field}}] >= {{extent.0}} && datum[{{field}}] <= {{extent.1}}"}},
+       {"calculate": {"x-eas:expr": "datum[{{field}}]"}, "as": "value"},
+       {"calculate": {"x-eas:expr": "{{anchor}} + {{step}} * floor((datum.value - {{anchor}}) / {{step}})"}, "as": "bin0"},
+       {"window": [{"op": "row_number", "as": "level"}], "groupby": ["bin0"], "sort": [{"field": "value"}]},
+       {"calculate": {"x-eas:expr": "(datum.level - 1) * ({{diameter}} + 1)"}, "as": "y"},
+       {"calculate": {"x-eas:expr": "{{diameter}} * {{diameter}}"}, "as": "area"}
+     ],
+     "mark": {"type": "point", "shape": "circle", "filled": false, "opacity": 1, "strokeWidth": 0.5,
+              "color": {"x-eas:slot": "color"}},
+     "encoding": {
+       "stroke": {"condition": {"param": "hover", "empty": false, "value": {"x-eas:slot": "hover_color"}},
+                  "value": {"x-eas:slot": "color"}},
+       "x": {"field": "value"},
+       "y": {"field": "y"},
+       "size": {"field": "area", "type": "quantitative", "legend": null,
+                "scale": {"domain": [0, 10000], "range": [0, 10000], "zero": true}},
+       "tooltip": [{"field": "value", "type": "quantitative", "title": {"x-eas:slot": "field"}, "format": ".3f"},
+                   {"field": "bin0", "type": "quantitative", "title": "bin", "format": ".3f"},
+                   {"field": "level", "type": "quantitative", "title": "rank in bin"}]
+     }}
+  ],
+  "config": {
+    "background": "white",
+    "font": "sans-serif",
+    "view": {"stroke": null},
+    "mark": {"color": "#4c78a8"},
+    "bar": {"cornerRadiusEnd": 0},
+    "rect": {"stroke": null, "strokeWidth": 0},
+    "area": {"opacity": 1},
+    "line": {"strokeWidth": 1, "strokeCap": "butt", "strokeJoin": "miter"},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

@@ -45,6 +45,19 @@
     (should (string-match-p "font-family=\"Times New Roman, Liberation Serif, serif\"" svg))
     (should (string-match-p "font-family=\"Arial, Liberation Sans, sans-serif\"" svg))))
 
+(ert-deftest eas-render-svg-grids-lie-beneath-every-axis ()
+  ;; Vega-Lite's grid axes come first: the y grid's zero line does not
+  ;; cover the x axis's domain.
+  (let* ((svg (eas-svg-render
+               (eas-compile '(:data (:values [(:k "a" :v 1) (:k "b" :v 2)]) :mark "bar"
+                              :encoding (:x (:field "k" :type "nominal")
+                                         :y (:field "v" :type "quantitative" :axis (:gridColor "#123456")))
+                              :config (:axisX (:domainColor "#abcdef"))))))
+         (grid (string-match "stroke=\"#123456\"" svg))
+         (domain (string-match "stroke=\"#abcdef\"" svg)))
+    (should (and grid domain (< grid domain)))
+    (should-not (string-match-p "#123456" (substring svg domain)))))
+
 (ert-deftest eas-render-text-is-deterministic ()
   (let ((spec (funcall (cdr (assoc "bars" eas-render-test--specs)))))
     (should (equal (eas-text-render (eas-compile spec :target 'text :size '(:cols 40 :rows 12)))

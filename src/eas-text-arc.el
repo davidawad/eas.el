@@ -7,9 +7,10 @@
 
 ;; Part of L5, terminal half (fc-qx1.49).  A wedge is filled at braille
 ;; resolution (2x4 dots per cell), so a donut keeps its hole and a pie
-;; its round edge even in a small terminal.  Each wedge leaves its
-;; starting edge one dot wide unfilled: neighbouring wedges stay apart
-;; without color.  A full ring has no edge to leave.
+;; its round edge even in a small terminal.  Wedges meet without a gap
+;; (fc-qx1.51): the text renderer gives a cell inside the arc a full
+;; block in the color of the wedge holding most of its dots, and keeps
+;; braille only where the arc's own edge cuts a cell.
 
 ;;; Code:
 
@@ -21,24 +22,13 @@
 centre lies inside arc ITEM, for cells of CW x CH pixels."
   (let* ((cx (plist-get item :cx)) (cy (plist-get item :cy))
          (r (or (plist-get item :outerRadius) 0))
-         (sx (/ cw 2.0)) (sy (/ ch 4.0))
-         (angles (eas-arc-angles item))
-         (start (min (car angles) (cdr angles)))
-         (full (>= (abs (- (cdr angles) (car angles))) (- (* 2 float-pi) 1e-6)))
-         (gap (/ (min sx sy) 1.0)))
+         (sx (/ cw 2.0)) (sy (/ ch 4.0)))
     (when (and cx cy (> r 0))
       (cl-loop for dy from (floor (- cy r) sy) to (ceiling (+ cy r) sy)
                for py = (* (+ dy 0.5) sy)
                do (cl-loop for dx from (floor (- cx r) sx) to (ceiling (+ cx r) sx)
                            for px = (* (+ dx 0.5) sx)
-                           when (and (eas-arc-contains-p item px py)
-                                     (or full
-                                         ;; Distance from the starting edge's ray, ahead of it.
-                                         (let* ((ux (sin start)) (uy (- (cos start)))
-                                                (vx (- px cx)) (vy (- py cy))
-                                                (along (+ (* vx ux) (* vy uy)))
-                                                (across (abs (- (* vx uy) (* vy ux)))))
-                                           (or (<= along 0) (>= across gap)))))
+                           when (eas-arc-contains-p item px py)
                            do (funcall fn dx dy))))))
 
 (provide 'eas-text-arc)

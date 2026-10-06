@@ -168,20 +168,33 @@ LTTB decimation when a series has more points than pixel columns.
   per mark type, which financial-chart-text.el already has) where every
   cell carries text properties `eas-datum`, `eas-view` and
   `help-echo`. Moving point over the chart is the terminal's hover.
-  Glyphs per mark (fc-qx1.49): lines, trails and arcs are braille (an
-  arc is a sector fill that leaves its starting edge unfilled, so
-  wedges stay apart without color); bars and areas are eighth blocks,
-  the value end partial and the baseline end full; a ranged bar whose
+  Glyphs per mark (fc-qx1.49): lines and trails are braille; arcs
+  are braille only where their edge cuts a cell, and full blocks in
+  the color of the wedge holding most of a cell inside, so wedges meet
+  without a seam (fc-qx1.51); bars and areas are eighth blocks,
+  the value end partial and the baseline end full (stacked slices
+  that share a cell compose: the lower slice's block on the upper
+  slice's color); a ranged bar whose
   y2 lies below its y (a falling candle) is shaded `▒`, a rising one
   solid; ticks and rules are box lines; points are shape glyphs. One
   glyph fits a cell, so marks keep Vega's painter's order within three
   tiers (fills, strokes, symbols); a stroke drawn before an opaque fill
   sits under it (a wick under its body). Tick labels that would
   overwrite one another are dropped, text runs back onto the canvas,
-  and wide characters take two cells. `eas-text-check` judges a text
+  and wide characters take two cells. Text cannot rotate, so axis
+  labels run along their axis whatever their labelAngle; a log axis
+  offers 1, 2, 3 and 5 per decade, kept by rank as rows allow. A
+  gradient legend draws its ramp in half blocks; a brush shades every
+  cell of its rectangle, and an empty interval draws nothing. Colors
+  pass `eas-text-ink-legible` (fc-qx1.51): kept when their WCAG
+  contrast with the frame's background is at least 3, neutral ink
+  becomes the default face's foreground, other hues move their
+  lightness until legible, so a dark terminal draws light rules.
+  Text views follow their window's size. `eas-text-check` judges a text
   rendering against its scene (every visible item lands in a cell,
   baselines reach zero, labels and legend entries show, labels never
-  share a cell); `eas-text-gallery` holds every non-map example and
+  share a cell and sit on their side of the axis line, every color
+  holds 3:1 contrast on a light and a dark background); `eas-text-gallery` holds every non-map example and
   template to it at three sizes (test/vl-examples/text-status.json).
 - Static: resolved spec to `bin/chart build`. Not part of Emacs and
   never a runtime dependency: it is the conformance oracle (section 6)

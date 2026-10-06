@@ -314,6 +314,31 @@ decades than COUNT (default 10), else powers of ten."
       (mapcar (lambda (e) (expt 10.0 e))
               (eas-scale-linear-ticks (floor i) (ceiling j) (min (- (ceiling j) (floor i)) count))))))
 
+(defconst eas-scale-log-mantissas '(1 5 2 3)
+  "Mantissas a text log axis labels, most wanted first (the reference
+renderings label 1, 2, 3 and 5 times each power of ten).")
+
+(defun eas-scale-log-mantissa (v)
+  "The mantissa of V > 0 (1 to 9.99), e.g. 5 for 0.05."
+  (/ v (expt 10.0 (floor (+ 1e-9 (log v 10))))))
+
+(defun eas-scale-log-text-ticks (lo hi)
+  "Candidate ticks of a text log axis over LO..HI: each mantissa of
+`eas-scale-log-mantissas' times each power of ten inside it, ascending;
+nil when fewer than three fall inside."
+  (let ((out (cl-loop for p from (floor (log lo 10)) to (ceiling (log hi 10))
+                      append (cl-loop for m in (sort (copy-sequence eas-scale-log-mantissas) #'<)
+                                      for v = (if (< p 0) (/ m (expt 10.0 (- p))) (* m (expt 10.0 p)))
+                                      when (<= (* lo (- 1 1e-12)) v (* hi (+ 1 1e-12))) collect v))))
+    (and (cddr out) out)))
+
+(defun eas-scale-log-rank (v)
+  "Rank of log tick V when labels compete for room: powers of ten first,
+then the other mantissas in `eas-scale-log-mantissas' order."
+  (let ((m (eas-scale-log-mantissa v)))
+    (or (cl-position-if (lambda (k) (< (abs (- m k)) 1e-6)) eas-scale-log-mantissas)
+        (length eas-scale-log-mantissas))))
+
 (defun eas-scale-log-label-p (v ticks count)
   "d3's log tickFormat filter: label tick V only when its mantissa is small."
   (let* ((k (max 1 (/ (* 10.0 count) (max 1 (length ticks)))))

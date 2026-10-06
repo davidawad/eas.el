@@ -182,6 +182,8 @@ PLOT-SIZE is the plot extent along the axis."
     (unless (or (memq axis '(:null :false)) (null scale) (null def)
                 (eq (car (eas-layout--axis-config config channel :disable)) t))
       (let* ((discrete (member (plist-get scale :type) '("band" "point")))
+             (text-log (and (eas-layout-text-p metrics) (equal (plist-get scale :type) "log")
+                            (not (plist-get axis :values)) (not (plist-get axis :tickCount))))
              (spacing (plist-get metrics (if (eq channel :x) :x-tick-spacing :y-tick-spacing)))
              (count (or (plist-get axis :tickCount)
                         ;; Vega-Lite leaves log axes at Vega's default count.
@@ -207,8 +209,14 @@ PLOT-SIZE is the plot extent along the axis."
                                                                  eas-time-zone)))
                                           (eas-time-format v f))
                                       (format "%s" v))))
-                    (eas-scale-tick-format scale count (or (plist-get axis :format) (plist-get def :format)
-                                                      (and (equal (plist-get def :stack) "normalize") ".0%")))))
+                    (let ((f (eas-scale-tick-format scale count (or (plist-get axis :format) (plist-get def :format)
+                                                                    (and (equal (plist-get def :stack) "normalize") ".0%")))))
+                      ;; Every text log tick is labelled: thinning picks among them.
+                      (if (and text-log (not (or (plist-get axis :format) (plist-get def :format))))
+                          (lambda (v) (if (and (numberp v) (> v 0))
+                                          (eas-scale-format-number v (max 0 (- (floor (+ 1e-9 (log v 10))))))
+                                        (funcall f v)))
+                        f))))
              (values (cond ((plist-get axis :values)
                             ;; A time axis's values may be date strings or DateTime objects.
                             (mapcar (lambda (v) (if (and (not (numberp v)) (member (plist-get scale :type) '("time" "utc")))
@@ -219,6 +227,9 @@ PLOT-SIZE is the plot extent along the axis."
                             (let ((d (plist-get scale :domain)) (step (plist-get scale :bin-step)))
                               (cl-loop for v = (aref d 0) then (+ v step) while (<= v (+ (aref d 1) (* 1e-9 step)))
                                        collect v)))
+                           ;; Text: the log ticks the reference renderings label.
+                           ((and text-log (eas-scale-log-text-ticks (aref (plist-get scale :domain) 0)
+                                                                    (aref (plist-get scale :domain) 1))))
                            (t (eas-scale-ticks scale count))))
              (title (let ((tt (cond ((plist-member axis :title)
                                      (let ((tt (plist-get axis :title))) (and (stringp tt) tt)))
@@ -229,7 +240,9 @@ PLOT-SIZE is the plot extent along the axis."
                       (and (stringp tt) (not (string-empty-p tt))
                            (eas-layout-truncate metrics tt (plist-get metrics :title-size)
                                                 (or (plist-get axis :titleLimit) (eas-theme-axis config channel :titleLimit))))))
-             (angle (cond ((plist-get axis :labelAngle))
+             ;; Text cannot turn a label: it runs along the axis, below it.
+             (angle (cond ((eas-layout-text-p metrics) 0)
+                          ((plist-get axis :labelAngle))
                           ((and (not (eas-layout-text-p metrics))
                                 (numberp (car (eas-layout--axis-config config channel :labelAngle))))
                            (car (eas-layout--axis-config config channel :labelAngle)))
@@ -334,6 +347,18 @@ labels survive without the last one, the last replaces the last kept."
         (setq ticks (append (if (> (length ticks) 1) (butlast ticks) ticks) (last all)))))
     ticks))
 
+(defun eas-layout--thin-ranked (ticks overlap-p rank)
+  "TICKS (sorted by position) whose labels fit, taken best RANK first:
+each is kept when it overlaps none kept (OVERLAP-P on two ticks in
+position order).  Returned in position order."
+  (let ((kept nil))
+    (dolist (tk (seq-sort-by (lambda (tk) (funcall rank tk)) #'< (copy-sequence ticks)))
+      (unless (seq-some (lambda (k) (if (< (plist-get k :pos) (plist-get tk :pos)) (funcall overlap-p k tk)
+                                      (funcall overlap-p tk k)))
+                        kept)
+        (push tk kept)))
+    (seq-filter (lambda (tk) (memq tk kept)) ticks)))
+
 (defun eas-layout--bottom-align (p x0 w flush angle)
   "Label alignment of a bottom tick at P (Vega-Lite labelFlush when FLUSH)."
   (cond ((eas-axis-pos-x-align angle nil))
@@ -368,11 +393,12 @@ Overlapping labels drop their ticks too; lines sit at cell centres."
                              ("left" (cons p (+ p lw))) ("right" (cons (- p lw) p))
                              (_ (cons (- p (/ lw 2.0)) (+ p (/ lw 2.0))))))
                        (cons (- p (/ size 2.0)) (+ p (/ size 2.0)))))))
-         (ticks (eas-layout--thin
-                 (sort (eas-layout--positioned-ticks axis scale)
-                       (lambda (a b) (< (plist-get a :pos) (plist-get b :pos))))
-                 (lambda (a b) (> (+ (cdr (funcall extent a)) (if along cw 0)) (car (funcall extent b))))
-                 "parity"))
+         (overlap (lambda (a b) (> (+ (cdr (funcall extent a)) (if along cw 0)) (car (funcall extent b)))))
+         (sorted (sort (eas-layout--positioned-ticks axis scale)
+                       (lambda (a b) (< (plist-get a :pos) (plist-get b :pos)))))
+         (ticks (if (equal (plist-get scale :type) "log")
+                    (eas-layout--thin-ranked sorted overlap (lambda (tk) (eas-scale-log-rank (plist-get tk :value))))
+                  (eas-layout--thin sorted overlap "parity")))
          (label-extent (eas-layout-axis-label-extent axis metrics))
          (title (plist-get axis :title)))
     (append (eas--plist-without axis :ticks)

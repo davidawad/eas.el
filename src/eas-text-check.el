@@ -19,6 +19,10 @@
 ;;   label       an axis tick label of the scene is missing from its row.
 ;;   legend      a legend entry's label is missing from its row.
 ;;   collision   two axis tick labels claim the same cell.
+;;   side        a bottom axis label not below its axis line, or a
+;;               left axis label not left of it.
+;;   contrast    a glyph's color is under WCAG 3:1 against the
+;;               background, drawn for a light and for a dark one.
 ;;
 ;; Each problem is a string starting with its kind, so callers can
 ;; count them.  Nothing here draws differently from `eas-text-render'.
@@ -29,6 +33,7 @@
 (require 'eas-text)
 (require 'eas-arc)
 (require 'eas-scale)
+(require 'eas-text-ink)
 
 (defun eas-text-check--cell (scene)
   "SCENE's text cell size as (CW . CH)."
@@ -196,6 +201,23 @@ labels shows at least one; no two shown labels share a cell."
               out)))
     (delete-dups (nreverse out))))
 
+(defun eas-text-check--sides (scene)
+  "Axis labels of SCENE on the wrong side of their axis line."
+  (let ((cell (eas-text-check--cell scene)) out)
+    (pcase-dolist (`(,view ,axis ,tk ,cells) (eas-text-check--label-spans scene))
+      (let ((line (plist-get axis :domain-line)) (orient (plist-get axis :orient)))
+        (when (and line cells)
+          (pcase orient
+            ("bottom" (unless (> (cdar cells) (floor (aref line 1) (cdr cell)))
+                        (push (format "side: x axis label %S of view %s is not below its axis line"
+                                      (plist-get tk :label) (plist-get view :id))
+                              out)))
+            ("left" (unless (< (car (car (last cells))) (floor (aref line 0) (car cell)))
+                      (push (format "side: y axis label %S of view %s is not left of its axis line"
+                                    (plist-get tk :label) (plist-get view :id))
+                            out)))))))
+    (nreverse out)))
+
 (defun eas-text-check--mark-cells (view mark cells)
   "Every cell CELLS records for MARK of VIEW."
   (cl-loop for i below (length (plist-get mark :items))
@@ -208,6 +230,25 @@ painter's order hid it, as SVG would (a halo under its line)."
          (over (make-hash-table :test 'equal)))
     (dolist (m later) (dolist (c (eas-text-check--mark-cells view m cells)) (puthash c t over)))
     (seq-every-p (lambda (c) (gethash c over)) (eas-text-check--mark-cells view mark cells))))
+
+(defun eas-text-check-contrast (scene mode)
+  "Contrast problems of SCENE drawn as text on a MODE (light or dark) background."
+  (let* ((text (let ((eas-text-background-mode mode)) (eas-text-render scene)))
+         (bg (eas-text-ink-background mode)) (seen nil) (out nil) (pos 0))
+    (while (< pos (length text))
+      (let ((next (or (next-single-property-change pos 'face text) (length text)))
+            (face (get-text-property pos 'face text)))
+        (when-let* ((fg (and (consp face) (plist-get face :foreground))))
+          (when (and (stringp fg) (not (member fg seen)) (eas-text-ink--rgb fg)
+                     (string-match-p "[^[:space:]]" (substring-no-properties text pos next)))
+            (push fg seen)
+            (let ((ratio (eas-text-ink-contrast fg bg)))
+              (when (< ratio eas-text-ink-min-contrast)
+                (push (format "contrast: %s on the %s background %s is %.2f:1 (mark %s)"
+                              fg mode bg ratio (get-text-property pos 'eas-mark text))
+                      out)))))
+        (setq pos next)))
+    (nreverse out)))
 
 (defun eas-text-check (scene)
   "Problems (strings) of SCENE's text rendering; nil when it holds.
@@ -251,7 +292,8 @@ SCENE must be compiled for the text target."
               (unless (eas-text-check--shown-p scene lines (plist-get e :lx) (plist-get e :ly) (plist-get e :label) "left")
                 (push (format "legend: entry %S of view %s is not shown" (plist-get e :label) (plist-get view :id))
                       out)))))))
-    (delete-dups (append (nreverse out) (eas-text-check--labels scene lines)))))
+    (delete-dups (append (nreverse out) (eas-text-check--labels scene lines) (eas-text-check--sides scene)
+                         (eas-text-check-contrast scene 'light) (eas-text-check-contrast scene 'dark)))))
 
 (defun eas-text-check-kind (problem)
   "The kind of PROBLEM, a string from `eas-text-check'."

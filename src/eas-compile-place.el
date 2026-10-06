@@ -327,11 +327,29 @@ Nested concatenations align their plots with their siblings' too."
              (natural (mapcar (lambda (ch) (eas-place-arrange ch 0 0 metrics)) children))
              (along (mapcar (lambda (s) (if vertical (cdr s) (car s))) natural))
              (total (max 1 (apply #'+ along)))
-             (avail (- (if vertical height width) (* spacing (1- (length children))))))
-        (cl-loop for child in children for a in along
+             (avail (- (if vertical height width) (* spacing (1- (length children)))))
+             ;; Arrange insets each child to the widest lead (left axes of
+             ;; a vconcat); a view's plot also gives way to the widest
+             ;; trailing chrome, so stacked panes share one x range (and
+             ;; side-by-side ones one y range).
+             (key (if vertical :left :top))
+             (align (apply #'max 0 (mapcar (lambda (ch) (eas-place--lead ch key)) children)))
+             (trail (lambda (ch) (and (plist-get ch :group)
+                                      (plist-get (plist-get (plist-get ch :group) :chrome) (if vertical :right :bottom)))))
+             (most (apply #'max 0 (delq nil (mapcar trail children))))
+             ;; Stacked text panes take whole rows, the last the rest: a
+             ;; pane ending mid-row put its x labels on its axis line.
+             (unit (and vertical (eas-layout-text-p metrics) (aref (plist-get metrics :cell) 1)))
+             (shares (let ((exact (mapcar (lambda (a) (* avail (/ (float a) total))) along)))
+                       (if (not unit) exact
+                         (let ((cells (mapcar (lambda (v) (* unit (floor v unit))) (butlast exact))))
+                           (append cells (list (- avail (apply #'+ cells)))))))))
+        (cl-loop for child in children for share in shares
+                 for cross = (- (if vertical width height) (- align (eas-place--lead child key))
+                                (if (funcall trail child) (- most (funcall trail child)) 0))
                  do (if vertical
-                        (eas-place-fit child width (* avail (/ (float a) total)) metrics)
-                      (eas-place-fit child (* avail (/ (float a) total)) height metrics)))))))))
+                        (eas-place-fit child cross share metrics)
+                      (eas-place-fit child share cross metrics)))))))))
 
 (defun eas-place-layout (tree metrics title-h size &optional sized)
   "Size, chrome and arrange TREE; return the scene size (W . H).

@@ -25,6 +25,7 @@ single views (a column repeat), else its children's cells."
       (list (plist-get node :children))
     (mapcar (lambda (row) (plist-get row :children)) (plist-get node :children))))
 (declare-function eas-facet-layout-min-plot "eas-facet-layout")
+(declare-function eas-layout-text-p "eas-layout")
 
 (defun eas-place-grid-p (node)
   "Non-nil when layout NODE is a grid: rows of single-view cells."
@@ -79,6 +80,12 @@ likewise, so the spacing separates the boxes and plots line up."
       (dolist (g cells)
         (let ((least (eas-facet-layout-min-plot g metrics)))
           (setq w (max w (car least)) h (max h (cdr least))))))
+    ;; Text plots span whole cells: one ending mid-cell put its axis
+    ;; labels on its axis line.
+    (when (eas-layout-text-p metrics)
+      (let ((cell (plist-get metrics :cell)))
+        (setq w (* (aref cell 0) (max 4 (floor w (aref cell 0))))
+              h (* (aref cell 1) (max 2 (floor h (aref cell 1)))))))
     (dolist (g cells) (plist-put g :w w) (plist-put g :h h))))
 
 (provide 'eas-compile-grid)

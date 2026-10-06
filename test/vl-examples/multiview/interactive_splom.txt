@@ -1,20 +1,20 @@
-Horsepower       Horsepower        Horsepower
-200┤┈┈●●●●┈●┈┈┈┈ 200┤┈┈┈●●●●●●┈┈┈  200┤┈┈┈┈┈●●●●●●┈ Origin
-   │   ●●●●●●●●     │     ●●●●●●●     │  ●●●●       ● Europe
-  0└┬───┬────┬──   0└┬───┬────┬──    0└────┬────┬── ● Japan
-    0   20  40       0   10  20        0  100  200  ● USA
-  Miles_per_Gallon   Acceleration       Horsepower
+Horsepower       Horsepower       Horsepower
+200┤┈●●●●●┈●┈┈┈  200┤┈┈┈●●●●●┈┈┈  200┤┈┈┈┈┈●●●●●●  Origin
+   │   ●●●●●●●●     │    ●●●●●●●     │  ●●●●       ● Europe
+  0└┬───┬───┬──    0└┬───┬───┬──    0└┬───┬────┬─  ● Japan
+    0  20   40       0  10  20        0  100  200  ● USA
+  Miles_per_Gallon  Acceleration      Horsepower
 
- Acceleration     Acceleration      Acceleration
- 20┤┈┈●●●●●●●●●┈  20┤┈┈┈┈┈┈●●●●●●   20┤┈┈●●●●●●●●●┈
-   │  ●●●●●●●       │   ●●●●          │   ●●●●●●●●
-  0└┬───┬────┬──   0└┬───┬────┬──    0└────┬────┬──
-    0   20  40       0   10  20        0  100  200
-  Miles_per_Gallon   Acceleration       Horsepower
+ Acceleration     Acceleration     Acceleration
+ 20┤┈●●●●●●●●●●   20┤┈┈┈┈┈●●●●●●   20┤┈┈●●●●●●●●┈
+   │  ●●●●●●        │   ●●●          │   ●●●●●●●●
+  0└┬───┬───┬──    0└┬───┬───┬──    0└┬───┬────┬─
+    0  20   40       0  10  20        0  100  200
+  Miles_per_Gallon  Acceleration      Horsepower
 
- Miles_per_Gallon Miles_per_Gallon  Miles_per_Gallon
- 40┤┈┈┈┈┈●●●●●●┈  40┤┈┈┈┈┈●●●●●●●   40┤┈┈●●●●●┈┈┈┈┈
-   │  ●●●●          │   ●●●●●●●●      │  ●●●●●●●●●
-  0└┬───┬────┬──   0└┬───┬────┬──    0└────┬────┬──
-    0   20  40       0   10  20        0  100  200
-  Miles_per_Gallon   Acceleration       Horsepower
+ Miles_per_Gallon Miles_per_Gallon Miles_per_Gallon
+ 40┤┈┈┈┈┈●●●●●●   40┤┈┈┈┈●●●●●●●   40┤┈┈●●●●●┈┈┈┈
+   │ ●●●●●          │   ●●●●●●●      │  ●●●●●●●●●
+  0└┬───┬───┬──    0└┬───┬───┬──    0└┬───┬────┬─
+    0  20   40       0  10  20        0  100  200
+  Miles_per_Gallon  Acceleration      Horsepower

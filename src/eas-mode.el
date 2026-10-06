@@ -293,6 +293,19 @@ their own pointer, and a key pressed after them keeps the mouse's hover."
                      (eas-mode--window-size (get-buffer-window) (eas-view-target eas-mode--view)))
   (eas-mode-redraw))
 
+(defun eas-mode--follow-window (window)
+  "Recompile this buffer's view when WINDOW, showing it, changed size.
+Run from `window-size-change-functions' (buffer-locally), so a chart
+always fills its window: after `delete-other-windows', a split or a
+resized frame."
+  (when (and eas-mode--view (window-live-p window) (eq (window-buffer window) (current-buffer))
+             (eas-view-interactive eas-mode--view))
+    (let* ((target (eas-view-target eas-mode--view))
+           (size (eas-mode--window-size window target)))
+      (unless (equal size (eas-view-size eas-mode--view))
+        (eas-view-resize eas-mode--view size)
+        (eas-mode-redraw)))))
+
 (defvar eas-view-mode-map
   (let ((map (make-sparse-keymap)))
     (dolist (k '("+" "=" "-" "0" "[" "]" "<" ">")) (define-key map k #'eas-mode-key))
@@ -316,7 +329,8 @@ their own pointer, and a key pressed after them keeps the mouse's hover."
   "Major mode for a live eas chart.  See `eas-view-mode-map'."
   (setq-local track-mouse t)
   (setq truncate-lines t)
-  (add-hook 'post-command-hook #'eas-mode--post-command nil t))
+  (add-hook 'post-command-hook #'eas-mode--post-command nil t)
+  (add-hook 'window-size-change-functions #'eas-mode--follow-window nil t))
 
 (defun eas-show (view &optional target)
   "Show VIEW (an id or view) in its buffer; TARGET overrides svg/text.

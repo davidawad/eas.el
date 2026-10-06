@@ -11,7 +11,8 @@
 ;; eighth blocks, axes are box-drawing lines.  Every mark cell carries
 ;; `eas-view', `eas-mark', `eas-datum' and `help-echo', so moving
 ;; point is the terminal's hover.  Output is a deterministic string.
-;; Like the SVG renderer it reads only the scene.
+;; Like the SVG renderer it reads only the scene, and the background
+;; it draws on: colors go through `eas-text-ink-legible'.
 
 ;;; Code:
 
@@ -24,6 +25,9 @@
 (require 'eas-symbols)
 (require 'eas-marks-image)
 (require 'eas-scale)
+(require 'eas-text-ink)
+(require 'eas-text-band)
+(require 'eas-text-ramp)
 
 (defface eas-axis '((t :inherit shadow)) "Face for eas axis lines and grid." :group 'faces)
 (defface eas-label '((t :inherit default)) "Face for eas tick labels." :group 'faces)
@@ -39,7 +43,7 @@ eas-text-check.el uses it to prove every item lands in a cell.")
   "The (VIEW-ID MARK-ID INDEX) being drawn, for `eas-text-trace'.")
 
 (cl-defstruct (eas-text--grid (:constructor eas-text--grid-make))
-  cols rows cw ch chars props prio dots dot-props dot-prio cover)
+  cols rows cw ch chars props prio dots dot-props dot-prio cover bands brush)
 
 (defun eas-text--new (scene)
   "An empty grid sized for SCENE."
@@ -51,7 +55,8 @@ eas-text-check.el uses it to prove every item lands in a cell.")
     (eas-text--grid-make :cols cols :rows rows :cw cw :ch ch
                            :chars (make-vector n ?\s) :props (make-vector n nil)
                            :prio (make-vector n -1) :dots (make-vector n 0) :dot-props (make-vector n nil)
-                           :dot-prio (make-vector n -1) :cover (make-vector n 0.0))))
+                           :dot-prio (make-vector n -1) :cover (make-vector n 0.0)
+                           :bands (make-hash-table :test 'eql) :brush (make-vector n nil))))
 
 (defvar eas-text--dot-prio 2
   "Priority of the braille dots being drawn: a cell shows its dots
@@ -165,7 +170,8 @@ SHOW-P, when non-nil, is called per dot and skips the dot when it says nil."
                  (if (or (null f) (equal f "none")) s f))))
     (append (list 'eas-view (plist-get view :id) 'eas-mark (plist-get mark :id) 'eas-datum datum)
             (when-let* ((tip (eas-text--tooltip item))) (list 'help-echo tip))
-            (when (and color (not (equal color "none"))) (list 'face (list :foreground color))))))
+            (when-let* ((ink (and color (not (equal color "none")) (eas-text-ink-legible color))))
+              (list 'face (list :foreground ink))))))
 
 (defun eas-text--xs (points)
   "The x of each of POINTS, as a vector `eas-text--interp' bisects."
@@ -207,6 +213,9 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
                  do (cl-loop for row from (max (aref clip 1) (floor top ch)) below (min (aref clip 3) (ceiling bottom ch))
                              for y0 = (* row ch) for y1 = (* (1+ row) ch)
                              for covered = (- (min y1 bottom) (max y0 top))
+                             when (> covered 0)
+                             do (push (list top bottom (funcall props-fn cx))
+                                      (gethash (+ col (* row (eas-text--grid-cols g))) (eas-text--grid-bands g)))
                              do (cond
                                  ((>= covered (- ch 0.01)) (eas-text--put g col row ?█ (funcall props-fn cx) prio))
                                  ((and (> top y0) (> covered 0))
@@ -232,6 +241,64 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
       (when (= (length points) 1)
         (let ((p (aref points 0)) (eas-text--dot-prio prio))
           (eas-text--dot-line g (aref p 0) (aref p 1) (aref p 0) (aref p 1) props-fn clip))))))
+
+(defun eas-text--resolve-bands (g prio)
+  "Compose the cells of grid G that area slices drawn at PRIO tile
+\(`eas-text-band-resolve'), then forget the slices."
+  (let* ((ch (eas-text--grid-ch g)) (cols (eas-text--grid-cols g)) (bands (eas-text--grid-bands g))
+         (slack (/ ch 4.0)))
+    (maphash (lambda (i segs)
+               (when (= (aref (eas-text--grid-prio g) i) prio)
+                 (pcase (let ((y0 (* (/ i cols) ch)))
+                          ;; A slice ending just past the cell's edge meets this one.
+                          (eas-text-band-resolve
+                           (append segs
+                                   (seq-filter (lambda (s) (>= (cadr s) (- y0 slack))) (gethash (- i cols) bands))
+                                   (seq-filter (lambda (s) (<= (car s) (+ y0 ch slack))) (gethash (+ i cols) bands)))
+                           y0 ch))
+                   (`(,char ,props ,under)
+                    (aset (eas-text--grid-chars g) i char)
+                    (aset (eas-text--grid-props g) i
+                          (if (not under) props
+                            (let ((bg (plist-get (plist-get under 'face) :foreground)))
+                              (if (not bg) props
+                                (plist-put (copy-sequence props) 'face
+                                           (append (list :background bg) (plist-get props 'face)))))))))))
+             bands)
+    (clrhash bands)))
+
+(defun eas-text--arc-dot (g dx dy props i clip arcs)
+  "Record braille dot DX DY of arc item I (PROPS) in ARCS, inside CLIP.
+ARCS maps a cell to (BITS . ((I COUNT . PROPS) ...)); see
+`eas-text--resolve-arcs'."
+  (let ((col (floor dx 2)) (row (floor dy 4)))
+    (when (and (<= (aref clip 0) col) (< col (aref clip 2)) (<= (aref clip 1) row) (< row (aref clip 3))
+               (< -1 col (eas-text--grid-cols g)) (< -1 row (eas-text--grid-rows g)))
+      (when (and eas-text-trace eas-text-trace-item) (funcall eas-text-trace col row))
+      (let* ((k (+ col (* row (eas-text--grid-cols g))))
+             (cell (or (gethash k arcs) (puthash k (list 0) arcs)))
+             (own (or (assq i (cdr cell)) (car (setcdr cell (cons (cons i (cons 0 props)) (cdr cell)))))))
+        (setcar cell (logior (car cell) (aref (aref eas-glyph-braille-dots (mod dy 4)) (mod dx 2))))
+        (cl-incf (cadr own))))))
+
+(defun eas-text--resolve-arcs (g arcs prio clip)
+  "Draw the cells an arc mark's wedges recorded in ARCS at PRIO: a cell
+whose eight dots are all inside the arc is a full block, the rest keep
+their braille dots; either takes the color of the wedge with most dots
+\(the later wedge on a tie), so wedges meet without a seam."
+  (let ((cols (eas-text--grid-cols g)) (eas-text--dot-prio prio))
+    (maphash (lambda (k cell)
+               (let* ((best (car (sort (copy-sequence (cdr cell))
+                                       (lambda (a b) (or (> (cadr a) (cadr b))
+                                                         (and (= (cadr a) (cadr b)) (> (car a) (car b))))))))
+                      (props (cddr best)) (col (% k cols)) (row (/ k cols)))
+                 (if (= (car cell) #xff)
+                     (eas-text--put g col row ?█ props prio)
+                   (dotimes (j 8)
+                     (let ((dx (+ (* 2 col) (% j 2))) (dy (+ (* 4 row) (/ j 2))))
+                       (when (/= 0 (logand (car cell) (aref (aref eas-glyph-braille-dots (mod dy 4)) (mod dx 2))))
+                         (eas-text--dot g dx dy props clip)))))))
+             arcs)))
 
 (defun eas-text--under (g col row props prio)
   "Give the lower eighth block at COL ROW of grid G, drawn at PRIO, the
@@ -305,8 +372,7 @@ shaded, a rising one solid; color tells them apart too."
          (x (plist-get item :x)) (y (plist-get item :y)) (w (plist-get item :w)) (h (plist-get item :h))
          (orient (plist-get item :orient))
          (brush (equal (plist-get mark :mark) "brush"))
-         (props (if brush
-                    (list 'face (list :background "#555555") 'eas-brush (plist-get mark :param))
+         (props (if brush (list 'eas-brush (plist-get mark :param))
                   (eas-text--item-props view mark item (plist-get item :datum))))
          (vertical (equal orient "vertical")) (horizontal (equal orient "horizontal"))
          (falling (eq (plist-get item :rise) :false))
@@ -323,8 +389,10 @@ shaded, a rising one solid; color tells them apart too."
          (rows (if vertical (cons (floor y ch) (ceiling (- (+ y h) 0.001) ch)) (eas-text--cells y h ch)))
          (c0 (car cols)) (c1 (max (1+ c0) (cdr cols)))
          (r0 (car rows)) (r1 (max (1+ r0) (cdr rows))))
-    ;; A zero-length bar (a value of 0) draws nothing, as in SVG.
-    (unless (or (and vertical (< h 0.01)) (and horizontal (< w 0.01)))
+    ;; A zero-length bar (a value of 0) draws nothing, as in SVG, and an
+    ;; empty interval (a click, no drag) no brush.
+    (unless (or (and vertical (< h 0.01)) (and horizontal (< w 0.01))
+                (and brush (or (< w 0.5) (< h 0.5))))
      (cl-loop for row from (max r0 (aref clip 1)) below (min r1 (aref clip 3))
              do (cl-loop for col from (max c0 (aref clip 0)) below (min c1 (aref clip 2))
                          for char = (cond
@@ -337,11 +405,20 @@ shaded, a rising one solid; color tells them apart too."
                          for glyph = (if (and char falling) (eas-text--falling char) char)
                          do (cond
                              (glyph (eas-text--put g col row glyph props prio (eas-text--coverage glyph)))
+                             ;; The brush shades its cells whatever they hold
+                             ;; when the grid is composed: one solid region.
                              (brush
-                              (let ((idx (+ col (* row (eas-text--grid-cols g)))))
-                                (when (< -1 idx (length (eas-text--grid-props g)))
-                                  (aset (eas-text--grid-props g) idx
-                                        (append props (aref (eas-text--grid-props g) idx))))))))))))
+                              (when (and (< -1 col (eas-text--grid-cols g)) (< -1 row (eas-text--grid-rows g)))
+                                (aset (eas-text--grid-brush g) (+ col (* row (eas-text--grid-cols g))) props)))))))))
+
+(defun eas-text--brush-props (props brush shade)
+  "PROPS of a cell under BRUSH (its props), shaded with color SHADE."
+  (let ((face (plist-get props 'face)))
+    (append brush
+            (plist-put (copy-sequence props) 'face
+                       (cond ((null face) (list :background shade))
+                             ((keywordp (car-safe face)) (append (list :background shade) face))
+                             (t (list (list :background shade) face)))))))
 
 (defun eas-text--segment (g seg props clip prio)
   "Draw segment SEG [x1 y1 x2 y2] with box glyphs (braille when diagonal)."
@@ -400,7 +477,7 @@ sits under strokes.  Later marks win ties."
                        (eas-text--col g (+ (aref b 0) (aref b 2) -0.01)) (eas-text--row g (+ (aref b 1) (aref b 3) -0.01))))
          (clip (vector (aref clip 0) (aref clip 1) (1+ (aref clip 2)) (1+ (aref clip 3)))))
     (seq-doseq (mark (plist-get view :marks))
-     (let ((prio (pop prios)))
+     (let ((prio (pop prios)) (arcs (and (equal (plist-get mark :mark) "arc") (make-hash-table :test 'eql))))
       (seq-do-indexed
        (lambda (item i)
          (unless (equal (plist-get item :opacity) 0)
@@ -408,10 +485,9 @@ sits under strokes.  Later marks win ties."
            (pcase (plist-get mark :mark)
              ((or "line" "area" "trail") (eas-text--series g view mark item clip prio))
              ((or "bar" "rect" "brush") (eas-text--rect g view mark item clip prio))
-             ("arc" (let ((props (eas-text--item-props view mark item (plist-get item :datum)))
-                          (eas-text--dot-prio prio))
+             ("arc" (let ((props (eas-text--item-props view mark item (plist-get item :datum))))
                       (eas-text-arc-dots item (eas-text--grid-cw g) (eas-text--grid-ch g)
-                                         (lambda (dx dy) (eas-text--dot g dx dy props clip)))))
+                                         (lambda (dx dy) (eas-text--arc-dot g dx dy props i clip arcs)))))
              ((or "rule" "tick")
               ;; A rule on the plot's right edge (the last datum's crosshair)
               ;; belongs to the last column, not the clipped one past it.
@@ -436,7 +512,9 @@ sits under strokes.  Later marks win ties."
                     (eas-text--put g col row
                                      (eas-symbols-glyph (plist-get item :shape) filled (plist-get item :angle))
                                      (eas-text--item-props view mark item (plist-get item :datum)) prio))))))))
-       (plist-get mark :items))))))
+       (plist-get mark :items))
+      (when arcs (eas-text--resolve-arcs g arcs prio clip))
+      (eas-text--resolve-bands g prio)))))
 
 (defvar eas-text--label-cells nil
   "Hash of (COL . ROW) cells holding a tick label, while a scene renders.")
@@ -504,6 +582,15 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
   (seq-doseq (legend (plist-get view :legends))
     (when-let* ((tm (plist-get legend :title-mark)))
       (eas-text--string g (plist-get tm :x) (plist-get tm :y) (plist-get tm :text) "left" (list 'face 'eas-title) 5))
+    (when-let* ((bar (plist-get legend :bar)))
+      (pcase-dolist (`(,col ,row ,char ,fg ,bg)
+                     (eas-text-ramp-cells bar (plist-get legend :stops) (eas-text--grid-cw g) (eas-text--grid-ch g)
+                                          ;; Text lays every bar out upright, whatever its direction.
+                                          (> (aref bar 2) (aref bar 3))))
+        (eas-text--put g col row char
+                       (list 'eas-view (plist-get view :id) 'eas-legend-ramp (plist-get legend :channel)
+                             'face (list :foreground (eas-text-ink-legible fg) :background (eas-text-ink-legible bg)))
+                       5)))
     (seq-doseq (e (plist-get legend :entries))
       (let ((props (list 'eas-view (plist-get view :id) 'eas-legend (plist-get e :value)
                          'help-echo (plist-get e :label))))
@@ -512,33 +599,42 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
                            (cond ((plist-get e :dash) (eas-text--dash-glyph (plist-get e :dash)))
                                  ((plist-get e :shape) (eas-symbols-glyph (plist-get e :shape) t))
                                  (t (pcase (plist-get legend :shape) ("square" ?■) ("stroke" ?━) (_ ?●))))
-                           (append props (list 'face (list :foreground (plist-get e :color)))) 5))
+                           (append props (list 'face (list :foreground (eas-text-ink-legible (plist-get e :color))))) 5))
         (eas-text--string g (plist-get e :lx) (plist-get e :ly) (plist-get e :label) "left"
                             (append props (list 'face 'eas-label)) 5)))))
 
 (defun eas-text--compose (g)
   "Return grid G as a propertized string, braille dots merged, lines trimmed."
-  (let ((cols (eas-text--grid-cols g)) lines)
+  (let ((cols (eas-text--grid-cols g)) (shade (eas-text-ink-shade)) lines)
     (dotimes (row (eas-text--grid-rows g))
-      (let ((runs nil) (chars nil) (props :unset))
-        (dotimes (col cols)
+      (let ((runs nil) (chars nil) (props :unset)
+            ;; Blank cells past the last glyph are trimmed, unless brushed.
+            (end (cl-loop for col downfrom (1- cols) to 0
+                          for i = (+ col (* row cols))
+                          unless (and (eq (aref (eas-text--grid-chars g) i) ?\s) (null (aref (eas-text--grid-brush g) i))
+                                      (or (zerop (aref (eas-text--grid-dots g) i))
+                                          (> (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
+                          return (1+ col)
+                          finally return 0)))
+        (dotimes (col end)
           (let* ((i (+ col (* row cols)))
                  (dots (aref (eas-text--grid-dots g) i))
                  (use-dots (and (> dots 0) (<= (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
                  (char (if use-dots (+ #x2800 dots) (aref (eas-text--grid-chars g) i)))
-                 (p (if use-dots (aref (eas-text--grid-dot-props g) i) (aref (eas-text--grid-props g) i))))
+                 (p (if use-dots (aref (eas-text--grid-dot-props g) i) (aref (eas-text--grid-props g) i)))
+                 (p (if-let* ((brush (aref (eas-text--grid-brush g) i))) (eas-text--brush-props p brush shade) p)))
             (unless (equal p props)
               (when chars (push (apply #'propertize (apply #'string (nreverse chars)) (unless (eq props :unset) props)) runs))
               (setq chars nil props p))
             (unless (eq char 0) (push char chars))))
         (when chars (push (apply #'propertize (apply #'string (nreverse chars)) (unless (eq props :unset) props)) runs))
-        (let ((line (apply #'concat (nreverse runs))))
-          (push (if (string-match "[ ]+\\'" line) (substring line 0 (match-beginning 0)) line) lines))))
+        (push (apply #'concat (nreverse runs)) lines)))
     (mapconcat #'identity (nreverse lines) "\n")))
 
 (defun eas-text-render (scene)
   "Return SCENE drawn as a propertized string (rows joined by newlines)."
-  (let ((g (eas-text--new scene)) (eas-text--label-cells (make-hash-table :test 'equal)))
+  (eas-text-ink-with
+   (let ((g (eas-text--new scene)) (eas-text--label-cells (make-hash-table :test 'equal)))
     (seq-doseq (view (plist-get scene :views))
       (eas-text--axes g view)
       (when-let* ((h (plist-get view :header)))
@@ -548,7 +644,7 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
     (dolist (title (let ((tt (plist-get scene :title))) (and tt (delq nil (list tt (plist-get tt :subtitle))))))
       (eas-text--string g (plist-get title :x) (plist-get title :y) (plist-get title :text) "center"
                           (list 'face 'eas-title) 5))
-    (eas-text--compose g)))
+    (eas-text--compose g))))
 
 (provide 'eas-text)
 ;;; eas-text.el ends here

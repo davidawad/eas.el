@@ -1,16 +1,16 @@
 Sum of count
 15,000┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈  series
       │                       ■ Agriculture
-      │                   ▁▁  ■ Business services
+      │                   ▇▇  ■ Business services
       │                   ▅▅  ■ Construction
-10,000┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈▁▄▇  ■ Education and Health
-      │    ▁ ▁▁▁         ▇▃▄  ■ Finance
-      │    ▆▁█▆▆▁▁▁▁▁▁ ▁▁▅▂▅  ■ Government
-      │  ▁▁▃▂▄▄▄▂▂▃▅▄█▁▆▃▂██  ■ Information
- 5,000┤▁▁▂▄▃▂▃▂▂▂▁▄▃▄▃▄▃▁███  ■ Leisure and hospitality
-      │▁▁▃▅▅▅▅██▅█▅▅▅▅▅▇█▂▁▃  ■ Manufacturing
-      │▁▄▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▄  ■ Mining and Extraction
-      │▁▁▁▁█▇▇▇█▁█▇▇▁▇▂▂▇███  ■ Other
+10,000┤┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈▇▄█  ■ Education and Health
+      │    ▁ ▁▁▁         ▇▁▄  ■ Finance
+      │    ▁▁▃▁▂▁▅▁▁▁▁ ▁▁▂▂▅  ■ Government
+      │  ▁▁█▂▁▁█▂▂█▅▃▄▃▆▃▂▁▃  ■ Information
+ 5,000┤▁▁▂▁▃▁▃▂▂██▃▂▂▂▁▃▁▂██  ■ Leisure and hospitality
+      │▁█▃█▅▂▅▄▄▁▂▁▂█▁▅█▂▂▁▃  ■ Manufacturing
+      │▁▄█▁▁█▁█▁▂▁█▁▂█▂▂▁▁▃▄  ■ Mining and Extraction
+      │▅▄▆▅█▇▇▇█▇█▇▇▆▇▆▆▇███  ■ Other
      0└┬─────────┬─────────┬  ■ Self-employed
        2000    2005       2010■ Transportation and Utilities
          date (year-month)    ■ Wholesale and Retail Trade

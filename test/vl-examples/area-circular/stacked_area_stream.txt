@@ -1,14 +1,14 @@
                               series
                          ▁▁▁  ■ Agriculture
-                         ███  ■ Business services
-     ▁▁▁▁▁▁▁▁▁     ▁  ▁▁▁▇██  ■ Construction
-▁▁▁▁▁▄██▅▁████▁▁▁▁▁▆▁▁█▅▁▄█▇  ■ Education and Health
-▂▃▁▂▃▄▄▄▄█▄▄▅▄▄▄▃▄▄▃▄▃▄▅█▄▄▄  ■ Finance
+                         █▃▅  ■ Business services
+     ▁▁▁▁▁▁▁▁▁     ▁  ▁▁█▇██  ■ Construction
+▁▁▁▁█▄▃▂▅▁▃▄▃▁▂▁▁▁▁▁▁▁▃▅█▄█▇  ■ Education and Health
+▂███▁▁▁▂█▁▂▂▁▁▁▂▃▁█▃▄▁▄▁▃▁▄▃  ■ Finance
 ▄▂▂▃▃▂▄▃▃▄▃▃▃▂▃▃▃▃▃▂▂▃▂▃▃▄▃▄  ■ Government
-▂▁▁▁▆▄▅▅█▅▅▅▄▅▅▅▅▁▁▅▄▁██████  ■ Information
-▁▁▁▁▁▁▂▂▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁███  ■ Leisure and hospitality
-    █▂██▂▆███████  █  █▇▂▃▃▁  ■ Manufacturing
-                        █▅▄▃  ■ Mining and Extraction
+▂██▁▆▄▅▅▃▅▅▅▄▅█▅▅▁▁▅▄█▃▄▃▃█▁  ■ Information
+▅▅▆▄▂▁█▁▁█▂██▁▂▃▂▄▄▂▃▃█▁▁███  ■ Leisure and hospitality
+    █▅██▅▆███████  █  █▇▄█▃▁  ■ Manufacturing
+                        █▅▁▁  ■ Mining and Extraction
                          ███  ■ Other
                               ■ Self-employed
 ┬            ┬             ┬  ■ Transportation and Utilities

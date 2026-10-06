@@ -46,7 +46,7 @@
     (aref (plist-get mark :rows) datum)))
 
 (defun eas-scene-summary (scene)
-  "A small plist describing SCENE: size, views, marks and item counts."
+  "Return a small plist describing SCENE: size, views, mark and item counts."
   (list :size (plist-get scene :size)
         :views (vconcat
                 (seq-map (lambda (v)

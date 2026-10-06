@@ -40,12 +40,14 @@
   (let ((v (plist-get (eas-title--object spec) key))) (if (and v (not (eq v :null))) v (plist-get metrics metric))))
 
 (defun eas-title--line-height (size)
-  "Height Vega bounds a one-line title of font SIZE with: it sets titles
-on a bottom baseline, round(0.8 size) - round(-0.21 size) above it."
+  "Height Vega bounds a one-line title of font SIZE with.
+Vega puts titles on a bottom baseline, round(0.8 size) - round(-0.21
+size) above it."
   (- (eas-layout--round (* 0.8 size)) (eas-layout--round (* -0.21 size))))
 
 (defun eas-title-height (spec metrics)
-  "Height the title of SPEC takes above the plots, its offset included."
+  "Height the title of SPEC takes above the plots, its offset included.
+METRICS gives the target."
   (let ((lines (eas-title-lines spec)))
     (cond ((null lines) 0)
           ((eas-title-extra-subtitle-lines spec)
@@ -57,7 +59,8 @@ on a bottom baseline, round(0.8 size) - round(-0.21 size) above it."
                   (eas-title--get spec metrics :offset :chart-title-pad)))))))
 
 (defun eas-title-place (spec groups metrics total)
-  "The scene title of SPEC over placed GROUPS in a TOTAL (W . H) canvas, or nil."
+  "The scene title of SPEC over placed GROUPS in a TOTAL (W . H) canvas, or nil.
+METRICS gives the target."
   (when-let* ((lines (eas-title-lines spec)))
     (let* ((text (eas-layout-text-p metrics))
            (frame (or (plist-get (eas-title--object spec) :frame) "bounds"))
@@ -90,8 +93,9 @@ on a bottom baseline, round(0.8 size) - round(-0.21 size) above it."
     (if (member a '("start" "middle" "end")) a (plist-get metrics :chart-title-anchor))))
 
 (defun eas-title-style (spec metrics)
-  "Scene title properties beyond size and weight: :dx :dy :font :fontStyle,
-from SPEC's title object over config.title (METRICS)."
+  "Scene title properties beyond size and weight.
+These are :dx :dy :font :fontStyle, from SPEC's title object over
+config.title (METRICS)."
   (unless (eas-layout-text-p metrics)
     (let ((obj (eas-title--object spec)) (config (eas-theme-get (plist-get metrics :config) :title)) out)
       (dolist (k '(:dx :dy :font :fontStyle))
@@ -103,7 +107,8 @@ from SPEC's title object over config.title (METRICS)."
 
 (defun eas-title-view-mark (group metrics)
   "A text mark drawing GROUP's own title (a concat cell's), or nil.
-The title sits above the cell's axes; `eas-place-chrome' reserved its room."
+The title sits above the cell's axes; `eas-place-chrome' reserved its room.
+METRICS gives the target."
   (when-let* ((node (plist-get group :title-node))
               (title (eas-title-place node (list group) metrics (cons 0 0))))
     (let* ((text (eas-layout-text-p metrics))

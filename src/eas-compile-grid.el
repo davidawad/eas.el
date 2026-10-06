@@ -18,8 +18,9 @@
 (require 'eas-core)
 
 (defun eas-place--grid-rows (node)
-  "NODE's rows, each a list of cell nodes: one row for an hconcat of
-single views (a column repeat), else its children's cells."
+  "NODE's rows, each a list of cell nodes.
+That is one row for an hconcat of single views (a column repeat), else
+its children's cells."
   (if (and (equal (plist-get node :concat) "h")
            (seq-every-p (lambda (c) (plist-get c :group)) (plist-get node :children)))
       (list (plist-get node :children))
@@ -41,7 +42,8 @@ single views (a column repeat), else its children's cells."
 Vega's gridLayout with align \"all\" and bounds \"full\": each cell's
 box is its plot with its chrome; columns are as wide as the widest box
 plus the spacing and the largest left chrome of the later columns, rows
-likewise, so the spacing separates the boxes and plots line up."
+likewise, so the spacing separates the boxes and plots line up.
+METRICS gives the default spacing."
   (let* ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing)))
          (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) row))
                        (eas-place--grid-rows node)))
@@ -64,7 +66,7 @@ likewise, so the spacing separates the boxes and plots line up."
           (+ top (* (1- (length rows)) (+ ymax offy)) ymax))))
 
 (defun eas-place-fit-grid (node width height metrics)
-  "Resize grid NODE's plots so the grid is WIDTH by HEIGHT."
+  "Resize grid NODE's plots so the grid is WIDTH by HEIGHT under METRICS."
   (let* ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing)))
          (rows (mapcar (lambda (row) (mapcar (lambda (c) (plist-get c :group)) row))
                        (eas-place--grid-rows node)))

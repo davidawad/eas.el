@@ -43,7 +43,8 @@
 nil until the first lookup loads `eas-template-directories'.")
 
 (defun eas-template--meta-check (meta path)
-  "Signal INVALID_INPUT unless META (an x-eas object) declares a template."
+  "Signal INVALID_INPUT unless META (an x-eas object) declares a template.
+PATH names the template in the error."
   (dolist (key '(:template :version :slots))
     (unless (plist-get meta key)
       (eas-signal "INVALID_INPUT"

@@ -29,7 +29,8 @@
   "Monthly-total style bars: each bar sums several source rows.")
 
 (defmacro eas-action-test--with-view (var source &rest body)
-  "Open SOURCE (a template name or spec) as VAR (id \"t\") in a fresh registry; run BODY.
+  "Open SOURCE (a template name or spec) as VAR (id \"t\") in a fresh registry.
+Then run BODY.
 SOURCE nil leaves VAR nil for BODY to open."
   (declare (indent 2))
   `(let ((eas-views (make-hash-table :test 'equal))

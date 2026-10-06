@@ -32,7 +32,7 @@
 (defconst eas-event-types
   '("pointermove" "pointerdown" "pointerup" "pointerleave" "click" "dblclick"
     "wheel" "drag" "brush" "key" "push" "link" "param")
-  "event/v1 types.")
+  "Types of event/v1.")
 
 (defconst eas-event-keys '("+" "=" "-" "0" "left" "right" "up" "down" "escape" "[" "]" "z")
   "Keys the runtime understands.")

@@ -31,7 +31,8 @@
   (or (plist-get (plist-get axis :style) :labelFontSize) (plist-get metrics :label-size)))
 
 (defun eas-axis-fit--collide-p (axis step metrics)
-  "Non-nil when neighbouring labels of AXIS, STEP apart, collide."
+  "Return non-nil when neighbouring labels of AXIS, STEP apart, collide.
+METRICS measures the labels."
   (let ((size (eas-axis-fit--size axis metrics))
         (labels (seq-remove #'string-empty-p (mapcar (lambda (tk) (plist-get tk :label)) (plist-get axis :ticks)))))
     (cl-loop for (a b) on labels while b
@@ -40,11 +41,13 @@
                         step))))
 
 (defun eas-axis-fit-overlap (before after fitted)
-  "AFTER, the axes `eas-axis-fit-labels' made of BEFORE, with default label
-overlap thinned when FITTED.  An axis it left alone (a continuous or
-vertical axis cannot cut labels to a step) whose spec leaves labelOverlap
-unset (:overlap-set is nil) thins its labels with Vega's \"parity\"
-strategy, as continuous axes already do (fc-qx1.38)."
+  "Return AFTER with default label overlap thinned when FITTED.
+AFTER is the axes `eas-axis-fit-labels' made of BEFORE.  An axis it
+left alone (a continuous or vertical axis cannot cut labels to a step)
+whose spec leaves labelOverlap unset (:overlap-set is nil) thins its
+labels with Vega's \"parity\" strategy, as continuous axes already do
+\(fc-qx1.38)."
+
   (if (not fitted) after
     (cl-mapcar (lambda (old axis)
                  (if (or (not (eq old axis)) (plist-get axis :overlap) (plist-get axis :overlap-set))
@@ -53,7 +56,8 @@ strategy, as continuous axes already do (fc-qx1.38)."
                before after)))
 
 (defun eas-axis-fit-labels (axes group metrics)
-  "AXES of fitted GROUP with crowded discrete x labels cut to their step."
+  "AXES of fitted GROUP with crowded discrete x labels cut to their step.
+METRICS measures the labels; under text METRICS AXES stay as they are."
   (if (or (eas-layout-text-p metrics) (null (plist-get group :fit-height))) axes
     (mapcar
      (lambda (axis)
@@ -73,8 +77,9 @@ strategy, as continuous axes already do (fc-qx1.38)."
 ;;; Text: labels a cell apart
 
 (defun eas-axis-fit--text-spans (tk cols cw ch)
-  "Cell spans (ROW START . END) of tick TK's label lines on a COLS-wide grid.
-As the text renderer places them: a label running off a side is moved in."
+  "Cell spans (ROW START . END) of tick TK's label lines on a grid COLS wide.
+As the text renderer places them: a label running off a side is moved in.
+CW and CH are the cell width and height in pixels."
   (seq-map-indexed
    (lambda (line i)
      (let* ((len (string-width line)) (x (/ (plist-get tk :lx) (float cw)))
@@ -92,8 +97,10 @@ As the text renderer places them: a label running off a side is moved in."
             spans))
 
 (defun eas-axis-fit-text (view width metrics)
-  "VIEW with its axes' tick labels thinned on a text canvas WIDTH pixels
-wide under METRICS; VIEW itself when METRICS is not text.
+  "Return VIEW with its axes' tick labels thinned on a text canvas.
+The canvas is WIDTH pixels wide under METRICS; return VIEW itself when
+METRICS is not text.
+
 Labels the renderer would print over, or run into, one kept before
 them are blanked (:full keeps the text), so a squeezed plot reads
 \"0  1,000\" as one label at most, never \"01,000\", and the scene says

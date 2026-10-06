@@ -36,7 +36,7 @@
     (seq-find (lambda (m) (equal (plist-get m :id) mark-id)) (plist-get view :marks))))
 
 (defun eas-tip--unit (plan mark-id)
-  "The compile-plan unit behind scene mark MARK-ID, or nil."
+  "Return the unit of compile PLAN behind scene mark MARK-ID, or nil."
   (cl-loop for group in (plist-get plan :groups)
            thereis (cl-loop for unit in (plist-get group :units)
                             for k from 0
@@ -45,22 +45,25 @@
                             return unit)))
 
 (defun eas-tip--item (scene hit)
-  "The scene item HIT points at, or nil once a recompile dropped it."
+  "Return the item of SCENE that HIT points at.
+Return nil once a recompile dropped it."
   (when-let* ((mark (eas-tip--mark scene (plist-get hit :view) (plist-get hit :mark)))
               (items (plist-get mark :items)))
     (and (< (plist-get hit :item) (length items)) (aref items (plist-get hit :item)))))
 
 (defun eas-tip-tooltip (scene plan hit)
-  "Tooltip of HIT (an `eas-hit' result) as [(:title T :value V) ...], or nil.
-A discrete item's compiled tooltip wins; a series datum is encoded from
-PLAN's unit encoding, since its item is the whole series."
+  "Return the tooltip of HIT as [(:title T :value V) ...], or nil.
+HIT is an `eas-hit' result in SCENE.  A discrete item's compiled
+tooltip wins; a series datum is encoded from PLAN's unit encoding,
+since its item is the whole series."
   (when hit
     (or (plist-get (eas-tip--item scene hit) :tooltip)
         (when-let* ((unit (eas-tip--unit plan (plist-get hit :mark))))
           (eas-encode-tooltip (plist-get unit :encoding) (plist-get unit :mark) (plist-get hit :row))))))
 
 (defun eas-tip-href (scene plan hit)
-  "The href (a string) HIT links to, or nil."
+  "Return the href (a string) HIT links to, or nil.
+The item's href in SCENE wins, else PLAN's unit encoding gives it."
   (when hit
     (or (plist-get (eas-tip--item scene hit) :href)
         (when-let* ((unit (eas-tip--unit plan (plist-get hit :mark)))

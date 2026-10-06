@@ -177,7 +177,8 @@ brushed."
       (eas-error (message "eas: %s" (plist-get (eas-error-plist err) :message))))))
 
 (defun eas-brush-copy (&optional as)
-  "Copy the brushed rows to the kill-ring as an org table (AS json with a prefix)."
+  "Copy the brushed rows to the `kill-ring' as an org table.
+AS is `json' with a prefix argument."
   (interactive (list (if current-prefix-arg 'json 'org)))
   (condition-case err
       (eas-brush-emit eas-mode--view :as (or as 'org) :to 'kill-ring)

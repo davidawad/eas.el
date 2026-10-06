@@ -67,7 +67,8 @@
     (?m . "\\([0-9]\\{1,2\\}\\)") (?d . "\\([0-9]\\{1,2\\}\\)") (?e . " ?\\([0-9]\\{1,2\\}\\)")
     (?H . "\\([0-9]\\{1,2\\}\\)") (?M . "\\([0-9]\\{1,2\\}\\)") (?S . "\\([0-9]\\{1,2\\}\\)")
     (?L . "\\([0-9]\\{3\\}\\)") (?b . "\\([A-Za-z]\\{3\\}\\)") (?B . "\\([A-Za-z]+\\)"))
-  "d3 time-format directives `eas-data-url-parse-time' reads.")
+  "D3 time-format directives `eas-data-url-parse-time' reads.")
+
 
 (defun eas-data-url--format-regexp (format)
   "(REGEXP . DIRECTIVES) matching d3 time FORMAT."

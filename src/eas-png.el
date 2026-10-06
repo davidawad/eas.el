@@ -122,7 +122,8 @@ Signals INVALID_INPUT for PNGs this decoder does not handle."
 ;;; Comparison
 
 (defun eas-png--yiq-delta (r1 g1 b1 r2 g2 b2)
-  "pixelmatch's squared YIQ distance between colors R1 G1 B1 and R2 G2 B2."
+  "Return pixelmatch's squared YIQ distance between R1 G1 B1 and R2 G2 B2."
+
   (let* ((dr (- r1 r2)) (dg (- g1 g2)) (db (- b1 b2))
          (y (+ (* 0.29889531 dr) (* 0.58662247 dg) (* 0.11448223 db)))
          (i (- (* 0.59597799 dr) (* 0.2741761 dg) (* 0.32180189 db)))

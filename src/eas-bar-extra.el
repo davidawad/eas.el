@@ -30,8 +30,9 @@
   "Mark properties that edit a bar's span.")
 
 (defvar eas-bar-extra--last nil
-  "(MARK SPANS-P . STROKE) for the mark seen last: every row of a unit
-shares its mark, so the per-row hooks decide once per mark.")
+  "Cache of (MARK SPANS-P . STROKE) for the mark seen last.
+Every row of a unit shares its mark, so the per-row hooks decide once
+per mark.")
 
 (defun eas-bar-extra--of (mark)
   "(SPANS-P . STROKE) of MARK, from `eas-bar-extra--last' when it is MARK."
@@ -62,9 +63,9 @@ shares its mark, so the per-row hooks decide once per mark.")
         (cons (- c (/ size 2.0)) (+ c (/ size 2.0)))))))
 
 (defun eas-bar-extra-span (unit scales channel span row text)
-  "SPAN (LO . HI) of ROW's bar in UNIT along CHANNEL with the mark's size
-and offsets applied.  SCALES are the view's; TEXT is non-nil for the
-character grid, where offsets do not apply."
+  "Apply the mark's size and offsets to SPAN (LO . HI) of ROW's bar in UNIT.
+SPAN lies along CHANNEL.  SCALES are the view's; TEXT is non-nil for
+the character grid, where offsets do not apply."
   (if (or (null span) (not (car (eas-bar-extra--of (plist-get unit :mark))))) span
     (let* ((mark (plist-get unit :mark)) (scale (plist-get scales channel))
            (enc (plist-get unit :encoding))

@@ -24,8 +24,8 @@
   "(ZONE . WEEK) -> offset in ms, or nil across a transition.")
 
 (defun eas-time-offset-week (ms zone)
-  "UTC offset in milliseconds of ZONE (a string) around epoch MS, or nil
-when the week holding MS has a transition."
+  "UTC offset in milliseconds of ZONE (a string) around epoch MS, or nil.
+Nil when the week holding MS has a transition."
   (let* ((week (floor ms eas-time-offset--week))
          (key (cons zone week))
          (hit (gethash key eas-time-offset--cache 'none)))

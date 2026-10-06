@@ -60,7 +60,7 @@
 ;;; Rows
 
 (defun eas-facet-layout--cell-key (node)
-  "Levels facet cell NODE keeps, normalized for hashing, or nil."
+  "Return facet cell NODE's levels, normalized for hashing, or nil."
   (when-let* ((cell (plist-get (plist-get node :x-eas) :facet-cell)))
     (mapcar (lambda (f) (let ((v (or (plist-get f :equal) :null))) (if (numberp v) (float v) v)))
             (plist-get cell :keys))))
@@ -139,12 +139,13 @@ dropped (the trellis draws its own); METRICS gives the target."
   (let ((v (plist-get header key))) (if (numberp v) v default)))
 
 (defun eas-facet-layout--labels-p (header labels)
-  "Non-nil when HEADER shows LABELS."
+  "Non-nil when LABELS appear under HEADER."
   (and (vectorp labels) (> (length labels) 0) (not (eq (plist-get header :labels) :false))))
 
 (defun eas-facet-layout--row-label-extent (header label metrics)
-  "Pixels row LABEL under HEADER takes left of its padding, and its anchor
-offset: (EXTENT . ANCHOR), ANCHOR measured leftward from the padding.
+  "Return the extent and anchor offset of row LABEL under HEADER.
+The result is (EXTENT . ANCHOR): EXTENT the pixels LABEL takes left of
+its padding under METRICS, ANCHOR measured leftward from the padding.
 Vega offsets a horizontal row label by its own width, then aligns it."
   (let ((angle (eas-facet-layout--num header :labelAngle -90))
         (size (eas-facet-layout--num header :labelFontSize 10)))
@@ -175,7 +176,8 @@ Vega offsets a horizontal row label by its own width, then aligns it."
         left 0)))
 
 (defun eas-facet-layout--axis-bounds (g channel metrics)
-  "Bounds [X1 Y1 X2 Y2] of group G's CHANNEL axis relative to its plot, or nil."
+  "Bounds [X1 Y1 X2 Y2] of group G's CHANNEL axis relative to its plot, or nil.
+METRICS are the layout's."
   (when-let* ((axis (seq-find (lambda (a) (equal (plist-get a :channel) (eas-key-name channel)))
                               (plist-get g :axes-model)))
               (scale (eas-place--local-scale g channel)))
@@ -183,7 +185,8 @@ Vega offsets a horizontal row label by its own width, then aligns it."
 
 (defun eas-facet-layout--box (g indep metrics)
   "Group G's content box [X1 Y1 X2 Y2] relative to its plot origin.
-The axes of the channels in INDEP (independent scales) are the cell's own."
+The axes of the channels in INDEP (independent scales) are the cell's own,
+laid out under METRICS."
   (let* ((over (or (plist-get g :mark-over) [0 0 0 0]))
          (box (vector (- (aref over 0)) (- (aref over 1))
                       (+ (plist-get g :w) (aref over 2)) (+ (plist-get g :h) (aref over 3)))))
@@ -193,8 +196,9 @@ The axes of the channels in INDEP (independent scales) are the cell's own."
                           (max (aref box 2) (aref b 2)) (max (aref box 3) (aref b 3))))))))
 
 (defun eas-facet-layout--plan (node metrics)
-  "Trellis plan of facet NODE: plot origins relative to the grid's origin,
-the extent of everything around them and the header items, as
+  "Return the trellis plan of facet NODE under METRICS.
+It holds the plot origins relative to the grid's origin, the extent of
+everything around them and the header items, as
 \(:origins ((G X . Y) ...) :left :top :right :bottom :items ITEMS)."
   (let* ((meta (eas-facet-layout-meta node))
          (rows (eas-facet-layout--rows node))
@@ -330,8 +334,8 @@ the extent of everything around them and the header items, as
 
 (defun eas-facet-layout-arrange (node ox oy metrics)
   "Place facet NODE's cells with the block's top-left at OX OY.
-Return the block's (W . H), or nil when NODE is no facet grid or the
-target is text."
+Return the block's (W . H), or nil when NODE is no facet grid or
+METRICS target text."
   (when (and (eas-facet-layout--grid-p node) (not (eas-layout-text-p metrics)))
     (let* ((plan (eas-facet-layout--plan node metrics))
            (dx (- ox (plist-get plan :left))) (dy (- oy (plist-get plan :top)))
@@ -360,6 +364,7 @@ target is text."
 
 (defun eas-facet-layout-min-plot (group metrics)
   "Smallest (W . H) plot of GROUP whose axis labels do not collide.
+METRICS are the layout's.
 A band axis keeps every label (rotated labels need their font height
 each, others their width); a continuous axis keeps at least its first
 and last label.  While `eas-place-squeeze' is non-nil there is no
@@ -392,9 +397,10 @@ floor: a terminal chart thins its labels instead of growing."
 (declare-function eas-place-fit-grid "eas-compile-grid")
 
 (defun eas-facet-layout-fit (node width height metrics)
-  "Resize facet NODE's plots so its block is WIDTH by HEIGHT; nil when
-NODE is no facet grid.  In a terminal every cell gets one plot size, as
-a repeat grid's do, so the cells' axes share their rows."
+  "Resize facet NODE's plots so its block is WIDTH by HEIGHT under METRICS.
+Return nil when NODE is no facet grid.  In a terminal every cell gets
+one plot size, as a repeat grid's do, so the cells' axes share their
+rows."
   (cond
    ((not (eas-facet-layout--grid-p node)) nil)
    ((eas-layout-text-p metrics) (eas-place-fit-grid node width height metrics) t)
@@ -414,7 +420,7 @@ a repeat grid's do, so the cells' axes share their rows."
       t))))
 
 (defun eas-facet-layout-view-marks (group)
-  "The trellis header marks GROUP draws (the first cell's), as a list."
+  "Return the trellis header items GROUP draws (the first cell's), as a list."
   (when-let* ((items (plist-get group :facet-items)))
     (list (list :id (format "%s/facet-headers" (plist-get group :id)) :mark "text" :interactive-off t :rows []
                 :items (vconcat items)))))

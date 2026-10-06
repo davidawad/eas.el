@@ -85,7 +85,8 @@ METRICS carries the config.  Return a plist to prepend to the model."
       (plist-get (or hit gc) :value))))
 
 (defun eas-axis--tick-positions (axis scale)
-  "AXIS's ticks with :pos; with tickBand extent, :tick-pos at band edges."
+  "AXIS's ticks with :pos; with tickBand extent, :tick-pos at band edges.
+SCALE places the ticks."
   (let* ((half (/ (or (plist-get scale :bandwidth) 0) 2.0))
          (band (member (plist-get scale :type) '("band" "point")))
          (edge (and band (equal (plist-get axis :tick-band) "extent")))
@@ -211,7 +212,9 @@ outward direction (+1 or -1)."
   (dolist (k keys plist) (setq plist (eas--plist-without plist k))))
 
 (defun eas-axis--place-text (axis scale bounds metrics)
-  "AXIS placed on the character grid; top and right mirror bottom and left."
+  "AXIS placed on the character grid; top and right mirror bottom and left.
+SCALE, BOUNDS and METRICS are the axis's scale, plot and layout."
+
   (let* ((orient (plist-get axis :orient))
          (x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3))
          (mirror (member orient '("top" "right")))

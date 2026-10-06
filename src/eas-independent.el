@@ -20,12 +20,12 @@
 (require 'eas-compile-scales)
 
 (defun eas-independent-channels (group)
-  "Positional channels GROUP's resolve makes independent."
+  "Positional channels that GROUP's resolve declares independent."
   (let ((scale (plist-get (plist-get group :resolve) :scale)))
     (seq-filter (lambda (ch) (equal (plist-get scale ch) "independent")) '(:x :y))))
 
 (defun eas-independent-key (channel k)
-  "The view-scale key of the K-th (from 1) extra scale for CHANNEL."
+  "The view-scale key of extra scale K (from 1) for CHANNEL."
   (intern (format "%s_%d" channel k)))
 
 (defun eas-independent-scales (group zoom)

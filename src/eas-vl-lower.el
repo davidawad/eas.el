@@ -120,7 +120,7 @@
         (eas-plist-put (eas--plist-without spec :view) :config (eas-plist-put config :view cv))))))
 
 (defun eas-vl-lower--named (spec datasets)
-  "SPEC with every data.name that DATASETS defines replaced by its rows."
+  "SPEC with every data.name named in DATASETS replaced by its rows."
   (cond
    ((vectorp spec) (vconcat (mapcar (lambda (s) (eas-vl-lower--named s datasets)) spec)))
    ((and (consp spec) (keywordp (car spec)))
@@ -132,7 +132,7 @@
    (t spec)))
 
 (defun eas-vl-lower--datasets (spec)
-  "SPEC with its top-level datasets inlined where data.name uses them."
+  "SPEC with its top-level datasets inlined where data.name names them."
   (let ((datasets (plist-get spec :datasets)))
     (if (not (and datasets (eas-object-p datasets))) spec
       (eas-vl-lower--named (eas--plist-without spec :datasets) datasets))))

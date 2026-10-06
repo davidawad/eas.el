@@ -74,7 +74,8 @@ VALUES are the slot values; PATH locates EL."
              items)))
 
 (defun eas-resolve--substitute (node values path)
-  "Replace slot placeholders and named data in NODE using slot VALUES."
+  "Replace slot placeholders and named data in NODE using slot VALUES.
+PATH is NODE's JSON pointer, for findings."
   (cond
    ((vectorp node)
     (let ((i -1) out)
@@ -110,7 +111,8 @@ VALUES are the slot values; PATH locates EL."
 (defun eas-resolve--materialize (view cell path)
   "Run VIEW's domain transforms on its data, recursively; return the view.
 CELL is a one-element list holding the nearest inherited rows (or nil).
-Domain transforms must precede native transforms in an array."
+Domain transforms must precede native transforms in an array.  PATH
+is VIEW's JSON pointer, for findings."
   (let* ((own (plist-get (plist-get view :data) :values))
          (cell (if (vectorp own) (list own) cell))
          (native-seen nil) kept (i -1))

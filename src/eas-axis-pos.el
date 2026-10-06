@@ -66,11 +66,12 @@ where labels keep their own."
       (if (eq (< 0 a 180) (not top)) "left" "right"))))
 
 (defun eas-axis-pos--title-p (axis)
-  "Non-nil when AXIS moves its title."
+  "Non-nil when AXIS gives its title a position."
   (seq-some (lambda (k) (plist-get axis k)) '(:title-x :title-y :title-angle :title-align :title-baseline)))
 
 (defun eas-axis-pos--title (axis placed bounds metrics)
-  "Title mark of AXIS placed against the untitled PLACED axis in plot BOUNDS."
+  "Title mark of AXIS placed against the untitled PLACED axis in plot BOUNDS.
+METRICS gives the default title size."
   (let* ((orient (plist-get axis :orient))
          (horiz (member orient '("bottom" "top")))
          (x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3))
@@ -122,9 +123,10 @@ where labels keep their own."
                            (plist-get axis :ticks)))))))
 
 (defun eas-axis-pos-place (axis scale bounds metrics place)
-  "AXIS placed by PLACE (a function of the axis), then moved for its
-title and band position properties.  SCALE and BOUNDS are the axis's
-scale and plot; METRICS the layout's."
+  "Return AXIS placed by PLACE (a function of the axis), then moved.
+It moves for its title and band position properties.  SCALE and BOUNDS
+are the axis's scale and plot; METRICS the layout's."
+
   (if (or (eas-layout-text-p metrics)
           (not (or (eas-axis-pos--title-p axis) (plist-get axis :band-position))))
       (funcall place axis)

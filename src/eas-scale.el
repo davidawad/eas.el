@@ -30,7 +30,7 @@
 (defconst eas-scale--e2 (sqrt 2.0))
 
 (defun eas-scale--tick-spec (start stop count)
-  "d3's tickSpec: (I1 I2 INC) for START..STOP with about COUNT ticks."
+  "Return d3's tickSpec (I1 I2 INC) for START..STOP with about COUNT ticks."
   (let* ((step (/ (- stop start) (float (max 0 count))))
          (power (floor (log step 10)))
          (err (/ step (expt 10.0 power)))
@@ -52,11 +52,12 @@
       (list i1 i2 inc))))
 
 (defun eas-scale-tick-increment (start stop count)
-  "d3.tickIncrement: negative for 1/step, positive for step."
+  "Return d3.tickIncrement for START..STOP at COUNT ticks.
+Negative for 1/step, positive for step."
   (nth 2 (eas-scale--tick-spec start stop count)))
 
 (defun eas-scale-linear-ticks (start stop count)
-  "d3.ticks: about COUNT round values in START..STOP, ascending."
+  "Return d3.ticks: about COUNT round values in START..STOP, ascending."
   (cond
    ((or (<= count 0) (not (and (numberp start) (numberp stop)))) nil)
    ((= start stop) (list start))
@@ -69,7 +70,8 @@
         (if reverse (nreverse ticks) ticks)))))
 
 (defun eas-scale-nice-linear (lo hi &optional count)
-  "d3 linear.nice: extend LO..HI outward to round values; return (LO . HI)."
+  "Extend LO..HI outward to round values, as d3 linear.nice; return (LO . HI).
+COUNT (default 10) is the tick count the rounding aims for."
   (let ((count (or count 10)) (prestep nil) (step nil) (iter 10) (done nil))
     (if (or (= lo hi) (not (and (numberp lo) (numberp hi))))
         (cons lo hi)
@@ -106,7 +108,8 @@ PROPS may set :zero and :nice, applied here, plus provenance keys."
 
 (defun eas-scale-band (type domain range &optional padding-inner padding-outer)
   "Return a band or point scale (TYPE) of DOMAIN values over RANGE.
-Defaults follow Vega-Lite: band inner 0.1, outer 0.05; point padding 0.5."
+PADDING-INNER and PADDING-OUTER default as in Vega-Lite: band inner 0.1,
+outer 0.05; point padding 0.5."
   (let* ((n (length domain))
          (r0 (aref range 0)) (r1 (aref range 1))
          (start (float (min r0 r1))) (stop (float (max r0 r1)))
@@ -302,8 +305,9 @@ too; other ramps (schemes, sampled finely) linearly in RGB."
       (_ (append domain nil)))))
 
 (defun eas-scale-log-ticks (lo hi &optional count)
-  "d3 log.ticks for LO..HI (base 10): every k*10^i when the span has fewer
-decades than COUNT (default 10), else powers of ten."
+  "Return d3 log.ticks for LO..HI (base 10).
+Every k*10^i when the span has fewer decades than COUNT (default 10),
+else powers of ten."
   (let* ((count (or count 10)) (i (log lo 10)) (j (log hi 10)))
     (if (< (- j i) count)
         (let ((z (cl-loop for p from (floor i) to (ceiling j)
@@ -315,17 +319,17 @@ decades than COUNT (default 10), else powers of ten."
               (eas-scale-linear-ticks (floor i) (ceiling j) (min (- (ceiling j) (floor i)) count))))))
 
 (defconst eas-scale-log-mantissas '(1 5 2 3)
-  "Mantissas a text log axis labels, most wanted first (the reference
-renderings label 1, 2, 3 and 5 times each power of ten).")
+  "Mantissas a text log axis labels, most wanted first.
+The reference renderings label 1, 2, 3 and 5 times each power of ten.")
 
 (defun eas-scale-log-mantissa (v)
   "The mantissa of V > 0 (1 to 9.99), e.g. 5 for 0.05."
   (/ v (expt 10.0 (floor (+ 1e-9 (log v 10))))))
 
 (defun eas-scale-log-text-ticks (lo hi)
-  "Candidate ticks of a text log axis over LO..HI: each mantissa of
-`eas-scale-log-mantissas' times each power of ten inside it, ascending;
-nil when fewer than three fall inside."
+  "Return candidate ticks of a text log axis over LO..HI.
+Each mantissa of `eas-scale-log-mantissas' times each power of ten inside
+it, ascending; nil when fewer than three fall inside."
   (let ((out (cl-loop for p from (floor (log lo 10)) to (ceiling (log hi 10))
                       append (cl-loop for m in (sort (copy-sequence eas-scale-log-mantissas) #'<)
                                       for v = (if (< p 0) (/ m (expt 10.0 (- p))) (* m (expt 10.0 p)))
@@ -333,14 +337,16 @@ nil when fewer than three fall inside."
     (and (cddr out) out)))
 
 (defun eas-scale-log-rank (v)
-  "Rank of log tick V when labels compete for room: powers of ten first,
-then the other mantissas in `eas-scale-log-mantissas' order."
+  "Return the rank of log tick V when labels compete for room.
+Powers of ten first, then the other mantissas in `eas-scale-log-mantissas'
+order."
   (let ((m (eas-scale-log-mantissa v)))
     (or (cl-position-if (lambda (k) (< (abs (- m k)) 1e-6)) eas-scale-log-mantissas)
         (length eas-scale-log-mantissas))))
 
 (defun eas-scale-log-label-p (v ticks count)
-  "d3's log tickFormat filter: label tick V only when its mantissa is small."
+  "Return non-nil when d3's log tickFormat filter labels tick V.
+That is when its mantissa is small given the number of TICKS and COUNT."
   (let* ((k (max 1 (/ (* 10.0 count) (max 1 (length ticks)))))
          (m (/ v (expt 10.0 (round (log v 10)))))
          (m (if (< (* m 10) 9.5) (* m 10) m)))
@@ -364,7 +370,7 @@ then the other mantissas in `eas-scale-log-mantissas' order."
             (if (cadr parts) (concat "." (cadr parts)) ""))))
 
 (defun eas-scale-tick-decimals (scale count)
-  "Decimals d3's tickFormat uses for SCALE's ticks at COUNT."
+  "Return the decimals of d3's tickFormat for SCALE's ticks at COUNT."
   (let ((domain (plist-get scale :domain)))
     (if (not (member (plist-get scale :type) '("linear" "sqrt" "pow"))) 0
       (let ((step (abs (eas-scale-tick-increment (aref domain 0) (aref domain 1) count))))

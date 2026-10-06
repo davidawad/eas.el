@@ -1,7 +1,8 @@
 # eas.el: an Emacs-native, interactive, agent-drivable chart engine.
 #
 #   make test             unit, golden and runtime tests (fast; no :gallery)
-#   make compile          byte-compile src/ with warnings as errors
+#   make compile          checkdoc, then byte-compile src/ with warnings as errors
+#   make checkdoc         checkdoc over the library files; any warning fails
 #   make test-gallery     every gallery group, one Emacs each, in sequence
 #   make test-gallery-GROUP           one official Vega-Lite gallery group
 #   make test-gallery-conformance     the bin/chart conformance oracle
@@ -29,7 +30,7 @@ $(BATCH) --eval '(dolist (f (directory-files "src" t "-test\\.el\\'"'"'")) (load
   --eval '(ert-run-tests-batch-and-exit (quote $(1)))'
 endef
 
-.PHONY: all test compile test-gallery $(GALLERY_TARGETS) \
+.PHONY: all test compile checkdoc test-gallery $(GALLERY_TARGETS) \
         test-gallery-conformance bench bench-budget tty-check clean
 
 all: compile test
@@ -37,9 +38,12 @@ all: compile test
 test:
 	$(call run-tests,(not (tag :gallery)))
 
-compile:
+compile: checkdoc
 	$(BATCH) --eval '(setq byte-compile-error-on-warn t)' \
 	  -f batch-byte-compile $(LIB) $(TESTS)
+
+checkdoc:
+	$(BATCH) -l scripts/eas-checkdoc.el -f eas-checkdoc-batch $(LIB)
 
 test-gallery: $(GALLERY_TARGETS) test-gallery-conformance
 

@@ -48,7 +48,8 @@
 
 (defun eas-params-value-store (scene param value)
   "The selection store for PARAM (from `eas-params-of') holding VALUE.
-VALUE is in Vega-Lite's form; nil when it selects nothing."
+VALUE is in Vega-Lite's form; nil when it selects nothing.  SCENE
+gives the fields of the param's keys and channels."
   (pcase (plist-get (plist-get param :def) :type)
     ("point"
      (let* ((tuples (cond ((vectorp value) (append value nil)) ((consp value) (list value))))
@@ -80,7 +81,7 @@ VALUE is in Vega-Lite's form; nil when it selects nothing."
     (when params (list :params params))))
 
 (defun eas-params-set (state scene name value)
-  "STATE with param NAME of SCENE set to VALUE, as a bound input sets it.
+  "Return STATE with param NAME of SCENE at VALUE, as a bound input would.
 VALUE is in Vega-Lite's form; a selection's becomes its store.
 Signals EVENT_INVALID for a param SCENE does not have."
   (let ((raw (seq-find (lambda (p) (equal (plist-get p :name) name)) (plist-get scene :params))))

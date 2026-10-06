@@ -41,7 +41,7 @@
 ;;; lookup
 
 (defun eas-transform-calc--lookup (tr rows path)
-  "Vega-Lite lookup TR over ROWS."
+  "Vega-Lite lookup TR over ROWS; PATH locates TR for errors."
   (let* ((from (plist-get tr :from))
          (values (plist-get (plist-get from :data) :values))
          (key (and (plist-get from :key) (eas-key (plist-get from :key))))
@@ -75,7 +75,8 @@
            collect (cons (float u) (float v))))
 
 (defun eas-transform-calc--ols (ux uy uxy ux2)
-  "Vega's ordinary least squares: (INTERCEPT SLOPE) from the means."
+  "Vega's ordinary least squares: (INTERCEPT SLOPE) from the means.
+The means are UX, UY, UXY (of x*y) and UX2 (of x*x)."
   (let* ((delta (- ux2 (* ux ux)))
          (slope (if (< (abs delta) 1e-24) 0.0 (/ (- uxy (* ux uy)) delta))))
     (list (- uy (* slope ux)) slope)))
@@ -140,7 +141,8 @@ The result is plain polynomial coefficients."
     z))
 
 (defun eas-transform-calc--fit (method pts order)
-  "Fit METHOD to PTS: (COEF PREDICT)."
+  "Fit METHOD to PTS: (COEF PREDICT).
+ORDER is the degree of a poly fit."
   (pcase method
     ("constant" (let ((uy (/ (apply #'+ (mapcar #'cdr pts)) (float (length pts)))))
                   (list (vector uy) (lambda (_) uy))))
@@ -160,7 +162,8 @@ The result is plain polynomial coefficients."
                    :feature "transform/regression"))))
 
 (defun eas-transform-calc--sample-curve (f lo hi &optional min-steps max-steps)
-  "Vega's adaptive sampling of F over [LO HI]: a list of (X Y)."
+  "Vega's adaptive sampling of F over [LO HI]: a list of (X Y).
+It takes MIN-STEPS (default 25) to MAX-STEPS (default 200) steps."
   (let* ((min-steps (or min-steps 25)) (max-steps (max min-steps (or max-steps 200)))
          (point (lambda (x) (list x (funcall f x))))
          (span (- hi lo)) (stop (/ span max-steps))
@@ -293,7 +296,7 @@ The result is plain polynomial coefficients."
 ;;; quantile
 
 (defun eas-transform-calc--quantile-sorted (v p)
-  "d3's quantileSorted (R-7) of sorted vector V at P."
+  "Return d3's quantileSorted (R-7) of sorted vector V at P."
   (let ((n (length v)))
     (cond ((zerop n) :null)
           ((or (<= p 0) (< n 2)) (aref v 0))

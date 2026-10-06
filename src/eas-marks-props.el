@@ -29,8 +29,9 @@
 (declare-function eas-marks--mark-value "eas-marks")
 
 (defun eas-marks-props-stroke-width (unit scales row fallback)
-  "Stroke width of ROW in line or rule UNIT: the size channel, the mark's
-size, then its strokeWidth, else FALLBACK."
+  "Return the stroke width of ROW in line or rule UNIT under SCALES.
+That is the size channel, the mark's size, then its strokeWidth, else
+FALLBACK."
   (let ((mark (plist-get unit :mark))
         (size (and (plist-get (plist-get unit :encoding) :size) (eas-marks--channel unit scales :size row))))
     (cond ((numberp size) size)
@@ -39,7 +40,8 @@ size, then its strokeWidth, else FALLBACK."
           (t fallback))))
 
 (defun eas-marks-props-text-fill (unit scales row)
-  "Fill of text ROW in UNIT: fill or color channel, then mark fill or color."
+  "Fill of text ROW in UNIT: fill or color channel, then mark fill or color.
+SCALES map the channels."
   (let ((mark (plist-get unit :mark)))
     (or (eas-marks--channel unit scales :fill row) (eas-marks--channel unit scales :color row)
         (let ((f (plist-get mark :fill))) (and (stringp f) f))
@@ -47,7 +49,9 @@ size, then its strokeWidth, else FALLBACK."
 
 (defun eas-marks-props-truncate (metrics text size limit ellipsis &optional font)
   "TEXT cut to LIMIT px at font SIZE, ending in ELLIPSIS (default \"…\").
-A monospace FONT measures 0.6 em a character, as its canvas does."
+METRICS measures TEXT.  A monospace FONT measures 0.6 em a character,
+as its canvas does."
+
   (let ((eas-font-family font))
     (if (or (not (numberp limit)) (<= limit 0) (string-search "\n" text)
             (<= (eas-layout-text-width metrics text size) limit))

@@ -69,7 +69,7 @@
   "Per-view action bindings: view -> plist of (KEY BINDING).")
 
 (cl-defun eas-register-action (name &key fn doc)
-  "Register action NAME (a string): :fn FN runs with the click target and view.
+  "Register action NAME (a string): :fn FN is called with target and view.
 The target is the plist `eas-inspect' shows as :click, plus :args
 from the binding.  FN's string or number return value is recorded as
 the click's :result.  DOC is one line for describe.  Re-registering a
@@ -144,7 +144,7 @@ bindings."
           (list "*")))
 
 (defun eas-action-binding-for (view target)
-  "The action a click on TARGET in VIEW runs, as (NAME . ARGS), or nil."
+  "The action a click on TARGET in VIEW triggers, as (NAME . ARGS), or nil."
   (let ((tables (list (gethash view eas-action--bindings)
                       (eas-action--template-actions view))))
     (or (cl-loop for key in (eas-action--keys view target)
@@ -153,7 +153,7 @@ bindings."
         (and (stringp (plist-get target :href)) (list "open-href")))))
 
 (defun eas-action-for (view target)
-  "The action NAME a click on TARGET in VIEW runs, or nil."
+  "The action NAME a click on TARGET in VIEW triggers, or nil."
   (car (eas-action-binding-for view target)))
 
 (defun eas-action-run (view target)
@@ -218,7 +218,7 @@ for an entry of a legend whose view has a bind: \"legend\" param."
          (plist-get (aref rows datum) eas-params-row-key))))
 
 (defun eas-action--on-dispatch (view event old-state old-scene)
-  "Record and act on a click EVENT made in OLD-SCENE under OLD-STATE.
+  "Record and act on a click EVENT in VIEW made in OLD-SCENE under OLD-STATE.
 A click on empty space clears :click; other events leave it alone."
   (when-let* ((px (eas-tip-click-px event old-state)))
     (let* ((datum (eas-tip-click-target event old-state old-scene (eas-view-plan view)))

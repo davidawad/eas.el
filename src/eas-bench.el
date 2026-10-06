@@ -93,7 +93,7 @@
 ;;; Timing
 
 (defun eas-bench-compiled-p ()
-  "Non-nil when the engine runs byte- or natively compiled."
+  "Non-nil when the engine is byte- or natively compiled."
   (let ((f (symbol-function 'eas-dispatch)))
     (or (byte-code-function-p f) (and (fboundp 'native-comp-function-p) (native-comp-function-p f))
         (and (fboundp 'subr-native-elisp-p) (subr-native-elisp-p f)))))
@@ -114,8 +114,9 @@ The result is (:mean MS :max MS :reps REPS); a collection runs first."
 (defvar eas-bench-calibration-runs 5 "Runs of the calibration workload; the best counts.")
 
 (defun eas-bench-calibrate ()
-  "Best of `eas-bench-calibration-runs' runs of a fixed workload, in ms.
-This is the machine's speed, against which budget limits scale."
+  "Return the best time of a fixed workload, in ms.
+The best is over `eas-bench-calibration-runs' passes.  This is the
+machine's speed, against which budget limits scale."
   (let ((best nil))
     (dotimes (_ eas-bench-calibration-runs)
       (garbage-collect)
@@ -216,7 +217,8 @@ REPS (default 5) samples the slow stages; hover takes 10x that.  GC is
   (plist-get (seq-find (lambda (r) (equal (plist-get r :points) n)) (plist-get budget :reference)) :stages))
 
 (defun eas-bench-factor (result budget)
-  "How much slower this machine is than BUDGET's: calibration ratio, clamped."
+  "Return how much slower RESULT's machine is than BUDGET's, clamped.
+This is the ratio of their calibration times."
   (min 8.0 (max 0.5 (/ (float (plist-get result :calibration-ms)) (plist-get budget :calibration-ms)))))
 
 (defun eas-bench-check (result budget)

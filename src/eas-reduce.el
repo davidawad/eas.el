@@ -93,14 +93,17 @@ An unzoomed state is recorded as `:none'."
                        :future nil)))
 
 (defun eas-reduce--target-views (scene state)
-  "Views whose scales keyboard zoom and pan act on: the hovered one, else all."
+  "Return the SCENE views that keyboard zoom and pan act on.
+The view hovered in STATE when it is bound to scales, else every bound
+view."
   (let* ((bound (delete-dups (mapcar (lambda (p) (plist-get p :view))
                                      (seq-filter #'eas-reduce--scales-param-p (eas-params-of scene)))))
          (hovered (plist-get (plist-get state :hover) :view)))
     (if (member hovered bound) (list hovered) bound)))
 
 (defun eas-reduce--zoom (state scene view-id factor &optional px)
-  "Scale VIEW-ID's bound domains by FACTOR around PX (default: the centre)."
+  "Scale VIEW-ID's bound domains by FACTOR around PX (default: the centre).
+Return the updated STATE; SCENE supplies the scales."
   (let ((params (eas-reduce--params scene view-id #'eas-reduce--scales-param-p)))
     (dolist (channel (delete-dups (apply #'append (mapcar #'eas-reduce--channels params))))
       (when-let* ((scale (eas-reduce--scale scene view-id channel))
@@ -109,21 +112,22 @@ An unzoomed state is recorded as `:none'."
     state))
 
 (defun eas-reduce--pan (state scene view-id channel fraction)
-  "Shift VIEW-ID's CHANNEL domain by FRACTION of its range."
+  "Shift VIEW-ID's CHANNEL domain by FRACTION of its range.
+Return the updated STATE; SCENE supplies the scale."
   (if-let* ((scale (eas-reduce--scale scene view-id channel))
             (domain (eas-zoom-step-domain scale fraction)))
       (eas-reduce--set-domain state view-id channel domain)
     state))
 
 (defun eas-reduce--if-moved (state next)
-  "NEXT, or STATE when NEXT leaves the domains as they were.
+  "Return NEXT, or STATE when the domains in NEXT are unchanged.
 Keeps no-op zooms (unbound views, saturated domains) out of the history."
   (if (equal (plist-get state :domains) (plist-get next :domains)) state next))
 
 (defun eas-reduce--wheel (state scene px delta)
-  "Zoom the view under PX by DELTA wheel steps around PX.
-Consecutive wheel events at one pointer position are one gesture and
-one history entry."
+  "Zoom the SCENE view under PX by DELTA wheel ticks around PX.
+Return the updated STATE.  Consecutive wheel events at one pointer
+position are one gesture and one history entry."
   (if-let* ((view (eas-reduce--view-at scene px)))
       (let* ((id (plist-get view :id))
              (last (plist-get state :wheel))
@@ -139,7 +143,8 @@ one history entry."
 ;;; Pointer
 
 (defun eas-reduce--hover (state scene px)
-  "Hover at PX: nearest datum plus pointermove-driven selections."
+  "Hover at PX in SCENE: nearest datum plus pointermove-driven selections.
+Return the updated STATE."
   (let* ((view (eas-reduce--view-at scene px))
          (id (plist-get view :id))
          (movers (and view (eas-reduce--params scene id (lambda (p) (eas-reduce--on-p p "pointermove")))))
@@ -161,7 +166,8 @@ one history entry."
     state))
 
 (defun eas-reduce--legend-click (state scene px)
-  "Toggle a legend-bound selection when PX is on a legend entry; nil otherwise."
+  "Toggle a legend-bound selection when PX is on a legend entry; nil otherwise.
+Return the updated STATE; SCENE supplies the legends."
   (cl-loop for view across (plist-get scene :views)
            thereis
            (cl-loop for legend across (plist-get view :legends)
@@ -180,7 +186,8 @@ one history entry."
                                                      (list (eas-key field) (plist-get entry :value)))))))))
 
 (defun eas-reduce--click (state scene event)
-  "A click EVENT: legend toggles, point selections, brush clears."
+  "Apply a click EVENT in SCENE to STATE.
+A click toggles a legend entry, sets point selections or clears a brush."
   (let* ((px (plist-get event :px)))
     (or (eas-reduce--legend-click state scene px)
         (let* ((view (eas-reduce--view-at scene px)) (id (plist-get view :id)))
@@ -215,7 +222,7 @@ one history entry."
     (when fields (append store (list :fields fields)))))
 
 (defun eas-reduce--drag-to (state scene px)
-  "Continue the drag in STATE to PX."
+  "Continue the drag in STATE to PX over SCENE."
   (let* ((drag (plist-get state :drag)) (start (plist-get drag :start))
          (moved (or (plist-get drag :moved)
                     (> (+ (abs (- (aref px 0) (aref start 0))) (abs (- (aref px 1) (aref start 1))))
@@ -237,7 +244,8 @@ one history entry."
         (_ state)))))
 
 (defun eas-reduce--press (state scene px)
-  "Start a drag at PX: brush when the view has a brush, pan when bound to scales."
+  "Start a drag at PX: brush when the view has a brush, pan when bound to scales.
+Return the updated STATE; SCENE supplies the view."
   (let* ((view (eas-reduce--view-at scene px)) (id (plist-get view :id))
          (brush (and view (car (eas-reduce--params scene id #'eas-reduce--brush-p))))
          (pan (and view (car (eas-reduce--params scene id #'eas-reduce--scales-param-p)))))
@@ -251,7 +259,8 @@ one history entry."
                              :domains0 (plist-get state :domains)))))
 
 (defun eas-reduce--release (state scene px)
-  "End the drag at PX; an unmoved press is a click."
+  "End the drag at PX; an unmoved press is a click.
+Return the updated STATE; SCENE supplies the view."
   (let ((drag (plist-get state :drag)) (state (eas-reduce--put state :drag nil)))
     (cond ((null drag) state)
           ((not (plist-get drag :moved)) (eas-reduce--click state scene (list :px px)))
@@ -262,8 +271,9 @@ one history entry."
 ;;; Entry point
 
 (defun eas-reduce--zoom-to-brush (state scene)
-  "Zoom every brushed view to its brush's ranges, then clear the brushes.
-The previous domains go on the history, so [ undoes it."
+  "Zoom every brushed SCENE view to its brush's ranges; clear the brushes.
+Return the updated STATE.  The previous domains go on the history, so
+[ undoes it."
   (let ((brushes (seq-filter (lambda (p) (and (eas-reduce--brush-p p)
                                               (plist-get (plist-get state :params) (eas-key (plist-get p :name)))))
                              (eas-params-of scene))))
@@ -279,7 +289,7 @@ The previous domains go on the history, so [ undoes it."
             (setq s (eas-reduce--store s (plist-get p :name) nil))))))))
 
 (defun eas-reduce--brush-event (state scene event)
-  "Apply an agent's brush EVENT (data-space ranges)."
+  "Apply an agent's brush EVENT (data-space ranges) to STATE in SCENE."
   (let* ((params (eas-params-of scene "interval"))
          ;; A repeated spec has one param per view: "view" picks the cell.
          (params (or (seq-filter (lambda (p) (equal (plist-get p :view) (plist-get event :view))) params) params))
@@ -306,12 +316,12 @@ The previous domains go on the history, so [ undoes it."
         (eas-reduce--store state (plist-get p :name) (append store (list :fields fields)))))))
 
 (defun eas-reduce (state event scene)
-  "Return the view state after EVENT, given the current SCENE.  Pure.
+  "Return the view STATE after EVENT, given the current SCENE.  Pure.
 Views sharing a param bound to scales move together (`eas-link-scales')."
   (eas-link-scales state (eas-reduce--step state event scene) scene))
 
 (defun eas-reduce--step (state event scene)
-  "The view state after EVENT under SCENE, before linked views follow."
+  "Return the view STATE after EVENT under SCENE, before linked views follow."
   (let ((px (plist-get event :px)))
     (pcase (plist-get event :type)
       ("pointermove" (if (plist-get state :drag) (eas-reduce--drag-to state scene px)
@@ -348,7 +358,8 @@ Views sharing a param bound to scales move together (`eas-link-scales')."
       (_ state))))
 
 (defun eas-reduce--key (state scene key)
-  "Apply KEY to STATE."
+  "Apply KEY to STATE; SCENE gives the views it acts on."
+
   (let ((views (eas-reduce--target-views scene state)))
     (pcase key
       ((or "+" "=" "-")

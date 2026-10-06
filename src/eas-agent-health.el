@@ -65,7 +65,7 @@
         ns))))
 
 (defun eas-agent--bench-ladder (opts)
-  "Answer bench with no SOURCE: the ladder, checked with --budget."
+  "Answer bench with no SOURCE: the ladder under OPTS, checked with --budget."
   (let* ((points (eas-agent--points opts))
          (reps (eas-agent-arg-number opts :n))
          (gc (intern (eas-agent-arg-choice opts :gc '("deferred" "default") "deferred")))
@@ -153,10 +153,10 @@ Without SOURCE, the fixed ladder at 1k, 10k and 100k points."
   "Every health check, evaluated now."
   (append
    (list
-    (if (version<= "29.1" emacs-version)
+    (if (version<= "30.1" emacs-version)
         (eas-agent--row "emacs" "pass" (format "GNU Emacs %s" emacs-version))
-      (eas-agent--row "emacs" "fail" (format "GNU Emacs %s; eas needs 29.1" emacs-version)
-                        "Install GNU Emacs 29.1 or newer"))
+      (eas-agent--row "emacs" "fail" (format "GNU Emacs %s; eas needs 30.1" emacs-version)
+                        "Install GNU Emacs 30.1 or newer"))
     (if (and (fboundp 'json-serialize) (fboundp 'json-parse-string))
         (eas-agent--row "json" "pass" "native JSON")
       (eas-agent--row "json" "fail" "this Emacs lacks native JSON" "Build Emacs with libjansson (29) or use 30+"))

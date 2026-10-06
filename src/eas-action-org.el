@@ -110,7 +110,8 @@ The first non-hline line is the header, as the org-table adapter reads it."
       (point))))
 
 (defun eas-action--heading (title action)
-  "Position of the first heading whose title contains TITLE, for ACTION."
+  "Position of the first heading whose title includes TITLE, for ACTION."
+
   (save-excursion
     (goto-char (point-min))
     (if (re-search-forward (format "^\\*+[ \t]+.*%s" (regexp-quote title)) nil t)

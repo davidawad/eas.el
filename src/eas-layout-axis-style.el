@@ -55,7 +55,8 @@
       (plist-get (or hit def) :value))))
 
 (defun eas-layout-axis-style-tick (axis value label)
-  "Per-tick properties of AXIS for VALUE: :tick-dash and :grid-dash."
+  "Return per-tick properties of AXIS for VALUE: :tick-dash and :grid-dash.
+LABEL is the tick's label, for conditions."
   (cl-loop for (key . model) in '((:tickDash . :tick-dash) (:gridDash . :grid-dash))
            for v = (and (plist-member axis key) (eas-layout-axis-style--value (plist-get axis key) value label))
            when (and (vectorp v) (> (length v) 0)) append (list model v)))

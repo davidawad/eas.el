@@ -76,7 +76,8 @@
                     :path path :feature (concat "aggregate/" (format "%s" name)))))
 
 (defun eas-agg-apply (name values &optional path)
-  "Apply aggregate op NAME to the list VALUES."
+  "Apply aggregate op NAME to the list VALUES.
+An unsupported NAME signals UNSUPPORTED_FEATURE at PATH."
   (funcall (eas-agg-op name path) values))
 
 (defun eas-agg-default-as (op field)
@@ -113,7 +114,8 @@ result is `:null' when no row has a value."
     (eas-agg-apply op (mapcar (lambda (r) (and field (plist-get r field))) rows))))
 
 (defun eas-agg--specs (specs path)
-  "Normalize aggregate SPECS into (OP FIELD-KEY AS-KEY) lists."
+  "Normalize aggregate SPECS into (OP FIELD-KEY AS-KEY) lists.
+Errors point into PATH, the JSON path of SPECS."
   (seq-map-indexed
    (lambda (spec i)
      (let ((op (plist-get spec :op)) (field (plist-get spec :field)))
@@ -123,7 +125,8 @@ result is `:null' when no row has a value."
    specs))
 
 (defun eas-transform-aggregate (tr rows path)
-  "Apply aggregate transform TR to ROWS."
+  "Apply aggregate transform TR to ROWS.
+PATH is TR's JSON path, for errors."
   (let ((groupby (mapcar #'eas-key (plist-get tr :groupby)))
         (specs (eas-agg--specs (plist-get tr :aggregate) (concat path "/aggregate"))))
     (vconcat
@@ -134,7 +137,8 @@ result is `:null' when no row has a value."
              (eas-agg--groups rows groupby)))))
 
 (defun eas-transform-joinaggregate (tr rows path)
-  "Apply joinaggregate transform TR to ROWS."
+  "Apply joinaggregate transform TR to ROWS.
+PATH is TR's JSON path, for errors."
   (let* ((groupby (mapcar #'eas-key (plist-get tr :groupby)))
          (specs (eas-agg--specs (plist-get tr :joinaggregate) (concat path "/joinaggregate")))
          (results (make-hash-table :test 'equal)))
@@ -166,7 +170,9 @@ result is `:null' when no row has a value."
              finally return nil)))
 
 (defun eas-agg--rank-ops (op index sorted key-fn n param)
-  "Return the value of ranking OP for position INDEX in SORTED (length N)."
+  "Return the value of ranking OP for position INDEX in SORTED (length N).
+KEY-FN gives a row's sort key, ties sharing a rank; PARAM is ntile's
+bucket count (default 1)."
   (let* ((key (funcall key-fn (aref sorted index)))
          (first (cl-loop for j downfrom index to 0
                          while (equal (funcall key-fn (aref sorted j)) key)
@@ -184,7 +190,8 @@ result is `:null' when no row has a value."
       ("ntile" (1+ (floor (* (or param 1) index) n))))))
 
 (defun eas-transform-window (tr rows path)
-  "Apply window transform TR to ROWS, keeping the input order."
+  "Apply window transform TR to ROWS, keeping the input order.
+PATH is TR's JSON path, for errors."
   (let* ((groupby (mapcar #'eas-key (plist-get tr :groupby)))
          (sort (or (plist-get tr :sort) []))
          (frame (or (plist-get tr :frame) [:null 0]))

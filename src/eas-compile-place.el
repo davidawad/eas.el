@@ -109,7 +109,8 @@ Any truthy config.view.stroke counts, \"transparent\" too."
       0)))
 
 (defun eas-place--svg-chrome (group axes legends metrics)
-  "Chrome and legend offsets of GROUP in svg; return the chrome plist."
+  "Chrome and legend offsets of GROUP in svg; return the chrome plist.
+AXES and LEGENDS are GROUP's models, placed under METRICS."
   (let* ((w (plist-get group :w)) (h (plist-get group :h)) (plot (vector 0 0 w h))
          (placed (mapcar (lambda (axis)
                            (eas-layout-axis-place axis (eas-place--local-scale
@@ -256,7 +257,8 @@ tallest column."
     (plist-put group :chrome chrome)))
 
 (defun eas-place-title-mark (group metrics)
-  "GROUP's view title as a list of one non-interactive text mark, or nil."
+  "GROUP's view title as a list of one non-interactive text mark, or nil.
+METRICS gives the title's font size."
   (when-let* ((title (plist-get group :title)))
     (list (list :id (format "%s/title" (plist-get group :id)) :mark "text" :interactive-off t :rows []
                 :items (vector (list :text title :x (plist-get group :x0)
@@ -282,7 +284,8 @@ Nested concatenations align their plots with their siblings' too."
         (t (eas-place--lead (car (plist-get node :children)) key))))
 
 (defun eas-place-arrange (node ox oy metrics)
-  "Place NODE's groups with the block's top-left at OX OY; return (W . H)."
+  "Place NODE's groups with the block's top-left at OX OY; return (W . H).
+METRICS gives the default spacing."
   (let ((spacing (or (plist-get node :spacing) (plist-get metrics :spacing))))
     (or (run-hook-with-args-until-success 'eas-place-arrange-functions node ox oy metrics)
     (if (eas-place-grid-p node) (eas-place-arrange-grid node ox oy metrics)
@@ -309,7 +312,7 @@ Nested concatenations align their plots with their siblings' too."
         (if vertical (cons cross cursor) (cons cursor cross))))))))
 
 (defun eas-place-fit (node width height metrics)
-  "Resize NODE's plots so its block is WIDTH by HEIGHT."
+  "Resize NODE's plots so its block is WIDTH by HEIGHT under METRICS."
   (let ((min-w (* 4 (aref (plist-get metrics :cell) 0)))
         (min-h (* 2 (aref (plist-get metrics :cell) 1))))
     (cond
@@ -358,7 +361,7 @@ Nested concatenations align their plots with their siblings' too."
                       (eas-place-fit child share cross metrics)))))))))
 
 (defun eas-place-layout (tree metrics title-h size &optional sized)
-  "Size, chrome and arrange TREE; return the scene size (W . H).
+  "Size, chrome and arrange TREE under METRICS; return the scene size (W . H).
 TITLE-H is the chart title's height.  SIZE, when non-nil, is the target
 \(W . H) the plots are fitted to.  SIZED non-nil keeps the groups' current
 plot sizes (a relayout after marks were measured)."

@@ -68,7 +68,7 @@ horizontally, or in more than one column."
 (defun eas-legend-orient-place-row (legend x y metrics)
   "Symbol LEGEND with its top-left at X Y, its entries in Vega's grid:
 columns (legend.columns) columnPadding apart, rows rowPadding apart,
-each entry centred in its row."
+each entry centred in its row.  METRICS sizes the text."
   (let* ((fs (plist-get metrics :legend-label-size))
          (title (eas-legend--title legend x y metrics))
          (top (cdr title)) (es (append (plist-get legend :entries) nil))
@@ -128,7 +128,9 @@ each entry centred in its row."
 (defun eas-legend-orient-offsets (legends axes w h metrics)
   "Offsets from the plot origin of LEGENDS placed on top, bottom or left.
 AXES are the view's placed axes and W H its plot size.  Return an alist
-\(LEGEND . (X . Y)) for those legends; others are absent."
+\(LEGEND . (X . Y)) for those legends; others are absent.  METRICS gives
+the default offset."
+
   (let* ((default (plist-get metrics :legend-offset))
          (axis-box (lambda (horiz)
                      (apply #'eas-layout-union (vector 0 0 w h)

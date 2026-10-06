@@ -38,11 +38,12 @@
   "Legend model for SPEC (:channel :def :scale :shape :style), or nil.
 STYLE is the mark's constant look (:fill :stroke :stroke-width
 :opacity :stroked) that symbols copy.  The def's legend object
-restyles it (eas-legend-style.el)."
+restyles it (eas-legend-style.el).  METRICS are the layout's."
   (eas-legend-style-model (plist-get (plist-get spec :def) :legend) (eas-legend--model spec metrics)))
 
 (defun eas-legend--model (spec metrics)
-  "`eas-legend-model' of SPEC before the legend object's own properties."
+  "`eas-legend-model' of SPEC before the legend object's own properties.
+METRICS are the layout's."
   (let* ((channel (plist-get spec :channel)) (def (plist-get spec :def)) (scale (plist-get spec :scale))
          (legend (plist-get def :legend)) (style (plist-get spec :style))
          ;; config.legend's orient and direction apply where the legend sets none.
@@ -162,7 +163,8 @@ restyles it (eas-legend-style.el)."
 ;;; Text target
 
 (defun eas-legend--gradient-length (legend metrics)
-  "Gradient length: one row per label in text, clamp(plot height, 64, 200) in svg."
+  "Gradient length of LEGEND under METRICS.
+One row per label in text, clamp(plot height, 64, 200) in svg."
   (if (eas-layout-text-p metrics)
       (* (max 5 (length (plist-get legend :entries))) (plist-get metrics :row))
     (or (plist-get legend :gradient-length)
@@ -172,7 +174,8 @@ restyles it (eas-legend-style.el)."
           (max 64 (min 200 (or (plist-get legend :plot-h) 200)))))))
 
 (defun eas-legend--gradient-entries (legend metrics)
-  "LEGEND's gradient labels: d3 ticks, as many as Vega asks for its length."
+  "LEGEND's gradient labels: d3 ticks, as many as Vega asks for its length.
+METRICS are the layout's."
   (let* ((domain (plist-get legend :domain))
          (glen (eas-legend--gradient-length legend metrics))
          (count (if (eas-layout-text-p metrics) (max 2 (ceiling (/ glen 40.0)))
@@ -185,14 +188,16 @@ restyles it (eas-legend-style.el)."
     (vconcat (mapcar (lambda (v) (list :value v :label (funcall fmt v))) values))))
 
 (defun eas-legend-sized (legend metrics)
-  "LEGEND with its gradient entries filled in for its final length."
+  "LEGEND with its gradient entries filled in for its final length.
+METRICS are the layout's."
   (if (equal (plist-get legend :type) "gradient")
       (eas-legend-style-labels (eas-plist-put legend :entries (or (plist-get legend :fixed-entries)
                                                                        (eas-legend--gradient-entries legend metrics))))
     legend))
 
 (defun eas-legend-size (legend metrics)
-  "Return (WIDTH . HEIGHT) of LEGEND in text, including its offset from the plot."
+  "Return (WIDTH . HEIGHT) of LEGEND under METRICS.
+The size includes its offset from the plot."
   (let* ((metrics (eas-legend-style-metrics legend metrics))
          (size (plist-get metrics :label-size))
          (labels (mapcar (lambda (e) (eas-layout-text-width metrics (plist-get e :label) size))
@@ -209,7 +214,8 @@ restyles it (eas-legend-style.el)."
                        (* (length labels) (plist-get metrics :row)))))))
 
 (defun eas-legend--place-text (legend x y metrics)
-  "LEGEND on the character grid with its top-left corner at X Y."
+  "LEGEND on the character grid with its top-left corner at X Y.
+METRICS are the layout's."
   (let* ((sym (plist-get metrics :symbol)) (row (plist-get metrics :row))
          (title-h (if (plist-get legend :title) (plist-get metrics :title-size) 0))
          (gap (plist-get metrics :char-w))
@@ -269,22 +275,25 @@ restyles it (eas-legend-style.el)."
        (when (plist-get e :dash) (list :dash (plist-get e :dash)))))))
 
 (defun eas-legend-symbol-type (legend metrics)
-  "LEGEND's symbol shape: its own symbolType, else its point mark's
-constant shape, else config.legend's (METRICS)."
+  "Return LEGEND's symbol shape.
+That is its own symbolType, else its point mark's constant shape, else
+config.legend's (METRICS)."
   (or (let ((o (plist-get (plist-get legend :overrides) :symbolType))) (and (stringp o) o))
       (let ((p (plist-get (plist-get legend :props) :symbolType))) (and (stringp p) p))
       (plist-get (plist-get legend :style) :mark-shape)
       (plist-get metrics :symbol-type)))
 
 (defun eas-legend--title (legend x y metrics)
-  "LEGEND's title mark at X Y and the y where its body starts, as (MARK . Y)."
+  "Return LEGEND's title item at X Y and the y of its body, as (MARK . Y).
+METRICS are the layout's."
   (if-let* ((title (plist-get legend :title)))
       (cons (list :text title :x x :y y :align "left" :baseline "top")
             (+ y (plist-get metrics :legend-title-size) (plist-get metrics :legend-title-pad)))
     (cons nil y)))
 
 (defun eas-legend--place-symbols (legend x y metrics)
-  "Symbol LEGEND with its top-left at X Y, laid out as Vega does."
+  "Symbol LEGEND with its top-left at X Y, laid out as Vega does.
+METRICS are the layout's."
   (let* ((fs (plist-get metrics :legend-label-size))
          (title (eas-legend--title legend x y metrics))
          (looks (mapcar (lambda (e) (eas-legend--symbol legend e metrics)) (plist-get legend :entries)))
@@ -326,7 +335,8 @@ constant shape, else config.legend's (METRICS)."
             (when (car title) (list :title-mark (car title))))))
 
 (defun eas-legend--place-gradient (legend x y metrics)
-  "Gradient LEGEND with its top-left at X Y, laid out as Vega does."
+  "Gradient LEGEND with its top-left at X Y, laid out as Vega does.
+METRICS are the layout's."
   (let* ((fs (plist-get metrics :legend-label-size))
          (title (eas-legend--title legend x y metrics))
          (by (cdr title)) (thick (plist-get metrics :gradient-thickness))
@@ -361,7 +371,8 @@ constant shape, else config.legend's (METRICS)."
             (when (car title) (list :title-mark (car title))))))
 
 (defun eas-legend-place (legend x y metrics)
-  "Return LEGEND with geometry, its top-left corner at X Y."
+  "Return LEGEND with geometry, its top-left corner at X Y.
+METRICS are the layout's."
   (let ((metrics (eas-legend-style-metrics legend metrics)))
     (eas-legend-style-looks
      (cond ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))

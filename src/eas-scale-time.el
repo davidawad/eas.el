@@ -22,7 +22,7 @@
     (week 1 604800000)
     (month 1 2592000000) (month 3 7776000000)
     (year 1 31536000000))
-  "d3-time tickIntervals: (UNIT STEP APPROX-DURATION-MS).")
+  "The d3-time tickIntervals: (UNIT STEP APPROX-DURATION-MS).")
 
 (defun eas-scale-time--floor (unit ms)
   "Floor epoch MS to the start of UNIT (in `eas-time-zone')."
@@ -79,13 +79,14 @@
 (declare-function eas-scale-tick-increment "eas-scale" (start stop count))
 
 (defun eas-scale-tick-increment-years (start stop count)
-  "d3.tickStep over START..STOP measured in years, for year intervals."
+  "Return d3.tickStep for COUNT ticks over START..STOP measured in years."
   (let ((inc (eas-scale-tick-increment (/ start 31536000000.0) (/ stop 31536000000.0) count)))
     (if (< inc 0) (/ 1.0 (- inc)) inc)))
 
 (defvar eas-scale-time--memo (make-hash-table :test 'equal)
-  "(FN ARGS ZONE) -> result of the pure tick functions below.  Layout asks
-for a time axis's ticks and labels again for every tick count it tries.")
+  "Memo of the pure tick functions below: (FN ARGS ZONE) -> result.
+Layout asks for a time axis's ticks and labels again for every tick
+count it tries.")
 
 (defun eas-scale-time--memo (fn args)
   "FN applied to ARGS, remembered per `eas-time-zone'."

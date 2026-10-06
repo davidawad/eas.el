@@ -55,7 +55,7 @@ Elsewhere, or with `tooltip-mode' off, TEXT goes to the echo area."
                                      (plist-get (eas-view-state view) :hover))))
 
 (defun eas-mode-tip--own-p (view)
-  "Non-nil unless Emacs shows VIEW's hovered datum itself through a :map area."
+  "Non-nil unless Emacs displays VIEW's hovered datum itself via a :map area."
   (let ((hover (plist-get (eas-view-state view) :hover)))
     (not (and hover (eq (eas-view-target view) 'svg)
               (member (plist-get (eas-tip--mark (eas-view-scene view) (plist-get hover :view)

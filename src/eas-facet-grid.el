@@ -86,8 +86,9 @@ pointer of the definitions)."
                 (when (plist-get defs :facet) (list :columns (plist-get (plist-get defs :facet) :columns)))))))))
 
 (defun eas-facet-grid--facet (spec)
-  "SPEC's facet (see `eas-facet-grid--parse') with :inner (the cell
-spec), :outer (the composition's keys), :spacing and :resolve; or nil."
+  "SPEC's facet (see `eas-facet-grid--parse'), or nil.
+The facet comes with :inner (the cell spec), :outer (the composition's
+keys), :spacing and :resolve."
   (when-let* ((f (eas-facet-grid--parse spec)))
     (let* ((outer (cl-loop for k in eas-facet-grid--outer-keys
                            when (plist-member spec k) append (list k (plist-get spec k))))
@@ -123,17 +124,18 @@ spec), :outer (the composition's keys), :spacing and :resolve; or nil."
     (cons fields agg)))
 
 (defun eas-facet-grid--sort-lost-p (sort inner)
-  "Non-nil when Vega-Lite cannot sort by SORT's field: INNER aggregates and
-the field is none of its encodings' fields.  Vega-Lite computes the cells'
+  "Non-nil when Vega-Lite cannot sort by SORT's field.
+That is when INNER aggregates and the field is none of its encodings'
+fields.  Vega-Lite computes the cells'
 aggregate before the facet's domain then, which drops the field, and the
 levels keep the data's order (the official trellis_area_seattle does)."
   (let ((f (eas-facet-grid--inner-fields inner)))
     (and (cdr f) (not (member (plist-get sort :field) (car f))))))
 
 (defun eas-facet-grid--valid-rows (rows inner)
-  "ROWS a non-path INNER unit keeps: Vega-Lite filters out rows whose
-continuous x or y field is invalid before the facet, so a level with no
-valid row gets no cell."
+  "Return the ROWS a non-path INNER unit retains.
+Vega-Lite filters out rows whose continuous x or y field is invalid
+before the facet, so a level with no valid row gets no cell."
   (let* ((mark (plist-get inner :mark)) (type (if (stringp mark) mark (plist-get mark :type)))
          (enc (plist-get inner :encoding))
          (keys (cl-loop for ch in '(:x :y)
@@ -146,8 +148,9 @@ valid row gets no cell."
       (seq-remove (lambda (r) (seq-some (lambda (k) (memq (plist-get r k) '(nil :null))) keys)) rows))))
 
 (defun eas-facet-grid--levels (def rows &optional inner)
-  "DEF's levels over ROWS, ordered by DEF's sort (Vega's ascending order,
-null first, by default).  INNER is the cell spec."
+  "DEF's levels over ROWS, ordered by DEF's sort.
+The order is Vega's ascending order, null first, by default.  INNER is
+the cell spec."
   (let* ((key (eas-key (eas-facet-grid--field def)))
          (seen (make-hash-table :test 'equal)) values)
     (seq-doseq (r (eas-facet-grid--valid-rows rows inner))
@@ -169,7 +172,8 @@ null first, by default).  INNER is the cell spec."
        (t (funcall asc values))))))
 
 (defun eas-facet-grid--header (def channel config)
-  "DEF's header over CONFIG's header and headerRow/headerColumn/headerFacet."
+  "DEF's header over CONFIG's header and the one for CHANNEL.
+CHANNEL picks headerRow, headerColumn or headerFacet."
   (let ((out nil))
     (dolist (h (list (plist-get config :header)
                      (plist-get config (pcase channel (:row :headerRow) (:column :headerColumn) (_ :headerFacet)))
@@ -209,8 +213,8 @@ null first, by default).  INNER is the cell spec."
   "Facet field definition properties the native facet honors.")
 
 (defun eas-facet-grid--unsupported (def path)
-  "Findings for the properties of facet DEF (and its header) the native
-layout ignores.  PATH is the definition's JSON pointer."
+  "Findings for the properties of facet DEF the native layout skips.
+The header's properties count too.  PATH is the definition's JSON pointer."
   (append
    (cl-loop for (k _) on def by #'cddr
             unless (memq k eas-facet-grid-def-keys)
@@ -224,7 +228,7 @@ layout ignores.  PATH is the definition's JSON pointer."
 ;;; Cells
 
 (defun eas-facet-grid--bare (def)
-  "Positional DEF whose axis keeps its grid only (an inner facet cell)."
+  "Positional DEF whose axis draws its grid only (an inner facet cell)."
   (let ((axis (plist-get def :axis)))
     (if (eq axis :null) def
       (let ((a (if (eas-object-p axis) axis nil)))
@@ -292,16 +296,16 @@ layout ignores.  PATH is the definition's JSON pointer."
     names))
 
 (defun eas-facet-grid--static-p (transforms inner)
-  "Non-nil when TRANSFORMS read no param that INNER (or they) declare, so
-compile may run them once for every cell (eas-facet-layout.el)."
+  "Non-nil when TRANSFORMS read no param that INNER (or they) declare.
+Compile may then run them once for every cell (eas-facet-layout.el)."
   (let ((text (format "%S" transforms)))
     (and (not (string-match-p ":param" text))
          (seq-every-p (lambda (n) (not (string-match-p (concat "\\_<" (regexp-quote n) "\\_>") text)))
                       (eas-facet-grid--param-names (list :t transforms :i inner))))))
 
 (defun eas-facet-grid--rows (spec inherited)
-  "SPEC's rows after its own transforms (from INHERITED rows without
-inline data), or nil."
+  "SPEC's rows after its own transforms, or nil.
+Without inline data, the transforms start from INHERITED rows."
   (let* ((values (plist-get (plist-get spec :data) :values))
          (rows (if (vectorp values)
                    (seq-map (lambda (v) (if (and (consp v) (keywordp (car v))) v (list :data v))) values)
@@ -312,7 +316,7 @@ inline data), or nil."
         (error nil)))))
 
 (defun eas-facet-grid--meta (f rlevels clevels wlevels headers label)
-  "x-eas.facet of facet F: grid size, spacing, titles and labels.
+  "The x-eas.facet of facet F: grid size, spacing, titles and labels.
 RLEVELS, CLEVELS and WLEVELS are the row, column and wrapped levels,
 HEADERS an alist (CHANNEL . HEADER), LABEL a function (CHANNEL DEF VALUE)."
   (let* ((rdef (plist-get f :row)) (cdef (plist-get f :column)) (wrap (plist-get f :facet))
@@ -424,8 +428,9 @@ HEADERS an alist (CHANNEL . HEADER), LABEL a function (CHANNEL DEF VALUE)."
            (seq-some #'eas-facet-grid--has-facet-p (plist-get spec :hconcat)))))
 
 (defun eas-facet-grid--lower-tree (spec inherited)
-  "SPEC with its facets lowered; INHERITED is a function giving the rows a
-nested view gets from its parent (computed only when a facet needs them)."
+  "SPEC with its facets lowered.
+INHERITED is a function giving the rows a nested view gets from its
+parent (computed only when a facet needs them)."
   (cond
    ((not (eas-facet-grid--has-facet-p spec)) spec)
    ((eas-facet-grid--facet spec)
@@ -444,9 +449,9 @@ nested view gets from its parent (computed only when a facet needs them)."
         out))))
 
 (defvar eas-facet-grid--memo nil
-  "The last (KEY . OUTPUT) of `eas-facet-grid-lower'.  Parse, check and
-compile lower the same spec in turn; KEY is its data rows (by identity),
-the rest of it and the time zone.")
+  "The last (KEY . OUTPUT) of `eas-facet-grid-lower'.
+Parse, check and compile lower the same spec in turn; KEY is its data
+rows (by identity), the rest of it and the time zone.")
 
 (defun eas-facet-grid--memo-key (spec)
   "SPEC's memo key: its inline rows (compared by identity) and the rest."
@@ -465,8 +470,9 @@ A facet whose data is not inline is left alone (and reported unsupported)."
 ;;; Findings for check
 
 (defun eas-facet-grid-features (spec)
-  "Features of the facets lowered in SPEC, and the header properties they
-ignore (UNSUPPORTED_FEATURE findings), under their original paths."
+  "Features of the facets lowered in SPEC, under their original paths.
+The header properties they ignore come too (UNSUPPORTED_FEATURE
+findings)."
   (let (out)
     (cl-labels ((walk (node)
                   (when (and node (eas-object-p node))

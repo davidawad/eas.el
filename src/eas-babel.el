@@ -169,8 +169,10 @@ a list of plists is plist rows."
     bindings))
 
 (defun eas-babel-spec (params body)
-  "The block's resolved Vega-Lite and template name: (SPEC . NAME).
-NAME is nil when BODY is a whole chart/v1 spec."
+  "Return the block's resolved Vega-Lite and template name: (SPEC . NAME).
+PARAMS are the block's header arguments.  NAME is nil when BODY is a
+whole chart/v1 spec."
+
   (let ((name (cdr (assq :template params))))
     (if name
         (let* ((name (format "%s" name)) (template (eas-template-get name)))
@@ -184,7 +186,7 @@ NAME is nil when BODY is a whole chart/v1 spec."
         (cons (eas-resolve-spec spec) nil)))))
 
 (defun eas-babel--rows (params)
-  "Root rows from :data for a plain spec, or nil."
+  "Root rows from :data in PARAMS for a plain spec, or nil."
   (when-let* ((data (cdr (assq :data params))))
     (plist-get (eas-babel-data data) :rows)))
 
@@ -205,7 +207,8 @@ NAME is nil when BODY is a whole chart/v1 spec."
       (and w h (cons w h)))))
 
 (defun eas-babel-text (spec params &optional rows)
-  "SPEC (with root ROWS) drawn as the deterministic text chart."
+  "SPEC (with root ROWS) drawn as the deterministic text chart.
+PARAMS give the size."
   (substring-no-properties
    (eas-text-render (eas-compile spec :rows rows :target 'text
                                      :size (eas-babel-size params 'text)))))
@@ -234,7 +237,7 @@ NAME is nil when BODY is a whole chart/v1 spec."
   (and (boundp 'org-export-current-backend) org-export-current-backend t))
 
 (defun eas-babel-as (params)
-  "What the block yields: \"view\", \"text\" or \"vl\"."
+  "What the block with header PARAMS yields: \"view\", \"text\" or \"vl\"."
   (let ((as (format "%s" (or (cdr (assq :as params))
                              (if (eas-babel--exporting-p) eas-babel-export-as "view")))))
     (unless (member as '("view" "text" "vl"))
@@ -242,7 +245,7 @@ NAME is nil when BODY is a whole chart/v1 spec."
     (if (and (equal as "view") (eas-babel--exporting-p)) "text" as)))
 
 (defun eas-babel-source (params)
-  "Where the block's :data came from: (:name REF :buffer B), or nil."
+  "Where the block's :data in PARAMS came from: (:name REF :buffer B), or nil."
   (let ((data (cdr (assq :data params))))
     (when (and (stringp data) (not (eas-babel--file-adapter data)))
       (list :name data :buffer (current-buffer)))))
@@ -255,7 +258,8 @@ NAME is nil when BODY is a whole chart/v1 spec."
           ((integerp loc) (copy-marker loc)))))
 
 (defun eas-babel-view-id (template params)
-  "Id of a block's view: TEMPLATE:NAME, NAME its :id, #+name or :data."
+  "Id of a block's view: TEMPLATE:NAME, NAME its :id, #+name or :data.
+PARAMS are the block's header arguments."
   (format "%s:%s" (or template "chart")
           (or (cdr (assq :id params))
               (when-let* ((block (eas-babel--block)))
@@ -268,7 +272,9 @@ NAME is nil when BODY is a whole chart/v1 spec."
 
 (defun eas-babel-open (spec template params rows)
   "Open a live view of resolved SPEC (with root ROWS) for a block.
+TEMPLATE and PARAMS name the view as in `eas-babel-view-id'.
 Re-running the block replaces its view.  Return the view."
+
   (let ((id (eas-babel-view-id template params)))
     (when (gethash id eas-views) (eas-view-close id))
     (let* ((target (or eas-babel-target

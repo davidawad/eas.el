@@ -88,8 +88,8 @@
     spec))
 
 (defun eas-spec-props-lower--title (spec)
-  "SPEC with its title's anchor moved to config.title, when no nested view
-has a title of its own."
+  "SPEC with its title's anchor moved to config.title.
+Only when no nested view has a title of its own."
   (let ((title (plist-get spec :title)))
     (if (or (not (eas-object-p title))
             (seq-some (lambda (v) (plist-get v :title)) (cdr (eas-spec-props-lower--views spec))))

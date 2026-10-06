@@ -38,7 +38,8 @@
 (defconst eas-strip-series-marks '("line" "area" "trail") "Marks drawn as one path per series.")
 
 (defun eas-strip--key (encoding)
-  "The channel the strip reads across: :y when only y is discrete, else :x."
+  "The channel the strip scans for ENCODING.
+That is :y when only y is discrete, else :x."
   (let ((x (plist-get encoding :x)) (y (plist-get encoding :y)))
     (if (and (eas-object-p y) (eas-encode-discrete-p y)
              (not (and (eas-object-p x) (eas-encode-discrete-p x))))
@@ -63,7 +64,7 @@
       (or (eas-encode-title value-def) (plist-get value-def :field) "value"))))
 
 (defun eas-strip--pick (mark key col)
-  "Datums of MARK the strip reads at pixel COL along KEY (nil: the latest).
+  "Datums of MARK the strip picks at pixel COL along KEY (nil: the latest).
 A series gives its datum nearest COL; discrete marks give every item
 whose position along KEY is nearest COL (all series at one x)."
   (let ((items (plist-get mark :items)))
@@ -122,7 +123,7 @@ when the fields are read at the pointer's column, else \"latest\"."
       (list :at (if cursor "cursor" "latest") :fields (vconcat (nreverse fields))))))
 
 (defun eas-strip-format (strip)
-  "STRIP on one line: where it reads, then \"title=value\" fields, or \"\"."
+  "STRIP on one line: its position, then \"title=value\" fields, or \"\"."
   (if (null strip) ""
     (concat (plist-get strip :at) "  "
             (mapconcat (lambda (f) (format "%s=%s" (plist-get f :title) (plist-get f :value)))

@@ -35,7 +35,8 @@
     ("cardinal-open" 13 (10.0 30.0) (17.2813 17.2813) (25.0 5.0))
     ("catmull-rom" 37 (0.0 0.0) (17.2788 17.5497) (40.0 40.0))
     ("natural" 37 (0.0 0.0) (17.125 17.125) (40.0 40.0)))
-  "d3.line().curve(...) through (0,0) (10,30) (25,5) (40,40); cardinal at tension 0.3.")
+  "d3.line().curve(...) through (0,0) (10,30) (25,5) (40,40).
+Cardinal at tension 0.3.")
 
 (ert-deftest eas-area-arc-curves-match-d3 ()
   (dolist (c eas-area-arc-test--d3-curves)

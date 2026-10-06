@@ -33,12 +33,12 @@
     (31 . ?▅) (63 . ?▆) (127 . ?▇)
     (128 . ?▔) (240 . ?▀) (255 . ?█))
   "Unicode block masks available to the eighth-resolution renderer.
-Bits run from bottom to top. Masks not represented here use the nearest
+Bits run from bottom to top.  Masks not represented here use the nearest
 available mask.")
 
 (defun eas-glyph-range-mask (row-low row-high low high samples)
   "Return a SAMPLES-bit mask for LOW..HIGH inside ROW-LOW..ROW-HIGH.
-Bit zero represents the bottom sample. A sample is set when its price
+Bit zero represents the bottom sample.  A sample is set when its price
 interval overlaps LOW..HIGH."
   (let ((row-height (/ (- row-high row-low) (float samples)))
         (mask 0)

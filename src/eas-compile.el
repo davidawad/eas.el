@@ -66,13 +66,14 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
                       rows))))
 
 (defun eas-compile--view-id (node path)
-  "Stable id for the view at PATH: its name, else derived from PATH."
+  "Return a stable id for view NODE at PATH: its name, else derived from PATH."
   (or (plist-get node :name)
       (if (string-empty-p path) "main"
         (replace-regexp-in-string "\\`_" "" (replace-regexp-in-string "/" "_" path)))))
 
 (defun eas-compile--node-data (node ctx override)
-  "Rows for NODE given CTX; OVERRIDE replaces the root data."
+  "Return the rows for NODE given CTX.
+OVERRIDE, when non-nil, stands in for the root data."
   (let ((data (plist-get node :data)))
     (cond
      ((and override (string-empty-p (plist-get ctx :path))) (eas-compile--tag override))
@@ -101,7 +102,8 @@ lines and areas keep them (their default breaks the path instead)."
       (vconcat (seq-remove (lambda (row) (seq-some (lambda (k) (memq (plist-get row k) '(nil :null))) keys)) rows)))))
 
 (defun eas-compile--unit (node ctx env)
-  "Compile unit NODE under CTX into a unit plist (rows, encoding, mark)."
+  "Compile unit NODE under CTX into a unit plist (rows, encoding, mark).
+ENV gives the param values expressions see."
   (let* ((path (plist-get ctx :path))
          (encoding (eas-layer-drop-empty (plist-get ctx :encoding)))
          (rows (eas-layer-coerce
@@ -159,7 +161,9 @@ a child field or datum def inherits the parent def's other properties."
         :height (or (plist-get node :height) (plist-get ctx :height))))
 
 (defun eas-compile--collect (node ctx env override group)
-  "Walk NODE under CTX; return a layout tree.  GROUP collects layer units."
+  "Walk NODE under CTX; return a layout tree.  GROUP collects layer units.
+ENV gives the param values expressions see; OVERRIDE, when non-nil,
+stands in for the root data."
   (let* ((rows (eas-compile--node-data node ctx override))
          (ctx (plist-put (copy-sequence ctx) :rows rows))
          (own (eas-compile--merge-encoding (plist-get ctx :encoding) (plist-get node :encoding))))
@@ -211,7 +215,8 @@ a child field or datum def inherits the parent def's other properties."
         (unless group (list :group g)))))))
 
 (defun eas-compile--scales (group state metrics)
-  "Build GROUP's scales, axis defs and legend specs; STATE gives zooms."
+  "Build GROUP's scales, axis defs and legend specs; STATE gives zooms.
+METRICS supplies the config."
   (let* ((units (plist-get group :units))
          (config (plist-get metrics :config))
          (zoom (plist-get (plist-get state :domains) (eas-key (plist-get group :id))))
@@ -282,7 +287,7 @@ a child field or datum def inherits the parent def's other properties."
       (and a b (cons (max lo (min a b)) (- (min (+ lo len) (max a b)) (max lo (min a b))))))))
 
 (defun eas-compile--brushes (group state)
-  "Brush marks for GROUP's interval params that hold a value in STATE."
+  "Return a brush mark for each GROUP interval param with a value in STATE."
   (let ((x0 (plist-get group :x0)) (y0 (plist-get group :y0)) out)
     (dolist (p (plist-get group :params))
       (let* ((select (plist-get p :select))
@@ -302,7 +307,7 @@ a child field or datum def inherits the parent def's other properties."
     (nreverse out)))
 
 (defun eas-compile--view (group metrics state)
-  "Assemble GROUP into a scene view."
+  "Assemble GROUP into a scene view under METRICS and STATE."
   (let* ((bounds (vector (plist-get group :x0) (plist-get group :y0) (plist-get group :w) (plist-get group :h)))
          (scales (plist-get group :scales))
          (marks (seq-map-indexed
@@ -367,7 +372,8 @@ a child field or datum def inherits the parent def's other properties."
     (or (and (eas-object-p title) (stringp (plist-get title :frame)) (plist-get title :frame)) "group")))
 
 (defun eas-compile--title-start (groups metrics spec)
-  "Left edge the title anchors to: the plots, or with frame bounds the chart's."
+  "Left edge the title anchors to: the plots, or with frame bounds the chart's.
+GROUPS give the plots, METRICS the padding and SPEC the title frame."
   (if (equal (eas-compile--title-frame spec) "bounds")
       (apply #'min (mapcar (lambda (g) (if (plist-get g :content-x1) (+ (plist-get g :x0) (plist-get g :content-x1))
                                          (plist-get metrics :pad)))
@@ -375,7 +381,8 @@ a child field or datum def inherits the parent def's other properties."
     (apply #'min (mapcar (lambda (g) (plist-get g :x0)) groups))))
 
 (defun eas-compile--title-width (total groups metrics spec title)
-  "TOTAL (W . H) widened so a start-anchored TITLE fits, as Vega's autosize pads."
+  "TOTAL (W . H) widened so a start-anchored TITLE fits, as Vega's autosize pads.
+GROUPS, METRICS and SPEC place the title as in `eas-compile--title-start'."
   (if (or (null title) (eas-layout-text-p metrics)
           (not (equal (eas-title-anchor spec metrics) "start")))
       total
@@ -397,7 +404,7 @@ a child field or datum def inherits the parent def's other properties."
   (eas-title-text spec))
 
 (defun eas-compile--env (spec state)
-  "Param values visible to expressions: spec param :value defaults, then STATE."
+  "Return the param values expressions see: SPEC :value defaults, then STATE."
   (let ((env nil))
     (cl-labels ((walk (node)
                   (seq-doseq (p (plist-get node :params))
@@ -412,9 +419,10 @@ a child field or datum def inherits the parent def's other properties."
 
 (cl-defun eas-compile-plan (spec &key rows size target cell state)
   "Everything `eas-compile' derives before items: units, scales, layout.
-Arguments as in `eas-compile'.  The runtime keeps the plan so that a
-selection change can patch it (`eas-compile-patch') instead of
-compiling again."
+SPEC, ROWS, SIZE, TARGET, CELL and STATE are as in `eas-compile'.  The
+runtime keeps the plan so that a selection change can patch it
+\(`eas-compile-patch') instead of compiling again."
+
   (let* ((gc-cons-threshold (max gc-cons-threshold eas-compile-gc-threshold))
          (spec (eas-projection-expand (eas-composite-expand (eas-facet-expand (eas-overlay-expand (eas-spec-validate spec))))))
          (unsupported (car (eas-spec-unsupported spec))))
@@ -465,7 +473,7 @@ compiling again."
               :cut (plist-get tree :cut))))))
 
 (defun eas-compile--clipped-p (group state)
-  "Non-nil when GROUP's marks are clipped to its plot.
+  "Return non-nil when GROUP is clipped to its plot.
 Vega-Lite clips zoomable views (a param bound to scales or a scale
 domain from a selection), marks with clip: true, and eas clips views
 zoomed in STATE."
@@ -482,7 +490,9 @@ zoomed in STATE."
   "Compute GROUPS' items and record how far they overhang each plot.
 Sets :mark-over [LEFT TOP RIGHT BOTTOM] and :scope-over (series marks'
 overhang on the right) in pixels; clipped views overhang nothing, as in
-Vega.  Return non-nil when anything overhangs, so chrome may grow."
+Vega.  Return non-nil when anything overhangs, so chrome may grow.
+METRICS and STATE are as for `eas-compile--view'."
+
   (let (grew)
     (dolist (g groups)
       (let* ((x0 (plist-get g :x0)) (y0 (plist-get g :y0)) (w (plist-get g :w)) (h (plist-get g :h))

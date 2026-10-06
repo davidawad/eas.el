@@ -26,12 +26,14 @@
        (equal (plist-get legend :type) "symbol")))
 
 (defun eas-legend-row-orient (legend metrics)
-  "\"top\" or \"bottom\" for a LEGEND placed above or below a composition
-under METRICS (svg only), else nil."
+  "Return where a LEGEND sits against a composition under METRICS.
+That is \"top\" or \"bottom\" for a legend placed above or below it
+\(svg only), else nil."
   (and (not (eas-layout-text-p metrics)) (car (member (plist-get legend :orient) '("top" "bottom")))))
 
 (defun eas-legend-row-place (legend x y metrics)
-  "Symbol LEGEND in one row with its top-left at X Y."
+  "Symbol LEGEND in one row with its top-left at X Y.
+METRICS are the layout's."
   (let* ((vertical (eas-legend--place-symbols (eas--plist-without legend :title) 0 0 metrics))
          (entries (append (plist-get vertical :entries) nil))
          (row-h (apply #'max 0 (mapcar (lambda (e) (aref (plist-get e :bounds) 3)) entries)))

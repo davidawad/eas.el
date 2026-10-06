@@ -24,7 +24,8 @@
        (not (eas-layout-text-p metrics))))
 
 (defun eas-legend-extra-place-horizontal (legend x y metrics)
-  "Horizontal gradient LEGEND with its top-left at X Y."
+  "Horizontal gradient LEGEND with its top-left at X Y, sized by METRICS."
+
   (let* ((fs (plist-get metrics :legend-label-size))
          (title (eas-legend--title legend x y metrics))
          (by (cdr title)) (thick (plist-get metrics :gradient-thickness))

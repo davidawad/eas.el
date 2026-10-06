@@ -42,7 +42,7 @@
   "Function called with the detail view and its parent to display it.")
 
 (cl-defun eas-register-drill (name &key fn doc)
-  "Register detail provider NAME whose :fn FN returns the rows to drill into.
+  "Register detail provider NAME whose :fn FN gives the rows to drill into.
 FN is called with the click target, the view and the binding args and
 returns a vector (or list) of row plists.  DOC is one line."
   (unless (and (stringp name) (functionp fn))

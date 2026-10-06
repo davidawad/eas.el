@@ -34,8 +34,8 @@
     out))
 
 (defun eas-composite--continuous (encoding)
-  "The channel of ENCODING the interval runs along: a quantitative field
-that is not aggregated, y before x."
+  "Return the channel of ENCODING the interval lies along.
+That is a quantitative field that is not aggregated, y before x."
   (seq-find (lambda (ch)
               (let ((d (plist-get encoding ch)))
                 (and (eas-object-p d) d (plist-get d :field) (not (plist-get d :aggregate))
@@ -59,7 +59,7 @@ Return (AGGREGATE-OPS . CALCULATES)."
                      (list :calculate (format "datum['%s'] + datum['%s']" center spread) :as upper)))))))
 
 (defun eas-composite--expand-unit (node inherited)
-  "Primitive unit for composite NODE whose encoding extends INHERITED."
+  "Primitive unit for composite NODE, whose encoding builds on INHERITED."
   (let* ((mark (plist-get node :mark))
          (type (plist-get mark :type))
          (encoding (eas-composite--merge inherited (plist-get node :encoding)))
@@ -104,7 +104,8 @@ Return (AGGREGATE-OPS . CALCULATES)."
                                      partner (list :field (concat "upper_" field)))))))))
 
 (defun eas-composite-expand (spec &optional inherited)
-  "SPEC with composite marks rewritten into primitive units.
+  "SPEC with each composite mark rewritten into primitive units.
+
 INHERITED is the encoding a layer passes down."
   (let ((mark (plist-get spec :mark)))
     (cond

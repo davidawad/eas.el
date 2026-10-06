@@ -27,8 +27,9 @@
   (and (plist-get node :concat) (equal (plist-get node :bounds) "flush")))
 
 (defun eas-concat-flush--plan (node metrics)
-  "Plot origins of flush NODE's groups relative to its first plot, and its
-flush size: ((G X . Y) ...) and (W . H)."
+  "Plan flush NODE under METRICS: its plot origins and its flush size.
+Return (ORIGINS (W . H)), ORIGINS ((G X . Y) ...) relative to the first
+plot."
   (let* ((vertical (equal (plist-get node :concat) "v"))
          (spacing (or (plist-get node :spacing) (plist-get metrics :spacing)))
          (cursor 0) (cross 0) out)
@@ -67,7 +68,7 @@ flush size: ((G X . Y) ...) and (W . H)."
 
 (defun eas-concat-flush-arrange (node ox oy metrics)
   "Place flush NODE with its block's top-left at OX OY; return (W . H).
-Nil when NODE is not flush or the target is text."
+Nil when NODE is not flush or METRICS target text."
   (when (and (eas-concat-flush-p node) (not (eas-layout-text-p metrics)))
     (let* ((origins (car (eas-concat-flush--plan node metrics)))
            (e (eas-concat-flush--extent origins)))

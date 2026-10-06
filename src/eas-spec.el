@@ -125,8 +125,8 @@
   "Transform keys chart/v1 recognises; the first key present names it.")
 
 (defconst eas-spec--projections '("equalEarth" "mercator" "equirectangular")
-  "Map projections drawn natively, for points placed by longitude/latitude
-\(eas-projection.el).")
+  "Map projections drawn natively, for points placed by longitude/latitude.
+See eas-projection.el.")
 
 (defconst eas-spec--select-keys
   '(:type :on :nearest :fields :encodings :clear :toggle :resolve :mark :translate :zoom)
@@ -205,7 +205,7 @@ A known operation key wins; else the first key that is not a parameter."
        (or (plist-member value :x-eas:slot) (plist-member value :x-eas:item))))
 
 (defun eas-spec-features (spec)
-  "Return every feature SPEC uses, as plists (:feature ID :path POINTER).
+  "Return every feature in SPEC, as plists (:feature ID :path POINTER).
 IDs look like \"mark/bar\", \"encoding/color\", \"scale/log\",
 \"transform/aggregate\", \"param/interval\", \"bind/scales\" and
 \"composition/layer\".  Keys outside the chart/v1 vocabulary come back
@@ -404,8 +404,9 @@ Unsupported features are not errors here: they decide the backend."
     parsed))
 
 (defun eas-spec-unsupported (spec)
-  "Return the UNSUPPORTED_FEATURE findings of SPEC that keep it from
-drawing natively (an undrawn style property, :property t, does not)."
+  "Return the UNSUPPORTED_FEATURE findings that stop SPEC drawing natively.
+An undrawn style property (:property t) does not."
+
   (seq-filter (lambda (f) (and (equal (plist-get f :code) "UNSUPPORTED_FEATURE") (not (plist-get f :property))))
               (eas-spec-check spec)))
 

@@ -97,8 +97,8 @@ START is the first chart line; END the end of the last."
 
 (defun eas-babel-inline--show-image (ov view)
   "Display VIEW's SVG on overlay OV, its :map hot spots reaching the reducer.
-A click on a hot spot arrives as [AREA-ID mouse-1], so each area id is
-bound like the plain mouse keys (as `eas-mode' does)."
+A click on a hot spot arrives as AREA-ID followed by the mouse event, so
+each area id is bound like the plain mouse keys (as `eas-mode' does)."
   (let ((image (eas-svg-image (eas-view-scene view)))
         (map (make-sparse-keymap)))
     (set-keymap-parent map eas-babel-inline-map)

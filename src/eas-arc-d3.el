@@ -18,9 +18,9 @@
 
 (require 'eas-core)
 
-(defconst eas-arc-d3--eps 1e-12 "d3-shape's epsilon.")
+(defconst eas-arc-d3--eps 1e-12 "The epsilon of d3-shape.")
 
-(defconst eas-arc-d3--path-eps 1e-6 "d3-path's epsilon.")
+(defconst eas-arc-d3--path-eps 1e-6 "The epsilon of d3-path.")
 
 (defun eas-arc-d3-wanted-p (item)
   "Non-nil when arc ITEM needs d3's padding or corners."
@@ -28,7 +28,8 @@
       (let ((pad (plist-get item :padAngle))) (and (numberp pad) (> pad 0)))))
 
 (defun eas-arc-d3--intersect (x0 y0 x1 y1 x2 y2 x3 y3)
-  "Intersection (X . Y) of lines X0Y0-X1Y1 and X2Y2-X3Y3, or nil."
+  "Intersection (X . Y) of two lines, or nil.
+One line runs through X0 Y0 and X1 Y1, the other through X2 Y2 and X3 Y3."
   (let* ((x10 (- x1 x0)) (y10 (- y1 y0)) (x32 (- x3 x2)) (y32 (- y3 y2))
          (tt (- (* y32 x10) (* x32 y10))))
     (unless (< (* tt tt) eas-arc-d3--eps)
@@ -36,7 +37,9 @@
         (cons (+ x0 (* tt x10)) (+ y0 (* tt y10)))))))
 
 (defun eas-arc-d3--corner (x0 y0 x1 y1 r1 rc cw)
-  "d3's cornerTangents: (CX CY X01 Y01 X11 Y11) of a corner of radius RC."
+  "The cornerTangents of d3: (CX CY X01 Y01 X11 Y11) of a corner of radius RC.
+The corner joins X0 Y0 to X1 Y1 on a circle of radius R1, clockwise
+when CW is non-nil."
   (let* ((x01 (- x0 x1)) (y01 (- y0 y1))
          (lo (/ (if cw rc (- rc)) (sqrt (+ (* x01 x01) (* y01 y01)))))
          (ox (* lo y01)) (oy (* (- lo) x01))

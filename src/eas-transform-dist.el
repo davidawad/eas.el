@@ -155,8 +155,8 @@ charts reproducible.  nil when VALUES holds no numbers."
   "Density samples by their inputs: a recompile does not sum the kernels again.")
 
 (defun eas-density--samples (values bw lo hi steps cumulative)
-  "Vector of the density of VALUES (bandwidth BW) at STEPS+1 points from LO
-to HI, cumulative when CUMULATIVE."
+  "Return a vector of the density of VALUES (bandwidth BW) from LO to HI.
+The density is sampled at STEPS+1 points, cumulative when CUMULATIVE."
   (eas-memo eas-density--memo (list values bw lo hi steps cumulative)
     (let ((span (- hi lo)))
       (vconcat (cl-loop for i from 0 to steps

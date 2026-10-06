@@ -62,7 +62,7 @@ already exists (`make-temp-file' creates it), hence --force.")
         (t nil)))
 
 (defun eas-static-fallback-error (err)
-  "The UNSUPPORTED_FEATURE plist a view shows instead of a static image.
+  "The UNSUPPORTED_FEATURE plist a view displays instead of a static image.
 ERR is the `eas-unsupported-feature' condition; the message adds how
 to opt in to the bin/chart picture."
   (let ((plist (eas-error-plist err)))
@@ -100,7 +100,7 @@ bin/chart is absent and ENGINE_FAILED when it fails."
       (delete-file out))))
 
 (defun eas-chart-theme ()
-  "bin/chart's default theme, parsed: (:config CONFIG :hash HASH ...).
+  "The default theme of bin/chart, parsed: (:config CONFIG :hash HASH ...).
 Signals NOT_FOUND when bin/chart is absent and ENGINE_FAILED when it fails."
   (when-let* ((reason (eas-chart-missing-reason)))
     (eas-signal "NOT_FOUND" reason :program eas-chart-program))

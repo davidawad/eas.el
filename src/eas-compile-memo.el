@@ -20,16 +20,17 @@
 (require 'eas-transform)
 
 (defvar eas-compile-memo--runs nil
-  "Hash table of rows vector -> ((TRANSFORMS ENV) . ROWS) runs, while a
-compile is in progress; nil otherwise.")
+  "Hash table of rows vector -> ((TRANSFORMS ENV) . ROWS) runs.
+Set while a compile is in progress; nil otherwise.")
 
 (defmacro eas-compile-memo (&rest body)
-  "Run BODY with transform runs memoized."
+  "Evaluate BODY with each transform run memoized."
   `(let ((eas-compile-memo--runs (make-hash-table :test 'eq))) ,@body))
 
 (defun eas-compile-memo-transform-run (transforms rows env path)
-  "`eas-transform-run' of TRANSFORMS on ROWS under ENV (PATH for errors),
-reusing an equal run on the same ROWS within `eas-compile-memo'."
+  "Return `eas-transform-run' of TRANSFORMS on ROWS under ENV.
+PATH is for errors.  Reuse an equal run on the same ROWS within
+`eas-compile-memo'."
   (if (or (null eas-compile-memo--runs) (zerop (length transforms)) (not (vectorp rows)))
       (eas-transform-run transforms rows env path)
     (let* ((key (list transforms env))

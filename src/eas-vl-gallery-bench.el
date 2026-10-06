@@ -30,7 +30,7 @@
 (require 'eas-memo)
 
 (defun eas-vl-gallery-bench-example (group name n)
-  "bench data for example NAME of GROUP over N repetitions.
+  "Return bench data for example NAME of GROUP over N repetitions.
 Stage :compile-cold is an SVG compile with every memo table emptied
 first (`eas-memo-clear'), as the first compile of a session runs."
   (let* ((spec (eas-vl-gallery-spec group name))
@@ -59,9 +59,10 @@ Return the bench.json object without baselines."
   (expand-file-name "bench.json" (eas-vl-gallery-group-directory group)))
 
 (defun eas-vl-gallery-bench-write (group &optional n baseline)
-  "Bench GROUP and write its bench.json; BASELINE is an earlier result
-\(a bench object, or a file holding one) whose stage means become each
-example's baseline_ms.  Return the object written."
+  "Bench GROUP over N repetitions and write its bench.json.
+BASELINE is an earlier result (a bench object, or a file holding one)
+whose stage means become each example's baseline_ms.  Return the
+object written."
   (let* ((result (eas-vl-gallery-bench group n))
          (base (if (stringp baseline) (eas-json-read-file baseline) baseline))
          (examples (plist-get result :examples)))

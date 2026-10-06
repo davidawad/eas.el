@@ -26,7 +26,7 @@
 (defvar eas-curve-samples)
 
 (defvar eas-curve-tension nil
-  "mark.tension of the series being drawn, or nil for the curve's default.")
+  "The mark.tension of the series being drawn, or nil for the curve's default.")
 
 (defconst eas-curve-extra-modes
   '("basis" "basis-open" "bundle" "cardinal" "cardinal-open" "catmull-rom" "natural")
@@ -60,7 +60,7 @@
 ;;; basis and bundle
 
 (defun eas-curve-extra--basis-segment (path x0 y0 x1 y1 x y)
-  "d3's basis Bezier on PATH from previous points X0 Y0, X1 Y1 towards X, Y."
+  "Extend PATH with d3's basis Bezier from points X0 Y0, X1 Y1 towards X, Y."
   (eas-curve-extra--bezier path (/ (+ (* 2 x0) x1) 3.0) (/ (+ (* 2 y0) y1) 3.0)
                            (/ (+ x0 (* 2 x1)) 3.0) (/ (+ y0 (* 2 y1)) 3.0)
                            (/ (+ x0 (* 4 x1) x) 6.0) (/ (+ y0 (* 4 y1) y) 6.0)))
@@ -165,7 +165,8 @@
 ;;; natural
 
 (defun eas-curve-extra--natural-controls (xs)
-  "d3 curveNatural's control points for coordinates XS, as (A . B) vectors."
+  "Return d3 curveNatural's control points for coordinates XS.
+They come as (A . B), two vectors."
   (let* ((n (1- (length xs))) (a (make-vector n 0.0)) (b (make-vector n 0.0)) (r (make-vector n 0.0)))
     (aset b 0 2.0) (aset r 0 (+ (aref xs 0) (* 2 (aref xs 1))))
     (cl-loop for i from 1 below (1- n)
@@ -200,8 +201,8 @@
 ;;; Dispatch
 
 (defun eas-curve-extra-apply (points mode)
-  "POINTS ((X Y) ...) drawn with interpolation MODE, one of
-`eas-curve-extra-modes', under `eas-curve-tension'."
+  "Draw POINTS ((X Y) ...) with interpolation MODE under `eas-curve-tension'.
+MODE is one of `eas-curve-extra-modes'."
   (let ((tension (and (numberp eas-curve-tension) eas-curve-tension)))
     (pcase mode
       ("basis" (eas-curve-extra-basis points))

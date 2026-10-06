@@ -53,7 +53,7 @@ Throw `eas-params-index-skip' for integers floats cannot hold."
           table))))
 
 (defun eas-params-index--matches (store rows)
-  "Indices of ROWS in point STORE, unsorted; throws when no index applies."
+  "Indices of ROWS in point STORE, unsorted; throws when no index fits."
   (let ((table (eas-params-index--table rows (append (plist-get store :fields) nil))))
     (cl-loop for tuple across (plist-get store :values)
              append (copy-sequence (gethash (mapcar #'eas-params-index--norm tuple) table)))))
@@ -76,7 +76,8 @@ selection that means everything)."
       'all))
 
 (defun eas-params-index-filter (store rows empty)
-  "ROWS (a vector) in selection STORE, in order, or nil when no index applies.
+  "ROWS (a vector) in selection STORE, in order, or nil when no index fits.
+
 A nil STORE is the empty selection: all ROWS when EMPTY, else none."
   (cond
    ((null store) (if empty rows []))

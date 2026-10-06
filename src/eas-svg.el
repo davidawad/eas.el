@@ -97,7 +97,7 @@
   "A <text> node for TEXT at X Y with font SIZE.
 PROPS: :align :baseline :angle :fill :weight :opacity, and :font,
 :style (font style) and :line-height, and :lines-down
-(the first line on the anchor, the rest below)."
+\(the first line on the anchor, the rest below)."
   (let* ((baseline (plist-get props :baseline))
          (dy (floor (+ 0.5 (* size (pcase baseline ("top" 0.79) ("middle" 0.30) ("bottom" -0.21) (_ 0))))))
          (angle (or (plist-get props :angle) 0))
@@ -124,7 +124,10 @@ PROPS: :align :baseline :angle :fill :weight :opacity, and :font,
                                  lines))))))
 
 (defun eas-svg--line (seg color &optional width opacity dash cap)
-  "A <line> for SEG [x1 y1 x2 y2] in COLOR (CAP its stroke-linecap)."
+  "A <line> for SEG [x1 y1 x2 y2] in COLOR (CAP its stroke-linecap).
+WIDTH (default 1), OPACITY and DASH set its stroke width, opacity and
+dash array."
+
   (eas-svg--node 'line :x1 (aref seg 0) :y1 (aref seg 1) :x2 (aref seg 2) :y2 (aref seg 3)
                    :stroke color :stroke-width (or width 1) :stroke-opacity opacity
                    :stroke-dasharray (and dash (mapconcat #'eas-svg--n dash ","))

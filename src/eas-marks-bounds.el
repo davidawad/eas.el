@@ -127,7 +127,7 @@ text keep the first line on the anchor."
     (if (member (plist-get item :baseline) '("bottom" "alphabetic")) (1- n) 0)))
 
 (defun eas-marks-bounds (unit metrics)
-  "Union of the bounds of UNIT's items, or nil."
+  "Return the union of the bounds of UNIT's items under METRICS, or nil."
   (let ((type (plist-get (plist-get unit :mark) :type)) box)
     (seq-doseq (item (plist-get unit :items))
       (setq box (eas-layout-union box (eas-marks-item-bounds type item metrics))))

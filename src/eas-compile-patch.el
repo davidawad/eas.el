@@ -46,7 +46,7 @@
     (seq-filter (lambda (n) (string-match-p (concat "\\_<" (regexp-quote n) "\\_>") text)) names)))
 
 (defun eas-patch--changed (old new)
-  "Names of selection stores that differ between states OLD and NEW."
+  "Names of params whose selection differs between states OLD and NEW."
   (let ((a (plist-get old :params)) (b (plist-get new :params)) names)
     (dolist (k (delete-dups (append (eas-plist-keys a) (eas-plist-keys b))))
       (unless (equal (plist-get a k) (plist-get b k)) (push (eas-key-name k) names)))
@@ -77,7 +77,7 @@
     pairs))
 
 (defun eas-patch--positional-p (unit changed)
-  "Non-nil when a condition on a CHANGED param sits on a position channel."
+  "Non-nil when UNIT conditions a position channel on a CHANGED param."
   (cl-loop for ch in '(:x :y :x2 :y2)
            thereis (seq-some (lambda (n) (member n changed))
                               (eas-patch--param-names (plist-get (plist-get unit :encoding) ch)))))
@@ -96,7 +96,10 @@ vector lives; a full compile makes a new one.")
 
 (defun eas-patch--items (unit group metrics old new pairs)
   "UNIT's items with rows whose membership changed (per PAIRS) rebuilt.
-Only the rows a point-selection index names are tested (fc-qx1.9)."
+Only the rows a point-selection index names are tested (fc-qx1.9).
+GROUP gives the plot bounds and METRICS the layout; OLD and NEW are
+the states before and after."
+
   (let* ((rows (plist-get unit :rows)) (items (copy-sequence (plist-get unit :items)))
          (where (eas-patch--where rows items))
          (changed (eas-params-index-changed rows pairs old new))

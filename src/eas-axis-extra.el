@@ -40,17 +40,20 @@
 (declare-function eas-layout-union "eas-layout")
 
 (defun eas-axis-extra--prop (axis config channel key)
-  "Axis property KEY from the channel's AXIS def, else CONFIG; :none if unset."
+  "Return axis property KEY from CHANNEL's AXIS def, else CONFIG.
+Return :none if unset."
   (cond ((plist-member axis key) (plist-get axis key))
         ((let ((v (eas-theme-axis config channel key))) (and v (list v))) (eas-theme-axis config channel key))
         (t :none)))
 
 (defun eas-axis-extra--off-p (axis config channel key)
-  "Non-nil when axis property KEY is false."
+  "Return non-nil when axis property KEY is false.
+KEY is looked up in CHANNEL's AXIS def, else CONFIG."
   (eq (eas-axis-extra--prop axis config channel key) :false))
 
 (defun eas-axis-extra--color (spec datum env)
-  "Color SPEC (a string or a conditional value) for DATUM; :null hides."
+  "Return color SPEC (a string or a conditional value) for DATUM.
+:null hides.  Conditions test DATUM under ENV."
   (cond
    ((stringp spec) spec)
    ((eq spec :null) :null)
@@ -62,7 +65,8 @@
    ((eas-object-p spec) (eas-axis-extra--color (plist-get spec :value) datum env))))
 
 (defun eas-axis-extra--tick (tk axis env)
-  "Tick TK of AXIS def with labelExpr and colors applied, or nil when hidden."
+  "Return tick TK of AXIS def with labelExpr and colors applied.
+Return nil when hidden.  Expressions evaluate under ENV."
   (let* ((datum (list :value (plist-get tk :value) :label (plist-get tk :label)))
          (label (plist-get tk :label))
          (lc (and (plist-member axis :labelColor) (eas-axis-extra--color (plist-get axis :labelColor) datum env)))
@@ -143,7 +147,8 @@ CONFIG is the Vega config in force; ENV holds param values."
                                  (vector (- (aref ab 0) short) (aref ab 1) (aref ab 2) (aref ab 3))))))))
 
 (defun eas-axis-extra-place (axis scale metrics)
-  "AXIS after placement: minExtent, then tickBand (`eas-axis-extra--band')."
+  "Return AXIS after placement: minExtent, then tickBand.
+The tickBand applies for SCALE under METRICS (`eas-axis-extra--band')."
   (eas-axis-extra--band (if (eas-layout-text-p metrics) axis (eas-axis-extra--min-extent axis metrics)) scale metrics))
 
 (defun eas-axis-extra--band (axis scale metrics)

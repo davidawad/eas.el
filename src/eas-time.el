@@ -82,7 +82,7 @@ conversions take the local path; the previous TZ comes back on exit."
   "Month abbreviations of `eas-time--js-regexp' dates.")
 
 (defun eas-time-string-p (value)
-  "Non-nil when VALUE is a string `eas-time-parse' reads as a date."
+  "Non-nil when VALUE is a string that `eas-time-parse' takes as a date."
   (and (stringp value)
        (or (and (string-match-p eas-time--iso-regexp value) (> (length value) 4))
            (save-match-data
@@ -91,8 +91,9 @@ conversions take the local path; the previous TZ comes back on exit."
                   t)))))
 
 (defvar eas-time--parse-cache (make-hash-table :test 'equal)
-  "Date string -> epoch ms (or :none).  A crosshair tests every row's
-date against the selection on each move (fc-qx1.2), so parse once.")
+  "Memo of date string -> epoch ms (or :none).
+A crosshair tests every row's date against the selection on each move
+\(fc-qx1.2), so parse once.")
 
 (defconst eas-time--parse-cache-limit 200000
   "Entries kept before `eas-time--parse-cache' is emptied.")
@@ -166,8 +167,9 @@ Months may be numbers (1-12) or names; utc true reads it in UTC."
 ;; arithmetic.  Buckets holding a transition convert exactly.
 
 (defvar eas-time--offsets (make-hash-table :test 'equal)
-  "(ZONE . BUCKET) -> the zone's UTC offset in seconds throughout the
-15-minute BUCKET, or `mixed' when it changes inside it.")
+  "Memo of (ZONE . BUCKET) -> the zone's UTC offset in seconds.
+The offset holds throughout the 15-minute BUCKET, or is `mixed' when
+it changes inside it.")
 
 (defvar eas-time--encoded (make-hash-table :test 'equal)
   "(ZONE YEAR MONTH DAY HOURS MINUTES SECONDS) -> epoch seconds.")
@@ -178,8 +180,8 @@ Months may be numbers (1-12) or names; utc true reads it in UTC."
   (puthash key value table))
 
 (defun eas-time--offset (s)
-  "`eas-time-zone''s UTC offset in seconds at epoch S, or nil when its
-15-minute bucket holds a transition."
+  "Return the UTC offset of `eas-time-zone' in seconds at epoch S.
+Return nil when its 15-minute bucket contains a transition."
   (let* ((bucket (floor s 900)) (key (cons eas-time-zone bucket))
          (hit (gethash key eas-time--offsets)))
     (unless hit
@@ -216,7 +218,8 @@ Keys are :year :month (1-12) :day :hours :minutes :seconds
 
 (defun eas-time-ms (year &optional month day hours minutes seconds milliseconds)
   "Return epoch milliseconds for calendar fields in `eas-time-zone'.
-MONTH (1-12), DAY and the clock fields may overflow; they are normalized."
+The fields are YEAR, MONTH (1-12), DAY, HOURS, MINUTES, SECONDS and
+MILLISECONDS; all but YEAR may overflow and are normalized."
   (let* ((local (and eas-time-zone (eas-time--utc-ms year month day hours minutes seconds milliseconds)))
          (guess (and (stringp eas-time-zone) (eas-time-offset-week local eas-time-zone)))
          (off (and guess (eas-time-offset-week (- local guess) eas-time-zone))))
@@ -235,7 +238,8 @@ MONTH (1-12), DAY and the clock fields may overflow; they are normalized."
 Time units truncate many rows to the same few fields.")
 
 (defun eas-time--encode (year month day hours minutes seconds)
-  "Epoch ms of the local fields YEAR .. SECONDS in `eas-time-zone'."
+  "Epoch ms of the local fields YEAR .. SECONDS in `eas-time-zone'.
+The fields are YEAR, MONTH, DAY, HOURS, MINUTES and SECONDS."
   (let ((key (list eas-time-zone year month day hours minutes seconds)))
     (or (gethash key eas-time--encoded)
         (progn
@@ -245,8 +249,8 @@ Time units truncate many rows to the same few fields.")
                    eas-time--encoded)))))
 
 (defun eas-time--utc-ms (year &optional month day hours minutes seconds milliseconds)
-  "UTC epoch milliseconds for calendar fields YEAR MONTH DAY HOURS
-MINUTES SECONDS MILLISECONDS (see `eas-time-ms')."
+  "Return UTC epoch milliseconds for calendar fields (see `eas-time-ms').
+The fields are YEAR MONTH DAY HOURS MINUTES SECONDS MILLISECONDS."
   (let* ((month (or month 1))
          (y (+ year (floor (1- month) 12)))
          (m (1+ (mod (1- month) 12))))

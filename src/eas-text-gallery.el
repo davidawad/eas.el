@@ -72,8 +72,9 @@
          (string-match-p "topojson" (or (plist-get entry :reason) "")))))
 
 (defun eas-text-gallery-entries (&optional groups)
-  "Entries to check: examples of GROUPS (default all, maps left out), then
-the templates when GROUPS is nil or names `eas-text-gallery-group-templates'.
+  "Entries to check: examples of GROUPS, then the templates.
+GROUPS defaults to all, maps left out; the templates come when GROUPS
+is nil or names `eas-text-gallery-group-templates'.
 Each is (:group G :name N :open FN), FN taking a SIZE and returning a view."
   (append
    (cl-loop for group in (eas-vl-gallery-groups)
@@ -112,8 +113,9 @@ The window is faked: its size is SIZE whatever the batch frame's is."
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (defun eas-text-gallery-run (entry &optional sizes)
-  "Problems of ENTRY (from `eas-text-gallery-entries') at SIZES (default
-`eas-text-gallery-sizes'), each prefixed with its size; nil when it holds."
+  "Problems of ENTRY (from `eas-text-gallery-entries') at SIZES.
+SIZES defaults to `eas-text-gallery-sizes'.  Each problem is prefixed
+with its size; nil when ENTRY passes."
   (eas-vl-gallery--native
    (let (out)
      (dolist (size (or sizes eas-text-gallery-sizes))
@@ -150,8 +152,8 @@ Each group is (:group G :pass N :partial N :total N)."
           :problems (vconcat (nreverse problems)))))
 
 (defun eas-text-gallery-write-status (report)
-  "Write REPORT (from `eas-text-gallery-report' over every group) as
-text-status.json and return it."
+  "Write REPORT as text-status.json and return it.
+REPORT comes from `eas-text-gallery-report' over every group."
   (let ((bad (make-hash-table :test 'equal)) (status nil))
     (seq-doseq (p (plist-get report :problems))
       (puthash (cons (plist-get p :group) (plist-get p :name)) (plist-get p :problems) bad))

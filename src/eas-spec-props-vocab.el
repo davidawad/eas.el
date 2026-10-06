@@ -105,7 +105,7 @@
     (strokeOpacity 0.3 (stroke "#d62728")) (fill "#eeeeee")
     (fillOpacity 0.5 (fill "#eeeeee")) (cornerRadius 8) (opacity 0.4) (cursor "pointer") (clip t)
     (continuousWidth 100) (continuousHeight 100) (discreteWidth 100) (discreteHeight 100) (step 40))
-  "config.view properties.")
+  "Properties of config.view.")
 
 (defconst eas-spec-props--config
   '((background "#eeeeee") (padding 30) (font "Courier New") (autosize "none") (countTitle "N")
@@ -116,10 +116,11 @@
 (defconst eas-spec-props-inert
   '(aria ariaRole ariaRoleDescription description zindex cursor href tooltip style
     customFormatTypes timeUnitBandSize timeUnitBandPosition smooth)
-  "Properties that never change Vega's static picture: accessibility
-metadata, z-order among equals, pointer and link affordances (the scene
-carries them per item for the runtime), style names that only select
-config, and time-unit band settings with no time unit in play.")
+  "Properties that never change Vega's static picture.
+Accessibility metadata, z-order among equals, pointer and link
+affordances (the scene carries them per item for the runtime), style
+names that only select config, and time-unit band settings with no time
+unit in play.")
 
 (defun eas-spec-props-vocabulary (scope)
   "The (KEY PROBE [CONTEXT]) entries of SCOPE.

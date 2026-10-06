@@ -18,8 +18,9 @@
 (require 'eas-arc)
 
 (defun eas-text-arc-dots (item cw ch fn)
-  "Call FN with (DX DY), the braille dot coordinates of each dot whose
-centre lies inside arc ITEM, for cells of CW x CH pixels."
+  "Call FN with (DX DY) for each braille dot centred inside arc ITEM.
+DX DY are the braille dot coordinates, for cells of CW x CH pixels."
+
   (let* ((cx (plist-get item :cx)) (cy (plist-get item :cy))
          (r (or (plist-get item :outerRadius) 0))
          (sx (/ cw 2.0)) (sy (/ ch 4.0)))

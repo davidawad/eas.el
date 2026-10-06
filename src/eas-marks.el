@@ -42,8 +42,9 @@
 ;;; Channel values
 
 (defvar eas-marks--cache nil
-  "Per-unit memo of channel accessors and scale functions, bound by
-`eas-marks-items' so per-row work never re-resolves definitions.")
+  "Per-unit memo of channel accessors and scale functions.
+`eas-marks-items' binds it so per-row work never re-resolves
+definitions.")
 
 (defmacro eas-marks--memo (key &rest body)
   "Value of BODY memoized under KEY in the current unit's cache.
@@ -63,7 +64,8 @@ A hit allocates nothing, which matters in per-row loops."
     (when-let* ((s (plist-get scales channel))) (eas-scale-fn s))))
 
 (defun eas-marks--accessor (unit scales channel)
-  "Function ROW -> scaled CHANNEL value for UNIT, built once per unit."
+  "Function ROW -> scaled CHANNEL value for UNIT, built once per unit.
+SCALES are the view's."
   (eas-marks--memo channel
    (progn
      (let* ((def (plist-get (plist-get unit :encoding) channel))
@@ -86,13 +88,14 @@ A hit allocates nothing, which matters in per-row loops."
         (t #'ignore))))))
 
 (defun eas-marks--channel (unit scales channel row)
-  "Scaled value of CHANNEL for ROW in UNIT, honoring conditions and values."
+  "Scaled value of CHANNEL for ROW in UNIT, honoring conditions and values.
+SCALES are the view's."
   (funcall (eas-marks--accessor unit scales channel) row))
 
 (defun eas-marks--style (unit scales row)
   "Return (:fill F :stroke S :opacity O) for ROW in UNIT.
-When no style channel depends on the row, the plist is computed once
-per unit and shared by every item."
+SCALES are the view's.  When no style channel depends on the row, the
+plist is computed once per unit and shared by every item."
   (if (eas-marks--memo 'style-varies
         (let ((enc (plist-get unit :encoding)))
           (seq-some (lambda (ch) (let ((d (plist-get enc ch)))
@@ -102,7 +105,7 @@ per unit and shared by every item."
     (eas-marks--memo 'style (eas-marks--style-1 unit scales row))))
 
 (defun eas-marks--style-1 (unit scales row)
-  "Compute ROW's style in UNIT."
+  "Compute ROW's style in UNIT under SCALES."
   (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type))
          (color (or (eas-marks--channel unit scales :color row)
                     (plist-get mark :color) eas-marks-default-color))
@@ -137,7 +140,8 @@ per unit and shared by every item."
 
 (defun eas-marks--pos (unit scales channel row bounds &optional band-start)
   "Position on CHANNEL (:x or :y) for ROW; band centre unless BAND-START.
-Returns the plot centre when the channel is absent."
+UNIT is drawn with SCALES inside BOUNDS.  Return the plot centre when
+the channel is absent."
   (let* ((def (plist-get (plist-get unit :encoding) channel))
          (scale (plist-get scales channel))
          (fixed (cond ((and (eas-object-p def) (plist-member def :value) (not (plist-get def :condition)))
@@ -179,14 +183,16 @@ Returns the plot centre when the channel is absent."
                 (t p))))))))
 
 (defun eas-marks--zero (scale bounds channel)
-  "Baseline position for SCALE: zero when in domain, else the plot edge."
+  "Baseline position for SCALE: zero when in domain, else the plot edge.
+The edge is BOUNDS' on CHANNEL."
   (let ((z (and scale (equal (plist-get scale :type) "linear")
                 (let ((d (plist-get scale :domain))) (<= (min (aref d 0) (aref d 1)) 0 (max (aref d 0) (aref d 1))))
                 (eas-scale-apply scale 0))))
     (or z (if (eq channel :y) (+ (aref bounds 1) (aref bounds 3)) (aref bounds 0)))))
 
 (defun eas-marks--secondary (unit scales channel row)
-  "Position of CHANNEL's partner (:x2/:y2, stack start or bin end) for ROW."
+  "Position of CHANNEL's partner (:x2/:y2, stack start or bin end) for ROW.
+UNIT is drawn with SCALES."
   (let* ((enc (plist-get unit :encoding))
          (def (plist-get enc channel))
          (scale (plist-get scales channel))
@@ -216,7 +222,9 @@ Returns the plot centre when the channel is absent."
       v)))
 
 (defun eas-marks--point-row (unit scales bounds metrics)
-  "Row builder (ROW I -> item) for point, circle, square and text marks."
+  "Return the row builder (ROW I -> item) for point-like UNIT.
+Point, circle, square and text marks are drawn with SCALES inside
+BOUNDS under METRICS."
   (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type))
          ;; Circles and squares are always filled: one styled unit, not one per row.
          (styled (if (member type '("circle" "square"))
@@ -293,6 +301,7 @@ Returns the plot centre when the channel is absent."
 
 (defun eas-marks--corners (unit horizontal)
   "Function ROW -> corner radii [TL TR BR BL] of UNIT's bar for ROW, or nil.
+HORIZONTAL is non-nil for a bar along x.
 Vega-Lite rounds a stack's end by cornerRadiusEnd and both ends of a
 ranged (x2/y2) bar."
   (let* ((mark (plist-get unit :mark)) (enc (plist-get unit :encoding))
@@ -324,7 +333,8 @@ ranged (x2/y2) bar."
                (let ((b (plist-get def :bin))) (and b (not (eq b :false)))))))
 
 (defun eas-marks--bar-row (unit scales bounds metrics)
-  "Row builder (ROW I -> item) for bar and rect marks."
+  "Return the row builder (ROW I -> item) for bar or rect UNIT.
+It draws with SCALES inside BOUNDS under METRICS."
   (let* ((mark (plist-get unit :mark))
          (xs (plist-get scales :x)) (ys (plist-get scales :y))
          (xband (member (plist-get xs :type) '("band" "point")))
@@ -409,7 +419,8 @@ ranged (x2/y2) bar."
                      (eas-marks--extras unit row))))))))
 
 (defun eas-marks--rule-row (unit scales bounds)
-  "Row builder (ROW I -> item) for rule and tick marks."
+  "Return the row builder (ROW I -> item) for rule or tick UNIT.
+It draws with SCALES inside BOUNDS."
   (let* ((enc (plist-get unit :encoding)) (mark (plist-get unit :mark))
          (tick (equal (plist-get mark :type) "tick"))
          (x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3)))
@@ -472,6 +483,7 @@ ranged (x2/y2) bar."
 
 (defun eas-marks--series-run (unit scales run mode area max-points sorted)
   "The item drawing RUN, one unbroken stretch of a series in UNIT.
+SCALES are the view's; MODE and AREA shape the path.
 RUN holds (X Y I BASE KEY VALID) vertices; LTTB thins them above
 MAX-POINTS when SORTED along x."
   (let* ((mark (plist-get unit :mark))
@@ -506,7 +518,8 @@ MAX-POINTS when SORTED along x."
             (when (> (length pts) (length kept)) (list :decimated (length pts))))))
 
 (defun eas-marks--series-items (unit scales bounds max-points)
-  "Items for line and area marks: one item per unbroken run of each series.
+  "Return the line or area items of UNIT drawn with SCALES inside BOUNDS.
+There is one item per unbroken run of each series.
 Vertices follow `eas-marks-path-sort-key'; invalid positions break the
 path (eas-marks-path.el); LTTB thins x-ordered runs above MAX-POINTS."
   (let* ((mark (plist-get unit :mark)) (area (equal (plist-get mark :type) "area"))
@@ -539,12 +552,14 @@ path (eas-marks-path.el); LTTB thins x-ordered runs above MAX-POINTS."
 
 
 (defun eas-marks-items (unit scales bounds metrics)
-  "Return the scene items for UNIT drawn with SCALES inside BOUNDS."
+  "Return the scene items for UNIT drawn with SCALES inside BOUNDS.
+METRICS are the layout's."
   (let ((eas-marks--cache (make-hash-table :test 'equal)))
     (eas-marks--items unit scales bounds metrics)))
 
 (defun eas-marks-row-fn (unit scales bounds metrics)
-  "Function (ROW I) -> item for UNIT's per-row marks, or nil for series.
+  "Return the function (ROW I) -> item for UNIT, or nil for series.
+It draws UNIT's per-row items with SCALES inside BOUNDS under METRICS.
 Call it inside `eas-marks-with-cache'."
   (pcase (plist-get (plist-get unit :mark) :type)
     ((or "point" "circle" "square" "text") (eas-marks--point-row unit scales bounds metrics))
@@ -560,7 +575,8 @@ Call it inside `eas-marks-with-cache'."
 (declare-function eas-polar-items "eas-polar")
 
 (defun eas-marks--items (unit scales bounds metrics)
-  "Dispatch UNIT's mark type to its item builder."
+  "Dispatch UNIT's mark type to its item builder.
+The builder draws with SCALES inside BOUNDS under METRICS."
   (pcase (plist-get (plist-get unit :mark) :type)
     ((guard (and (fboundp 'eas-polar-unit-p) (eas-polar-unit-p unit)))
      (eas-polar-items unit scales bounds metrics))

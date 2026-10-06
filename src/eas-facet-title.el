@@ -123,7 +123,8 @@ HEADER's :value is the cell's facet value."
                          (list :x (- lx gap) :y (/ (+ lo hi) 2.0) :angle -90 :align "center" :baseline "bottom")))))))))
 
 (defun eas-facet-title-add (views groups metrics)
-  "VIEWS (of GROUPS, in order) with each facet's title drawn by its first cell."
+  "VIEWS (of GROUPS, in order) with each facet's title drawn by its first cell.
+METRICS gives the target."
   (if (not (seq-some (lambda (g) (plist-get (plist-get g :header) :title)) groups)) views
     (let ((pairs (cl-mapcar #'cons views groups)))
       (mapcar (lambda (p)

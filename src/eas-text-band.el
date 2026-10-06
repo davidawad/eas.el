@@ -21,24 +21,25 @@
 (require 'eas-glyph)
 
 (defun eas-text-band--tiled-p (segs y0 y1 slack)
-  "Non-nil when SEGS ((TOP BOTTOM ...) ...) cover Y0..Y1 with no gap wider
-than SLACK pixels: slices of series sampled at different x meet
-unevenly, and a gap under a quarter cell reads as a seam, not a hole."
+  "Non-nil when SEGS ((TOP BOTTOM ...) ...) cover Y0..Y1 without a hole.
+No gap may be wider than SLACK pixels: slices of series sampled at
+different x meet unevenly, and a gap under a quarter cell reads as a
+seam, not a hole."
   (let ((reach y0))
     (dolist (s (sort (copy-sequence segs) (lambda (a b) (< (car a) (car b)))))
       (when (<= (car s) (+ reach slack)) (setq reach (max reach (cadr s)))))
     (>= reach (- y1 slack))))
 
 (defun eas-text-band--at (segs y slack)
-  "The last drawn of SEGS covering pixel row Y, else the nearest within
-SLACK pixels (SEGS are newest first)."
+  "Return the last drawn of SEGS covering pixel row Y.
+Else return the nearest within SLACK pixels (SEGS are newest first)."
   (or (seq-find (lambda (s) (and (<= (car s) y) (< y (cadr s)))) segs)
       (car (sort (seq-filter (lambda (s) (< (max (- (car s) y) (- y (cadr s))) slack)) segs)
                  (lambda (a b) (< (max (- (car a) y) (- y (cadr a))) (max (- (car b) y) (- y (cadr b)))))))))
 
 (defun eas-text-band-resolve (segs y0 ch)
-  "Glyph for a cell from Y0, CH pixels high, that the area slices SEGS
-share; nil when they do not tile it.  SEGS are (TOP BOTTOM PROPS),
+  "Glyph for a cell from Y0, CH pixels high, that area slices SEGS share.
+Nil when they do not tile it.  SEGS are (TOP BOTTOM PROPS),
 newest first, and may reach past the cell.
 Return (CHAR PROPS UNDER), UNDER the props whose color backs CHAR, or nil."
   (let ((y1 (+ y0 ch)) (slack (/ ch 4.0)))

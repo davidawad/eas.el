@@ -32,7 +32,7 @@
        (eas-time-band-unit def)))
 
 (defun eas-time-band-step (unit ms n)
-  "MS moved N steps of time UNIT's finest component."
+  "Return MS moved by N times the step of time UNIT's finest component."
   (let* ((parts (eas-time-unit-components unit))
          (eas-time-zone (unless (string-prefix-p "utc" unit) eas-time-zone))
          (f (eas-time-fields ms))

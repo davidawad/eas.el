@@ -52,7 +52,8 @@ data is not inline is left alone and reported unsupported.  While
 ;;; Headers
 
 (defun eas-facet-header-extent (header metrics)
-  "Space HEADER (and its facet title) needs beside its plot: (SIDE . PIXELS)."
+  "Space HEADER (and its facet title) needs beside its plot: (SIDE . PIXELS).
+METRICS gives the target."
   (let ((e (eas-facet--label-extent header metrics)))
     (cons (car e) (+ (cdr e) (eas-facet-title-band header metrics)))))
 
@@ -65,7 +66,7 @@ data is not inline is left alone and reported unsupported.  While
   (or (plist-get header :padding) eas-facet-header-padding))
 
 (defun eas-facet--label-extent (header metrics)
-  "Space HEADER's label needs beside its plot: (SIDE . PIXELS)."
+  "Space HEADER's label needs beside its plot under METRICS: (SIDE . PIXELS)."
   (cond
    ((eas-layout-text-p metrics)
     (cons :top (plist-get metrics :label-size)))
@@ -80,7 +81,7 @@ data is not inline is left alone and reported unsupported.  While
 (defun eas-facet-header-place (header bounds inset metrics)
   "HEADER placed beside plot BOUNDS [X Y W H], outside INSET pixels of axes.
 Return (:text :x :y :angle :align :baseline :fontSize) and the label's
-own :color :fontWeight :font :fontStyle."
+own :color :fontWeight :font :fontStyle.  METRICS gives the target."
   (let* ((top (equal (plist-get header :orient) "top"))
          (x0 (- (aref bounds 0) (if top 0 inset))) (y0 (- (aref bounds 1) (if top inset 0)))
          (w (aref bounds 2)) (h (aref bounds 3))

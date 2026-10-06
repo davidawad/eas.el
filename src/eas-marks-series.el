@@ -21,8 +21,8 @@
   "Channels whose field splits a line, area or trail into series.")
 
 (defun eas-marks--series-defs (unit)
-  "The field defs splitting a line/area/trail UNIT into series, one per
-channel (nil where the channel does not split).  Vega-Lite's
+  "Return the field defs splitting a line/area/trail UNIT into series.
+There is one per channel (nil where the channel does not split).  Vega-Lite's
 pathGroupingFields: any unaggregated field on these channels splits paths,
 whatever its type; size does too, except for trails (fc-qx1.41)."
   (let ((enc (plist-get unit :encoding)))

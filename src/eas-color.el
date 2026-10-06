@@ -32,7 +32,7 @@
   (let ((x (/ x 255.0))) (if (<= x 0.04045) (/ x 12.92) (expt (/ (+ x 0.055) 1.055) 2.4))))
 
 (defun eas-color--lrgb2rgb (x)
-  "sRGB channel (0-255) of linear X."
+  "Return the sRGB channel (0-255) of linear X."
   (* 255 (if (<= x 0.0031308) (* 12.92 x) (- (* 1.055 (expt x (/ 1 2.4))) 0.055))))
 
 (defun eas-color--xyz2lab (tt)
@@ -40,7 +40,7 @@
   (if (> tt eas-color--t3) (expt tt (/ 1.0 3)) (+ (/ tt eas-color--t2) eas-color--t0)))
 
 (defun eas-color--lab2xyz (tt)
-  "Inverse of `eas-color--xyz2lab'."
+  "Inverse of `eas-color--xyz2lab', at TT."
   (if (> tt eas-color--t1) (* tt tt tt) (* eas-color--t2 (- tt eas-color--t0))))
 
 (defvar eas-color--hcl-cache (make-hash-table :test 'equal)
@@ -81,7 +81,7 @@
                          (eas-color--lrgb2rgb (+ (* 0.0719453 x) (* -0.2289914 y) (* 1.4052427 z))))))))
 
 (defun eas-color--lerp (a b tt &optional hue)
-  "d3's interpolation from A to B at TT; HUE takes the shorter way round."
+  "Interpolate from A to B at TT as d3 does; HUE takes the shorter way round."
   (let ((d (- b a)))
     (cond ((isnan (float a)) b)
           ((or (isnan (float d)) (zerop d)) a)
@@ -89,12 +89,13 @@
           (t (+ a (* tt d))))))
 
 (defun eas-color-interpolate-hcl (from to tt)
-  "d3.interpolateHcl(FROM, TO)(TT) for hex colors."
+  "Return d3.interpolateHcl(FROM, TO)(TT) for hex colors."
   (pcase-let ((`(,h0 ,c0 ,l0) (eas-color-hcl from)) (`(,h1 ,c1 ,l1) (eas-color-hcl to)))
     (eas-color-hcl-hex (eas-color--lerp h0 h1 tt t) (eas-color--lerp c0 c1 tt) (eas-color--lerp l0 l1 tt))))
 
 (defun eas-color-piecewise-hcl (colors tt)
-  "d3.piecewise(interpolateHcl, COLORS)(TT): COLORS a vector of hex strings."
+  "Return d3.piecewise(interpolateHcl, COLORS)(TT).
+COLORS is a vector of hex strings."
   (let* ((n (1- (length colors)))
          (i (max 0 (min (1- n) (floor (* tt n))))))
     (eas-color-interpolate-hcl (aref colors i) (aref colors (1+ i)) (- (* tt n) i))))

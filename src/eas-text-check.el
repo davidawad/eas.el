@@ -43,8 +43,8 @@
     (cons (aref cell 0) (aref cell 1))))
 
 (defun eas-text-check--span (scene x y text align)
-  "(ROW COL0 . COL1) a one-line TEXT anchored at X Y with ALIGN occupies,
-as `eas-text--string-1' places it."
+  "Return the (ROW COL0 . COL1) a one-line TEXT at X Y with ALIGN occupies.
+The anchor and cells are as `eas-text--string-1' places TEXT on SCENE."
   (let ((cell (eas-text-check--cell scene)) (size (plist-get scene :size)))
     (eas-text-string-span (max 1 (round (/ (float (plist-get size :w)) (car cell))))
                           (car cell) (cdr cell) x y text align
@@ -55,8 +55,8 @@ as `eas-text--string-1' places it."
   (if (< -1 row (length lines)) (aref lines row) ""))
 
 (defun eas-text-check--shown-p (scene lines x y text align)
-  "Non-nil when TEXT (its first line) drawn at X Y with ALIGN shows in LINES,
-at its own columns."
+  "Return non-nil when TEXT drawn at X Y with ALIGN appears in LINES.
+Only its first line counts, at its own columns on SCENE's cell grid."
   (let* ((text (car (split-string text "\n")))
          (span (eas-text-check--span scene x y text align))
          (line (eas-text-check--line lines (car span))))
@@ -99,7 +99,7 @@ at its own columns."
          (<= (aref bounds 1) (+ (aref box 3) 0.5)) (<= (aref box 1) (+ (aref bounds 1) (aref bounds 3) 0.5)))))
 
 (defun eas-text-check--zero (scale)
-  "Pixel of SCALE's zero when SCALE is linear and its domain holds 0, else nil."
+  "Return the pixel of SCALE's zero if SCALE is linear and spans 0, else nil."
   (let ((d (plist-get scale :domain)))
     (when (and (equal (plist-get scale :type) "linear") (vectorp d) (= (length d) 2)
                (numberp (aref d 0)) (numberp (aref d 1))
@@ -124,7 +124,8 @@ at its own columns."
                   (plist-get mark :id) i (plist-get view :id)))))))
 
 (defun eas-text-check--baselines (view cells cw ch)
-  "Baseline problems of VIEW's bars and areas, given CELLS (key -> cells)."
+  "Baseline problems of VIEW's bars and areas, given CELLS (key -> cells).
+CW and CH are the cell width and height in pixels."
   (let* ((scales (plist-get view :scales)) (out nil)
          (yz (eas-text-check--zero (plist-get scales :y))))
     (seq-doseq (mark (plist-get view :marks))
@@ -226,8 +227,9 @@ labels shows at least one; no two shown labels share a cell."
            append (gethash (list (plist-get view :id) (plist-get mark :id) i) cells)))
 
 (defun eas-text-check--covered-p (view mark cells)
-  "Non-nil when marks drawn after MARK in VIEW cover each of its cells:
-painter's order hid it, as SVG would (a halo under its line)."
+  "Return non-nil when what VIEW draws after MARK covers each of its cells.
+Painter's order hid it, as SVG would (a halo under its line).  CELLS
+maps keys to cells."
   (let* ((later (cdr (memq mark (append (plist-get view :marks) nil))))
          (over (make-hash-table :test 'equal)))
     (dolist (m later) (dolist (c (eas-text-check--mark-cells view m cells)) (puthash c t over)))
@@ -264,7 +266,8 @@ painter's order hid it, as SVG would (a halo under its line)."
     (nreverse out)))
 
 (defun eas-text-check (scene &optional cols)
-  "Problems (strings) of SCENE's text rendering; nil when it holds.
+  "Return the problems (strings) of SCENE's text rendering; nil if none.
+
 SCENE must be compiled for the text target.  COLS, when non-nil, is the
 width SCENE was compiled to fit: no line may be wider."
   (let* ((cells (make-hash-table :test 'equal))

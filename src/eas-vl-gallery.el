@@ -78,8 +78,8 @@
   "A vega-datasets CDN URL; group 1 is the file name.")
 
 (defun eas-vl-gallery--mirror (url)
-  "URL, or the file test/vl-examples/data/ mirrors when it is a
-vega-datasets CDN URL (the gallery reads no network)."
+  "Return URL, or its test/vl-examples/data/ mirror for a vega-datasets URL.
+The gallery reads no network."
   (if (string-match eas-vl-gallery--datasets-url url)
       (expand-file-name (concat "data/" (match-string 1 url)) eas-vl-gallery-directory)
     url))
@@ -139,8 +139,9 @@ vega-datasets CDN URL (the gallery reads no network)."
        (< (+ (aref a 1) 1) (+ (aref b 1) (aref b 3))) (< (+ (aref b 1) 1) (+ (aref a 1) (aref a 3)))))
 
 (defun eas-vl-gallery--legend-box (legend)
-  "Placed LEGEND's extent as [X Y W H]: its svg :box, else the text
-legend's column from its title to its last entry."
+  "Return placed LEGEND's extent as [X Y W H].
+Its svg :box, else the text legend's column from its title to its last
+entry."
   (if-let* ((b (plist-get legend :box)))
       (vector (aref b 0) (aref b 1) (- (aref b 2) (aref b 0)) (- (aref b 3) (aref b 1)))
     (let ((bottom (cl-loop for e across (plist-get legend :entries)
@@ -151,8 +152,10 @@ legend's column from its title to its last entry."
                 (- bottom (plist-get legend :y)))))))
 
 (defun eas-vl-gallery--rotated-box (metrics tk size angle)
-  "Tick TK's label box in the frame its labels are rotated into by ANGLE
-\(degrees): parallel rotated labels collide only when these boxes overlap."
+  "Return tick TK's label box in the frame its labels are rotated into.
+The frame is rotated by ANGLE (degrees); the label is measured with
+METRICS at SIZE.  Parallel rotated labels collide only when these boxes
+overlap."
   (let* ((x (plist-get tk :lx)) (y (plist-get tk :ly))
          (b (eas-layout-text-bounds metrics (plist-get tk :label) size x y (plist-get tk :align) (plist-get tk :baseline)))
          (a (degrees-to-radians angle))
@@ -190,9 +193,9 @@ Vega draws them, colliding or not: its labels are not a layout problem."
   "Legend orients that place a legend inside the plot.")
 
 (defun eas-vl-gallery-overlaps (scene)
-  "Layout problems in SCENE: views overlapping each other or a legend,
-views or legends leaving the canvas, axis labels colliding.  Return a
-list of strings (nil when clean)."
+  "Return the layout problems in SCENE as a list of strings (nil when clean).
+Views overlapping each other or a legend, views or legends leaving the
+canvas, axis labels colliding."
   (let* ((size (plist-get scene :size)) (w (plist-get size :w)) (h (plist-get size :h))
          (views (append (plist-get scene :views) nil))
          (boxes (mapcar (lambda (v) (cons (plist-get v :id) (plist-get v :bounds))) views))
@@ -226,8 +229,9 @@ list of strings (nil when clean)."
     (append (nreverse problems) (eas-vl-gallery--label-collisions scene))))
 
 (defun eas-vl-gallery-resize-problems (spec)
-  "Overlap problems of SPEC at every size in `eas-vl-gallery-sizes' and
-`eas-vl-gallery-text-sizes', each prefixed with the size."
+  "Return the overlap problems of SPEC at every gallery size.
+The sizes are `eas-vl-gallery-sizes' and `eas-vl-gallery-text-sizes';
+each problem is prefixed with the size."
   (eas-vl-gallery--native
    (let (out)
      (dolist (size eas-vl-gallery-sizes)
@@ -239,8 +243,9 @@ list of strings (nil when clean)."
      (nreverse out))))
 
 (defun eas-vl-gallery-ref-file (group name)
-  "The reference PNG of example NAME in GROUP: its status.json \"ref\",
-else bin/chart's ref/NAME.png, else its \"interim_ref\"."
+  "Return the reference PNG of example NAME in GROUP.
+Its status.json \"ref\", else bin/chart's ref/NAME.png, else its
+\"interim_ref\"."
   (let* ((dir (eas-vl-gallery-group-directory group))
          (bin-chart (expand-file-name (concat "ref/" name ".png") dir))
          (interim (eas-vl-gallery--entry-field group name :interim_ref)))
@@ -265,7 +270,8 @@ Signals NOT_FOUND without bin/chart."
   (plist-get (plist-get (eas-vl-gallery-status group) (eas-key name)) key))
 
 (defun eas-vl-gallery-mask (group name spec)
-  "Boxes of SPEC's native scene that NAME's status.json mask hides, or nil."
+  "Return boxes of SPEC's native scene that NAME's mask in GROUP hides, or nil.
+The mask is NAME's status.json entry field."
   (when-let* ((kind (eas-vl-gallery--entry-field group name :mask)))
     (eas-vl-gallery-mask-boxes kind (eas-vl-gallery--native (eas-compile spec)))))
 
@@ -274,7 +280,7 @@ Signals NOT_FOUND without bin/chart."
   (and (executable-find eas-chart-rsvg-program) (zlib-available-p)))
 
 (defun eas-vl-gallery-omit-marks (scene types)
-  "SCENE without its marks of TYPES (mark type strings)."
+  "Return SCENE with every mark whose type is in TYPES (strings) dropped."
   (if (null types) scene
     (plist-put (copy-sequence scene) :views
                (vconcat (mapcar (lambda (v) (plist-put (copy-sequence v) :marks
@@ -374,11 +380,11 @@ image comparison runs only where a rasterizer is available."
     problems))
 
 (defconst eas-vl-gallery-default-threshold 0.03
-  "Differing-pixel ratio a new example passes within, unless its status.json
-entry records another threshold with a reason.")
+  "Differing-pixel ratio a new example passes within.
+Unless its status.json entry records another threshold with a reason.")
 
 (defun eas-vl-gallery--verdict (r threshold)
-  "status.json fields for run result R judged at THRESHOLD."
+  "Return the status.json fields for run result R judged at THRESHOLD."
   (cond
    ((not (plist-get r :ok))
     (list :status "unsupported" :reason (plist-get (plist-get r :error) :message)))
@@ -399,8 +405,8 @@ entry records another threshold with a reason.")
               (list :threshold threshold))))))
 
 (defun eas-vl-gallery-write-status (group &optional names)
-  "Judge examples NAMES (default all) of GROUP against the references and
-record them in GROUP/status.json.  An existing entry keeps its
+  "Judge examples NAMES (default all) of GROUP against the references.
+Record them in GROUP/status.json.  An existing entry keeps its
 threshold, reason and oracle (ref, interim_ref, ref_build, mask) fields;
 the verdict, ratio and a generated reason are rewritten unless
 the entry has a \"note\" (a written reason, kept).  refOmits is kept too."

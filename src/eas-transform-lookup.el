@@ -35,7 +35,7 @@
     index))
 
 (defun eas-transform-lookup (tr rows env)
-  "Apply lookup transform TR to ROWS (ENV holds param values)."
+  "Apply lookup transform TR to ROWS; ENV gives the param values."
   (let* ((from (plist-get tr :from))
          (field (eas-key (plist-get tr :lookup)))
          (key (eas-key (plist-get from :key)))

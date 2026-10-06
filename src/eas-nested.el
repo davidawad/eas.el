@@ -49,7 +49,7 @@
                     (t nil))))))
 
 (defun eas-nested--fields (encoding)
-  "Nested field references ENCODING makes, as (KEY . PATH) pairs."
+  "Return the nested field references in ENCODING, as (KEY . PATH) pairs."
   (let (out)
     (cl-labels ((def (d)
                   (cond ((vectorp d) (seq-do #'def d))

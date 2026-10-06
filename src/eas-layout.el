@@ -85,12 +85,12 @@ Multi-line TEXT (lines split on newlines) is as wide as its widest line."
   (+ size 2))
 
 (defun eas-layout-text-extra-height (metrics text size)
-  "Height multi-line TEXT adds beyond its first line under METRICS."
+  "Height of multi-line TEXT beyond its first line at SIZE under METRICS."
   (let ((n (length (split-string (or text "") "\n"))))
     (* (1- n) (if (plist-get metrics :char-w) size (eas-layout-line-height size)))))
 
 (defun eas-layout-text-lift (baseline extra)
-  "How far multi-line text with EXTRA height moves up for BASELINE.
+  "Upward shift of multi-line text with EXTRA height for BASELINE.
 Lines grow downward from a top baseline, about the middle for a middle
 one, and upward from bottom and alphabetic baselines."
   (cond ((zerop extra) 0) ((equal baseline "top") 0) ((equal baseline "middle") (/ extra 2.0)) (t extra)))
@@ -108,7 +108,8 @@ one, and upward from bottom and alphabetic baselines."
 (defun eas-layout-text-bounds (metrics text size x y &optional align baseline angle weight)
   "Bounds [X1 Y1 X2 Y2] of TEXT drawn at X Y, as Vega bounds text.
 ALIGN is left/center/right, BASELINE top/middle/bottom/alphabetic and
-ANGLE degrees clockwise."
+ANGLE degrees clockwise.  SIZE and WEIGHT give the font, measured
+under METRICS."
   (let* ((w (eas-layout-text-width metrics text size weight))
          (extra (eas-layout-text-extra-height metrics text size))
          (dy (- (eas-layout-baseline-offset baseline size) (eas-layout--round (* 0.8 size))
@@ -137,7 +138,8 @@ ANGLE degrees clockwise."
 
 (defun eas-layout-truncate (metrics text size limit)
   "TEXT cut to fit LIMIT px at font SIZE with a trailing ellipsis.
-This is how Vega truncates labels past labelLimit."
+This is how Vega truncates labels past labelLimit.  METRICS measures
+the text."
   (if (or (not (numberp limit)) (<= limit 0) (<= (eas-layout-text-width metrics text size) limit)) text
     (let ((room (- limit (eas-layout-text-width metrics "\u2026" size))) (lo 0) (hi (length text)))
       (while (< lo hi)
@@ -170,14 +172,15 @@ bin/chart's empty (\"\") titles grow an axis by half its title padding
           (t "%b %d, %Y"))))
 
 (defun eas-layout--axis-config (config channel key)
-  "(VALUE) when CONFIG's axisX/axisY or axis sets KEY for CHANNEL, else nil.
+  "\(VALUE) when CONFIG's axisX/axisY or axis has KEY for CHANNEL, else nil.
 VALUE may be null."
   (or (let ((m (plist-member (eas-theme-get config (if (eq channel :x) :axisX :axisY)) key))) (and m (list (cadr m))))
       (let ((m (plist-member (eas-theme-get config :axis) key))) (and m (list (cadr m))))))
 
 (defun eas-layout-axis (channel def scale plot-size metrics)
   "Return the axis model for CHANNEL's DEF and SCALE, or nil when disabled.
-PLOT-SIZE is the plot extent along the axis."
+PLOT-SIZE is the plot extent along the axis.  METRICS supplies the
+config."
   (let ((axis (plist-get def :axis)) (config (plist-get metrics :config)))
     (unless (or (memq axis '(:null :false)) (null scale) (null def)
                 (eq (car (eas-layout--axis-config config channel :disable)) t))
@@ -287,14 +290,14 @@ PLOT-SIZE is the plot extent along the axis."
          def channel (plist-get metrics :config))))))
 
 (defun eas-layout--label-font (axis metrics)
-  "The label font family of AXIS: its own, else the config's."
+  "The label font family of AXIS: its own, else that of METRICS' config."
   (let ((style (plist-get axis :style)))
     (if (plist-member style :labelFont) (plist-get style :labelFont)
       (eas-theme-axis (plist-get metrics :config)
                       (if (member (plist-get axis :orient) '("bottom" "top")) :x :y) :labelFont))))
 
 (defun eas-layout-axis-label-extent (axis metrics)
-  "Thickness of AXIS's labels across the axis (text target)."
+  "Thickness of AXIS's labels across the axis under METRICS (text target)."
   (let* ((eas-font-family (eas-layout--label-font axis metrics))
          (widths (mapcar (lambda (tk) (eas-layout-text-width metrics (plist-get tk :label)
                                                               (plist-get metrics :label-size)))
@@ -316,7 +319,8 @@ In svg an axis with ticks false has none: Vega puts its labels at labelPadding."
       (plist-get metrics (if (equal (plist-get axis :orient) "bottom") :tick-bottom :tick-left))))
 
 (defun eas-layout-axis-extent (axis metrics)
-  "Space AXIS needs outside the plot in text: (SIDE . CELLS*PX) pairs."
+  "Space AXIS needs outside the plot in text under METRICS.
+The result is (SIDE . CELLS*PX) pairs."
   (let* ((labels (+ (eas-layout--tick axis metrics) (plist-get metrics :label-pad)
                     (eas-layout-axis-label-extent axis metrics)))
          (title (and (plist-get axis :title) (plist-get metrics :title-size)))
@@ -360,7 +364,8 @@ position order).  Returned in position order."
     (seq-filter (lambda (tk) (memq tk kept)) ticks)))
 
 (defun eas-layout--bottom-align (p x0 w flush angle)
-  "Label alignment of a bottom tick at P (Vega-Lite labelFlush when FLUSH)."
+  "Label alignment of a bottom tick at P on a plot from X0, W wide.
+FLUSH applies Vega-Lite labelFlush; ANGLE is the label angle."
   (cond ((eas-axis-pos-x-align angle nil))
         ((and flush (< (abs (- p x0)) 0.5)) "left")
         ((and flush (< (abs (- p (+ x0 w))) 0.5)) "right")
@@ -430,7 +435,8 @@ Overlapping labels drop their ticks too; lines sit at cell centres."
 (defun eas-layout-axis-place (axis scale bounds metrics)
   "Return AXIS with geometry for SCALE inside plot BOUNDS [x0 y0 w h].
 The svg result carries :bounds, Vega's axis bounds (ticks, visible
-labels, title) without the half-pixel translate of the drawn lines."
+labels, title) without the half-pixel translate of the drawn lines.
+METRICS gives the target."
   (eas-axis-pos-place
    axis scale bounds metrics
    (lambda (axis)
@@ -440,7 +446,7 @@ labels, title) without the half-pixel translate of the drawn lines."
          (eas-axis-extra-place (eas-layout--axis-place axis scale bounds metrics) scale metrics))))))
 
 (defun eas-layout--axis-place (axis scale bounds metrics)
-  "`eas-layout-axis-place' before the axis extras."
+  "`eas-layout-axis-place' of AXIS, SCALE, BOUNDS, METRICS before extras."
   (if (eas-layout-text-p metrics)
       (eas-layout-axis-place-text axis scale bounds metrics)
     (let* ((x0 (aref bounds 0)) (y0 (aref bounds 1)) (w (aref bounds 2)) (h (aref bounds 3))

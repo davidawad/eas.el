@@ -54,7 +54,7 @@
     (or (plist-get scale :bin-source) (plist-get scale :field))))
 
 (defun eas-params-point-fields (scene param)
-  "The fields a point selection PARAM stores in SCENE."
+  "Return the fields that point selection PARAM records in SCENE."
   (let ((def (plist-get param :def)))
     (cond ((plist-get def :fields) (append (plist-get def :fields) nil))
           ((plist-get def :encodings)
@@ -79,14 +79,15 @@
     (when values (list :type "point" :fields (vconcat fields) :values (vconcat values)))))
 
 (defun eas-params--same (a b)
-  "Equality for stored values: dates compare as instants."
+  "Return non-nil when stored values A and B are equal.
+Dates compare as instants."
   (or (equal a b)
       (and (numberp a) (numberp b) (= a b))
       (let ((ta (eas-time-parse a)) (tb (eas-time-parse b)))
         (and ta tb (stringp (if (stringp a) a b)) (= ta tb)))))
 
 (defun eas-params--number (v)
-  "V as a number for interval tests (dates become epoch ms)."
+  "Return V as a number for interval membership (dates become epoch ms)."
   (if (numberp v) v (eas-time-parse v)))
 
 (defun eas-params-contains (store row)

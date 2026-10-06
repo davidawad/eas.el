@@ -28,8 +28,9 @@
 (require 'eas-transform-domain)
 
 (defconst eas-geo-projections '("albersUsa" "albers" "conicEqualArea")
-  "Projection types this lowering draws.  The others (mercator, equirectangular,
-equalEarth) are drawn by eas-projection.el (fc-qx1.40), which runs at compile.")
+  "Projection types this lowering draws.
+The others (mercator, equirectangular, equalEarth) are drawn by
+eas-projection.el (fc-qx1.40), which runs at compile.")
 
 (defun eas-geo--rad (deg) "DEG in radians." (* deg (/ float-pi 180)))
 
@@ -38,7 +39,8 @@ equalEarth) are drawn by eas-projection.el (fc-qx1.40), which runs at compile.")
   (cond ((> lam float-pi) (- lam (* 2 float-pi))) ((< lam (- float-pi)) (+ lam (* 2 float-pi))) (t lam)))
 
 (defun eas-geo--conic-raw (p0 p1)
-  "d3's conicEqualAreaRaw for parallels P0 P1 (radians): (L P) -> (X . Y)."
+  "Return d3's conicEqualAreaRaw for parallels P0 P1 (radians).
+The result maps (L P) -> (X . Y)."
   (let* ((sy0 (sin p0)) (n (/ (+ sy0 (sin p1)) 2.0)))
     (if (< (abs n) 1e-6)
         (let ((cy0 (cos p0))) (lambda (l p) (cons (* l cy0) (/ (sin p) cy0))))
@@ -47,15 +49,16 @@ equalEarth) are drawn by eas-projection.el (fc-qx1.40), which runs at compile.")
                         (cons (* r (sin (* l n))) (- r0 (* r (cos (* l n)))))))))))
 
 (defun eas-geo--equal-earth (l p)
-  "d3's equalEarthRaw of L P (radians)."
+  "Return d3's equalEarthRaw of L P (radians)."
   (let* ((a1 1.340264) (a2 -0.081106) (a3 0.000893) (a4 0.003796) (m (/ (sqrt 3) 2))
          (th (asin (* m (sin p)))) (t2 (* th th)) (t6 (* t2 t2 t2)))
     (cons (/ (* l (cos th)) (* m (+ a1 (* 3 a2 t2) (* t6 (+ (* 7 a3) (* 9 a4 t2))))))
           (* th (+ a1 (* a2 t2) (* t6 (+ a3 (* a4 t2))))))))
 
 (defun eas-geo--sub (raw rotate center scale tx ty)
-  "A d3 projection: RAW rotated by ROTATE degrees of longitude, CENTER (lon
-lat, rotated frame) at TX TY, SCALE.  Return a function (LON LAT) -> (X . Y) px."
+  "Return a d3 projection, a function (LON LAT) -> (X . Y) px.
+RAW rotated by ROTATE degrees of longitude, CENTER (lon lat, rotated
+frame) at TX TY, SCALE."
   (let* ((c (funcall raw (eas-geo--rad (aref center 0)) (eas-geo--rad (aref center 1))))
          (dl (eas-geo--rad rotate)))
     (lambda (lon lat)
@@ -63,7 +66,8 @@ lat, rotated frame) at TX TY, SCALE.  Return a function (LON LAT) -> (X . Y) px.
         (cons (+ tx (* scale (- (car p) (car c)))) (- ty (* scale (- (cdr p) (cdr c)))))))))
 
 (defun eas-geo--albers-usa ()
-  "d3's geoAlbersUsa at scale 1, translate 0: (LON LAT) -> (X . Y) or nil."
+  "Return d3's geoAlbersUsa at scale 1, translate 0.
+The result maps (LON LAT) -> (X . Y) or nil."
   (let* ((e 1e-6)
          (lower (eas-geo--sub (eas-geo--conic-raw (eas-geo--rad 29.5) (eas-geo--rad 45.5)) 96 [-0.6 38.7] 1 0 0))
          (alaska (eas-geo--sub (eas-geo--conic-raw (eas-geo--rad 55) (eas-geo--rad 65)) 154 [-2 58.5] 0.35 -0.307 0.201))
@@ -77,8 +81,9 @@ lat, rotated frame) at TX TY, SCALE.  Return a function (LON LAT) -> (X . Y) px.
                when (and (<= x0 (car p) x1) (<= y0 (cdr p) y1)) return p))))
 
 (defun eas-geo-projection (projection)
-  "Unit-scale forward function (LON LAT) -> (X . Y) or nil of PROJECTION,
-a Vega-Lite projection object; nil for a type not drawn natively."
+  "Return the unit-scale forward function of PROJECTION.
+PROJECTION is a Vega-Lite projection object; the function maps
+\(LON LAT) -> (X . Y) or nil.  Return nil for a type not drawn natively."
   (let* ((type (or (plist-get projection :type) "equalEarth"))
          (rot (let ((r (plist-get projection :rotate))) (if (vectorp r) (aref r 0) 0)))
          (par (plist-get projection :parallels)))
@@ -164,8 +169,8 @@ alone (and reported unsupported).  Export keeps the projection."
           out)))))
 
 (defun eas-geo-features (spec &optional path)
-  "Features of the projected units lowered in SPEC (at PATH): the
-projection type, which check and supported.json see."
+  "Return features of the projected units lowered in SPEC (at PATH).
+The projection type, which check and supported.json see."
   (let ((path (or path "")) out)
     (seq-doseq (tr (plist-get spec :transform))
       (when (equal (plist-get tr :x-eas:transform) "project")

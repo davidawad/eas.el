@@ -54,7 +54,7 @@
   (expand-file-name (concat name (or ext ".vl.json")) (eas-vl-gallery-custom-directory group)))
 
 (defun eas-vl-gallery-custom-ref (group name)
-  "bin/chart's reference PNG for customization spec NAME of GROUP."
+  "Return bin/chart's reference PNG for customization spec NAME of GROUP."
   (expand-file-name (concat "ref/" name ".png") (eas-vl-gallery-custom-directory group)))
 
 (defun eas-vl-gallery-custom-spec (group name)
@@ -98,8 +98,10 @@ Return (:status pass|fail|unverified :detail D [:ratio R])."
             (delete-file mine)))))))
 
 (defun eas-vl-gallery-custom-check (group name)
-  "Problems of customization spec NAME of GROUP, as strings (nil when it
-holds).  An image that cannot be verified here is no problem."
+  "Return the problems of customization spec NAME of GROUP, as strings.
+Return nil when there are none.  An image that cannot be verified here
+is no problem."
+
   (condition-case err
       (let* ((spec (eas-vl-gallery-custom-spec group name))
              (findings (eas-vl-gallery-custom--findings spec))

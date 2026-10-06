@@ -42,13 +42,15 @@
       (+ (aref sorted i) (* (- h i) (- (aref sorted (1+ i)) (aref sorted i)))))))
 
 (defun eas-scale-discretize--count (type sp config)
-  "How many outputs a scale of TYPE with scale props SP has by default."
+  "How many outputs a scale of TYPE with scale props SP has by default.
+CONFIG may set the quantile and quantize counts."
   (pcase type
     ("threshold" (1+ (length (plist-get sp :domain))))
     (_ (or (plist-get (plist-get config :scale) (if (equal type "quantile") :quantileCount :quantizeCount)) 4))))
 
 (defun eas-scale-discretize--colors (type sp config)
-  "Color range of a discretizing scale of TYPE with scale props SP."
+  "Color range of a discretizing scale of TYPE with scale props SP.
+CONFIG supplies the default ramp."
   (let ((n (if (equal type "threshold") (1+ (length (plist-get sp :domain))) 5))
         (ramp (plist-get (plist-get config :range) :ramp)))
     (cond ((vectorp (plist-get sp :range)) (plist-get sp :range))
@@ -102,8 +104,9 @@ the mark, for the size range's ends."
 ;;; Legends
 
 (defun eas-scale-discretize-merge-p (color-def size-def size-scale)
-  "Non-nil when a discretized SIZE-SCALE (of SIZE-DEF) joins the legend of
-COLOR-DEF: both read the same field and the color scale discretizes too."
+  "Return non-nil when SIZE-SCALE of SIZE-DEF joins COLOR-DEF's legend.
+That is when SIZE-SCALE discretizes, both read the same field and the
+color scale discretizes too."
   (and color-def size-def (member (plist-get size-scale :type) eas-scale-discretize-types)
        (eas-scale-discretize-p color-def)
        (equal (plist-get color-def :field) (plist-get size-def :field))))
@@ -132,9 +135,10 @@ quantile's by its closest quantiles, a threshold's as axis ticks."
       (lambda (v) (eas-format-number (format ",.%df" digits) v)))))
 
 (defun eas-scale-discretize-entries (scale fmt color-of size-of)
-  "Legend entries of discretizing SCALE, one per bucket, as plists
-\(:value :label :color :size).  FMT is the legend's number format; COLOR-OF
-and SIZE-OF map a bucket's value to its symbol's color and area (or nil)."
+  "Return the legend entries of discretizing SCALE, one per bucket.
+Each is a plist (:value :label :color :size).  FMT is the legend's
+number format; COLOR-OF and SIZE-OF map a bucket's value to its
+symbol's color and area (or nil)."
   (let* ((th (append (plist-get scale :thresholds) nil))
          (f (eas-scale-discretize--formatter scale fmt))
          (values (cons -1.0e+INF th)))
@@ -152,9 +156,11 @@ and SIZE-OF map a bucket's value to its symbol's color and area (or nil)."
                                 (when size-of (list :size (funcall size-of probe)))))))))
 
 (defun eas-scale-discretize-gradient (scale fmt)
-  "Vega's discrete gradient legend of discretizing color SCALE: the bar's
-value extent, its colors sampled along it and a label per threshold, as
-\(:domain [LO HI] :stops COLORS :entries ENTRIES).  FMT is the legend's
+  "Return Vega's discrete gradient legend of discretizing color SCALE.
+It gives the bar's value extent, its colors sampled along it and a
+label per threshold, as (:domain [LO HI] :stops COLORS :entries
+ENTRIES).  FMT is the legend's
+
 number format.  A threshold scale's extent is its thresholds widened by
 their mean gap on each side (Vega's labelFraction)."
   (let* ((type (plist-get scale :type)) (th (plist-get scale :thresholds))

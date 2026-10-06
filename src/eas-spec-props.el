@@ -142,8 +142,9 @@ An enumerated property is honored for the VALUEs its entry lists."
                       (eas-spec-props--object 'config (list key value) "/config"))))))
 
 (defun eas-spec-props-findings (spec)
-  "UNSUPPORTED_FEATURE findings for the style properties of parsed SPEC
-that eas does not draw, each with :property t and its JSON path."
+  "Return UNSUPPORTED_FEATURE findings for parsed SPEC's undrawn styles.
+One per style property eas does not draw, each with :property t and its
+JSON path."
   (append (eas-spec-props--view spec "") (eas-spec-props--config (plist-get spec :config))))
 
 ;;; The audit
@@ -169,20 +170,21 @@ that eas does not draw, each with :property t and its JSON path."
      (_ '(:x (:field "i" :type "quantitative") :y (:field "b" :type "quantitative"))))))
 
 (defun eas-spec-props--extra-encodings (type)
-  "More base encodings for mark TYPE, where a property only shows in
-another context: a bar's binSpacing between bins, a tick's bandSize
-on continuous scales."
+  "Return more base encodings for mark TYPE.
+For where a property only shows in another context: a bar's binSpacing
+between bins, a tick's bandSize on continuous scales."
   (pcase type
     ("bar" (list '(:x (:field "b" :bin t) :y (:aggregate "count"))))
     ("tick" (list '(:x (:field "i" :type "quantitative") :y (:field "b" :type "quantitative"))))))
 
 (defun eas-spec-props--mark (type)
-  "The base mark object of TYPE (text marks draw a constant label)."
+  "Return the base mark object of TYPE.
+Text marks draw a constant label."
   (if (equal type "text") (list :type type :text "label") (list :type type)))
 
 (defun eas-spec-props--with (plist entry &optional probe)
-  "PLIST (an object or nil) with ENTRY's context and, with PROBE ((VALUE)),
-ENTRY's key set to VALUE."
+  "Return PLIST (an object or nil) with ENTRY's context.
+With PROBE ((VALUE)), ENTRY's key is also set to VALUE."
   (let ((out (copy-sequence (and (eas-object-p plist) plist))))
     (cl-loop for (k v) on (nth 2 entry) by #'cddr do (setq out (plist-put out (eas-key (symbol-name k)) v)))
     (when probe
@@ -198,7 +200,8 @@ ENTRY's key set to VALUE."
             (when config (list :config config)))))
 
 (defun eas-spec-props--colored (field type key obj &optional config)
-  "A point chart colored by FIELD of TYPE whose color carries KEY: OBJ."
+  "Return a point chart colored by FIELD of TYPE whose color carries KEY: OBJ.
+CONFIG, when non-nil, is the chart's config."
   (append (list :data (eas-spec-props--data) :mark "point"
                 :encoding (append (eas-spec-props--encoding "point")
                                   (list :color (append (list :field field :type type) (when key (list key obj))))))
@@ -218,8 +221,8 @@ ENTRY's key set to VALUE."
                 (when config (list :config config)))))
 
 (defun eas-spec-props--block (key obj)
-  "A config holding OBJ as block KEY, or nil when OBJ is empty (an empty
-block would replace the theme's)."
+  "Return a config holding OBJ as block KEY, or nil when OBJ is empty.
+An empty block would replace the theme's."
   (and obj (list key obj)))
 
 (defun eas-spec-props--charts (scope entry probe)
@@ -296,7 +299,8 @@ block would replace the theme's)."
           pic))))
 
 (defun eas-spec-props--effect-p (scope entry probe)
-  "Non-nil when PROBE ((VALUE)) of ENTRY changes what a SCOPE base chart draws."
+  "Return non-nil when PROBE ((VALUE)) of ENTRY alters a SCOPE base chart.
+That is, when it changes what the chart draws."
   (let ((eas-spec-supported-function nil))
     (cl-loop for base in (eas-spec-props--charts scope entry nil)
              for probed in (eas-spec-props--charts scope entry probe)
@@ -316,8 +320,9 @@ for an enumeration honored in part, or nil."
       (_ (and (eas-spec-props--effect-p scope entry (list probe)) (car entry))))))
 
 (defun eas-spec-props-audit (&optional scopes)
-  "The honored list as the engine stands: alist (SCOPE . KEYS) of the
-properties whose probe changes the picture.  SCOPES defaults to
+  "Return the honored list as the engine stands.
+An alist (SCOPE . KEYS) of the properties whose probe changes the
+picture.  SCOPES defaults to
 `eas-spec-props-scopes'.  Inert properties are skipped."
   (let ((eas-spec-props--pictures (make-hash-table :test 'equal)))
     (mapcar (lambda (scope)

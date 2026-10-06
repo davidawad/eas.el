@@ -22,10 +22,10 @@
 (defconst eas-curve-modes (append '("monotone" "linear-closed") eas-curve-extra-modes)
   "Interpolation modes `eas-curve-apply' draws.")
 
-(defun eas-curve--sign (x) "d3's sign: -1 below zero, else 1." (if (< x 0) -1 1))
+(defun eas-curve--sign (x) "The sign of X as d3 takes it: -1 below zero, else 1." (if (< x 0) -1 1))
 
 (defun eas-curve--slope3 (p0 p1 p2)
-  "d3 monotoneX tangent at P1 between neighbours P0 and P2."
+  "The d3 monotoneX tangent at P1 between neighbours P0 and P2."
   (let* ((h0 (- (car p1) (car p0))) (h1 (- (car p2) (car p1)))
          (s0 (if (/= h0 0) (/ (- (cadr p1) (cadr p0)) (float h0)) 0.0))
          (s1 (if (/= h1 0) (/ (- (cadr p2) (cadr p1)) (float h1)) 0.0))
@@ -34,7 +34,7 @@
        (min (abs s0) (abs s1) (* 0.5 (abs p))))))
 
 (defun eas-curve--slope2 (p0 p1 tangent)
-  "d3 monotoneX end tangent on P0..P1 given the neighbouring TANGENT."
+  "The d3 monotoneX end tangent on P0..P1 given the neighbouring TANGENT."
   (let ((h (- (car p1) (car p0))))
     (if (/= h 0) (/ (- (/ (* 3 (- (cadr p1) (cadr p0))) (float h)) tangent) 2) tangent)))
 

@@ -29,16 +29,16 @@
 (require 'eas-color-names)
 
 (defcustom eas-text-background-mode nil
-  "Background the text renderer draws for: `light', `dark' or nil (the
-selected frame's `background-mode')."
+  "Background the text renderer draws for: `light', `dark' or nil.
+nil follows the selected frame's `background-mode'."
   :type '(choice (const :tag "From the frame" nil) (const light) (const dark))
   :group 'eas)
 
 (defconst eas-text-ink-fallbacks
   '((light :background "#ffffff" :foreground "#000000")
     (dark :background "#282828" :foreground "#ebdbb2"))
-  "Background and ink per mode when the default face has no real colors
-\(batch, or a terminal's own unspecified colors).")
+  "Background and ink per mode when the default face has no real colors.
+That is in batch, or with a terminal's own unspecified colors.")
 
 (defconst eas-text-ink-min-contrast 3.0
   "Least WCAG contrast ratio a text mark's color keeps against the background.")
@@ -135,8 +135,9 @@ color names are returned as they are."
                    eas-text-ink--memo)))))
 
 (defun eas-text-ink-shade (&optional mode)
-  "Background of brushed cells for MODE: a quarter of the way from the
-background to the ink, so glyphs on it stay readable in either mode."
+  "Return the background of brushed cells for MODE.
+A quarter of the way from the background to the ink, so glyphs on it
+stay readable in either mode."
   (let* ((colors (if (and eas-text-ink--colors (null mode)) eas-text-ink--colors
                    (cons (eas-text-ink-background mode) (eas-text-ink-foreground mode))))
          (bg (eas-text-ink--rgb (car colors))) (ink (eas-text-ink--rgb (cdr colors))))

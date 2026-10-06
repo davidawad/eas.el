@@ -18,8 +18,9 @@
 (require 'eas-color-names)
 
 (defun eas-text-ramp-color (stops tt)
-  "The color at TT (0..1) of a linear RGB gradient through STOPS, as SVG
-interpolates its <stop>s.  Unparsable stops are returned as they are."
+  "Return the color at TT (0..1) of a linear RGB gradient through STOPS.
+It is interpolated as SVG interpolates its <stop>s.  Unparsable
+stops are returned as they are."
   (let* ((n (length stops)) (pos (* (max 0.0 (min 1.0 tt)) (max 0 (1- n))))
          (i (min (max 0 (1- (1- n))) (floor pos)))
          (a (aref stops i)) (b (aref stops (min (1- n) (1+ i)))))
@@ -30,8 +31,9 @@ interpolates its <stop>s.  Unparsable stops are returned as they are."
                           (eas-color--hex-rgb (eas-color-hex a)) (eas-color--hex-rgb (eas-color-hex b))))))))
 
 (defun eas-text-ramp-cells (bar stops cw ch &optional horizontal)
-  "Cells of gradient BAR [X Y W H] over STOPS on a grid of CW x CH pixel
-cells: (COL ROW CHAR FOREGROUND BACKGROUND) each.  Vertical bars run
+  "Return the cells of gradient BAR [X Y W H] over STOPS.
+The grid has CW x CH pixel cells; each is (COL ROW CHAR FOREGROUND
+BACKGROUND).  Vertical bars run
 low to high upwards (▄ on the upper half's color), HORIZONTAL ones
 left to right (▐ on the left half's color)."
   (let* ((x (aref bar 0)) (y (aref bar 1)) (w (max 1e-9 (aref bar 2))) (h (max 1e-9 (aref bar 3)))

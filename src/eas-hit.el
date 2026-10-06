@@ -90,7 +90,8 @@
       (if x-only (abs dx) (sqrt (+ (* dx dx) (* dy dy)))))))
 
 (defun eas-hit--candidate (mark item-index k px py x-only)
-  "Hit candidate for MARK's item ITEM-INDEX (point K) against PX PY."
+  "Return the hit candidate for MARK's item ITEM-INDEX (point K) at PX PY.
+X-ONLY measures the horizontal distance alone."
   (let* ((item (aref (plist-get mark :items) item-index))
          (p (eas-hit--item-point item (if (eq k :null) nil k))))
     (list :mark (plist-get mark :id) :item item-index :datum (eas-hit--datum item (if (eq k :null) 0 k))
@@ -115,9 +116,10 @@
           (puthash cells (cons columns bounds) eas-hit--grids)))))
 
 (defun eas-hit--grid (mark px py x-only)
-  "Nearest item of grid-indexed MARK to PX PY, as `eas-hit--scan' finds it.
-Searches square rings of cells outwards (columns only with X-ONLY) and
-stops once no unvisited cell can hold anything nearer."
+  "Return the nearest item of grid-indexed MARK to PX PY.
+The same item `eas-hit--scan' finds.  Search square rings of cells
+outwards (columns only with X-ONLY) and stop once no unvisited cell can
+hold anything nearer."
   (let* ((index (plist-get mark :index)) (size (plist-get index :size))
          (table (eas-hit--grid-table index)) (columns (car table)) (b (cdr table))
          (items (plist-get mark :items))
@@ -143,7 +145,8 @@ stops once no unvisited cell can hold anything nearer."
     (when best (eas-hit--candidate mark best :null px py x-only))))
 
 (defun eas-hit--scan (mark px py x-only)
-  "Nearest of MARK's items to PX PY by testing each; the first on ties."
+  "Return the nearest of MARK's items to PX PY by testing each.
+The first wins on ties; X-ONLY measures the horizontal distance alone."
   (let ((items (plist-get mark :items)) best best-d)
     (dotimes (i (length items))
       (let* ((item (aref items i))
@@ -178,7 +181,7 @@ stops once no unvisited cell can hold anything nearer."
        (<= (aref bounds 1) py (+ (aref bounds 1) (aref bounds 3)))))
 
 (defun eas-hit-view-at (scene px py)
-  "Return the scene view whose plot contains PX PY, else the nearest one."
+  "Return the view of SCENE whose plot has PX PY inside, else the nearest."
   (let ((views (append (plist-get scene :views) nil)))
     (or (seq-find (lambda (v) (eas-hit--contains (plist-get v :bounds) px py)) views)
         (car (sort (copy-sequence views)

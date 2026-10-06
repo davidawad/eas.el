@@ -45,7 +45,8 @@
     out))
 
 (defun eas-png-test--write (w h ctype pixels)
-  "A PNG file of W x H, color type CTYPE, from unibyte PIXELS; rows cycle filters 0-4."
+  "A PNG file of W x H, color type CTYPE, from unibyte PIXELS.
+Rows cycle filters 0-4."
   (let* ((bpp (pcase ctype (0 1) (2 3) (4 2) (_ 4))) (stride (* w bpp)) (raw nil) (prev nil)
          (file (make-temp-file "eas-png-test" nil ".png")))
     (dotimes (y h)

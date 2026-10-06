@@ -49,8 +49,9 @@
            a)))))
 
 (defun eas-shared-prepare (tree groups spec)
-  "Share TREE's non-positional scales across GROUPS unless SPEC resolves
-them independently; lift their legends onto TREE as :shared-legends."
+  "Share TREE's non-positional scales across GROUPS.
+Not when SPEC resolves them independently.  Lift their legends onto
+TREE as :shared-legends."
   (when (and (plist-get tree :concat) (cdr groups))
     (let (shared)
       (dolist (g groups)
@@ -89,15 +90,16 @@ A gradient follows the height of the view its legend came from, else PLOT-H."
                     (plist-get tree :shared-legends))))
 
 (defun eas-shared--size (legend metrics)
-  "(W . H) of LEGEND, without its offset from the plot."
+  "\(W . H) of LEGEND under METRICS, without its offset from the plot."
   (if (eas-layout-text-p metrics)
       (let ((s (eas-legend-size legend metrics))) (cons (- (car s) (plist-get metrics :legend-offset)) (cdr s)))
     (let ((b (plist-get (eas-legend-place legend 0 0 metrics) :box)))
       (cons (ceiling (aref b 2)) (ceiling (aref b 3))))))
 
 (defun eas-shared--flow (models metrics limit)
-  "MODELS stacked top-down, a new column whenever one would end below
-LIMIT (a height, or nil).  Return (PLACED . WIDTH): (LEGEND DX DY) each,
+  "MODELS stacked top-down under METRICS, in columns of height LIMIT.
+A new column starts whenever one would end below LIMIT (a height, or
+nil).  Return (PLACED . WIDTH): (LEGEND DX DY) each,
 offsets from the first legend's top-left, and the columns' total width."
   (let ((x 0) (y 0) (col-w 0) (gap (if (eas-layout-text-p metrics) 0 (plist-get metrics :legend-margin)))
         placed)
@@ -111,20 +113,23 @@ offsets from the first legend's top-left, and the columns' total width."
 
 (defun eas-shared--side (tree metrics plot-h side)
   "TREE's shared legend models on SIDE: nil (right), top or bottom (strings).
-Top and bottom ones are laid out in a row (eas-legend-row.el)."
+Top and bottom ones are laid out in a row (eas-legend-row.el).  METRICS
+and PLOT-H are as for `eas-shared-models'."
   (delq nil (mapcar (lambda (l) (let ((o (eas-legend-row-orient l metrics)))
                                   (when (equal o side) (if o (plist-put (copy-sequence l) :row t) l))))
                     (eas-shared-models tree metrics plot-h))))
 
 (defun eas-shared-extent (tree metrics plot-h)
-  "Width TREE's shared legends add to the right of the layout (0 if none)."
+  "Width of TREE's shared legends right of the layout (0 if none).
+METRICS and PLOT-H are as for `eas-shared-models'."
   (let ((models (eas-shared--side tree metrics plot-h nil)))
     (if (null models) 0
       (+ (plist-get metrics :legend-offset)
          (cdr (eas-shared--flow models metrics (plist-get tree :legend-limit)))))))
 
 (defun eas-shared-band (tree metrics plot-h)
-  "Heights (TOP . BOTTOM) that TREE's top and bottom shared legends add."
+  "Heights (TOP . BOTTOM) of TREE's top and bottom shared legends.
+METRICS and PLOT-H are as for `eas-shared-models'."
   (cl-flet ((band (side) (let ((models (eas-shared--side tree metrics plot-h side)))
                            (if (null models) 0
                              (+ (plist-get metrics :legend-offset)
@@ -161,7 +166,7 @@ Vega-Lite titles a shared axis with its layers' distinct titles joined
 by \", \" unless the first def sets one."
   (let* ((def (cdar pairs))
          (titles (delete-dups (delq nil (mapcar (lambda (p) (eas-encode-title (cdr p))) pairs)))))
-    (if (or (cdr titles) (null titles)) 
+    (if (or (cdr titles) (null titles))
         (if (or (plist-member (plist-get def :axis) :title) (plist-member def :title) (null (cdr titles))) def
           ;; A derived title, so config.axis.title still overrides it.
           (eas-plist-put (eas-plist-put def :title (string-join titles ", ")) :title-joined t))

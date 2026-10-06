@@ -113,7 +113,8 @@ With KEEP-NULL, null values count too (discrete domains show them)."
       (t (sort unique #'eas-compile--less))))))
 
 (defun eas-compile--continuous (type pairs channel values zoom)
-  "Continuous scale of TYPE for CHANNEL over VALUES (ZOOM overrides domain)."
+  "Continuous scale of TYPE for CHANNEL over VALUES (ZOOM overrides domain).
+PAIRS are the channel's (UNIT . DEF) pairs."
   (let* ((def (cdar pairs)) (sp (plist-get def :scale))
          (explicit (eas-compile--domain (plist-get sp :domain) (plist-get (caar pairs) :env) channel))
          (nums (if (equal type "time") (delq nil (mapcar #'eas-time-parse values))
@@ -187,8 +188,9 @@ With KEEP-NULL, null values count too (discrete domains show them)."
                      range))))
 
 (defun eas-compile--domain (domain env channel)
-  "An explicit scale DOMAIN: an array, or {\"param\": NAME} for the
-interval selection NAME's range on CHANNEL in ENV (nil while empty)."
+  "Resolve an explicit scale DOMAIN on CHANNEL in ENV.
+DOMAIN is an array, or {\"param\": NAME} for the interval selection
+NAME's range (nil while empty)."
   (cond ((vectorp domain) domain)
         ((and (consp domain) (plist-get domain :param))
          (let* ((store (plist-get env (eas-key (plist-get domain :param))))
@@ -197,8 +199,9 @@ interval selection NAME's range on CHANNEL in ENV (nil while empty)."
            (and (vectorp r) (vector (min (aref r 0) (aref r 1)) (max (aref r 0) (aref r 1))))))))
 
 (defun eas-compile--dimension-p (pairs channel)
-  "Non-nil when CHANNEL is the dimension (not the measure) of a bar, area
-or line in PAIRS; Vega-Lite does not extend dimension scales to zero."
+  "Non-nil when CHANNEL is the dimension of a bar, area or line in PAIRS.
+The dimension is not the measure; Vega-Lite does not extend dimension
+scales to zero."
   (seq-some (lambda (p)
               (let* ((u (car p)) (enc (plist-get u :encoding))
                      (type (plist-get (plist-get u :mark) :type))
@@ -258,7 +261,7 @@ ZOOM is a [LO HI] domain from view state, or nil."
             pairs))
 
 (defun eas-compile-color-scale (units &optional config)
-  "Return (CHANNEL DEF SCALE) for the first field-mapped color channel.
+  "Return (CHANNEL DEF SCALE) for the first field-mapped color channel of UNITS.
 Ranges come from CONFIG's range.category, .heatmap and .ramp."
   (cl-loop for channel in '(:color :fill :stroke)
            ;; A nominal datum (a repeat's field name) joins the scale too.
@@ -315,7 +318,7 @@ Ranges come from CONFIG's range.category, .heatmap and .ramp."
 
 (defun eas-compile-dash-scale (units &optional config)
   "Ordinal scale for UNITS' field-mapped strokeDash channel, or nil.
-Its range is the scale's own, else config.range.strokeDash, else
+Its range is the scale's own, else CONFIG's range.strokeDash, else
 `eas-compile-dash-range'."
   (when-let* ((pairs (seq-filter (lambda (p) (plist-get (cdr p) :field)) (eas-compile--defs units :strokeDash))))
     (let* ((def (cdar pairs)) (sp (plist-get def :scale))
@@ -327,8 +330,9 @@ Its range is the scale's own, else config.range.strokeDash, else
               (list :field (plist-get def :field))))))
 
 (defun eas-compile--config-range (config key &optional count)
-  "CONFIG's range KEY: an array of colors, or a {scheme} (sampled COUNT times
-for a discrete scale, else its ramp stops)."
+  "Return CONFIG's range KEY as an array of colors, or nil.
+A {scheme} range is sampled COUNT times for a discrete scale, else it
+gives its ramp stops."
   (let ((r (plist-get (plist-get config :range) key)))
     (cond ((and (vectorp r) (> (length r) 0)) r)
           ((and (eas-object-p r) (plist-get r :scheme))
@@ -336,7 +340,7 @@ for a discrete scale, else its ramp stops)."
              (eas-scheme-ramp (plist-get r :scheme)))))))
 
 (defun eas-compile-aux-scale (units channel range)
-  "Linear scale for CHANNEL (size or opacity) onto RANGE, or nil.
+  "Linear scale for CHANNEL (size or opacity) of UNITS onto RANGE, or nil.
 The scale's own range wins; a trail's size is its width, onto
 Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
   (when-let* ((pairs (seq-filter (lambda (p) (plist-get (cdr p) :field)) (eas-compile--defs units channel))))

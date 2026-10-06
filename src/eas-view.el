@@ -48,8 +48,9 @@ taken, so a function may record data in VIEW's state (clicks, fc-qx1.1).")
 Hook functions with side effects (actions, echo) skip them then.")
 
 (defvar eas-push-function nil
-  "When non-nil, `eas-push' calls it with VIEW and ROWS instead of
-dispatching a push now.  eas-stream sets it to coalesce live data.")
+  "Function that takes over `eas-push' with VIEW and ROWS, or nil.
+When non-nil, `eas-push' calls it instead of dispatching a push now.
+eas-stream sets it to coalesce live data.")
 
 (cl-defstruct (eas-view (:constructor eas-view--make) (:copier nil))
   id template subject spec spec-hash bindings data size target cell
@@ -237,7 +238,8 @@ With `eas-push-function' set (eas-stream), the push may be coalesced."
   "Mark rows vector -> (KEY . SUMMARY), so a hover does not rescan rows.")
 
 (defun eas-view--visible-summary (scene-view)
-  "n/min/max/first/last/change of the y field over SCENE-VIEW's x domain.
+  "Summarize the y field over SCENE-VIEW's x domain.
+Return n/min/max/first/last/change.
 Cached per mark rows and domain: hover keeps both (fc-qx1.9)."
   (let* ((scales (plist-get scene-view :scales))
          (xs (plist-get scales :x)) (ys (plist-get scales :y))
@@ -269,7 +271,8 @@ Cached per mark rows and domain: hover keeps both (fc-qx1.9)."
               :change-pct (if (zerop first) :null (/ (round (* 10000.0 (/ (- last first) (float first)))) 100.0)))))))
 
 (defun eas-inspect (view)
-  "What VIEW shows right now, as JSON-ready data."
+  "Describe what VIEW draws right now, as JSON-ready data."
+
   (let* ((view (eas-view-get view)) (scene (eas-view-scene view)) (state (eas-view-state view))
          (hover (plist-get state :hover)))
     (list :id (eas-view-id view) :template (or (eas-view-template view) :null)

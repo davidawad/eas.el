@@ -53,7 +53,7 @@ nil when the result would be degenerate."
     (eas-zoom--domain scale (+ a (* factor (- r0 a))) (+ a (* factor (- r1 a))))))
 
 (defun eas-zoom-pan-domain (scale pixels)
-  "Domain of SCALE after the picture moves PIXELS along its range.
+  "Return the domain of SCALE once the picture shifted PIXELS along its range.
 Positive PIXELS drag the content toward larger pixel values, which
 brings data from the low end of the range into view."
   (let ((r (plist-get scale :range)))
@@ -68,7 +68,7 @@ On x that is right (later data); on a bottom-up y range it is up."
 ;;; Native input -> wheel delta
 
 (defun eas-zoom-wheel-delta (event)
-  "Wheel steps of mouse wheel EVENT; negative zooms in.
+  "Return the wheel step count of mouse wheel EVENT; negative zooms in.
 A precision-scroll EVENT carrying a pixel delta (Emacs 29+, trackpads)
 gives a fractional step proportional to it; otherwise one step."
   (let* ((up (memq (event-basic-type event) '(wheel-up mouse-4)))
@@ -78,9 +78,9 @@ gives a fractional step proportional to it; otherwise one step."
        (if (and dy (> dy 0)) (/ dy eas-zoom-wheel-pixels) 1))))
 
 (defun eas-zoom-pinch-delta (scale previous)
-  "Wheel steps for a pinch whose finger-distance ratio went from PREVIOUS
-to SCALE (both relative to the gesture's start).  Spreading the fingers
-\(SCALE > PREVIOUS) zooms in."
+  "Return the wheel step count for a pinch from PREVIOUS to SCALE.
+Both are finger-distance ratios relative to the gesture's start.
+Spreading the fingers (SCALE > PREVIOUS) zooms in."
   (if (and (numberp scale) (numberp previous) (> scale 0) (> previous 0))
       (/ (log (/ previous (float scale))) (log eas-zoom-wheel-step))
     0))

@@ -110,7 +110,8 @@ ENV holds param values for expressions."
       (eas-encode--aggregate enc rows))))
 
 (defun eas-encode--arg-op (op)
-  "(OP-NAME . FIELD) of an {\"argmin\": FIELD} or {\"argmax\": FIELD} aggregate, or nil."
+  "\(OP-NAME . FIELD) of an argmin or argmax aggregate OP, or nil.
+OP is {\"argmin\": FIELD} or {\"argmax\": FIELD}."
   (and (consp op) (keywordp (car op))
        (cond ((plist-get op :argmin) (cons "argmin" (plist-get op :argmin)))
              ((plist-get op :argmax) (cons "argmax" (plist-get op :argmax))))))
@@ -169,7 +170,7 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
 ;;; Evaluation
 
 (defun eas-encode-field (def)
-  "The row key DEF reads, or nil."
+  "The row key DEF's field names, or nil."
   (and (eas-object-p def) (plist-get def :field) (eas-key (plist-get def :field))))
 
 (defun eas-encode-raw (def row)
@@ -179,7 +180,7 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
         ((plist-member def :datum) (plist-get def :datum))))
 
 (defun eas-encode--condition-holds (cond row env)
-  "Non-nil when condition COND applies to ROW."
+  "Non-nil when condition COND is true of ROW under ENV."
   (cond
    ((plist-get cond :param)
     (funcall eas-encode-param-test-function (plist-get cond :param) row
@@ -188,7 +189,8 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
    (t nil)))
 
 (defun eas-encode-active (def row env)
-  "Return the definition that applies to ROW: a matching condition or DEF."
+  "Return the definition in force for ROW: a matching condition or DEF.
+ENV holds param values for test predicates."
   (let ((conds (plist-get def :condition)))
     (or (seq-find (lambda (c) (eas-encode--condition-holds c row env))
                   (cond ((vectorp conds) conds) (conds (list conds))))
@@ -208,8 +210,8 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
 ;;; Titles and tooltips
 
 (defvar eas-encode-count-title nil
-  "config.countTitle while compiling (set by `eas-compile-scene'), for callers
-that have no config at hand.")
+  "The config.countTitle while compiling (set by `eas-compile-scene').
+It serves callers that have no config at hand.")
 
 (defun eas-encode-title (def &optional config)
   "Vega-Lite's default title for DEF, or DEF's explicit :title.

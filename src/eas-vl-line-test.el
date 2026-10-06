@@ -61,7 +61,8 @@ splits lines but not trails."
                :column (:field "s" :title "Series" :header (:labelColor "#aa0000" :labelFontSize 12)))))
 
 (defun eas-vl-line-test--headers (scene)
-  "Items of SCENE's facet-headers mark (the facet grid draws labels and title there)."
+  "Items of SCENE's facet-headers mark.
+The facet grid draws labels and title there."
   (seq-some (lambda (v) (seq-some (lambda (m) (and (string-suffix-p "/facet-headers" (plist-get m :id))
                                                    (append (plist-get m :items) nil)))
                                   (plist-get v :marks)))

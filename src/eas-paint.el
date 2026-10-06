@@ -29,8 +29,8 @@
     (and (> (length stops) 0) (plist-get (aref stops (1- (length stops))) :color))))
 
 (defun eas-paint-style (style)
-  "STYLE (:fill :stroke ...) with gradient paints split into :gradient
-\(fill) and a solid fallback color."
+  "Return STYLE (:fill :stroke ...) with its gradient paints split.
+Each becomes :gradient (fill) and a solid fallback color."
   (let ((fill (plist-get style :fill)) (stroke (plist-get style :stroke)))
     (when (eas-paint-gradient-p stroke)
       (setq style (plist-put (copy-sequence style) :stroke (eas-paint-solid stroke))))
@@ -64,8 +64,8 @@
                    (plist-get gradient :stops)))))
 
 (defun eas-paint-svg-fill (item)
-  "SVG fill of ITEM: url(#id) for a gradient (recording its definition
-in `eas-paint--svg-defs'), else its :fill."
+  "Return the SVG fill of ITEM: url(#id) for a gradient, else its :fill.
+A gradient's definition is recorded in `eas-paint--svg-defs'."
   (if-let* ((gradient (plist-get item :gradient)))
       (let ((id (eas-paint--id gradient)))
         (unless (seq-some (lambda (d) (equal (dom-attr d 'id) id)) eas-paint--svg-defs)

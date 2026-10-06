@@ -47,7 +47,7 @@
     (eas-data-make (vconcat (nreverse out)))))
 
 (defun eas-data-org--named (name buffer)
-  "Return the lisp form of the table named NAME in BUFFER."
+  "Return the Lisp form of the table named NAME in BUFFER."
   (require 'org-table)
   (with-current-buffer (or buffer (current-buffer))
     (save-excursion

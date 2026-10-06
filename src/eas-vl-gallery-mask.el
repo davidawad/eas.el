@@ -19,11 +19,11 @@
 (require 'eas-core)
 
 (defconst eas-vl-gallery-mask-em 1.25
-  "Width and height of a masked emoji glyph, in em (Apple Color Emoji
-glyphs are 1.0-1.2em wide).")
+  "Width and height of a masked emoji glyph, in em.
+Apple Color Emoji glyphs are 1.0-1.2em wide.")
 
 (defun eas-vl-gallery-mask--emoji-p (text)
-  "Non-nil when TEXT holds a pictographic (emoji) character."
+  "Non-nil when a pictographic (emoji) character occurs in TEXT."
   (and (stringp text)
        (seq-some (lambda (c) (or (<= #x1F000 c #x1FAFF) (<= #x2600 c #x27BF))) text)))
 

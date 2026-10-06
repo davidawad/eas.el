@@ -41,8 +41,9 @@
                   (eas-plist-put :truncated n))))
 
 (defun eas-legend-fit (legend max-h metrics)
-  "LEGEND cut to the entries that fit in MAX-H pixels (nil: no limit).
-Only symbol legends are cut; at least one entry always stays."
+  "Return LEGEND cut to the entries that fit in MAX-H pixels (nil: no limit).
+Heights are measured under METRICS.  Only symbol legends are cut; at
+least one entry always stays."
   (if (or (null max-h) (not (equal (plist-get legend :type) "symbol"))
           (<= (eas-legend-fit--height legend metrics) max-h))
       legend
@@ -63,8 +64,9 @@ Only symbol legends are cut; at least one entry always stays."
       mark)))
 
 (defun eas-legend-fit-width (view width metrics)
-  "VIEW with its legends' labels and titles cut to a text canvas WIDTH
-pixels wide under METRICS; VIEW itself when METRICS is not text."
+  "Return VIEW with its legends' labels and titles cut to fit WIDTH.
+WIDTH is the pixel width of a text canvas under METRICS; return VIEW
+itself when METRICS is not text."
   (if (not (and (eas-layout-text-p metrics) (plist-get view :legends)))
       view
     (let ((cw (aref (plist-get metrics :cell) 0)))

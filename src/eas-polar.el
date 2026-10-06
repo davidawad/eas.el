@@ -96,8 +96,9 @@
 ;;; Scales
 
 (defun eas-polar--scale (units channel default-range)
-  "Continuous scale for polar CHANNEL over UNITS, onto DEFAULT-RANGE unless
-the scale sets a range, or nil when no unit encodes CHANNEL."
+  "Return a continuous scale for polar CHANNEL over UNITS, or nil.
+The range is DEFAULT-RANGE unless the scale sets one; nil when no unit
+encodes CHANNEL."
   (when-let* ((pairs (seq-filter (lambda (p) (plist-get (cdr p) :field)) (eas-compile--defs units channel))))
     (let* ((def (cdar pairs)) (sp (plist-get def :scale))
            (type (or (plist-get sp :type) "linear"))
@@ -155,7 +156,7 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
 ;;; Items
 
 (defun eas-polar--value (unit scales channel row &optional mid)
-  "Scaled polar CHANNEL of ROW in UNIT; the stack's middle when MID."
+  "Return polar CHANNEL of ROW in UNIT via SCALES; the stack's middle if MID."
   (let* ((def (plist-get (plist-get unit :encoding) channel))
          (scale (plist-get scales (if (eq channel :radius2) :radius channel))))
     (cond
@@ -167,7 +168,8 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
         (eas-scale-apply scale (if (and (numberp v) (numberp s)) (/ (+ v s) 2.0) v)))))))
 
 (defun eas-polar--start (unit scales row)
-  "Start angle of ROW's arc in UNIT: its stack start, theta2 or the range start."
+  "Start angle of ROW's arc in UNIT: its stack start, theta2 or the range start.
+SCALES supply the theta scale."
   (let* ((enc (plist-get unit :encoding)) (def (plist-get enc :theta)) (scale (plist-get scales :theta)))
     (cond ((and (eas-object-p def) (plist-get def :stack-start) scale)
            (eas-scale-apply scale (plist-get row (eas-key (plist-get def :stack-start)))))
@@ -179,7 +181,8 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
           (t 0))))
 
 (defun eas-polar--arc-row (unit scales bounds)
-  "Row builder (ROW I -> item) for arc marks."
+  "Return a row builder (ROW I -> item) for arc UNIT.
+SCALES place the arcs inside BOUNDS."
   (let* ((mark (plist-get unit :mark))
          (cx (+ (aref bounds 0) (/ (aref bounds 2) 2.0))) (cy (+ (aref bounds 1) (/ (aref bounds 3) 2.0)))
          (rmax (/ (min (aref bounds 2) (aref bounds 3)) 2.0))
@@ -208,7 +211,8 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
                     (eas-marks--extras unit row))))))))
 
 (defun eas-polar--place (unit scales bounds items)
-  "ITEMS of a non-arc UNIT moved to their polar positions."
+  "ITEMS of a non-arc UNIT moved to their polar positions.
+SCALES give the positions inside BOUNDS."
   (let* ((mark (plist-get unit :mark)) (rows (plist-get unit :rows))
          (cx (+ (aref bounds 0) (/ (aref bounds 2) 2.0))) (cy (+ (aref bounds 1) (/ (aref bounds 3) 2.0)))
          (num (lambda (k default) (let ((v (plist-get mark k))) (if (numberp v) v default)))))
@@ -227,7 +231,9 @@ the scale sets a range, or nil when no unit encodes CHANNEL."
                    items)))))
 
 (defun eas-polar-items (unit scales bounds metrics)
-  "Scene items of polar UNIT drawn with SCALES inside BOUNDS."
+  "Scene items of polar UNIT drawn with SCALES inside BOUNDS.
+METRICS measures text."
+
   (if (equal (plist-get (plist-get unit :mark) :type) "arc")
       (eas-marks--each unit (eas-polar--arc-row unit scales bounds))
     (eas-polar--place unit scales bounds

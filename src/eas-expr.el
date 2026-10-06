@@ -155,7 +155,7 @@
     (list :object (nreverse pairs))))
 
 (defun eas-expr--postfix (node)
-  "Parse member access and calls following NODE."
+  "Parse member access and call suffixes following NODE."
   (let (op)
     (while (setq op (eas-expr--peek-op "." "[" "("))
       (pop eas-expr--tokens)
@@ -299,8 +299,9 @@
             (mapcar (lambda (arg) (eas-expr-eval arg datum env)) args)))))
 
 (defvar eas-expr--random-calls nil
-  "Hash of DATUM -> random() calls so far, bound per evaluation (`fresh'
-until the first call).")
+  "Hash of DATUM -> random() call count so far, bound per evaluation.
+It is `fresh' until the first call.")
+
 
 (defun eas-expr--random (datum)
   "A uniform number in [0, 1), deterministic for DATUM's source row.

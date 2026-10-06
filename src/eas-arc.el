@@ -69,7 +69,8 @@ Padded or rounded arcs take d3's own geometry (eas-arc-d3.el)."
                   "Z"))))))
 
 (defun eas-arc-polygon (item &optional steps)
-  "Vector [X0 Y0 X1 Y1 ...] of integers outlining arc ITEM (STEPS per side)."
+  "Return a vector [X0 Y0 X1 Y1 ...] of integers outlining arc ITEM.
+STEPS is the number of segments per side."
   (let* ((cx (plist-get item :cx)) (cy (plist-get item :cy))
          (r0 (or (plist-get item :innerRadius) 0)) (r1 (or (plist-get item :outerRadius) 0))
          (angles (eas-arc-angles item)) (a0 (car angles)) (a1 (cdr angles))
@@ -81,8 +82,9 @@ Padded or rounded arcs take d3's own geometry (eas-arc-d3.el)."
                              (if (> r0 0) (funcall side r0 a1 a0) (list (cons cx cy))))))))
 
 (defun eas-arc-bounds (item)
-  "Bounding box [X0 Y0 X1 Y1] of arc ITEM: its ends, centre or inner ends,
-and every quarter-turn extreme its angles sweep."
+  "Return the bounding box [X0 Y0 X1 Y1] of arc ITEM.
+It spans the arc's ends, centre or inner ends, and every quarter-turn
+extreme its angles sweep."
   (let* ((cx (plist-get item :cx)) (cy (plist-get item :cy))
          (r0 (or (plist-get item :innerRadius) 0)) (r1 (or (plist-get item :outerRadius) 0))
          (angles (eas-arc-angles item))
@@ -107,8 +109,8 @@ and every quarter-turn extreme its angles sweep."
          (<= a hi))))
 
 (defun eas-arc-cells (item cw ch clip fn)
-  "Call FN with (COL ROW) for each text cell of size CW x CH whose centre
-lies inside arc ITEM, within CLIP [COL0 ROW0 COL1 ROW1)."
+  "Call FN with (COL ROW) for each CW x CH text cell centred inside arc ITEM.
+Only cells within CLIP [COL0 ROW0 COL1 ROW1) are visited."
   (let* ((cx (plist-get item :cx)) (cy (plist-get item :cy)) (r (or (plist-get item :outerRadius) 0)))
     (cl-loop for row from (max (aref clip 1) (floor (- cy r) ch)) below (min (aref clip 3) (ceiling (+ cy r) ch))
              do (cl-loop for col from (max (aref clip 0) (floor (- cx r) cw)) below (min (aref clip 2) (ceiling (+ cx r) cw))

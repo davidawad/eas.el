@@ -43,8 +43,8 @@ The result carries :derived \"binned\", :bin-end and :bin-step (or nil)."
               (list :bin-end (plist-get partner :field))))))
 
 (defun eas-bins-boundaries (def rows lo hi)
-  "Vega's scale bins for binned DEF over domain LO..HI, or nil.
-Binned-by-encoding fields step by their rows' bin width; pre-binned
+  "Return Vega's scale bins for binned DEF over domain LO..HI, or nil.
+Binned-by-encoding fields step by the bin width of their ROWS; pre-binned
 fields only with an explicit bin step."
   (let ((step (pcase (plist-get def :derived)
                 ("bin" (let ((s (eas-key (plist-get def :field))) (e (eas-key (plist-get def :bin-end))))
@@ -97,8 +97,9 @@ distinct default title of the channel and its x2/y2 partner joined by
       (/ extent (/ (abs (- (aref d 1) (aref d 0))) (float (plist-get def :bin-step))))))))
 
 (defun eas-bins-size-range (group local-scale)
-  "Point marks' size range in GROUP from its plot steps; nil when not applicable.
-LOCAL-SCALE maps a channel to GROUP's scale over its unplaced plot."
+  "Return the point size range in GROUP, or nil when not applicable.
+The range follows GROUP's plot steps.  LOCAL-SCALE maps a channel to
+GROUP's scale over its unplaced plot."
   (let* ((units (plist-get group :units))
          (size (plist-get (plist-get group :scales) :size))
          (pairs (cl-loop for u in units
@@ -129,7 +130,7 @@ With NICE, rounded out to powers of ten."
       (vector (expt 10.0 lo) (expt 10.0 hi)))))
 
 (defun eas-bins-band-space (scale n)
-  "Vega's bandspace of discrete SCALE with N values, in steps.
+  "Return Vega's bandspace of discrete SCALE with N values, in step units.
 N for default paddings; a point scale with padding P spans N - 1 + 2P."
   (let* ((point (equal (plist-get scale :type) "point"))
          (inner (if point 1.0 (or (plist-get scale :padding-inner) 0.1)))
@@ -141,8 +142,9 @@ N for default paddings; a point scale with padding P spans N - 1 + 2P."
   "Vega-Lite's default shape range.")
 
 (defun eas-bins-shape-scale (units)
-  "Ordinal scale for UNITS' shape field, or nil: the spec's domain and
-range, else the data's values onto `eas-bins-shapes'."
+  "Return the ordinal scale for UNITS' shape field, or nil.
+The spec's domain and range, else the data's values onto
+`eas-bins-shapes'."
   (when-let* ((pairs (cl-loop for u in units
                               for d = (plist-get (plist-get u :encoding) :shape)
                               when (and (eas-object-p d) d (plist-get d :field)) collect (cons u d))))

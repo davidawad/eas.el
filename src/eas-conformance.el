@@ -107,7 +107,7 @@ Return (:name :ok :features :svg :text :error)."
           (eas-conformance-gallery)))
 
 (defun eas-conformance-supported-data (results)
-  "supported.json content for gallery RESULTS."
+  "The supported.json content for gallery RESULTS."
   (let ((features (make-hash-table :test 'equal)))
     (dolist (r results)
       (when (and (plist-get r :ok) (not (equal (plist-get (plist-get r :oracle) :status) "fail")))

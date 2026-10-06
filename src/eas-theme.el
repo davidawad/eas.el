@@ -47,7 +47,8 @@
     :title (:anchor "start" :color "#0b0b0b" :fontSize 16 :fontWeight 600 :offset 12
             :subtitleColor "#52514e" :subtitleFontSize 12)
     :view (:continuousHeight 300 :continuousWidth 480 :stroke :null))
-  "bin/chart's default theme (`chart theme --json' \"config\"), the native default.")
+  "The default theme of bin/chart, the native default.
+It is the \"config\" of `chart theme --json'.")
 
 (defconst eas-theme-vega-lite
   '(:mark (:color "#4c78a8") :text (:color "black" :fontSize 11) :rule (:color "black")
@@ -68,7 +69,8 @@ Objects merge key by key; any other value (arrays included) replaces."
   base)
 
 (defun eas-theme-get (config &rest keys)
-  "The value at KEYS in CONFIG, or nil.  A JSON null reads as nil."
+  "The value at KEYS in CONFIG, or nil.
+A JSON null counts as nil."
   (let ((v config))
     (dolist (k keys) (setq v (and (eas-object-p v) (plist-get v k))))
     (unless (eq v :null) v)))

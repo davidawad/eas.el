@@ -56,8 +56,8 @@ STYLE is the item's `eas-marks--style' plist."
        (list :outline (if (numberp (plist-get mark :strokeWidth)) (plist-get mark :strokeWidth) 1))))))
 
 (defun eas-mark-style-svg (node item)
-  "NODE, the SVG path of area, line or arc ITEM, with ITEM's extra
-presentation attributes (those NODE does not already carry)."
+  "NODE, the SVG path of area, line or arc ITEM, with ITEM's extra attributes.
+Those are the presentation attributes NODE does not already carry."
   (let* ((outline (plist-get item :outline))
          (have (mapcar #'car (cadr node)))
          (extra

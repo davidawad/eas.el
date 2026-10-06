@@ -24,7 +24,7 @@
 PLIST has :doc, :convert (VALUE -> data/v1) and optionally :example.")
 
 (cl-defun eas-register-adapter (name &key doc convert example)
-  "Register adapter NAME (a string) that turns caller data into data/v1.
+  "Register adapter NAME (a string), a converter of caller data to data/v1.
 CONVERT is called with the caller's value and returns data/v1, or
 signals SHAPE_INVALID with :index and :field.  DOC is one line for
 describe.  EXAMPLE is a small input value that CONVERT accepts."
@@ -55,13 +55,14 @@ The plist is (:code :message :index :field ...), never signalled."
     (eas-error (eas-error-plist err))))
 
 (defun eas-shape-invalid (message index &optional field &rest props)
-  "Signal SHAPE_INVALID with MESSAGE for element INDEX and FIELD."
+  "Signal SHAPE_INVALID with MESSAGE for element INDEX and FIELD.
+PROPS are further error properties."
   (apply #'eas-signal "SHAPE_INVALID" message :index index :field field props))
 
 ;;; data/v1
 
 (defun eas-data-p (value)
-  "Non-nil when VALUE looks like data/v1."
+  "Return non-nil when VALUE has the shape of data/v1."
   (and (eas-object-p value) (plist-member value :rows) (plist-member value :schema)))
 
 (defun eas-data-rows (data)
@@ -107,7 +108,7 @@ SCHEMA, when nil, is inferred from the rows."
 ;;; Built-in adapters
 
 (defun eas-data--plist-rows (value)
-  "Convert a list or vector of row objects to data/v1."
+  "Convert VALUE, a list or vector of row objects, to data/v1."
   (unless (or (vectorp value) (listp value))
     (eas-shape-invalid "Rows must be a list or array of objects" nil))
   (let ((index 0))

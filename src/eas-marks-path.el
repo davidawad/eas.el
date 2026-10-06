@@ -49,7 +49,9 @@ KEY nil means x order."
                             (if (or ka kb) (eas-marks-path--less ka kb) (< (car a) (car b)))))))
 
 (defun eas-marks-path-runs (pts filter)
-  "PTS split into runs of valid vertices; FILTER non-nil keeps one run."
+  "Split PTS into lists of consecutive valid vertices.
+These are its runs; FILTER non-nil keeps one run."
+
   (let (runs run)
     (dolist (p pts)
       (cond ((nth 5 p) (push p run))

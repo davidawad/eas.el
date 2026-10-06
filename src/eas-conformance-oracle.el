@@ -68,7 +68,7 @@ in the gallery), which native layout reproduces only approximately.")
   (string-remove-prefix "sha256:" (eas-content-hash (eas--plist-without spec :usermeta))))
 
 (defun eas-conformance--eas-meta (entry key)
-  "usermeta.eas KEY of gallery ENTRY's spec."
+  "Return usermeta.eas KEY of gallery ENTRY's spec."
   (plist-get (plist-get (plist-get (plist-get entry :spec) :usermeta) :eas) key))
 
 (defun eas-conformance--file-hash (file)

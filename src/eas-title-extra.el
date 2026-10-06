@@ -30,7 +30,7 @@
 (defconst eas-title-extra-subtitle-padding 3 "Vega's default title.subtitlePadding.")
 
 (defun eas-title-extra--get (spec metrics key default)
-  "Title property KEY of SPEC, else config.title's, else DEFAULT."
+  "Title property KEY of SPEC, else METRICS' config.title's, else DEFAULT."
   (let ((v (plist-get (eas-title--object spec) key)))
     (cond ((and v (not (eq v :null))) v)
           ((eas-theme-get (plist-get metrics :config) :title key))
@@ -48,7 +48,8 @@
   (eas-title-extra--get spec metrics :subtitleFontSize 12))
 
 (defun eas-title-extra-height (spec metrics)
-  "Height SPEC's subtitle adds to its title's room (0 without one)."
+  "Return the height SPEC's subtitle needs in the title's room, 0 if none.
+METRICS measures the subtitle."
   (let ((lines (eas-title-extra-subtitle-lines spec)))
     (cond ((null lines) 0)
           ((eas-layout-text-p metrics) (* (length lines) (plist-get metrics :chart-title-size)))
@@ -57,7 +58,9 @@
                   (eas-title--line-height size) (* (1- (length lines)) (+ size 2))))))))
 
 (defun eas-title-extra-apply (title spec metrics)
-  "Scene TITLE of SPEC with its dx/dy applied and its :subtitle placed."
+  "Scene TITLE of SPEC with its dx/dy applied and its :subtitle placed.
+METRICS gives the config; under text METRICS dx/dy do not apply."
+
   (if (null title) title
     (let* ((text (eas-layout-text-p metrics))
            (dx (if text 0 (let ((v (eas-title-extra--get spec metrics :dx 0))) (if (numberp v) v 0))))

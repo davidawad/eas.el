@@ -83,8 +83,9 @@ FORMATTED non-nil: LABEL carries the format already (a bucket's range)."
                                       (plist-get legend :entries)))))))
 
 (defun eas-legend-style-model (def model)
-  "Legend MODEL with legend object DEF's overrides: entries chosen by
-values, labels formatted, the rest carried as :overrides."
+  "Return legend MODEL with legend object DEF's overrides applied.
+Entries are chosen by values, labels formatted, the rest carried as
+:overrides."
   (let ((o (eas-legend-style-overrides def)))
     (if (or (null model) (null o)) model
       (let* ((model (append model (list :overrides o)))

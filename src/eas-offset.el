@@ -82,9 +82,10 @@
 
 (defun eas-offset-step (scales channel step)
   "Size per category of position CHANNEL's band when an offset band takes STEP.
-Nil without an offset.  The parent's step holds the offset band
-\(bandspace(n, inner, outer) * STEP) as its bandwidth, and the plot is
-bandspace(N, inner, outer) parent steps for N categories."
+SCALES are the view's scales.  Nil without an offset.  The parent's step
+holds the offset band (bandspace(n, inner, outer) * STEP) as its
+bandwidth, and the plot is bandspace(N, inner, outer) parent steps for N
+categories."
   (let ((off (plist-get scales (eas-offset-channel channel)))
         (pos (plist-get scales channel)))
     (when (and off (equal (plist-get off :type) "band") (equal (plist-get pos :type) "band"))
@@ -97,7 +98,8 @@ bandspace(N, inner, outer) parent steps for N categories."
         (/ (* pstep (+ (- parents inner) (* 2 outer))) parents)))))
 
 (defun eas-offset-shift (unit scales channel row)
-  "(SHIFT . BANDWIDTH) of ROW's offset along CHANNEL in UNIT, or nil."
+  "\(SHIFT . BANDWIDTH) of ROW's offset along CHANNEL in UNIT, or nil.
+SCALES are the view's scales."
   (let* ((och (eas-offset-channel channel))
          (s (and och (plist-get scales och)))
          (def (and s (plist-get (plist-get unit :encoding) och))))

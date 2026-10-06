@@ -40,12 +40,13 @@
     (apply #'concat (nreverse out))))
 
 (defun eas-expr-regexp-make (pattern &optional flags)
-  "A regexp value for PATTERN with FLAGS, as Vega's regexp() returns."
+  "Return a regexp value for PATTERN with FLAGS, like Vega's regexp()."
   (list :regexp (eas-expr-regexp-js (if (stringp pattern) pattern (format "%s" pattern)))
         :fold (and (stringp flags) (string-match-p "i" flags) t)))
 
 (defun eas-expr-regexp-test (re string)
-  "t when regexp value (or pattern string) RE matches STRING, else :false."
+  "Return t when regexp value (or pattern string) RE matches STRING.
+Else return :false."
   (let* ((re (if (stringp re) (eas-expr-regexp-make re) re))
          (case-fold-search (plist-get re :fold)))
     (if (and (stringp string) (string-match-p (plist-get re :regexp) string)) t :false)))

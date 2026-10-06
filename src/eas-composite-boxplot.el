@@ -28,9 +28,11 @@
 (declare-function eas-composite--continuous "eas-composite")
 
 (defun eas-composite-boxplot--grouping (encoding channel partner)
-  "(GROUPBY TIME-TRANSFORMS ENCODING) of ENCODING's channels other than
-CHANNEL and PARTNER: the fields a boxplot groups by, the timeUnits they
-need, and the encoding that shows them."
+  "Return (GROUPBY TIME-TRANSFORMS ENCODING) for the other channels.
+The other channels are ENCODING's channels besides CHANNEL and PARTNER:
+GROUPBY is the fields a boxplot groups by, TIME-TRANSFORMS the
+timeUnits they need, and ENCODING the encoding that shows them."
+
   (let (groupby time-tx enc)
     (cl-loop for (ch d) on encoding by #'cddr
              unless (memq ch (list channel partner))

@@ -117,13 +117,30 @@ a cell's centre, and one event log must hover the same datum on both."
   "Non-nil when ITEM is drawn fully transparent (a hit target, not a mark)."
   (let ((o (plist-get item :opacity))) (and (numberp o) (zerop o))))
 
+(defconst eas-intersect--big-radius 16
+  "Symbols wider than this radius are tested whatever the nearest centre.")
+
+(defvar eas-intersect--big (make-hash-table :test 'eq :weakness 'key)
+  "Mark -> indexes of its symbols over `eas-intersect--big-radius'.")
+
+(defun eas-intersect--big-items (mark)
+  "Indexes of MARK's large symbols (nested circles, bubbles), cached."
+  (with-memoization (gethash mark eas-intersect--big)
+    (let ((items (plist-get mark :items)))
+      (cl-loop for i below (length items)
+               when (> (sqrt (/ (or (plist-get (aref items i) :size) 30) float-pi)) eas-intersect--big-radius)
+               collect i))))
+
 (defun eas-intersect--candidates (mark px py)
   "Item indexes of MARK worth testing against PX PY."
   (let ((items (plist-get mark :items)))
     (if (and (member (plist-get mark :mark) '("point" "circle" "square" "text"))
              (> (length items) 64))
-        ;; The grid index finds the nearest centre without a scan (fc-qx1.9).
-        (when-let* ((c (eas-hit-mark mark px py))) (list (plist-get c :item)))
+        ;; The grid index finds the nearest centre without a scan (fc-qx1.9);
+        ;; a large symbol can hold PX PY far from its centre (circle packing).
+        (let ((near (when-let* ((c (eas-hit-mark mark px py))) (list (plist-get c :item)))))
+          (if (equal (plist-get mark :mark) "text") near
+            (delete-dups (append near (eas-intersect--big-items mark)))))
       (number-sequence 0 (1- (length items))))))
 
 (defun eas-intersect-mark (scene mark px py)

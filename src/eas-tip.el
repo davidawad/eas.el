@@ -26,6 +26,7 @@
 (require 'eas-encode)
 (require 'eas-params)
 (require 'eas-reduce)
+(require 'eas-intersect)
 
 (defconst eas-tip-series-marks '("line" "area" "trail")
   "Marks drawn as one path per series; they hit-test through the scene index.")
@@ -105,6 +106,15 @@ nearest such hit wins.  The result is shaped like `eas-hit''s."
             (when (and (<= (plist-get c :distance) (eas-tip--tolerance scene mark))
                        (or (null best) (< (plist-get c :distance) (plist-get best :distance))))
               (setq best (append c (list :row (aref (plist-get mark :rows) (plist-get c :datum)))))))))
+      ;; A large symbol (a packed circle) is clicked anywhere it is
+      ;; drawn, as hover touches it, not only near its centre.
+      (unless best
+        (seq-doseq (mark (plist-get view :marks))
+          (when (and (not (plist-get mark :interactive-off))
+                     (member (plist-get mark :mark) '("point" "circle" "square")))
+            (when-let* ((c (eas-intersect-mark scene mark (aref px 0) (aref px 1))))
+              (when (or (null best) (<= (plist-get c :distance) (plist-get best :distance)))
+                (setq best (append c (list :row (aref (plist-get mark :rows) (plist-get c :datum))))))))))
       (when best (append (list :view (plist-get view :id)) best)))))
 
 (defun eas-tip-click-px (event old-state)

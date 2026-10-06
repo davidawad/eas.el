@@ -117,6 +117,48 @@ gallery's label check (`eas-vl-gallery--rotated-box` only compares
 parallel labels) and hover on text (`eas-intersect` reaches half a font
 size around the anchor, so the ends of a long or turned word miss).
 
+
+Hierarchies (`eas-7r1.4`) are Vega's tree transforms as domain
+transforms, ported from d3-hierarchy and held to Vega's own numbers.
+eas rows carry no hidden tree, so a hierarchy is always a key column
+and a parent-key column (`key`/`parentKey`, default `id`/`parent`) and
+each layout rebuilds the tree from them:
+
+| transform | does (eas-hierarchy*.el) |
+|---|---|
+| `stratify` | checks the rows form one tree (`SHAPE_INVALID` with the row's index), adds `depth`, `children` |
+| `nest` | groups rows by `keys` into a tree: a root row, one row per group, the rows under them |
+| `tree` | `method` `tidy` (Reingold-Tilford) or `cluster`; `size` or `nodeSize`, `separation`; `x`, `y` |
+| `treemap` | `squarify` (`ratio`), `resquarify`, `binary`, `dice`, `slice`, `slicedice`, paddings, `round`; `x0`..`y1` |
+| `partition` | icicle bands (`x0`..`y1`); a sunburst reads x as angle and y as radius |
+| `pack` | circle packing, `x`, `y`, `r` (d3's front chain and enclosing circle, same random stream) |
+| `treelinks` | one `{source, target}` row per edge, the rows nested |
+| `treepath` | for each link of `links` (a data slot), the tree rows on its path (Vega's `treePath`) |
+| `subtree` | the rows under `root`, which becomes the root; `level` keeps each row's depth in the whole tree |
+| `formula` | a Vega expression into a field among the domain transforms (`params` names constants) |
+
+Layouts take `field` (summed up the tree; leaves count 1 without it)
+and `sort` (Vega's compare; `value`, `depth`, `height` are the node's),
+and write their fields back in row order (`as` renames them). Laid-out
+rows are drawn on identity scales (`domain` = `range`, no axes); a
+sunburst draws partition rows as arcs spanning `theta`..`theta2` and
+`radius2`..`radius` (conformance spec `encoding-theta2-radius2`).
+
+`linkpath` (eas-linkpath.el) is the link geometry of node-link
+diagrams: `shape` `line`, `arc`, `curve`, `diagonal` or `orthogonal`,
+`orient` `vertical`, `horizontal` or `radial` (x an angle in radians, y
+a radius). The transform turns each link row into vertex rows (`x`,
+`y`, `step`, `link`), which a line mark draws with `detail: link` and
+`order: step`; curves are sampled, so renderers stay polyline-only.
+Other code asks for the geometry directly: `(eas-linkpath-path SHAPE
+ORIENT SX SY TX TY)` is Vega's SVG path data and `(eas-linkpath-points
+...)` the same path as `((X Y) ...)`. Hierarchical edge bundling is
+`treepath` rows on a line mark with `interpolate: "bundle"` and
+`tension`. The `zoom-subtree` click action re-opens a template's view
+with slot `focus` set to the clicked node, which a `subtree` transform
+lays out alone: d3's layouts place every subtree independently, so
+that is the zoomed layout.
+
 ### L2 spec: chart/v1
 
 It is Vega-Lite (pinned to the version `bin/chart` pins, 6.4.1).
@@ -162,6 +204,15 @@ one template per Vega gallery example (`eas-7r1`, target
 names them as `../examples/vega/NAME.data.json`), and its `x-eas.vega`
 records `{"status": "pass|partial|unsupported", "note"}` against the
 vendored reference.
+
+`templates/vega/` reproduces the Vega gallery (`eas-7r1`), namespace
+`vega` (`eas-template-add-directory` loads it). Each template's
+`x-eas.vega` records `status` (pass, partial, unsupported), a `note`
+and the `ratio` its example may differ from
+`test/vega-examples/ref/NAME.png` by; `examples/vega/NAME.data.json`
+binds the gallery's data. Those references were drawn by vg2svg
+without node-canvas, so Vega padded their canvas by estimated text
+widths: the comparison aligns the plot origins first.
 
 A slot that holds an array can expand into views:
 `{"x-eas:each": SLOT, "spec": X}` in any array becomes one X per item,

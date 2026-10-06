@@ -237,11 +237,16 @@ BOUNDS under METRICS."
            (append (let* ((xo (or (plist-get mark :xOffset) 0)) (yo (or (plist-get mark :yOffset) 0)))
                      (if (equal type "text")
                          ;; dx/dy shift the text in pixels (whole cells in a terminal).
-                         (let ((dx (eas-marks--mark-value unit :dx row)) (dy (eas-marks--mark-value unit :dy row))
-                               (cell (and (eas-layout-text-p metrics) (plist-get metrics :cell))))
+                         (let* ((dx (eas-marks--mark-value unit :dx row)) (dy (eas-marks--mark-value unit :dy row))
+                                (cell (and (eas-layout-text-p metrics) (plist-get metrics :cell)))
+                                (dx (if (numberp dx) (if cell (* (aref cell 0) (round dx (aref cell 0))) dx) 0))
+                                (dy (if (numberp dy) (if cell (* (aref cell 1) (round dy (aref cell 1))) dy) 0))
+                                ;; Vega offsets rotated text along its own axes.
+                                (a (and (not cell) (or (eas-marks--channel unit scales :angle row) (plist-get mark :angle))))
+                                (rad (if (numberp a) (degrees-to-radians a) 0)))
                            (list :datum i
-                                 :x (+ x xo (if (numberp dx) (if cell (* (aref cell 0) (round dx (aref cell 0))) dx) 0))
-                                 :y (+ y yo (if (numberp dy) (if cell (* (aref cell 1) (round dy (aref cell 1))) dy) 0))))
+                                 :x (+ x xo (- (* dx (cos rad)) (* dy (sin rad))))
+                                 :y (+ y yo (* dx (sin rad)) (* dy (cos rad)))))
                        (list :datum i :x (+ x xo) :y (+ y yo))))
                    (if (equal type "text")
                        (let* ((text (eas-marks--channel unit scales :text row))

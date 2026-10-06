@@ -1,0 +1,31 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {"a0": 0, "a1": 6.283185307179586, "r0": 0, "r1": 40, "ring": "root"},
+      {"a0": 0, "a1": 2.5, "r0": 40, "r1": 80, "ring": "inner"},
+      {"a0": 2.5, "a1": 4.4, "r0": 40, "r1": 80, "ring": "inner"},
+      {"a0": 4.4, "a1": 6.283185307179586, "r0": 40, "r1": 80, "ring": "inner"},
+      {"a0": 0, "a1": 1.2, "r0": 80, "r1": 120, "ring": "outer"},
+      {"a0": 1.2, "a1": 2.5, "r0": 80, "r1": 120, "ring": "outer"},
+      {"a0": 2.5, "a1": 3.1, "r0": 80, "r1": 120, "ring": "outer"},
+      {"a0": 4.4, "a1": 5.9, "r0": 80, "r1": 120, "ring": "outer"}
+    ]
+  },
+  "description": "A sunburst drawn from precomputed angles and radii: each arc spans theta..theta2 and radius2..radius on identity scales.",
+  "width": 260,
+  "height": 260,
+  "mark": {"type": "arc", "stroke": "white", "strokeWidth": 1},
+  "encoding": {
+    "theta": {"field": "a0", "type": "quantitative", "stack": null,
+              "scale": {"domain": [0, 1], "range": [0, 1], "zero": false, "nice": false}},
+    "theta2": {"field": "a1"},
+    "radius": {"field": "r1", "type": "quantitative",
+               "scale": {"domain": [0, 1], "range": [0, 1], "zero": false, "nice": false}},
+    "radius2": {"field": "r0"},
+    "color": {"field": "ring", "type": "nominal", "legend": null, "sort": null}
+  },
+  "usermeta": {
+    "eas": {"source": "templates/vega/sunburst.json (eas-7r1.4)", "threshold": 0.02}
+  }
+}

@@ -53,6 +53,11 @@
       "png_sha256": "d86a37d2fc089e03b113d0dd5c04d94d2a94b5ceb1b7b10d3e4c553ff5686c73",
       "spec_sha256": "58d1fe8ccf55ac8725e32f42bc9415efed29811ed62814542ceb5709d8ec2807"
     },
+    "encoding-theta2-radius2": {
+      "generator": "vega-lite 6.4.1 + vega 6 + resvg-js with bin-chart-default-theme.json (bin/chart unavailable in eas-7r1.4; rebuild with eas-conformance-update-refs)",
+      "png_sha256": "5e6c33850bfa25268f710f42b4e60b49f69cf2a6893dbcfc806d6f1ca49fc674",
+      "spec_sha256": "04a351210dd23543e85e003abc26b4292f97a0d0588f4f3f1ef0888392b00e71"
+    },
     "encoding-timeunit": {
       "png_sha256": "988e57588810028e8ef9f6d4b2b2aa10851a6a54cb00c94be7fed1eb9465d246",
       "spec_sha256": "4897d9ed19fbcc746816b4f74337354b5d1e617e06fd737036ce1ecff3738e2e"

@@ -48,7 +48,9 @@
   '(:transform/x-eas "Domain transforms are materialized by resolve (ERT: eas-resolve-materializes-domain-transforms)."
     :mark/slot "Template slot placeholders are substituted by resolve (ERT: eas-template-enum-and-array-items)."
     :transform/x-eas/countpattern "Vega's countpattern: regexp matches counted into text/count rows (ERT: eas-vega-wordcloud-countpattern-counts-words)."
-    :transform/x-eas/wordcloud "Vega's wordcloud: seeded spiral placement of measured, rotated words (ERT: eas-vega-wordcloud-places-without-overlap).")
+    :transform/x-eas/wordcloud "Vega's wordcloud: seeded spiral placement of measured, rotated words (ERT: eas-vega-wordcloud-places-without-overlap)."
+    :transform/x-eas:hierarchy "stratify, nest, tree (tidy, cluster), treemap, partition, pack, treelinks, treepath and formula match Vega's layouts (ERT: eas-vega-hierarchy-*)."
+    :transform/x-eas:linkpath "linkpath draws Vega's line, arc, curve, diagonal and orthogonal links, radial too (ERT: eas-vega-hierarchy-linkpath-*).")
   "Features outside Vega-Lite proper, proven by ERT rather than the gallery.")
 
 (defvar eas-conformance-gallery-functions nil

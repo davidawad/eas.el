@@ -1,0 +1,1399 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "edge-bundling",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Hierarchical edge bundling: the leaves of an id/parent tree on a circle, and each source-target link drawn along the tree path between its ends, bundled.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per tree node: a key, the parent's key (null at the root) and a label"
+      },
+      "links": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per link between two node keys"
+      },
+      "key": {
+        "type": "field",
+        "of": "data",
+        "default": "id"
+      },
+      "parent": {
+        "type": "field",
+        "of": "data",
+        "default": "parent",
+        "doc": "the parent's key; exactly one row has none"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "name"
+      },
+      "source": {
+        "type": "field",
+        "of": "links",
+        "default": "source"
+      },
+      "target": {
+        "type": "field",
+        "of": "links",
+        "default": "target"
+      },
+      "method": {
+        "enum": [
+          "tidy",
+          "cluster"
+        ],
+        "default": "cluster"
+      },
+      "tension": {
+        "type": "number",
+        "default": 0.85,
+        "doc": "bundle strength, 0 (straight) to 1 (along the tree)"
+      },
+      "radius": {
+        "type": "number",
+        "default": 280
+      },
+      "extent": {
+        "type": "number",
+        "default": 360
+      },
+      "rotate": {
+        "type": "number",
+        "default": 0
+      },
+      "textSize": {
+        "type": "number",
+        "default": 8
+      },
+      "textOffset": {
+        "type": "number",
+        "default": 2
+      },
+      "colorIn": {
+        "type": "string",
+        "default": "firebrick"
+      },
+      "colorOut": {
+        "type": "string",
+        "default": "forestgreen"
+      },
+      "width": {
+        "type": "number",
+        "default": 720
+      },
+      "height": {
+        "type": "number",
+        "default": 720
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "Hierarchical edge bundling: links between leaves follow their tree path, so related links bundle together."
+      }
+    },
+    "example": "../examples/vega/edge-bundling.data.json",
+    "vega": {
+      "status": "partial",
+      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0148 (Vega's own SVG through the same rasterizer: 0.0128). Bundled links and leaf labels match Vega. Hovering a label draws its links in colorOut/colorIn as Vega does, but the linked labels are not bolded or recolored (Vega's indata tests), and the tension, radius, extent, rotate, text and layout widgets are slots.",
+      "ratio": 0.02
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "view": {
+      "stroke": null
+    },
+    "legend": {
+      "titleFontWeight": "bold",
+      "titleColor": "#000",
+      "labelColor": "#000",
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    }
+  },
+  "layer": [
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "tree",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "size": [
+            1,
+            1
+          ],
+          "as": [
+            "alpha",
+            "beta",
+            "depth",
+            "children"
+          ]
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "(rotate + extent * datum.alpha + 270) % 360",
+          "as": "angle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "inrange(datum.angle, [90, 270])",
+          "as": "leftside",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "width / 2 + radius * datum.beta * cos(PI * datum.angle / 180)",
+          "as": "x",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "height / 2 + radius * datum.beta * sin(PI * datum.angle / 180)",
+          "as": "y",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.leftside ? datum.angle - 180 : datum.angle",
+          "as": "labelAngle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.x + textOffset * cos(PI * datum.angle / 180)",
+          "as": "labelX",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            },
+            "textOffset": {
+              "x-eas:slot": "textOffset"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.y + textOffset * sin(PI * datum.angle / 180)",
+          "as": "labelY",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            },
+            "textOffset": {
+              "x-eas:slot": "textOffset"
+            }
+          }
+        },
+        {
+          "filter": "datum.children == 0 && datum.leftside"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "fontSize": {
+          "x-eas:slot": "textSize"
+        },
+        "baseline": "middle",
+        "align": "right"
+      },
+      "encoding": {
+        "x": {
+          "field": "labelX",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "labelY",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "height"
+              }
+            ],
+            "reverse": true,
+            "nice": false,
+            "zero": false
+          }
+        },
+        "angle": {
+          "field": "labelAngle",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -90,
+              360
+            ],
+            "range": [
+              -90,
+              360
+            ],
+            "zero": false,
+            "nice": false
+          }
+        },
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        },
+        "color": {
+          "value": "black"
+        }
+      },
+      "name": "labels_left"
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "tree",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "size": [
+            1,
+            1
+          ],
+          "as": [
+            "alpha",
+            "beta",
+            "depth",
+            "children"
+          ]
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "(rotate + extent * datum.alpha + 270) % 360",
+          "as": "angle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "inrange(datum.angle, [90, 270])",
+          "as": "leftside",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "width / 2 + radius * datum.beta * cos(PI * datum.angle / 180)",
+          "as": "x",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "height / 2 + radius * datum.beta * sin(PI * datum.angle / 180)",
+          "as": "y",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.leftside ? datum.angle - 180 : datum.angle",
+          "as": "labelAngle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.x + textOffset * cos(PI * datum.angle / 180)",
+          "as": "labelX",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            },
+            "textOffset": {
+              "x-eas:slot": "textOffset"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.y + textOffset * sin(PI * datum.angle / 180)",
+          "as": "labelY",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            },
+            "textOffset": {
+              "x-eas:slot": "textOffset"
+            }
+          }
+        },
+        {
+          "filter": "datum.children == 0 && !datum.leftside"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "fontSize": {
+          "x-eas:slot": "textSize"
+        },
+        "baseline": "middle",
+        "align": "left"
+      },
+      "encoding": {
+        "x": {
+          "field": "labelX",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "labelY",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "height"
+              }
+            ],
+            "reverse": true,
+            "nice": false,
+            "zero": false
+          }
+        },
+        "angle": {
+          "field": "labelAngle",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -90,
+              360
+            ],
+            "range": [
+              -90,
+              360
+            ],
+            "zero": false,
+            "nice": false
+          }
+        },
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        },
+        "color": {
+          "value": "black"
+        }
+      },
+      "name": "labels_right"
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "tree",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "size": [
+            1,
+            1
+          ],
+          "as": [
+            "alpha",
+            "beta",
+            "depth",
+            "children"
+          ]
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "(rotate + extent * datum.alpha + 270) % 360",
+          "as": "angle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "inrange(datum.angle, [90, 270])",
+          "as": "leftside",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "width / 2 + radius * datum.beta * cos(PI * datum.angle / 180)",
+          "as": "x",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "height / 2 + radius * datum.beta * sin(PI * datum.angle / 180)",
+          "as": "y",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.leftside ? datum.angle - 180 : datum.angle",
+          "as": "labelAngle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "treepath",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "links": {
+            "x-eas:slot": "links"
+          },
+          "source": {
+            "x-eas:slot": "source"
+          },
+          "target": {
+            "x-eas:slot": "target"
+          },
+          "as": [
+            "link",
+            "step",
+            "source",
+            "target"
+          ]
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "interpolate": "bundle",
+        "tension": {
+          "x-eas:slot": "tension"
+        },
+        "strokeWidth": 1.5,
+        "stroke": "steelblue",
+        "strokeOpacity": 0.2
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "height"
+              }
+            ],
+            "reverse": true,
+            "nice": false,
+            "zero": false
+          }
+        },
+        "detail": {
+          "field": "link",
+          "type": "nominal"
+        },
+        "order": {
+          "field": "step",
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "tree",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "size": [
+            1,
+            1
+          ],
+          "as": [
+            "alpha",
+            "beta",
+            "depth",
+            "children"
+          ]
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "(rotate + extent * datum.alpha + 270) % 360",
+          "as": "angle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "inrange(datum.angle, [90, 270])",
+          "as": "leftside",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "width / 2 + radius * datum.beta * cos(PI * datum.angle / 180)",
+          "as": "x",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "height / 2 + radius * datum.beta * sin(PI * datum.angle / 180)",
+          "as": "y",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.leftside ? datum.angle - 180 : datum.angle",
+          "as": "labelAngle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "treepath",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "links": {
+            "x-eas:slot": "links"
+          },
+          "source": {
+            "x-eas:slot": "source"
+          },
+          "target": {
+            "x-eas:slot": "target"
+          },
+          "as": [
+            "link",
+            "step",
+            "source",
+            "target"
+          ]
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.source",
+          "as": {
+            "x-eas:slot": "key"
+          }
+        },
+        {
+          "filter": {
+            "param": "active",
+            "empty": false
+          }
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "interpolate": "bundle",
+        "tension": {
+          "x-eas:slot": "tension"
+        },
+        "strokeWidth": 1.5,
+        "stroke": {
+          "x-eas:slot": "colorOut"
+        },
+        "strokeOpacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "height"
+              }
+            ],
+            "reverse": true,
+            "nice": false,
+            "zero": false
+          }
+        },
+        "detail": {
+          "field": "link",
+          "type": "nominal"
+        },
+        "order": {
+          "field": "step",
+          "type": "quantitative"
+        }
+      },
+      "name": "edges_source"
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "tree",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "size": [
+            1,
+            1
+          ],
+          "as": [
+            "alpha",
+            "beta",
+            "depth",
+            "children"
+          ]
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "(rotate + extent * datum.alpha + 270) % 360",
+          "as": "angle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "inrange(datum.angle, [90, 270])",
+          "as": "leftside",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "width / 2 + radius * datum.beta * cos(PI * datum.angle / 180)",
+          "as": "x",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "height / 2 + radius * datum.beta * sin(PI * datum.angle / 180)",
+          "as": "y",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.leftside ? datum.angle - 180 : datum.angle",
+          "as": "labelAngle",
+          "params": {
+            "rotate": {
+              "x-eas:slot": "rotate"
+            },
+            "extent": {
+              "x-eas:slot": "extent"
+            },
+            "radius": {
+              "x-eas:slot": "radius"
+            },
+            "width": {
+              "x-eas:slot": "width"
+            },
+            "height": {
+              "x-eas:slot": "height"
+            }
+          }
+        },
+        {
+          "x-eas:transform": "treepath",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "links": {
+            "x-eas:slot": "links"
+          },
+          "source": {
+            "x-eas:slot": "source"
+          },
+          "target": {
+            "x-eas:slot": "target"
+          },
+          "as": [
+            "link",
+            "step",
+            "source",
+            "target"
+          ]
+        },
+        {
+          "x-eas:transform": "formula",
+          "expr": "datum.target",
+          "as": {
+            "x-eas:slot": "key"
+          }
+        },
+        {
+          "filter": {
+            "param": "active",
+            "empty": false
+          }
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "interpolate": "bundle",
+        "tension": {
+          "x-eas:slot": "tension"
+        },
+        "strokeWidth": 1.5,
+        "stroke": {
+          "x-eas:slot": "colorIn"
+        },
+        "strokeOpacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "height"
+              }
+            ],
+            "reverse": true,
+            "nice": false,
+            "zero": false
+          }
+        },
+        "detail": {
+          "field": "link",
+          "type": "nominal"
+        },
+        "order": {
+          "field": "step",
+          "type": "quantitative"
+        }
+      },
+      "name": "edges_target"
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "kind": "depends on"
+          },
+          {
+            "kind": "imported by"
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "opacity": 0,
+        "size": 0
+      },
+      "encoding": {
+        "x": {
+          "datum": 0,
+          "type": "quantitative"
+        },
+        "y": {
+          "datum": 0,
+          "type": "quantitative"
+        },
+        "stroke": {
+          "field": "kind",
+          "type": "nominal",
+          "scale": {
+            "domain": [
+              "depends on",
+              "imported by"
+            ],
+            "range": [
+              {
+                "x-eas:slot": "colorIn"
+              },
+              {
+                "x-eas:slot": "colorOut"
+              }
+            ]
+          },
+          "legend": {
+            "title": "Dependencies",
+            "orient": "bottom-right",
+            "symbolType": "stroke",
+            "symbolOpacity": 1,
+            "symbolStrokeWidth": 1.5
+          }
+        }
+      }
+    }
+  ],
+  "params": [
+    {
+      "name": "active",
+      "select": {
+        "type": "point",
+        "on": "pointerover",
+        "clear": "pointerout",
+        "fields": [
+          {
+            "x-eas:slot": "key"
+          }
+        ]
+      },
+      "views": [
+        "labels_left",
+        "labels_right"
+      ]
+    }
+  ]
+}

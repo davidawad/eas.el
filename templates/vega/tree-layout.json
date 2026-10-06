@@ -1,0 +1,421 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "tree-layout",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A horizontal node-link tree of id/parent rows: tidy or cluster layout, links as lines, curves, diagonals or elbows, nodes colored by depth.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per node: a key, the parent's key (null at the root) and a label"
+      },
+      "key": {
+        "type": "field",
+        "of": "data",
+        "default": "id"
+      },
+      "parent": {
+        "type": "field",
+        "of": "data",
+        "default": "parent",
+        "doc": "the parent's key; exactly one row has none"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "name"
+      },
+      "method": {
+        "enum": [
+          "tidy",
+          "cluster"
+        ],
+        "default": "tidy"
+      },
+      "links": {
+        "enum": [
+          "line",
+          "curve",
+          "diagonal",
+          "orthogonal"
+        ],
+        "default": "diagonal"
+      },
+      "separation": {
+        "type": "boolean",
+        "default": false,
+        "doc": "space cousins twice as far apart as siblings"
+      },
+      "labels": {
+        "type": "boolean",
+        "default": true
+      },
+      "width": {
+        "type": "number",
+        "default": 600
+      },
+      "height": {
+        "type": "number",
+        "default": 1600
+      },
+      "depth": {
+        "type": "number",
+        "default": 500,
+        "doc": "x extent of the tree; the rest of the width holds leaf labels"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "magma",
+        "doc": "color scheme of node depth"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A node-link tree: each row a node placed by depth across and by the tidy tree layout down."
+      }
+    },
+    "example": "../examples/vega/tree-layout.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0130 (Vega's own SVG through the same rasterizer: 0.0127). Layout, links and labels match Vega exactly (tree is Buchheim/Reingold-Tilford as d3). Vega's bound widgets (labels, layout, links, separation) are the slots of the same names.",
+      "ratio": 0.02
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "layer": [
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "tree",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "separation": {
+            "x-eas:slot": "separation"
+          },
+          "size": [
+            {
+              "x-eas:slot": "height"
+            },
+            {
+              "x-eas:slot": "depth"
+            }
+          ],
+          "as": [
+            "y",
+            "x",
+            "depth",
+            "children"
+          ]
+        },
+        {
+          "x-eas:transform": "treelinks",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          }
+        },
+        {
+          "x-eas:transform": "linkpath",
+          "shape": {
+            "x-eas:slot": "links"
+          },
+          "orient": "horizontal",
+          "as": [
+            "x",
+            "y",
+            "step",
+            "link"
+          ]
+        }
+      ],
+      "mark": {
+        "type": "line",
+        "stroke": "#ccc",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "height"
+              }
+            ],
+            "reverse": true,
+            "nice": false,
+            "zero": false
+          }
+        },
+        "detail": {
+          "field": "link",
+          "type": "nominal"
+        },
+        "order": {
+          "field": "step",
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "tree",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "separation": {
+            "x-eas:slot": "separation"
+          },
+          "size": [
+            {
+              "x-eas:slot": "height"
+            },
+            {
+              "x-eas:slot": "depth"
+            }
+          ],
+          "as": [
+            "y",
+            "x",
+            "depth",
+            "children"
+          ]
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "shape": "circle",
+        "filled": true,
+        "size": 100,
+        "opacity": 1,
+        "stroke": "#fff",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative"
+        },
+        "color": {
+          "field": "depth",
+          "type": "quantitative",
+          "legend": null,
+          "scale": {
+            "scheme": {
+              "x-eas:slot": "scheme"
+            },
+            "zero": true
+          }
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "label"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": "depth",
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "x-eas:when": "labels",
+      "spec": {
+        "data": {
+          "name": "data"
+        },
+        "transform": [
+          {
+            "x-eas:transform": "tree",
+            "key": {
+              "x-eas:slot": "key"
+            },
+            "parentKey": {
+              "x-eas:slot": "parent"
+            },
+            "method": {
+              "x-eas:slot": "method"
+            },
+            "separation": {
+              "x-eas:slot": "separation"
+            },
+            "size": [
+              {
+                "x-eas:slot": "height"
+              },
+              {
+                "x-eas:slot": "depth"
+              }
+            ],
+            "as": [
+              "y",
+              "x",
+              "depth",
+              "children"
+            ]
+          },
+          {
+            "filter": "datum.children > 0"
+          }
+        ],
+        "mark": {
+          "type": "text",
+          "fontSize": 9,
+          "baseline": "middle",
+          "align": "right",
+          "dx": -7
+        },
+        "encoding": {
+          "x": {
+            "field": "x",
+            "type": "quantitative"
+          },
+          "y": {
+            "field": "y",
+            "type": "quantitative"
+          },
+          "text": {
+            "field": {
+              "x-eas:slot": "label"
+            },
+            "type": "nominal"
+          }
+        }
+      }
+    },
+    {
+      "x-eas:when": "labels",
+      "spec": {
+        "data": {
+          "name": "data"
+        },
+        "transform": [
+          {
+            "x-eas:transform": "tree",
+            "key": {
+              "x-eas:slot": "key"
+            },
+            "parentKey": {
+              "x-eas:slot": "parent"
+            },
+            "method": {
+              "x-eas:slot": "method"
+            },
+            "separation": {
+              "x-eas:slot": "separation"
+            },
+            "size": [
+              {
+                "x-eas:slot": "height"
+              },
+              {
+                "x-eas:slot": "depth"
+              }
+            ],
+            "as": [
+              "y",
+              "x",
+              "depth",
+              "children"
+            ]
+          },
+          {
+            "filter": "datum.children == 0"
+          }
+        ],
+        "mark": {
+          "type": "text",
+          "fontSize": 9,
+          "baseline": "middle",
+          "align": "left",
+          "dx": 7
+        },
+        "encoding": {
+          "x": {
+            "field": "x",
+            "type": "quantitative"
+          },
+          "y": {
+            "field": "y",
+            "type": "quantitative"
+          },
+          "text": {
+            "field": {
+              "x-eas:slot": "label"
+            },
+            "type": "nominal"
+          }
+        }
+      }
+    }
+  ]
+}

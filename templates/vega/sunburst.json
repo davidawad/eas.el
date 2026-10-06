@@ -1,0 +1,209 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "sunburst",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A sunburst of id/parent rows: the root at the centre, each depth a ring, each node an arc whose angle is its value, colored by depth.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per node: a key, the parent's key (null at the root), a label and, on leaves, a size"
+      },
+      "key": {
+        "type": "field",
+        "of": "data",
+        "default": "id"
+      },
+      "parent": {
+        "type": "field",
+        "of": "data",
+        "default": "parent",
+        "doc": "the parent's key; exactly one row has none"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "name"
+      },
+      "size": {
+        "type": "field",
+        "of": "data",
+        "default": "size",
+        "doc": "the leaf value arc angles are proportional to"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "tableau20",
+        "doc": "color scheme of depth"
+      },
+      "width": {
+        "type": "number",
+        "default": 600
+      },
+      "height": {
+        "type": "number",
+        "default": 600
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A sunburst: rings of arcs, each node's angle its share of its parent."
+      },
+      "radius": {
+        "type": "number",
+        "default": 300,
+        "doc": "outer radius of the last ring, in pixels (Vega: width / 2)"
+      }
+    },
+    "example": "../examples/vega/sunburst.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0002 (Vega's own SVG through the same rasterizer: 0.0002). Arcs (arc mark with theta2/radius2) match Vega's partition; hover strokes the arc red, but its strokeWidth stays 0.5 (a conditional strokeWidth on arcs is not drawn). In a terminal, wedges thinner than a character cell draw no cell (eas-text-check reports them at 60x16).",
+      "ratio": 0.005
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "data": {
+    "name": "data"
+  },
+  "transform": [
+    {
+      "x-eas:transform": "partition",
+      "key": {
+        "x-eas:slot": "key"
+      },
+      "parentKey": {
+        "x-eas:slot": "parent"
+      },
+      "field": {
+        "x-eas:slot": "size"
+      },
+      "sort": {
+        "field": "value"
+      },
+      "size": [
+        6.283185307179586,
+        {
+          "x-eas:slot": "radius"
+        }
+      ],
+      "as": [
+        "a0",
+        "r0",
+        "a1",
+        "r1",
+        "depth",
+        "children"
+      ]
+    }
+  ],
+  "params": [
+    {
+      "name": "hover",
+      "select": {
+        "type": "point",
+        "on": "pointerover",
+        "clear": "pointerout"
+      }
+    }
+  ],
+  "mark": {
+    "type": "arc",
+    "strokeWidth": 0.5
+  },
+  "encoding": {
+    "theta": {
+      "field": "a0",
+      "type": "quantitative",
+      "stack": null,
+      "scale": {
+        "domain": [
+          0,
+          1
+        ],
+        "range": [
+          0,
+          1
+        ],
+        "zero": false,
+        "nice": false
+      }
+    },
+    "theta2": {
+      "field": "a1"
+    },
+    "radius": {
+      "field": "r1",
+      "type": "quantitative",
+      "scale": {
+        "domain": [
+          0,
+          1
+        ],
+        "range": [
+          0,
+          1
+        ],
+        "zero": false,
+        "nice": false
+      }
+    },
+    "radius2": {
+      "field": "r0"
+    },
+    "color": {
+      "field": "depth",
+      "type": "ordinal",
+      "legend": null,
+      "scale": {
+        "scheme": {
+          "x-eas:slot": "scheme"
+        }
+      }
+    },
+    "stroke": {
+      "condition": {
+        "param": "hover",
+        "empty": false,
+        "value": "red"
+      },
+      "value": "white"
+    },
+    "tooltip": [
+      {
+        "field": {
+          "x-eas:slot": "label"
+        },
+        "type": "nominal"
+      },
+      {
+        "field": {
+          "x-eas:slot": "size"
+        },
+        "type": "quantitative"
+      }
+    ]
+  }
+}

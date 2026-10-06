@@ -4,7 +4,9 @@
     "mark/slot": "Template slot placeholders are substituted by resolve (ERT: eas-template-enum-and-array-items).",
     "transform/x-eas": "Domain transforms are materialized by resolve (ERT: eas-resolve-materializes-domain-transforms).",
     "transform/x-eas/countpattern": "Vega's countpattern: regexp matches counted into text/count rows (ERT: eas-vega-wordcloud-countpattern-counts-words).",
-    "transform/x-eas/wordcloud": "Vega's wordcloud: seeded spiral placement of measured, rotated words (ERT: eas-vega-wordcloud-places-without-overlap)."
+    "transform/x-eas/wordcloud": "Vega's wordcloud: seeded spiral placement of measured, rotated words (ERT: eas-vega-wordcloud-places-without-overlap).",
+    "transform/x-eas:hierarchy": "stratify, nest, tree (tidy, cluster), treemap, partition, pack, treelinks, treepath and formula match Vega's layouts (ERT: eas-vega-hierarchy-*).",
+    "transform/x-eas:linkpath": "linkpath draws Vega's line, arc, curve, diagonal and orthogonal links, radial too (ERT: eas-vega-hierarchy-linkpath-*)."
   },
   "features": {
     "bind/input": {
@@ -49,7 +51,7 @@
     },
     "encoding/color": {
       "oracle": "verified",
-      "specs": ["encoding-condition", "encoding-order", "encoding-radius", "mark-arc", "mark-area-stacked", "mark-bar-stacked", "mark-line-multi", "mark-rect", "mark-square", "param-bind-legend", "param-point", "scale-ordinal-color", "transform-fold", "area-circular/arc_donut", "area-circular/arc_pie", "area-circular/arc_pie_normalize_tooltip", "area-circular/arc_pie_pyramid", "area-circular/arc_radial", "area-circular/layer_arc_label", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "bar/bar_color_disabled_scale", "bar/bar_diverging_stack_population_pyramid", "bar/bar_diverging_stack_transform", "bar/bar_grouped", "bar/bar_grouped_repeated", "bar/bar_heatlane", "bar/bar_layered_transparent", "bar/stacked_bar_count_corner_radius_mark", "bar/stacked_bar_h", "bar/stacked_bar_h_normalized_labeled", "bar/stacked_bar_normalize", "bar/stacked_bar_weather", "calculations/joinaggregate_mean_difference_by_year", "calculations/joinaggregate_residual_graph", "calculations/layer_line_window", "calculations/parallel_coordinate", "calculations/waterfall_chart", "calculations/window_rank", "distributions/area_density_stacked", "distributions/boxplot_preaggregated", "distributions/isotype_bar_chart", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "interactive/brush_table", "interactive/dynamic_color_legend", "interactive/interactive_brush", "interactive/interactive_concat_layer", "interactive/interactive_global_development", "interactive/interactive_index_chart", "interactive/interactive_layered_crossfilter", "interactive/interactive_legend", "interactive/interactive_line_hover", "interactive/interactive_line_point_hover", "interactive/interactive_multi_line_label", "interactive/interactive_multi_line_pivot_tooltip", "interactive/interactive_multi_line_tooltip", "interactive/interactive_query_widgets", "interactive/interactive_seattle_weather", "interactive/interactive_splom", "interactive/isotype_grid", "interactive/point_href", "interactive/selection_layer_bar_month", "interactive/selection_type_point_zorder", "layered/concat_layer_voyager_result", "layered/layer_bar_annotations", "layered/layer_bar_fruit", "layered/layer_candlestick", "layered/layer_falkensee", "layered/layer_histogram_global_mean", "layered/layer_likert", "layered/layer_line_co2_concentration", "layered/layer_precipitation_mean", "layered/layer_ranged_dot", "layered/layer_text_heatmap", "line/layer_line_co2_concentration", "line/line_color", "line/line_overlay", "line/line_overlay_stroked", "line/line_slope", "line/repeat_layer", "line/sequence_line_fold", "line/trail_color", "line/trail_comet", "line/window_rank", "multiview/concat_bar_scales_discretize", "multiview/concat_marginal_histograms", "multiview/concat_population_pyramid", "multiview/facet_grid_bar", "multiview/geo_circle", "multiview/interactive_splom", "multiview/repeat_histogram", "multiview/repeat_layer", "multiview/trellis_area", "multiview/trellis_bar", "multiview/trellis_barley", "multiview/trellis_stacked_bar", "scatter-table/circle_bubble_health_income", "scatter-table/circle_natural_disasters", "scatter-table/layer_text_heatmap", "scatter-table/point_angle_windvector", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather", "scatter-table/rect_lasagna", "scatter-table/rect_mosaic_labelled_with_offset", "scatter-table/text_scatterplot_colored"]
+      "specs": ["encoding-condition", "encoding-order", "encoding-radius", "encoding-theta2-radius2", "mark-arc", "mark-area-stacked", "mark-bar-stacked", "mark-line-multi", "mark-rect", "mark-square", "param-bind-legend", "param-point", "scale-ordinal-color", "transform-fold", "area-circular/arc_donut", "area-circular/arc_pie", "area-circular/arc_pie_normalize_tooltip", "area-circular/arc_pie_pyramid", "area-circular/arc_radial", "area-circular/layer_arc_label", "area-circular/stacked_area", "area-circular/stacked_area_normalize", "area-circular/stacked_area_stream", "bar/bar_color_disabled_scale", "bar/bar_diverging_stack_population_pyramid", "bar/bar_diverging_stack_transform", "bar/bar_grouped", "bar/bar_grouped_repeated", "bar/bar_heatlane", "bar/bar_layered_transparent", "bar/stacked_bar_count_corner_radius_mark", "bar/stacked_bar_h", "bar/stacked_bar_h_normalized_labeled", "bar/stacked_bar_normalize", "bar/stacked_bar_weather", "calculations/joinaggregate_mean_difference_by_year", "calculations/joinaggregate_residual_graph", "calculations/layer_line_window", "calculations/parallel_coordinate", "calculations/waterfall_chart", "calculations/window_rank", "distributions/area_density_stacked", "distributions/boxplot_preaggregated", "distributions/isotype_bar_chart", "distributions/layer_point_errorbar_ci", "distributions/layer_point_errorbar_stdev", "distributions/rect_binned_heatmap", "interactive/brush_table", "interactive/dynamic_color_legend", "interactive/interactive_brush", "interactive/interactive_concat_layer", "interactive/interactive_global_development", "interactive/interactive_index_chart", "interactive/interactive_layered_crossfilter", "interactive/interactive_legend", "interactive/interactive_line_hover", "interactive/interactive_line_point_hover", "interactive/interactive_multi_line_label", "interactive/interactive_multi_line_pivot_tooltip", "interactive/interactive_multi_line_tooltip", "interactive/interactive_query_widgets", "interactive/interactive_seattle_weather", "interactive/interactive_splom", "interactive/isotype_grid", "interactive/point_href", "interactive/selection_layer_bar_month", "interactive/selection_type_point_zorder", "layered/concat_layer_voyager_result", "layered/layer_bar_annotations", "layered/layer_bar_fruit", "layered/layer_candlestick", "layered/layer_falkensee", "layered/layer_histogram_global_mean", "layered/layer_likert", "layered/layer_line_co2_concentration", "layered/layer_precipitation_mean", "layered/layer_ranged_dot", "layered/layer_text_heatmap", "line/layer_line_co2_concentration", "line/line_color", "line/line_overlay", "line/line_overlay_stroked", "line/line_slope", "line/repeat_layer", "line/sequence_line_fold", "line/trail_color", "line/trail_comet", "line/window_rank", "multiview/concat_bar_scales_discretize", "multiview/concat_marginal_histograms", "multiview/concat_population_pyramid", "multiview/facet_grid_bar", "multiview/geo_circle", "multiview/interactive_splom", "multiview/repeat_histogram", "multiview/repeat_layer", "multiview/trellis_area", "multiview/trellis_bar", "multiview/trellis_barley", "multiview/trellis_stacked_bar", "scatter-table/circle_bubble_health_income", "scatter-table/circle_natural_disasters", "scatter-table/layer_text_heatmap", "scatter-table/point_angle_windvector", "scatter-table/point_color_with_shape", "scatter-table/point_invalid_color", "scatter-table/rect_binned_heatmap", "scatter-table/rect_heatmap", "scatter-table/rect_heatmap_weather", "scatter-table/rect_lasagna", "scatter-table/rect_mosaic_labelled_with_offset", "scatter-table/text_scatterplot_colored"]
     },
     "encoding/column": {
       "oracle": "verified",
@@ -97,7 +99,11 @@
     },
     "encoding/radius": {
       "oracle": "verified",
-      "specs": ["encoding-radius", "area-circular/arc_radial"]
+      "specs": ["encoding-radius", "encoding-theta2-radius2", "area-circular/arc_radial"]
+    },
+    "encoding/radius2": {
+      "oracle": "verified",
+      "specs": ["encoding-theta2-radius2"]
     },
     "encoding/row": {
       "oracle": "verified",
@@ -129,7 +135,11 @@
     },
     "encoding/theta": {
       "oracle": "verified",
-      "specs": ["encoding-order", "encoding-radius", "mark-arc", "area-circular/arc_donut", "area-circular/arc_pie", "area-circular/arc_pie_normalize_tooltip", "area-circular/arc_pie_pyramid", "area-circular/arc_radial", "area-circular/layer_arc_label"]
+      "specs": ["encoding-order", "encoding-radius", "encoding-theta2-radius2", "mark-arc", "area-circular/arc_donut", "area-circular/arc_pie", "area-circular/arc_pie_normalize_tooltip", "area-circular/arc_pie_pyramid", "area-circular/arc_radial", "area-circular/layer_arc_label"]
+    },
+    "encoding/theta2": {
+      "oracle": "verified",
+      "specs": ["encoding-theta2-radius2"]
     },
     "encoding/timeUnit": {
       "oracle": "verified",
@@ -169,7 +179,7 @@
     },
     "mark/arc": {
       "oracle": "verified",
-      "specs": ["encoding-order", "encoding-radius", "mark-arc", "area-circular/arc_donut", "area-circular/arc_pie", "area-circular/arc_pie_normalize_tooltip", "area-circular/arc_pie_pyramid", "area-circular/arc_radial", "area-circular/layer_arc_label"]
+      "specs": ["encoding-order", "encoding-radius", "encoding-theta2-radius2", "mark-arc", "area-circular/arc_donut", "area-circular/arc_pie", "area-circular/arc_pie_normalize_tooltip", "area-circular/arc_pie_pyramid", "area-circular/arc_radial", "area-circular/layer_arc_label"]
     },
     "mark/area": {
       "oracle": "verified",

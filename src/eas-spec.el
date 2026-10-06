@@ -86,7 +86,9 @@
     ;; scatter and table plots (fc-qx1.27)
     :angle :xOffset :yOffset :url :longitude :latitude
     ;; interactive (fc-qx1.33)
-    :fillOpacity :strokeOpacity :strokeWidth)
+    :fillOpacity :strokeOpacity :strokeWidth
+    ;; arcs spanning theta..theta2 and radius2..radius (eas-7r1.4, eas-polar.el)
+    :theta2 :radius2)
   "Encoding channels chart/v1 recognises.")
 
 (defconst eas-spec--channel-def-keys

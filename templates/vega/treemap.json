@@ -1,0 +1,667 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "treemap",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "A treemap of id/parent rows: each leaf a rectangle sized by its value, groups colored and labelled, larger labels for shallower groups.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per node: a key, the parent's key (null at the root), a label and, on leaves, a size"
+      },
+      "key": {
+        "type": "field",
+        "of": "data",
+        "default": "id"
+      },
+      "parent": {
+        "type": "field",
+        "of": "data",
+        "default": "parent",
+        "doc": "the parent's key; exactly one row has none"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "name"
+      },
+      "size": {
+        "type": "field",
+        "of": "data",
+        "default": "size",
+        "doc": "the leaf value areas are proportional to"
+      },
+      "method": {
+        "enum": [
+          "squarify",
+          "resquarify",
+          "binary",
+          "dice",
+          "slice",
+          "slicedice"
+        ],
+        "default": "squarify"
+      },
+      "ratio": {
+        "type": "number",
+        "default": 1.6,
+        "doc": "squarify's target aspect ratio"
+      },
+      "round": {
+        "type": "boolean",
+        "default": true,
+        "doc": "snap rectangles to whole pixels"
+      },
+      "colors": {
+        "type": "array",
+        "items": "string",
+        "default": [
+          "#3182bd",
+          "#6baed6",
+          "#9ecae1",
+          "#c6dbef",
+          "#e6550d",
+          "#fd8d3c",
+          "#fdae6b",
+          "#fdd0a2",
+          "#31a354",
+          "#74c476",
+          "#a1d99b",
+          "#c7e9c0",
+          "#756bb1",
+          "#9e9ac8",
+          "#bcbddc",
+          "#dadaeb",
+          "#636363",
+          "#969696",
+          "#bdbdbd",
+          "#d9d9d9"
+        ],
+        "doc": "fills of the groups, in data order"
+      },
+      "labelSizes": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          256,
+          28,
+          20,
+          14
+        ],
+        "doc": "font size of group labels at depth 0, 1, 2 and 3 or deeper"
+      },
+      "labelOpacities": {
+        "type": "array",
+        "items": "number",
+        "default": [
+          0.15,
+          0.5,
+          0.8,
+          1
+        ],
+        "doc": "opacity of group labels at depth 0, 1, 2 and 3 or deeper"
+      },
+      "width": {
+        "type": "number",
+        "default": 960
+      },
+      "height": {
+        "type": "number",
+        "default": 500
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "A treemap: each leaf's area is its value, nested inside its groups."
+      }
+    },
+    "example": "../examples/vega/treemap.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0338 (Vega's own SVG through the same rasterizer: 0.0338). Rectangles match Vega's to the pixel; hovering a leaf fills it red as in Vega. The layout and aspectRatio widgets are the method and ratio slots.",
+      "ratio": 0.04
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 2.5,
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "layer": [
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "treemap",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "field": {
+            "x-eas:slot": "size"
+          },
+          "sort": {
+            "field": "value"
+          },
+          "round": {
+            "x-eas:slot": "round"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "ratio": {
+            "x-eas:slot": "ratio"
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        },
+        {
+          "filter": "datum.children > 0"
+        }
+      ],
+      "mark": {
+        "type": "rect",
+        "strokeWidth": 0
+      },
+      "encoding": {
+        "x": {
+          "field": "x0",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "x2": {
+          "field": "x1"
+        },
+        "y": {
+          "field": "y0",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "height"
+              }
+            ],
+            "reverse": true,
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y2": {
+          "field": "y1"
+        },
+        "color": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal",
+          "legend": null,
+          "sort": null,
+          "scale": {
+            "range": {
+              "x-eas:slot": "colors"
+            }
+          }
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "treemap",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "field": {
+            "x-eas:slot": "size"
+          },
+          "sort": {
+            "field": "value"
+          },
+          "round": {
+            "x-eas:slot": "round"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "ratio": {
+            "x-eas:slot": "ratio"
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        },
+        {
+          "filter": "datum.children == 0"
+        }
+      ],
+      "params": [
+        {
+          "name": "hover",
+          "select": {
+            "type": "point",
+            "on": "pointerover",
+            "clear": "pointerout"
+          }
+        }
+      ],
+      "mark": {
+        "type": "rect",
+        "stroke": "#fff",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "x0",
+          "type": "quantitative"
+        },
+        "x2": {
+          "field": "x1"
+        },
+        "y": {
+          "field": "y0",
+          "type": "quantitative"
+        },
+        "y2": {
+          "field": "y1"
+        },
+        "fill": {
+          "condition": {
+            "param": "hover",
+            "empty": false,
+            "value": "red"
+          },
+          "value": "transparent"
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "label"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "size"
+            },
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "treemap",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "field": {
+            "x-eas:slot": "size"
+          },
+          "sort": {
+            "field": "value"
+          },
+          "round": {
+            "x-eas:slot": "round"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "ratio": {
+            "x-eas:slot": "ratio"
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        },
+        {
+          "filter": "datum.children > 0 && datum.depth == 0"
+        },
+        {
+          "calculate": "(datum.x0 + datum.x1) / 2",
+          "as": "cx"
+        },
+        {
+          "calculate": "(datum.y0 + datum.y1) / 2",
+          "as": "cy"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "font": "Helvetica Neue, Arial",
+        "align": "center",
+        "baseline": "middle",
+        "color": "#000",
+        "fontSize": {
+          "x-eas:slot": "labelSizes",
+          "key": "0"
+        },
+        "opacity": {
+          "x-eas:slot": "labelOpacities",
+          "key": "0"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "cx",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "cy",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "treemap",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "field": {
+            "x-eas:slot": "size"
+          },
+          "sort": {
+            "field": "value"
+          },
+          "round": {
+            "x-eas:slot": "round"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "ratio": {
+            "x-eas:slot": "ratio"
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        },
+        {
+          "filter": "datum.children > 0 && datum.depth == 1"
+        },
+        {
+          "calculate": "(datum.x0 + datum.x1) / 2",
+          "as": "cx"
+        },
+        {
+          "calculate": "(datum.y0 + datum.y1) / 2",
+          "as": "cy"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "font": "Helvetica Neue, Arial",
+        "align": "center",
+        "baseline": "middle",
+        "color": "#000",
+        "fontSize": {
+          "x-eas:slot": "labelSizes",
+          "key": "1"
+        },
+        "opacity": {
+          "x-eas:slot": "labelOpacities",
+          "key": "1"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "cx",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "cy",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "treemap",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "field": {
+            "x-eas:slot": "size"
+          },
+          "sort": {
+            "field": "value"
+          },
+          "round": {
+            "x-eas:slot": "round"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "ratio": {
+            "x-eas:slot": "ratio"
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        },
+        {
+          "filter": "datum.children > 0 && datum.depth == 2"
+        },
+        {
+          "calculate": "(datum.x0 + datum.x1) / 2",
+          "as": "cx"
+        },
+        {
+          "calculate": "(datum.y0 + datum.y1) / 2",
+          "as": "cy"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "font": "Helvetica Neue, Arial",
+        "align": "center",
+        "baseline": "middle",
+        "color": "#000",
+        "fontSize": {
+          "x-eas:slot": "labelSizes",
+          "key": "2"
+        },
+        "opacity": {
+          "x-eas:slot": "labelOpacities",
+          "key": "2"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "cx",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "cy",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "treemap",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "field": {
+            "x-eas:slot": "size"
+          },
+          "sort": {
+            "field": "value"
+          },
+          "round": {
+            "x-eas:slot": "round"
+          },
+          "method": {
+            "x-eas:slot": "method"
+          },
+          "ratio": {
+            "x-eas:slot": "ratio"
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        },
+        {
+          "filter": "datum.children > 0 && datum.depth >= 3"
+        },
+        {
+          "calculate": "(datum.x0 + datum.x1) / 2",
+          "as": "cx"
+        },
+        {
+          "calculate": "(datum.y0 + datum.y1) / 2",
+          "as": "cy"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "font": "Helvetica Neue, Arial",
+        "align": "center",
+        "baseline": "middle",
+        "color": "#000",
+        "fontSize": {
+          "x-eas:slot": "labelSizes",
+          "key": "3"
+        },
+        "opacity": {
+          "x-eas:slot": "labelOpacities",
+          "key": "3"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "cx",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "cy",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": {
+            "x-eas:slot": "label"
+          },
+          "type": "nominal"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,312 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "zoomable-circle-packing",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Circle packing of id/parent rows that zooms: clicking a circle lays its subtree out alone, clicking the circle in focus zooms back out.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per node: a key, the parent's key (null at the root), a label and, on leaves, a size"
+      },
+      "key": {
+        "type": "field",
+        "of": "data",
+        "default": "id"
+      },
+      "parent": {
+        "type": "field",
+        "of": "data",
+        "default": "parent",
+        "doc": "the parent's key; exactly one row has none"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "name"
+      },
+      "size": {
+        "type": "field",
+        "of": "data",
+        "default": "size",
+        "doc": "the leaf value circle areas are proportional to"
+      },
+      "focus": {
+        "type": "any",
+        "default": null,
+        "doc": "the key of the node zoomed into; null shows the whole tree (the zoom-subtree action sets it)"
+      },
+      "levels": {
+        "type": "array",
+        "default": null,
+        "doc": "the color domain, every depth of the whole tree; null takes the depths shown (the zoom-subtree action sets it)"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "magma",
+        "doc": "color scheme of depth"
+      },
+      "blackStrokeFrom": {
+        "type": "number",
+        "default": 4,
+        "doc": "depths from this one on, light in the scheme, get a black outline"
+      },
+      "help": {
+        "type": "array",
+        "items": "string",
+        "default": [
+          "interactivity instructions:",
+          "• click on a node to zoom in",
+          "• click the node in focus to zoom out to its parent"
+        ],
+        "doc": "lines of help under the circles; [] for none"
+      },
+      "helpY": {
+        "type": "number",
+        "default": 605,
+        "doc": "baseline of the first help line (height + 5)"
+      },
+      "width": {
+        "type": "number",
+        "default": 600
+      },
+      "height": {
+        "type": "number",
+        "default": 600
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "Zoomable circle packing: each leaf a circle sized by its value; click to zoom into a group."
+      }
+    },
+    "actions": {
+      "circles": "zoom-subtree"
+    },
+    "example": "../examples/vega/zoomable-circle-packing.data.json",
+    "vega": {
+      "status": "partial",
+      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0090 (Vega's own SVG through the same rasterizer: n/a (timer)). The initial view matches. Clicking a circle opens a zoomed view (the zoom-subtree action re-lays its subtree out, which is d3's zoom geometry) and clicking the focused circle zooms out, but without Vega's animated transition, the shift-click details panel or the slow-motion modifier; the help text describes eas's clicks.",
+      "ratio": 0.015
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "layer": [
+    {
+      "name": "circles",
+      "data": {
+        "name": "data"
+      },
+      "transform": [
+        {
+          "x-eas:transform": "subtree",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "root": {
+            "x-eas:slot": "focus"
+          },
+          "as": "level"
+        },
+        {
+          "x-eas:transform": "pack",
+          "key": {
+            "x-eas:slot": "key"
+          },
+          "parentKey": {
+            "x-eas:slot": "parent"
+          },
+          "field": {
+            "x-eas:slot": "size"
+          },
+          "sort": {
+            "field": "value"
+          },
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ]
+        },
+        {
+          "calculate": "4 * datum.r * datum.r",
+          "as": "area"
+        }
+      ],
+      "params": [
+        {
+          "name": "hover",
+          "select": {
+            "type": "point",
+            "on": "pointerover",
+            "clear": "pointerout"
+          }
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "shape": "circle",
+        "filled": true,
+        "opacity": 1,
+        "strokeOpacity": 0.5,
+        "cursor": "pointer"
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "height"
+              }
+            ],
+            "reverse": true,
+            "nice": false,
+            "zero": false
+          }
+        },
+        "size": {
+          "field": "area",
+          "type": "quantitative",
+          "legend": null,
+          "scale": {
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              1
+            ],
+            "zero": false,
+            "nice": false
+          }
+        },
+        "color": {
+          "field": "level",
+          "type": "ordinal",
+          "legend": null,
+          "scale": {
+            "scheme": {
+              "x-eas:slot": "scheme"
+            },
+            "domain": {
+              "x-eas:slot": "levels"
+            }
+          }
+        },
+        "stroke": {
+          "condition": {
+            "test": {
+              "x-eas:expr": "datum.level >= {{blackStrokeFrom}}"
+            },
+            "value": "black"
+          },
+          "value": "white"
+        },
+        "strokeWidth": {
+          "condition": {
+            "param": "hover",
+            "empty": false,
+            "value": 2
+          },
+          "value": 0.5
+        },
+        "tooltip": [
+          {
+            "field": {
+              "x-eas:slot": "label"
+            },
+            "type": "nominal"
+          },
+          {
+            "field": {
+              "x-eas:slot": "size"
+            },
+            "type": "quantitative"
+          },
+          {
+            "field": "level",
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "alphabetic",
+        "fontSize": 14,
+        "lineHeight": 16,
+        "color": "#000",
+        "text": {
+          "x-eas:slot": "help"
+        }
+      },
+      "encoding": {
+        "x": {
+          "datum": 0,
+          "type": "quantitative"
+        },
+        "y": {
+          "datum": {
+            "x-eas:slot": "helpY"
+          },
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+}

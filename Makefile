@@ -51,7 +51,7 @@ $(GALLERY_TARGETS): test-gallery-%:
 	EAS_GALLERY_GROUPS=$* $(call run-tests,(and (tag :gallery) (or "^eas-vl-gallery-groups-hold-their-status$$" "^eas-vl-gallery-groups-hold-their-text-status$$")))
 
 test-gallery-conformance:
-	$(call run-tests,(and (tag :gallery) (or "^eas-conformance-" "^eas-text-gallery-templates-")))
+	$(call run-tests,(and (tag :gallery) (or "^eas-conformance-" "^eas-text-gallery-templates-" "^eas-vega-.*gallery")))
 
 bench:
 	scripts/eas-bench.sh

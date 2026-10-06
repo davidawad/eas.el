@@ -1,0 +1,221 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "circle-packing",
+    "namespace": "vega",
+    "version": "1.0.0",
+    "doc": "Circle packing of id/parent rows: each leaf a circle whose area is its value, nested inside its groups' circles, colored by depth.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per node: a key, the parent's key (null at the root), a label and, on leaves, a size"
+      },
+      "key": {
+        "type": "field",
+        "of": "data",
+        "default": "id"
+      },
+      "parent": {
+        "type": "field",
+        "of": "data",
+        "default": "parent",
+        "doc": "the parent's key; exactly one row has none"
+      },
+      "label": {
+        "type": "field",
+        "of": "data",
+        "default": "name"
+      },
+      "size": {
+        "type": "field",
+        "of": "data",
+        "default": "size",
+        "doc": "the leaf value circle areas are proportional to"
+      },
+      "scheme": {
+        "type": "string",
+        "default": "category20",
+        "doc": "color scheme of depth"
+      },
+      "width": {
+        "type": "number",
+        "default": 600
+      },
+      "height": {
+        "type": "number",
+        "default": 600
+      },
+      "title": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": "Circle packing: each leaf a circle sized by its value, inside its group's circle."
+      }
+    },
+    "example": "../examples/vega/circle-packing.data.json",
+    "vega": {
+      "status": "pass",
+      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0001 (Vega's own SVG through the same rasterizer: 0.0001). Circles match d3's pack to the last bit; hover outlines the circle red with tooltips.",
+      "ratio": 0.005
+    }
+  },
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
+  "padding": 5,
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "data": {
+    "name": "data"
+  },
+  "transform": [
+    {
+      "x-eas:transform": "pack",
+      "key": {
+        "x-eas:slot": "key"
+      },
+      "parentKey": {
+        "x-eas:slot": "parent"
+      },
+      "field": {
+        "x-eas:slot": "size"
+      },
+      "sort": {
+        "field": "value"
+      },
+      "size": [
+        {
+          "x-eas:slot": "width"
+        },
+        {
+          "x-eas:slot": "height"
+        }
+      ]
+    },
+    {
+      "calculate": "4 * datum.r * datum.r",
+      "as": "area"
+    }
+  ],
+  "params": [
+    {
+      "name": "hover",
+      "select": {
+        "type": "point",
+        "on": "pointerover",
+        "clear": "pointerout"
+      }
+    }
+  ],
+  "mark": {
+    "type": "point",
+    "shape": "circle",
+    "filled": true,
+    "opacity": 1
+  },
+  "encoding": {
+    "x": {
+      "field": "x",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {
+        "domain": [
+          0,
+          {
+            "x-eas:slot": "width"
+          }
+        ],
+        "nice": false,
+        "zero": false
+      }
+    },
+    "y": {
+      "field": "y",
+      "type": "quantitative",
+      "axis": null,
+      "scale": {
+        "domain": [
+          0,
+          {
+            "x-eas:slot": "height"
+          }
+        ],
+        "reverse": true,
+        "nice": false,
+        "zero": false
+      }
+    },
+    "size": {
+      "field": "area",
+      "type": "quantitative",
+      "legend": null,
+      "scale": {
+        "domain": [
+          0,
+          1
+        ],
+        "range": [
+          0,
+          1
+        ],
+        "zero": false,
+        "nice": false
+      }
+    },
+    "color": {
+      "field": "depth",
+      "type": "ordinal",
+      "legend": null,
+      "scale": {
+        "scheme": {
+          "x-eas:slot": "scheme"
+        }
+      }
+    },
+    "stroke": {
+      "condition": {
+        "param": "hover",
+        "empty": false,
+        "value": "red"
+      },
+      "value": "white"
+    },
+    "strokeWidth": {
+      "condition": {
+        "param": "hover",
+        "empty": false,
+        "value": 2
+      },
+      "value": 0.5
+    },
+    "tooltip": [
+      {
+        "field": {
+          "x-eas:slot": "label"
+        },
+        "type": "nominal"
+      },
+      {
+        "field": {
+          "x-eas:slot": "size"
+        },
+        "type": "quantitative"
+      }
+    ]
+  }
+}

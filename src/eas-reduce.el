@@ -59,7 +59,7 @@
   (and (equal (plist-get (plist-get p :def) :type) "point")
        (not (equal (plist-get p :bind) "legend"))
        (member (plist-get (plist-get p :def) :on)
-               (if (equal on "pointermove") '("pointermove" "mouseover" "mousemove") (list on)))))
+               (if (equal on "pointermove") '("pointermove" "pointerover" "mouseover" "mousemove") (list on)))))
 
 (defun eas-reduce--put (state key value)
   "STATE with KEY set to VALUE."

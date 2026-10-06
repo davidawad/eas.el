@@ -335,7 +335,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
     (nreverse out)))
 
 (defun eas-svg--axes (axes theme front)
-  "SVG nodes of AXES under THEME drawn behind the marks, or in FRONT of them.
+  "Return the SVG nodes of AXES under THEME: behind the items, or in FRONT.
 Every grid lies beneath every axis, as Vega-Lite puts the grids in axes
 of their own ahead of the others.  An axis's zindex above 0 draws it in
 front; its grid follows :grid-zindex when it has one."

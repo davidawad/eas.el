@@ -1,4 +1,4 @@
 {
   "shapes": {"url": "test/vega-examples/data/us-10m.json", "feature": "counties"},
-  "rates": {"file": "test/vega-examples/data/unemployment.tsv"}
+  "rates": {"file": "../../test/vega-examples/data/unemployment.tsv"}
 }

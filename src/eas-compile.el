@@ -616,7 +616,13 @@ METRICS and STATE are as for `eas-compile--view'."
                                                 metrics))
                                    (eas-facet-title-add (mapcar (lambda (g) (eas-compile--view g metrics state)) groups)
                                                         groups metrics)))
-           :params (vconcat (apply #'append (mapcar (lambda (g) (plist-get g :params)) groups)))))))
+           :params (let ((own (apply #'append (mapcar (lambda (g) (plist-get g :params)) groups))))
+                     ;; A concat root's params (a slider over every cell) belong
+                     ;; to no view group; they reach the scene against the first.
+                     (vconcat own
+                              (cl-loop for p across (vconcat (plist-get spec :params))
+                                       unless (seq-find (lambda (q) (equal (plist-get q :name) (plist-get p :name))) own)
+                                       collect (append p (list :view (plist-get (car groups) :id))))))))))
 
 (cl-defun eas-compile (spec &key rows size target cell state)
   "Compile resolved chart/v1 SPEC to scene/v1.

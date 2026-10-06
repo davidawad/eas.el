@@ -39,6 +39,16 @@
           "women"
         ]
       },
+      "choices": {
+        "type": "array",
+        "items": "string",
+        "default": [
+          "men",
+          "women",
+          "all"
+        ],
+        "doc": "the radio's options: each group, then all"
+      },
       "colors": {
         "type": "array",
         "items": "string",
@@ -197,7 +207,7 @@
       "bind": {
         "input": "radio",
         "options": {
-          "x-eas:expr": "{{groups}}"
+          "x-eas:slot": "choices"
         }
       }
     },

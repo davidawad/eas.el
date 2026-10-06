@@ -33,7 +33,7 @@
 (defun eas-vega-geo-resolve (name)
   "Template NAME resolved with its example bindings."
   (let* ((tpl (eas-vega-geo-template name)) (default-directory eas-test-root))
-    (eas-resolve tpl (eas-json-read-file (eas-template-example-file tpl)))))
+    (eas-resolve tpl (eas-template-read-bindings (eas-template-example-file tpl)))))
 
 (defun eas-vega-geo-marks (scene type)
   "SCENE's marks of TYPE, across its views."
@@ -296,7 +296,7 @@ a hole, a resampled meridian, the sphere and a point."
     (let* ((tpl (eas-vega-geo-template "world-map"))
            (eas-views (make-hash-table :test 'equal))
            (view (let ((default-directory eas-test-root))
-                   (eas-view-open (plist-get tpl :name) :bindings (eas-json-read-file (eas-template-example-file tpl))))))
+                   (eas-view-open (plist-get tpl :name) :bindings (eas-template-read-bindings (eas-template-example-file tpl))))))
       (eas-dispatch view '(:type "param" :param "type" :value "orthographic"))
       (let* ((m (car (eas-vega-geo-marks (eas-view-scene view) "geoshape"))))
         (should (equal (plist-get (plist-get (plist-get m :geo) :resolved) :type) "orthographic")))
@@ -316,7 +316,7 @@ a hole, a resampled meridian, the sphere and a point."
   (let* ((tpl (eas-vega-geo-template "zoomable-world-map"))
          (eas-views (make-hash-table :test 'equal))
          (view (let ((default-directory eas-test-root))
-                 (eas-view-open (plist-get tpl :name) :bindings (eas-json-read-file (eas-template-example-file tpl)))))
+                 (eas-view-open (plist-get tpl :name) :bindings (eas-template-read-bindings (eas-template-example-file tpl)))))
          (params (lambda () (plist-get (eas-view-state view) :params))))
     (eas-dispatch view '(:type "wheel" :px [450 250] :delta -1))
     (should (< (abs (- (plist-get (funcall params) :scale) (* 150 eas-zoom-wheel-step))) 1e-9))
@@ -351,7 +351,7 @@ a hole, a resampled meridian, the sphere and a point."
   "Template NAME's example bindings with less data, for a fast render.
 Twelve countries; for the choropleths, the shapes of a few counties."
   (let* ((tpl (eas-vega-geo-template name))
-         (b (let ((default-directory eas-test-root)) (eas-json-read-file (eas-template-example-file tpl)))))
+         (b (let ((default-directory eas-test-root)) (eas-template-read-bindings (eas-template-example-file tpl)))))
     (when (plist-get b :world) (setq b (plist-put b :world (eas-vega-geo-world 12))))
     (when (plist-get b :projections) (setq b (plist-put b :projections (seq-take (plist-get b :projections) 4))))
     (when (plist-get b :shapes)

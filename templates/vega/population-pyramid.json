@@ -108,6 +108,26 @@
   "description": {
     "x-eas:slot": "description"
   },
+  "params": [
+    {
+      "name": "year",
+      "value": {
+        "x-eas:slot": "initialYear"
+      },
+      "bind": {
+        "input": "range",
+        "min": {
+          "x-eas:slot": "minYear"
+        },
+        "max": {
+          "x-eas:slot": "maxYear"
+        },
+        "step": {
+          "x-eas:slot": "yearStep"
+        }
+      }
+    }
+  ],
   "data": {
     "name": "data"
   },
@@ -286,26 +306,6 @@
             "x": {
               "field": "x-eas-max",
               "type": "quantitative"
-            }
-          }
-        }
-      ],
-      "params": [
-        {
-          "name": "year",
-          "value": {
-            "x-eas:slot": "initialYear"
-          },
-          "bind": {
-            "input": "range",
-            "min": {
-              "x-eas:slot": "minYear"
-            },
-            "max": {
-              "x-eas:slot": "maxYear"
-            },
-            "step": {
-              "x-eas:slot": "yearStep"
             }
           }
         }

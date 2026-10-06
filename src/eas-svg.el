@@ -64,8 +64,15 @@
                      theme))
 
 (defun eas-svg--font (font)
-  "SVG font-family for theme FONT: the generic sans-serif resolves to Arial."
-  (if (member font '(nil "sans-serif")) "Arial, Liberation Sans, sans-serif" font))
+  "SVG font-family for theme FONT.
+The generic families resolve as in bin/chart's font database (usvg's
+defaults): sans-serif to Arial, serif to Times New Roman and monospace
+to Courier New, each with its metric-compatible Liberation font."
+  (pcase font
+    ((or 'nil "sans-serif") "Arial, Liberation Sans, sans-serif")
+    ("serif" "Times New Roman, Liberation Serif, serif")
+    ("monospace" "Courier New, Liberation Mono, monospace")
+    (_ font)))
 
 (defun eas-svg--n (v)
   "Format number V compactly for SVG attributes."
@@ -233,7 +240,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                      (plist-get item :fontSize)
                      (list :align (plist-get item :align) :baseline (plist-get item :baseline) :fill fill
                            :opacity opacity :weight (plist-get item :fontWeight) :angle (plist-get item :angle)
-                           :font (plist-get item :font) :style (plist-get item :fontStyle)
+                           :font (eas-svg--font-name (plist-get item :font)) :style (plist-get item :fontStyle)
                            :line-height (plist-get item :lineHeight)
                            ;; Vega draws a text mark's first line on the anchor, the rest below it.
                            :lines-down t)))

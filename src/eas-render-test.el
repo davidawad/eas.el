@@ -34,6 +34,17 @@
     (eas-test-golden (format "svg-%s.svg" (car entry))
                        (concat (eas-svg-render (eas-compile (funcall (cdr entry)))) "\n"))))
 
+(ert-deftest eas-render-svg-generic-fonts-resolve-like-bin-chart ()
+  ;; bin/chart's font database maps the generic families to Arial, Times
+  ;; New Roman and Courier New; rsvg-convert must draw the same faces.
+  (let ((svg (eas-svg-render
+              (eas-compile '(:data (:values [(:x 1 :t "a")]) :mark (:type "text" :font "monospace")
+                             :encoding (:x (:field "x" :type "quantitative") :text (:field "t"))
+                             :config (:axis (:labelFont "serif")))))))
+    (should (string-match-p "font-family=\"Courier New, Liberation Mono, monospace\"" svg))
+    (should (string-match-p "font-family=\"Times New Roman, Liberation Serif, serif\"" svg))
+    (should (string-match-p "font-family=\"Arial, Liberation Sans, sans-serif\"" svg))))
+
 (ert-deftest eas-render-text-is-deterministic ()
   (let ((spec (funcall (cdr (assoc "bars" eas-render-test--specs)))))
     (should (equal (eas-text-render (eas-compile spec :target 'text :size '(:cols 40 :rows 12)))

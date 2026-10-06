@@ -214,7 +214,8 @@ config."
                                       (format "%s" v))))
                     (let ((f (eas-scale-tick-format scale count (or (plist-get axis :format) (plist-get def :format)
                                                                     (and (equal (plist-get def :stack) "normalize") ".0%"))
-                                                    (plist-get axis :values))))
+                                                    ;; Text thins log labels its own way.
+                                                    (or (plist-get axis :values) text-log))))
                       ;; Every text log tick is labelled: thinning picks among them.
                       (if (and text-log (not (or (plist-get axis :format) (plist-get def :format))))
                           (lambda (v) (if (and (numberp v) (> v 0))

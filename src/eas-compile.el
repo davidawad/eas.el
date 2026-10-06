@@ -435,6 +435,7 @@ runtime keeps the plan so that a selection change can patch it
       (eas-signal "UNSUPPORTED_FEATURE" (plist-get unsupported :message)
                     :path (plist-get unsupported :path) :feature (plist-get unsupported :feature)))
     (let* ((target (or target 'svg))
+           (eas-compile-scales-text (eq target 'text))
            (config (eas-theme-merge eas-theme-vega-lite eas-theme-default
                                       (let ((c (plist-get spec :config))) (and (eas-object-p c) c))
                                       ;; A top-level padding overrides config.padding, as in Vega-Lite.

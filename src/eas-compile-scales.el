@@ -217,6 +217,10 @@ scales to zero."
   "Domain bound V as a number for scale TYPE."
   (if (equal type "time") (eas-time-parse v) v))
 
+(defvar eas-compile-scales-text nil
+  "Non-nil while a plan is compiled for the text target.
+Character cells have no room for a rect band's fractional outer padding.")
+
 (defun eas-compile-position-scale (units channel zoom)
   "Scale for positional CHANNEL shared by UNITS, or nil.
 ZOOM is a [LO HI] domain from view state, or nil."
@@ -249,7 +253,8 @@ ZOOM is a [LO HI] domain from view state, or nil."
                             (and nested 0.2) (plist-get cfg :bandPaddingOuter)
                             ;; Vega-Lite: paddingInner / 2 (0.125 for a tick's default 0.25,
                             ;; 0 for touching rects), so a step size spans whole pixels.
-                            (cond ((or rect tick) (/ inner 2.0)) (nested 0.2)))))
+                            (cond ((and rect eas-compile-scales-text) 0)
+                                  ((or rect tick) (/ inner 2.0)) (nested 0.2)))))
             (append (eas-scale-band type (eas-compile--discrete-domain pairs values) [0 1] inner outer)
                     (list :field (plist-get (cdar pairs) :field) :padding-inner inner :padding-outer outer)))
         (eas-compile--continuous type pairs channel values zoom)))))

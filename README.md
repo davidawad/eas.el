@@ -208,6 +208,31 @@ as financial-chart.el with its candlestick, depth and payoff charts,
 supplies only templates and transforms
 (`eas-register-transform`). It never draws.
 
+A package registers its own directory under a namespace, so its names
+cannot collide with another package's:
+
+```elisp
+(eas-template-add-directory "/path/to/health-charts/templates" "health")
+;; templates/lab-trend.json is now "health/lab-trend"; "lab-trend"
+;; still finds it while no other namespace has one.
+```
+
+A template file that fails to load is skipped and reported
+(`eas-template-load-errors`, `bin/eas doctor`, `describe`); the others
+still load. Inside a template body:
+
+| form | becomes |
+|---|---|
+| `{"x-eas:slot": S}` | slot S's value; a null value leaves the property out |
+| `{"x-eas:slot": S, "key": "a.b", "default": D}` | a part of an object (or array) slot |
+| `{"x-eas:expr": "datum.v > {{limit}}"}` | a string, each `{{S}}` or `{{S.key}}` a JSON literal (`{{@KEY}}` reads the each item) |
+| `{"x-eas:text": "Average {{metric}}"}` | the same, string values inserted as they are |
+| `{"x-eas:when": S, "spec": X}` in an array | X while slot S is truthy |
+| `{"x-eas:each": S, "spec": X}` in an array | one X per item of S; S may be an `{"x-eas:item": KEY}`, so eaches nest, and `"../KEY"` reads the enclosing item |
+
+A template may hold a facet, and a wrapped `concat` (`"columns"`) whose
+views an `x-eas:each` expands.
+
 ## Vega-Lite coverage
 
 The native subset is measured against the official Vega-Lite 6.4.1

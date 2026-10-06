@@ -126,6 +126,17 @@ and inside X `{"x-eas:item": KEY, "default": D}` reads the item (`"."`
 is the item itself; a missing KEY with no default drops its key). The
 `ohlc` template draws one overlay layer and one pane per entry of its
 `indicators` and `oscillators` slots this way (`fc-qx1.36`).
+Eaches nest: the inner one's array may be `{"x-eas:item": KEY}` of the
+outer item, and `"../KEY"` reads the enclosing item (`eas-agt.3`).
+
+Slots reach further than whole nodes (`eas-agt.3`):
+`{"x-eas:slot": S, "key": "a.b"}` reads into an object slot, and
+`{"x-eas:expr": "..."}` / `{"x-eas:text": "..."}` substitute `{{S}}`
+references inside a string, as JSON literals or as raw text. A slot
+whose value is null leaves its property out. Template names may carry
+a namespace (`eas-template-add-directory DIR NAMESPACE`), and a
+template file that fails to load is skipped and reported rather than
+stopping the rest.
 
 ### L4 compile: scene/v1
 

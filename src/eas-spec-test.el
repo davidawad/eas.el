@@ -167,8 +167,15 @@
 (ert-deftest eas-resolve-output-passes-bin-chart-check ()
   (eas-test-require-chart)
   (dolist (name (eas-template-names))
-    (let ((file (make-temp-file "eas-resolved" nil ".vl.json"
-                                (eas-json-encode (eas-resolve name (eas-template-example name))))))
+    ;; Gallery reproductions leave the title empty to match their
+    ;; untitled references; a caller supplies one, so the check does.
+    (let* ((example (eas-template-example name))
+           (bindings (if (and (member (plist-get example :title) '(nil ""))
+                              (plist-get (plist-get (plist-get (eas-template-get name) :meta) :slots) :title))
+                         (plist-put (copy-sequence example) :title name)
+                       example))
+           (file (make-temp-file "eas-resolved" nil ".vl.json"
+                                 (eas-json-encode (eas-resolve name bindings)))))
       (unwind-protect
           (should (zerop (call-process eas-test-chart-program nil nil nil "check" file)))
         (delete-file file)))))

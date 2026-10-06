@@ -36,6 +36,19 @@
 (require 'eas-marks-image)
 (require 'eas-mark-style)
 (require 'eas-legend-style)
+(require 'eas-font-file)
+
+(defcustom eas-svg-font-embed 'url
+  "How an SVG carries the font files its scene registered (:fonts).
+`url' links each file with a file: URL in an @font-face rule; `data'
+inlines it base64-encoded, so an exported SVG is self-contained (and
+larger); nil writes no @font-face.  Emacs draws SVG with librsvg,
+which ignores @font-face and finds fonts through fontconfig: a frame
+draws a registered family only when it is also installed."
+  :type '(choice (const :tag "Link the font file" url)
+                 (const :tag "Inline the font file" data)
+                 (const :tag "No @font-face" nil))
+  :group 'eas-font)
 
 (defun eas-svg--face-color (face attribute)
   "FACE's ATTRIBUTE color as a string, or nil when unspecified."
@@ -470,7 +483,13 @@ follows :grid-zindex when it has one."
              (width . ,(eas-svg--n (plist-get size :w))) (height . ,(eas-svg--n (plist-get size :h)))
              (viewBox . ,(format "0 0 %s %s" (eas-svg--n (plist-get size :w)) (eas-svg--n (plist-get size :h))))
              (font-family . ,(eas-svg--escape (eas-svg--font (plist-get theme :font)))))
-           (cons (apply #'dom-node 'defs nil (append (nreverse defs) eas-paint--svg-defs)) (nreverse children)))))
+           (cons (apply #'dom-node 'defs nil
+                        (append (let ((css (and eas-svg-font-embed
+                                                (eas-font-file-css (plist-get scene :fonts) eas-svg-font-embed))))
+                                  (unless (member css '(nil ""))
+                                    (list (dom-node 'style nil (eas-svg--escape css)))))
+                                (nreverse defs) eas-paint--svg-defs))
+                 (nreverse children)))))
 
 (defun eas-svg-render (scene &optional theme)
   "Return SCENE drawn as an SVG string under THEME."

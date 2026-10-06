@@ -98,7 +98,8 @@ Transparent items count too, so hover and selection never move layout."
                                   (max (plist-get item :x1) (plist-get item :x2)) (max (plist-get item :y1) (plist-get item :y2)))
                           item))
       ;; A multi-line text mark's lines run down from its anchor (vega-scenegraph).
-      ("text" (let ((lines (or (plist-get item :lines)
+      ("text" (let ((eas-font-family (plist-get item :font))
+                    (lines (or (plist-get item :lines)
                                (vconcat (split-string (format "%s" (plist-get item :text)) "\n"))))
                     (lh (+ (plist-get item :fontSize) 2)))
                 (apply #'eas-layout-union

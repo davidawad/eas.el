@@ -257,6 +257,7 @@ wins."
       (unless (eas-layout-text-p metrics)
         (let* ((size (eas-title--get node metrics :fontSize :chart-title-size))
                (weight (eas-title--get node metrics :fontWeight :chart-title-weight))
+               (eas-font-family (plist-get (eas-title-style node metrics) :font))
                (over (- (apply #'max 0 (mapcar (lambda (l) (eas-layout-text-width metrics l size weight))
                                                (eas-title-lines node)))
                         (plist-get group :w))))

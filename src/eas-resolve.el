@@ -34,6 +34,7 @@
 (require 'eas-spec)
 (require 'eas-template)
 (require 'eas-transform-domain)
+(require 'eas-font-file)
 
 (defun eas-resolve--slot-value (values name path)
   "Return slot NAME's value from VALUES (data slots give their rows).
@@ -254,6 +255,8 @@ is VIEW's JSON pointer, for findings."
 VALUES come from `eas-template-bind'; nil for a plain spec."
   (let* ((spec (let ((eas-facet-keep t)) (eas-spec-parse spec)))
          (body (eas-resolve--substitute spec values ""))
+         ;; Font files register here, so pure Vega-Lite keeps only family names.
+         (_ (eas-font-file-register-spec body))
          (body (eas-resolve--materialize body nil ""))
          (body (eas-resolve--strip body)))
     (if (plist-get body :$schema)
@@ -262,8 +265,11 @@ VALUES come from `eas-template-bind'; nil for a plain spec."
 
 (defun eas-resolve (template bindings)
   "Resolve TEMPLATE (a name or template plist) with BINDINGS.
-Return a complete, standalone Vega-Lite spec."
-  (let ((template (if (stringp template) (eas-template-get template) template)))
+Return a complete, standalone Vega-Lite spec.  Relative x-eas.fonts
+files are found beside the template's file."
+  (let* ((template (if (stringp template) (eas-template-get template) template))
+         (path (plist-get template :path))
+         (eas-font-file-directory (if path (file-name-directory path) eas-font-file-directory)))
     (eas-resolve-spec (plist-get template :spec)
                         (eas-template-bind template bindings))))
 

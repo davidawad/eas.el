@@ -12,8 +12,13 @@
 ;; design) rather than Vega's headless 0.8em-per-character guess.
 ;; Widths are in 1/2048 em; characters outside the tables count as a
 ;; digit, wide (CJK) characters as one em.
+;;
+;; A family registered from a user font file (eas-font-file.el) is
+;; measured with that file's own advance widths instead.
 
 ;;; Code:
+
+(require 'eas-font-file)
 
 (defconst eas-font-sans-regular
   [569 569 727 1139 1139 1821 1366 391 682 682 797 1196 569 682 569 569
@@ -81,10 +86,14 @@ serif one (Times New Roman, the generic serif) has Times's widths.")
 
 (defun eas-font-text-width (text size &optional weight)
   "Width in pixels of TEXT at SIZE px with font WEIGHT.
-Set in Arial, or in `eas-font-family' when that is monospace or serif."
-  (if (eas-font-mono-p)
-      (* 0.6 size (length text))
-    (eas-font--arial-width text size weight (eas-font-serif-p))))
+Set in `eas-font-family' when that names a registered font file
+\(`eas-font-register'), else in Arial, or in Courier New or Times New
+Roman when `eas-font-family' is monospace or serif."
+  (let ((face (and eas-font-family eas-font-file--faces
+                    (eas-font-file-face eas-font-family (eas-font-bold-p weight)))))
+    (cond (face (eas-font-file-width face text size))
+          ((eas-font-mono-p) (* 0.6 size (length text)))
+          (t (eas-font--arial-width text size weight (eas-font-serif-p))))))
 
 (defun eas-font--arial-width (text size weight &optional serif)
   "Width of TEXT in Arial at SIZE px with font WEIGHT.

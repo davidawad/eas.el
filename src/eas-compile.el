@@ -31,6 +31,7 @@
 (require 'eas-compile-place)
 (require 'eas-marks-bounds)
 (require 'eas-theme)
+(require 'eas-font-file)
 (require 'eas-legend)
 (require 'eas-link-scale)
 (require 'eas-overlay)
@@ -428,10 +429,11 @@ GROUPS, METRICS and SPEC place the title as in `eas-compile--title-start'."
                            (let ((tt (plist-get spec :title))) (and (eas-object-p tt) (equal (plist-get tt :frame) "group"))))
                        (eas-compile--title-start groups metrics spec)
                      (plist-get metrics :pad))
-                   (apply #'max (mapcar (lambda (line)
-                                          (eas-layout-text-width metrics line (plist-get metrics :chart-title-size)
-                                                                 (plist-get metrics :chart-title-weight)))
-                                        (eas-title-lines spec)))
+                   (let ((eas-font-family (plist-get (eas-title-style spec metrics) :font)))
+                     (apply #'max (mapcar (lambda (line)
+                                            (eas-layout-text-width metrics line (plist-get metrics :chart-title-size)
+                                                                   (plist-get metrics :chart-title-weight)))
+                                          (eas-title-lines spec))))
                    (plist-get metrics :pad))))
       (if (> need (car total)) (cons (ceiling need) (cdr total)) total))))
 
@@ -574,6 +576,9 @@ METRICS and STATE are as for `eas-compile--view'."
            :background (let ((bg (plist-get spec :background)))
                          (if (stringp bg) bg (or (eas-theme-get (plist-get metrics :config) :background) "white")))
            :config (plist-get metrics :config))
+     ;; Registered font files the chart names, for the SVG's @font-face rules.
+     (when-let* ((fonts (eas-font-file-scene-fonts spec (plist-get metrics :config))))
+       (list :fonts (vconcat fonts)))
      (when title
        (let* ((x1 (eas-compile--title-start groups metrics spec))
               (x2 (apply #'max (mapcar (lambda (g) (+ (plist-get g :x0) (plist-get g :w))) groups)))

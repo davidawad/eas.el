@@ -71,14 +71,17 @@ CONFIG is the Vega config in force (default `eas-theme-default')."
 
 (defun eas-layout-text-width (metrics text size &optional weight)
   "Width of TEXT at font SIZE (and WEIGHT) under METRICS.
-The svg target measures with the oracle's font (`eas-font-text-width').
-Multi-line TEXT (lines split on newlines) is as wide as its widest line."
+The svg target measures with the oracle's font (`eas-font-text-width'),
+in `eas-font-family' or else the config's font.  Multi-line TEXT
+\(lines split on newlines) is as wide as its widest line."
   (let ((text (or text "")))
     (if (string-search "\n" text)
         (apply #'max (mapcar (lambda (line) (eas-layout-text-width metrics line size weight))
                              (split-string text "\n")))
       (if (plist-get metrics :char-w) (* (string-width text) (plist-get metrics :char-w))
-        (eas-font-text-width text size weight)))))
+        ;; Text no axis, title or mark gives a font is set in config.font.
+        (let ((eas-font-family (or eas-font-family (eas-theme-get (plist-get metrics :config) :font))))
+          (eas-font-text-width text size weight))))))
 
 (defun eas-layout-line-height (size)
   "Vega's spacing of multi-line text at font SIZE."

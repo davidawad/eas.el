@@ -10,5 +10,7 @@
 # See src/eas-agent.el.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec "${EMACS:-emacs}" -Q --batch -L "$here/src" -l eas-agent-cli \
+# load-prefer-newer: a stale .elc beside a newer .el would otherwise load,
+# and its warning would land in the JSON output.
+exec "${EMACS:-emacs}" -Q --batch --eval '(setq load-prefer-newer t)' -L "$here/src" -l eas-agent-cli \
   -f eas-agent-cli-main -- "$@"

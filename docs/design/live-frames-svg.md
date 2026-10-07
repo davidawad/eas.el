@@ -169,14 +169,150 @@ Remaining draw costs, byte-compiled:
   is one `eq`, otherwise a walk to the first difference. A dirty set
   from the update path (which marks it rebuilt) would make it free.
 
+## Phase 2 (eas-b2s.6): large scenes, direct printers, retained click areas
+
+The perf suite (`make bench`, docs/perf.md) found the next hot spots:
+a county-map hover at about 270 MB and 1.3 s a frame, the projections
+template's first render at 3.6 s, a pi-monte-carlo step at 17-24 ms of
+draw, and axis click areas at about 10% of a ladder draw.
+
+### Where the time went
+
+Profiled per stage (`memory-use-counts` deltas and the CPU profiler,
+byte-compiled; `scripts/bench-frame-svg.el` now reports KB consed per
+half of a frame too):
+
+- **County hover**: 298 MB and 950 ms of a frame were the *update*, not
+  the SVG: a pointermove patches the plan, and the patch rebuilds every
+  item of a geoshape unit (`eas-compile-patch.el` lists geoshape with
+  the series kinds), and `eas-geoshape-items` re-projected all 3,000
+  counties through the d3 stream pipeline to restyle one of them. The
+  SVG draw was 12 MB and 18 ms of retained-item lookups (one
+  `sxhash-equal` and `equal` per county).
+- **Projections first render**: 24 maps of the 110m world (about
+  20,000 points each, resampled), about 600,000 projected points at
+  about 3 us each: 60% of the open is the stream pipeline (closures and
+  boxed floats per point), 24% is `eas-resolve-hash` serializing the
+  resolved spec, inline GeoJSON included, to JSON to hash it.
+- **Item misses**: a pi-monte-carlo step changes every circle; building
+  1,000 DOM nodes and printing them (one `format` per tag and attribute
+  name, one `format` per float) was most of its draw.
+
+### What changed (every SVG byte-identical)
+
+1. **Projected shapes are retained** (`eas-geoshape--project`): per
+   projection (its plain :spec, the last 4 kept) a weak table maps each
+   GeoJSON object, by identity, to its anchor and anchor-relative rings.
+   A frame that restyles a map re-projects nothing; a new projection (a
+   resize, a changed projection param) projects afresh.
+2. **Items reused by position** (`eas-svg--mark-strings`): a mark's
+   slot keeps its last items and their printed text; an item `equal` to
+   the last version's item at its index takes that text. A patch keeps
+   the unchanged items themselves, so the test is mostly one `eq`, and
+   only changed items are printed or looked up.
+3. **Direct printers** (`eas-svg--item-string`) for rect (no corners),
+   rule and tick, point/circle/square symbols (circle, square, Vega
+   symbol paths) and one-line text: the attribute pieces are pushed
+   straight onto a list and joined, no DOM node, no `apply`, no
+   `format` of attribute names. A changed item of these kinds skips the
+   content cache too (its hashing cost what printing does).
+   `eas-svg-retain-direct-printers-print-nodes` checks 3,000 random
+   items (every optional property in or out) against the printed node.
+4. **Float formatting cache** (`eas-svg--n`): a float's text is looked
+   up by value (`eql`), the table emptied at 65,536 entries.
+5. **One concat for the document** (`eas-svg-retain-to-string`):
+   `eas-svg-render` no longer inserts thousands of pieces into a temp
+   buffer and copies it out.
+6. **Axis click areas retained** (`eas-action-callback--axis-areas`):
+   per axis slot, keyed on the axis and the scene's target, size and
+   axis config (what the label boxes are measured from); their :map
+   areas are retained while the areas are the same, so ids are not
+   interned again each frame.
+7. A rotation with both a longitude shift and a tilt built two closures
+   per point (`eas-geo-rotation`); they are built once.
+
+The random-sequence property test (`eas-svg-retain-random-frames-equal-
+fresh-renders`, now 60 frames) also checks the action click areas
+retained against fresh ones, and that items are reused by position.
+
+### Before and after
+
+Same machine and run (8 cores, Emacs 30.1), "before" a worktree of
+1d3cd8f (phase 1), `emacs -Q --batch -l scripts/bench-frame-svg.el --
+MODE SRC 20`: mean ms per frame over 20 frames (10 for the county sweep,
+2 opens for the first render), KB consed per frame.
+
+| workload | mode | draw ms before | draw ms after | frame ms before | frame ms after | KB/frame before | KB/frame after |
+|---|---|---:|---:|---:|---:|---:|---:|
+| ladder push (25 levels) | byte | 1.50 | 0.82 | 3.08 | 2.18 | 394 | 281 |
+| depth push (25 levels) | byte | 1.55 | 1.01 | 3.63 | 3.11 | 415 | 347 |
+| clock tick | byte | 0.72 | 0.63 | 1.59 | 1.42 | 188 | 182 |
+| pacman tick | byte | 3.85 | 2.78 | 7.30 | 5.21 | 813 | 810 |
+| pi-monte-carlo slider step | byte | 26.05 | 14.57 | 617.27 | 601.33 | 89978 | 88378 |
+| airport-connections hover | byte | 0.86 | 0.93 | 1.62 | 1.85 | 363 | 348 |
+| county-unemployment hover | byte | 26.80 | 6.16 | 1147.98 | 54.69 | 269980 | 5665 |
+| airport-connections sweep | byte | 2.25 | 2.78 | 11.31 | 12.27 | 3113 | 3092 |
+| projections first render | byte | 299.67 | 368.68 | 3965.47 | 3809.61 | 865921 | 860513 |
+| ladder push (25 levels) | native | 1.06 | 0.50 | 2.11 | 1.37 | 394 | 281 |
+| depth push (25 levels) | native | 1.21 | 0.54 | 2.66 | 1.66 | 415 | 347 |
+| clock tick | native | 0.65 | 0.50 | 1.42 | 1.14 | 188 | 182 |
+| pacman tick | native | 1.99 | 2.58 | 3.83 | 5.06 | 813 | 809 |
+| pi-monte-carlo slider step | native | 17.97 | 10.80 | 390.86 | 383.83 | 89978 | 88378 |
+| airport-connections hover | native | 0.85 | 0.50 | 1.58 | 1.00 | 363 | 348 |
+| county-unemployment hover | native | 16.95 | 4.19 | 962.74 | 33.36 | 269980 | 5665 |
+| airport-connections sweep | native | 1.68 | 1.36 | 8.81 | 9.05 | 3113 | 3092 |
+| projections first render | native | 303.51 | 291.18 | 3008.58 | 3039.20 | 865921 | 860513 |
+
+Allocation is deterministic; times at 20 frames move by about 0.3 ms
+between runs of the same tree (the pacman, airport and projections
+draw rows go both ways between byte and native: noise of that size).
+The county hover is 21x (byte) and 29x (native) cheaper per frame, and
+allocates 48x less; draw is 4-6 ms. Draw falls by 35-55% on the
+ladder, depth and slider workloads. The byte-compiled projections draw
+(a cold render: every float new to the format cache) measured 300 to
+369 ms over 2 opens, native 304 to 291. Rendering that cold scene alone
+with the float cache and without it (the plain `format`, byte-compiled,
+three alternating runs, retained parts and the cache emptied each time)
+gave 621-665 ms against 598-683 ms: the cache costs a cold scene about
+nothing, so that row is noise of a 2-open sample.
+
+### What is left, and whose it is
+
+- **County hover update, 29-49 ms**: with projection retained, the
+  update is `eas-marks--style` (condition tests per county) and
+  `eas-marks--extras` (every county's tooltip formatted again,
+  `eas-encode-format-value` / `format`) for all 3,000 rows, because the
+  patch rebuilds every geoshape item. Owner: the compile/update path
+  (eas-b2s.3): patch geoshape units item by item as `eas-patch--items`
+  does for points (the projection is now retained, so a rebuilt item
+  costs only its style), or memoize the tooltip per row when the
+  tooltip encoding reads no param. That reaches the 20 ms target.
+- **Projections first render, 3-3.8 s**: 24% is `eas-resolve-hash`
+  (eas-resolve.el: JSON-serializing the resolved spec with its inline
+  GeoJSON to hash it; hashing the data by reference or by its source
+  would remove it). The 60% in the stream pipeline is about 3 us per
+  projected point through four closure stages with boxed floats;
+  inlining `eas-geo-point` and friends measured no gain. A real cut
+  needs the pipeline fused per projection (rotate, project and
+  resample in one function on unboxed locals) or a dynamic module: a
+  rewrite of the d3 port, measured and not started here.
+- **pi-monte-carlo update, 370-590 ms**: the compile path (eas-b2s.3).
+- **Changed-mark list from the update path** (plan item 5): not
+  needed. A patch keeps unchanged items `eq`, `equal` returns at once
+  on `eq`, and the positional reuse above makes an unchanged item one
+  comparison; a list from `eas-compile-patch.el` would save only the
+  mark-level `equal` walk to its first changed item.
+- **GUI image strips** (Phase 3): still needs a display to measure;
+  unchanged.
+
 ## Phased plan
 
 - **Phase 1 (this change)**: retained items, marks, axes, legends,
   hot spots and hot-spot keys; faster printer; unchanged image kept;
   no slowdown over a long stream. Done, measured above.
-- **Phase 2**: direct string emitters per item kind; retained axis click
-  areas; a dirty-mark set from the update path (eas-b2s.3) so unchanged
-  marks are reused by identity, not `equal`.
+- **Phase 2 (eas-b2s.6, done)**: direct string printers per item kind,
+  items reused by position, retained axis click areas, retained geoshape
+  projection; measured above. The dirty-mark set proved unnecessary.
 - **Phase 3 (GUI raster, needs a display to measure)**: librsvg
   rasterizes the whole image on every changed frame, and that is the
   largest GUI cost left (tens of ms at 1000x640, fc-qx1.24). Splitting a

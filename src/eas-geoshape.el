@@ -298,6 +298,47 @@ of it, not between the parts; a path without rings uses its centroid."
           (when (> a best-a) (setq best p best-a a)))))
     (eas-geo-path-centroid (if best (list :paths (list best)) path))))
 
+;;; Compile: projected shapes, retained
+
+(defvar eas-geoshape--projected nil
+  "Projected shapes per projection: alist of (SPEC . TABLE), newest first.
+SPEC is a projection's plain values (its :spec); TABLE maps a GeoJSON
+object, by identity and weakly, to (ANCHOR . RELATIVE) as
+`eas-geoshape--project' returns it.")
+
+(defvar eas-geoshape-projected-max 4
+  "Projections whose shapes `eas-geoshape--projected' keeps.")
+
+(defun eas-geoshape--projected-table (proj)
+  "The table of shapes projected under PROJ, made if new."
+  (let* ((spec (plist-get proj :spec))
+         (hit (assoc spec eas-geoshape--projected)))
+    (if hit
+        (progn (unless (eq hit (car eas-geoshape--projected))
+                 (setq eas-geoshape--projected (cons hit (delq hit eas-geoshape--projected))))
+               (cdr hit))
+      (let ((table (make-hash-table :test 'eq :weakness 'key)))
+        (push (cons spec table) eas-geoshape--projected)
+        (when (> (length eas-geoshape--projected) eas-geoshape-projected-max)
+          (setcdr (nthcdr (1- eas-geoshape-projected-max) eas-geoshape--projected) nil))
+        table))))
+
+(defun eas-geoshape--project (proj shape &optional table)
+  "SHAPE projected under PROJ as (ANCHOR . (PATHS CIRCLES BOX)), or nil.
+ANCHOR is [X Y] in plot pixels, the rest relative to it
+\=(`eas-geoshape--relative').  With TABLE (`eas-geoshape--projected-table')
+the value is retained per shape object: a frame that only restyles a
+map (a hover) re-projects nothing."
+  (let ((hit (and table (gethash shape table))))
+    (if hit (and (consp hit) hit)
+      (let* ((path (eas-geo-proj-path proj shape))
+             (value (if (and path (or (plist-get path :paths) (plist-get path :circles)))
+                        (let ((c (or (eas-geoshape--anchor path) [0 0])))
+                          (cons c (eas-geoshape--relative path (aref c 0) (aref c 1))))
+                      'none)))
+        (when table (puthash shape value table))
+        (and (consp value) value)))))
+
 (defun eas-geoshape-items (unit scales bounds _metrics)
   "Scene items of geoshape UNIT with SCALES in plot BOUNDS [X Y W H]."
   (let* ((geo (eas-geoshape--geo unit))
@@ -305,14 +346,15 @@ of it, not between the parts; a path without rings uses its centroid."
                    (eas-geoshape-resolve (eas-geoshape--eval (plist-get geo :projection) (plist-get unit :env))
                                          (list unit) (aref bounds 2) (aref bounds 3))))
          (mark (plist-get unit :mark))
+         (table (and (plist-get proj :spec) (eas-geoshape--projected-table proj)))
          (ox (aref bounds 0)) (oy (aref bounds 1)) out)
     (seq-do-indexed
      (lambda (row i)
        (let* ((shape (eas-geoshape--shape geo row))
-              (path (and (eas-object-p shape) shape (eas-geo-proj-path proj shape))))
-         (when (and path (or (plist-get path :paths) (plist-get path :circles)))
-           (let* ((c (or (eas-geoshape--anchor path) [0 0]))
-                  (rel (eas-geoshape--relative path (aref c 0) (aref c 1)))
+              (projected (and (eas-object-p shape) shape (eas-geoshape--project proj shape table))))
+         (when projected
+           (let* ((c (car projected))
+                  (rel (cdr projected))
                   (style (eas-marks--style unit scales row))
                   (stroked (eq (plist-get mark :filled) :false)))
              (push (append (list :datum i :x (+ ox (aref c 0)) :y (+ oy (aref c 1))

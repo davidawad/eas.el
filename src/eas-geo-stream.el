@@ -104,8 +104,10 @@ DL DP DG are the rotation angles in radians."
          (lam (lambda (d) (lambda (l p) (vector (eas-geo--wrap-lambda (+ l d)) p)))))
     (cond
      ((and (/= dl 0) pg)
-      (cons (lambda (l p) (let ((a (funcall (funcall lam dl) l p))) (funcall (car pg) (aref a 0) (aref a 1))))
-            (lambda (l p) (let ((a (funcall (cdr pg) l p))) (funcall (funcall lam (- dl)) (aref a 0) (aref a 1))))))
+      ;; The longitude shifts are made once, not per point.
+      (let ((fwd (funcall lam dl)) (back (funcall lam (- dl))) (pf (car pg)) (pb (cdr pg)))
+        (cons (lambda (l p) (let ((a (funcall fwd l p))) (funcall pf (aref a 0) (aref a 1))))
+              (lambda (l p) (let ((a (funcall pb l p))) (funcall back (aref a 0) (aref a 1)))))))
      ((/= dl 0) (cons (funcall lam dl) (funcall lam (- dl))))
      (pg pg)
      (t (let ((id (lambda (l p) (vector (eas-geo--wrap-lambda l) p)))) (cons id id))))))

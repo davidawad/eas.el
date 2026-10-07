@@ -92,15 +92,28 @@ to Courier New, each with its metric-compatible Liberation font."
     ("monospace" "Courier New, Liberation Mono, monospace")
     (_ font)))
 
+(defvar eas-svg--n-cache (make-hash-table :test 'eql :size 4096)
+  "Floats formatted by `eas-svg--n', by value.")
+
+(defvar eas-svg-n-cache-max 65536
+  "Floats `eas-svg--n-cache' holds before it is emptied.")
+
 (defun eas-svg--n (v)
   "Format number V compactly for SVG attributes."
   (if (integerp v) (number-to-string v)
-    ;; "%.2f" always has two decimals: drop ".00" or a trailing "0"
-    ;; (a regexp here dominated rendering long paths).
-    (let ((s (format "%.2f" v)))
-      (cond ((string-suffix-p ".00" s) (substring s 0 -3))
-            ((eq (aref s (1- (length s))) ?0) (substring s 0 -1))
-            (t s)))))
+    ;; Pixel coordinates repeat from frame to frame: `format' is the
+    ;; cost of a float, a lookup a tenth of it.
+    (or (gethash v eas-svg--n-cache)
+        (progn
+          (when (>= (hash-table-count eas-svg--n-cache) eas-svg-n-cache-max)
+            (clrhash eas-svg--n-cache))
+          ;; "%.2f" always has two decimals: drop ".00" or a trailing "0"
+          ;; (a regexp here dominated rendering long paths).
+          (puthash v (let ((s (format "%.2f" v)))
+                       (cond ((string-suffix-p ".00" s) (substring s 0 -3))
+                             ((eq (aref s (1- (length s))) ?0) (substring s 0 -1))
+                             (t s)))
+                   eas-svg--n-cache)))))
 
 (defun eas-svg--escape (text)
   "Escape TEXT for XML."
@@ -296,6 +309,129 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
                            :opacity opacity)
           item)))))
 
+;;; Direct printers
+
+;; The common item kinds print straight to the string `eas-svg--item''s
+;; node prints to, with no DOM node, no `apply' and no `format' per
+;; attribute name.  Each mirrors its branch of `eas-svg--item' (and
+;; `eas-svg-retain--pieces'); `eas-svg-retain-direct-printers-print-nodes'
+;; checks them against it.  Pieces are pushed last first.
+
+(defsubst eas-svg--a (name v acc)
+  "Push attribute NAME (\" x=\\\"\") with value V onto ACC; ACC when V is nil.
+V is formatted as `eas-svg--node' does."
+  (if v (cl-list* "\"" (if (numberp v) (eas-svg--n v) (eas-svg--escape v)) name acc) acc))
+
+(defconst eas-svg--styled-attrs
+  '((:fillOpacity . " fill-opacity=\"") (:strokeOpacity . " stroke-opacity=\"")
+    (:strokeDash . " stroke-dasharray=\"") (:strokeCap . " stroke-linecap=\"")
+    (:strokeJoin . " stroke-linejoin=\""))
+  "The attributes `eas-svg--styled' adds, in its order.")
+
+(defun eas-svg--styled-pieces (item width acc)
+  "Push the attributes `eas-svg--styled' gives ITEM (and WIDTH) onto ACC."
+  (dolist (a (if width (append eas-svg--styled-attrs '((:strokeWidth . " stroke-width=\"")))
+               eas-svg--styled-attrs))
+    (let ((v (plist-get item (car a))))
+      (cond ((numberp v) (setq acc (cl-list* "\"" (eas-svg--n v) (cdr a) acc)))
+            ((stringp v) (setq acc (cl-list* "\"" v (cdr a) acc)))
+            ((vectorp v) (setq acc (cl-list* "\"" (mapconcat #'eas-svg--n v ",") (cdr a) acc))))))
+  acc)
+
+(defun eas-svg--close (acc tag)
+  "ACC, an element's pieces last first, closed with no children as TAG."
+  (apply #'concat (nreverse (cons tag acc))))
+
+(defun eas-svg--rect-string (item fill stroke opacity)
+  "The printed <rect> of bar ITEM (no corners) with FILL STROKE OPACITY."
+  (let ((acc (list "<rect")))
+    (setq acc (eas-svg--a " x=\"" (plist-get item :x) acc)
+          acc (eas-svg--a " y=\"" (plist-get item :y) acc)
+          acc (eas-svg--a " width=\"" (max 0 (plist-get item :w)) acc)
+          acc (eas-svg--a " height=\"" (max 0 (plist-get item :h)) acc)
+          acc (eas-svg--a " fill=\"" fill acc)
+          acc (eas-svg--a " stroke=\"" (unless (equal stroke "none") stroke) acc)
+          acc (eas-svg--a " opacity=\"" opacity acc))
+    (eas-svg--close (eas-svg--styled-pieces item t acc) "></rect>")))
+
+(defun eas-svg--line-string (item stroke opacity)
+  "The printed <line> of rule ITEM with STROKE and OPACITY."
+  (let ((acc (list "<line")) (dash (plist-get item :strokeDash)))
+    (setq acc (eas-svg--a " x1=\"" (plist-get item :x1) acc)
+          acc (eas-svg--a " y1=\"" (plist-get item :y1) acc)
+          acc (eas-svg--a " x2=\"" (plist-get item :x2) acc)
+          acc (eas-svg--a " y2=\"" (plist-get item :y2) acc)
+          acc (eas-svg--a " stroke=\"" stroke acc)
+          acc (eas-svg--a " stroke-width=\"" (or (plist-get item :strokeWidth) 1) acc)
+          acc (eas-svg--a " stroke-opacity=\"" opacity acc)
+          acc (eas-svg--a " stroke-dasharray=\"" (and dash (mapconcat #'eas-svg--n dash ",")) acc)
+          acc (eas-svg--a " stroke-linecap=\"" (plist-get item :strokeCap) acc))
+    (eas-svg--close acc "></line>")))
+
+(defun eas-svg--symbol-string (item fill stroke opacity)
+  "The printed symbol of point ITEM with FILL STROKE OPACITY, or nil.
+Nil for a symbol drawn from SVG path data, left to `eas-svg--item'."
+  (let* ((shape (plist-get item :shape)) (x (plist-get item :x)) (y (plist-get item :y))
+         (size (plist-get item :size)) (angle (plist-get item :angle))
+         (r (/ (sqrt (max 0 size)) 2.0))
+         (square (and (equal shape "square") (not angle)))
+         (d (and (not square) (eas-symbols-path shape x y size angle))))
+    (unless (and (not square) (not d) (stringp shape) (string-match-p "\\`[ \t]*[Mm]" shape))
+      (let ((acc (cond (square (eas-svg--a " height=\"" (* 2 r)
+                                           (eas-svg--a " width=\"" (* 2 r)
+                                                       (eas-svg--a " y=\"" (- y r)
+                                                                   (eas-svg--a " x=\"" (- x r) (list "<rect"))))))
+                       (d (eas-svg--a " d=\"" d (list "<path")))
+                       (t (eas-svg--a " r=\"" r (eas-svg--a " cy=\"" y (eas-svg--a " cx=\"" x (list "<circle")))))))
+            (none (equal stroke "none")))
+        (setq acc (eas-svg--a " fill=\"" fill acc)
+              acc (eas-svg--a " stroke=\"" (unless none stroke) acc)
+              acc (eas-svg--a " stroke-width=\"" (unless none (plist-get item :strokeWidth)) acc)
+              acc (eas-svg--a " opacity=\"" opacity acc))
+        (eas-svg--close (eas-svg--styled-pieces item nil acc)
+                        (cond (square "></rect>") (d "></path>") (t "></circle>")))))))
+
+(defun eas-svg--text-string (item fill opacity)
+  "The printed <text> of one-line text ITEM with FILL and OPACITY, or nil."
+  (let ((text (plist-get item :text)))
+    (when (and (stringp text) (not (string-search "\n" text)))
+      (let* ((x (plist-get item :x)) (y (plist-get item :y)) (size (plist-get item :fontSize))
+             (dy (floor (+ 0.5 (* size (pcase (plist-get item :baseline)
+                                         ("top" 0.79) ("middle" 0.30) ("bottom" -0.21) (_ 0))))))
+             (angle (or (plist-get item :angle) 0))
+             (flat (zerop angle))
+             (w (plist-get item :fontWeight))
+             (acc (list "<text")))
+        (setq acc (eas-svg--a " x=\"" x acc)
+              acc (eas-svg--a " y=\"" (+ y (if flat dy 0)) acc)
+              acc (eas-svg--a " dy=\"" (unless flat (eas-svg--n dy)) acc)
+              acc (eas-svg--a " font-size=\"" size acc)
+              acc (eas-svg--a " fill=\"" fill acc)
+              acc (eas-svg--a " font-weight=\"" (and w (format "%s" w)) acc)
+              acc (eas-svg--a " font-family=\"" (eas-svg--font-name (plist-get item :font)) acc)
+              acc (eas-svg--a " font-style=\"" (plist-get item :fontStyle) acc)
+              acc (eas-svg--a " opacity=\"" opacity acc)
+              acc (eas-svg--a " text-anchor=\"" (eas-svg--anchor (plist-get item :align)) acc)
+              acc (eas-svg--a " transform=\"" (unless flat
+                                                (format "rotate(%s %s %s)" (eas-svg--n angle)
+                                                        (eas-svg--n x) (eas-svg--n y)))
+                              acc))
+        (eas-svg--close (cons (eas-svg--escape text) (cons ">" acc)) "</text>")))))
+
+(defun eas-svg--item-string (kind item)
+  "ITEM of a mark of KIND printed directly, or nil when no printer has it.
+The string is what `eas-svg--item''s node prints to.  An item with a
+gradient fill records a definition as it prints: nil."
+  (unless (plist-get item :gradient)
+    (let* ((fill (plist-get item :fill)) (stroke (plist-get item :stroke))
+           (opacity (let ((o (plist-get item :opacity))) (and o (/= o 1) o))))
+      (pcase kind
+        ((or "bar" "rect" "brush")
+         (unless (plist-get item :corners) (eas-svg--rect-string item fill stroke opacity)))
+        ((or "rule" "tick") (eas-svg--line-string item stroke opacity))
+        ((or "point" "circle" "square") (eas-svg--symbol-string item fill stroke opacity))
+        ("text" (eas-svg--text-string item fill opacity))))))
+
 (defun eas-svg--styled (node item &optional width)
   "NODE with ITEM's fillOpacity and strokeOpacity (and strokeWidth when WIDTH)."
   (let ((extra (cl-loop for (key attr) in (append '((:fillOpacity fill-opacity) (:strokeOpacity stroke-opacity)
@@ -465,18 +601,48 @@ retained between frames (`eas-svg-retain-part')."
     (eas-svg-retain-part (list 'legend view-id (plist-get legend :channel)) (cons legend theme)
                          (lambda () (list (eas-svg-retain-string (eas-svg--legend legend theme)))))))
 
+(defun eas-svg--item-print (kind mark item)
+  "ITEM of MARK (of KIND) as printed SVG text, or nil when it draws nothing.
+A direct printer's string when one has the item, else the retained
+print of its node (`eas-svg-retain-item')."
+  (or (eas-svg--item-string kind item)
+      (eas-svg-retain-item kind item (lambda () (eas-svg--item mark item)))))
+
 (defun eas-svg--mark-nodes (mark)
   "SVG nodes of MARK's items.
-While `eas-svg--fragments' is set each is its printed SVG text,
-retained per item (`eas-svg-retain-item')."
+While `eas-svg--fragments' is set each is its printed SVG text
+\=(`eas-svg--item-print')."
   (let ((kind (plist-get mark :mark)))
     (delq nil (mapcar (lambda (item)
                         ;; Fully transparent items draw nothing.
                         (unless (equal (plist-get item :opacity) 0)
                           (if (and eas-svg--fragments (not (equal kind "image")))
-                              (eas-svg-retain-item kind item (lambda () (eas-svg--item mark item)))
+                              (eas-svg--item-print kind mark item)
                             (eas-svg--item mark item))))
                       (plist-get mark :items)))))
+
+(defun eas-svg--mark-strings (mark prev-items prev-strings)
+  "MARK's items printed, as (STRINGS . PER-ITEM).
+STRINGS is the list of SVG texts in order; PER-ITEM a vector, item by
+item, of its text or nil.  An item `equal' to the item at its index in
+PREV-ITEMS (the last version of the mark) takes its text from
+PREV-STRINGS, so a frame that changed a few items prints only those."
+  (let* ((kind (plist-get mark :mark))
+         (items (let ((v (plist-get mark :items))) (if (vectorp v) v (vconcat v))))
+         (n (length items)) (per (make-vector n nil)) (out nil)
+         (np (if (vectorp prev-items) (min (length prev-items) (length prev-strings)) 0))
+         (reused 0))
+    (dotimes (i n)
+      (let* ((item (aref items i))
+             ;; Fully transparent items draw nothing.
+             (s (unless (equal (plist-get item :opacity) 0)
+                  (if (and (< i np) (not (plist-get item :gradient)) (equal item (aref prev-items i)))
+                      (progn (setq reused (1+ reused)) (aref prev-strings i))
+                    (eas-svg--item-print kind mark item)))))
+        (aset per i s)
+        (when s (push s out))))
+    (eas-svg-retain-count-reused reused)
+    (cons (nreverse out) per)))
 
 (defun eas-svg--mark-children (mark &optional view-id)
   "MARK's children of its view's group: its nodes, or their SVG text.
@@ -485,7 +651,7 @@ view VIEW-ID (`eas-svg-retain-mark'); svg-print inserts it as it is."
   (if (and eas-svg--fragments eas-render-cache-enabled
            (not (equal (plist-get mark :mark) "image")))
       (list (eas-svg-retain-mark (list 'mark view-id (plist-get mark :id)) mark
-                                 (lambda () (eas-svg--mark-nodes mark))))
+                                 (lambda (items strings) (eas-svg--mark-strings mark items strings))))
     (eas-svg--mark-nodes mark)))
 
 (defun eas-svg-dom (scene &optional theme)
@@ -557,9 +723,7 @@ view VIEW-ID (`eas-svg-retain-mark'); svg-print inserts it as it is."
 
 (defun eas-svg-render (scene &optional theme)
   "Return SCENE drawn as an SVG string under THEME."
-  (with-temp-buffer
-    (eas-svg-retain-print (let ((eas-svg--fragments t)) (eas-svg-dom scene theme)))
-    (buffer-string)))
+  (eas-svg-retain-to-string (let ((eas-svg--fragments t)) (eas-svg-dom scene theme))))
 
 ;;; Hot spots
 

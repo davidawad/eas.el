@@ -46,7 +46,9 @@
   "Bytes of retained fragments one generation holds before it ages.")
 
 (defvar eas-svg-retain-stats nil
-  "Counters, a plist: :item-hits :item-misses :part-hits :part-misses.
+  "Counters of retained fragments, a plist.
+Its keys are :item-hits :item-misses :item-reused (items reused by
+position in their mark) :part-hits :part-misses.
 `eas-svg-retain-clear' resets it.")
 
 (defvar eas-svg-retain-max-parts 4096
@@ -91,7 +93,7 @@ lookup."
         eas-svg-retain--old (make-hash-table :test 'eas-svg-retain)
         eas-svg-retain--parts (make-hash-table :test 'equal)
         eas-svg-retain--bytes 0
-        eas-svg-retain-stats (list :item-hits 0 :item-misses 0 :part-hits 0 :part-misses 0)))
+        eas-svg-retain-stats (list :item-hits 0 :item-misses 0 :item-reused 0 :part-hits 0 :part-misses 0)))
 
 (eas-svg-retain-clear)
 
@@ -182,7 +184,13 @@ whose name starts with a colon are dropped."
 
 (defun eas-svg-retain-print (dom)
   "Insert DOM's XML at point, as `svg-print' does."
-  (apply #'insert (nreverse (eas-svg-retain--pieces dom nil))))
+  (insert (eas-svg-retain-to-string dom)))
+
+(defun eas-svg-retain-to-string (dom)
+  "DOM's XML as a multibyte string, what `svg-print' would insert.
+One `concat' of the pieces: inserting them one by one grows a buffer's
+gap a little at a time, about 25 bytes allocated per byte printed."
+  (string-to-multibyte (apply #'concat (nreverse (eas-svg-retain--pieces dom nil)))))
 
 (defvar eas-paint--svg-defs)
 
@@ -205,25 +213,37 @@ This is the order and dedup `eas-paint' records gradients in."
     (unless (seq-some (lambda (o) (equal (dom-attr o 'id) (dom-attr d 'id))) eas-paint--svg-defs)
       (setq eas-paint--svg-defs (append eas-paint--svg-defs (list d))))))
 
-(defun eas-svg-retain-mark (slot mark nodes-fn)
-  "Return the SVG text of MARK's nodes, from NODES-FN, retained in SLOT.
-The gradient definitions NODES-FN records in `eas-paint--svg-defs' are
-recorded again on a hit.  Hits and misses count in
-`eas-render-cache-stats' as :svg-hits and :svg-misses.  A slot keeps
-the last version of its mark only: `eas-render-cache-svg-fragment',
-keyed on the mark, kept every version of a pushed mark in one bucket."
-  (let* ((hit (let ((entry (gethash slot eas-svg-retain--parts)))
-                (and entry (equal (car entry) mark) (cdr entry))))
+(defun eas-svg-retain-count-reused (n)
+  "Add N items reused by position to :item-reused of `eas-svg-retain-stats'."
+  (unless (zerop n)
+    (setq eas-svg-retain-stats (plist-put eas-svg-retain-stats :item-reused
+                                          (+ n (or (plist-get eas-svg-retain-stats :item-reused) 0))))))
+
+(defun eas-svg-retain-mark (slot mark strings-fn)
+  "Return the SVG text of MARK's items, from STRINGS-FN, retained in SLOT.
+STRINGS-FN is called with the items and per-item texts of the slot's
+last version of the mark (nil, nil when there is none) and returns
+\(STRINGS . PER-ITEM) as `eas-svg--mark-strings' does.  The gradient
+definitions it records in `eas-paint--svg-defs' are recorded again on
+a hit.  Hits and misses count in `eas-render-cache-stats' as :svg-hits
+and :svg-misses.  A slot keeps the last version of its mark only:
+`eas-render-cache-svg-fragment', keyed on the mark, kept every version
+of a pushed mark in one bucket."
+  ;; An entry is (MARK TEXT DEFS ITEMS PER-ITEM).
+  (let* ((entry (gethash slot eas-svg-retain--parts))
+         (hit (and entry (equal (car entry) mark) entry))
          (value (or hit
-                    (let ((eas-paint--svg-defs nil))
-                      (cons (eas-svg-retain-string (funcall nodes-fn)) eas-paint--svg-defs)))))
+                    (let* ((eas-paint--svg-defs nil)
+                           (printed (funcall strings-fn (plist-get (car entry) :items) (nth 4 entry))))
+                      (list mark (eas-svg-retain-string (car printed)) eas-paint--svg-defs
+                            (plist-get mark :items) (cdr printed))))))
     (eas-render-cache--count (if hit :svg-hits :svg-misses))
     (unless hit
       (when (>= (hash-table-count eas-svg-retain--parts) eas-svg-retain-max-parts)
         (clrhash eas-svg-retain--parts))
-      (puthash slot (cons mark value) eas-svg-retain--parts))
-    (eas-svg-retain--merge-defs (cdr value))
-    (car value)))
+      (puthash slot value eas-svg-retain--parts))
+    (eas-svg-retain--merge-defs (nth 2 value))
+    (nth 1 value)))
 
 (provide 'eas-svg-retain)
 ;;; eas-svg-retain.el ends here

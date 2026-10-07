@@ -237,7 +237,17 @@ TEXT-ALIGN when the renderer aligns it otherwise than ALIGN."
       default))
 
 (defun eas-action-callback--axis-areas (scene view axis)
-  "Areas of AXIS in VIEW of SCENE: its title, then each tick and label."
+  "Areas of AXIS in VIEW of SCENE: its title, then each tick and label.
+Retained per axis (`eas-svg-retain-part'): they depend on the axis and
+on SCENE's target, size and axis config only, so a frame whose axes did
+not move measures no label again."
+  (eas-svg-retain-part (list 'axis-areas (plist-get view :id) (plist-get axis :channel) (plist-get axis :orient))
+                       (list axis (plist-get scene :target) (plist-get scene :size)
+                             (plist-get (plist-get scene :config) :axis))
+                       (lambda () (eas-action-callback--axis-areas-1 scene view axis))))
+
+(defun eas-action-callback--axis-areas-1 (scene view axis)
+  "Areas of AXIS in VIEW of SCENE, as `eas-action-callback--axis-areas'."
   (let* ((id (plist-get view :id)) (channel (plist-get axis :channel))
          (horizontal (member (plist-get axis :orient) '("bottom" "top")))
          (size (eas-action-callback--axis-size scene axis :labelFontSize 10))
@@ -353,7 +363,14 @@ A channel without a scale, or whose scale cannot invert, is left out."
 ;;; GUI hot spots
 
 (defun eas-action-callback-hot-spots (scene)
-  "Image :map areas for SCENE's axis, title and background click areas."
+  "Image :map areas for SCENE's axis, title and background click areas.
+Retained while the areas stay the same (`eas-svg-retain-part')."
+  (let ((areas (eas-action-callback-areas scene)))
+    (eas-svg-retain-part '(action-hot-spots) areas
+                         (lambda () (eas-action-callback--hot-spots-1 areas)))))
+
+(defun eas-action-callback--hot-spots-1 (areas)
+  "Image :map areas for click AREAS (`eas-action-callback-areas')."
   (mapcar (lambda (a)
             (let ((b (plist-get a :box)))
               (list (cons 'rect (cons (cons (round (aref b 0)) (round (aref b 1)))
@@ -362,7 +379,7 @@ A channel without a scale, or whose scale cannot invert, is left out."
                     (append (when (plist-get a :help) (list 'help-echo (plist-get a :help)))
                             (list 'pointer (if (equal (plist-get (plist-get a :target) :area) "background")
                                                'arrow 'hand))))))
-          (eas-action-callback-areas scene)))
+          areas))
 
 (setq eas-action-pick-function #'eas-action-callback-pick
       eas-action-default-tables-function #'eas-action-callback--tables)

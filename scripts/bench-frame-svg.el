@@ -8,7 +8,9 @@
 ;; eas-b2s.2.  Milliseconds per frame of the live SVG workloads: a
 ;; 25-level order-book ladder push and a depth push (10 levels change
 ;; per push), clock and pacman timer ticks, a pi-monte-carlo slider step
-;; (10 more samples) and an airport-connections hover.  A frame is the
+;; (10 more samples), an airport-connections hover, a pointermove sweep
+;; over the county-unemployment map and airport-connections (eas-b2s.6)
+;; and the projections template's first render (open and draw).  A frame is the
 ;; update (push, tick, slider or pointermove) and what the GUI glue
 ;; does to draw it, `eas-mode-redraw' in an `eas-view-mode' buffer: the
 ;; SVG string, the :map hot spots, the image inserted and its hot-spot
@@ -22,8 +24,9 @@
 ;; SRC defaults to the src/ next to this script, so a checkout of an
 ;; older commit benches the same way.  Compiled copies are kept under
 ;; the temporary directory, keyed by the sources' hash.  It prints a
-;; Markdown table: update, draw and total ms per frame, the mean over
-;; FRAMES (default 40) frames after a warm-up frame.
+;; Markdown table: update, draw and total ms per frame and the KB each
+;; half conses, the mean over FRAMES (default 40) frames after a warm-up
+;; frame (fewer for the heavy county sweep and first render).
 
 ;;; Code:
 
@@ -156,20 +159,35 @@
       (setq eas-mode--view view)))
   (eas-mode-redraw bench-frame-svg--buffer))
 
+(defconst bench-frame-svg--cell-bytes [16 16 8 48 1 56 32]
+  "Bytes per unit of each `memory-use-counts' entry on a 64-bit build.")
+
+(defun bench-frame-svg--bytes (before after)
+  "Bytes consed between `memory-use-counts' BEFORE and AFTER."
+  (cl-loop for b in before for a in after for i from 0
+           sum (* (aref bench-frame-svg--cell-bytes i) (- a b))))
+
+(defvar bench-frame-svg--workload-frames nil
+  "Frames of the workload being timed, when not `bench-frame-svg-frames'.")
+
 (defun bench-frame-svg--time (view step)
-  "Mean (UPDATE DRAW) ms per frame of STEP, then a draw of VIEW.
-STEP is called with the frame number."
-  (let ((update 0.0) (draw 0.0))
+  "Mean (UPDATE DRAW UPDATE-KB DRAW-KB) per frame of STEP, then a draw of VIEW.
+Times are ms, sizes KB consed.  STEP is called with the frame number."
+  (let ((update 0.0) (draw 0.0) (ubytes 0) (dbytes 0)
+        (frames (or bench-frame-svg--workload-frames bench-frame-svg-frames)))
     (funcall step 0) (bench-frame-svg--draw view)
     (garbage-collect)
-    (dotimes (i bench-frame-svg-frames)
-      (let ((t0 (float-time)))
+    (dotimes (i frames)
+      (let ((t0 (float-time)) (m0 (memory-use-counts)))
         (funcall step (1+ i))
-        (let ((t1 (float-time)))
+        (let ((t1 (float-time)) (m1 (memory-use-counts)))
           (bench-frame-svg--draw view)
           (cl-incf update (- t1 t0))
-          (cl-incf draw (- (float-time) t1)))))
-    (list (/ (* 1000 update) bench-frame-svg-frames) (/ (* 1000 draw) bench-frame-svg-frames))))
+          (cl-incf draw (- (float-time) t1))
+          (cl-incf ubytes (bench-frame-svg--bytes m0 m1))
+          (cl-incf dbytes (bench-frame-svg--bytes m1 (memory-use-counts))))))
+    (list (/ (* 1000 update) frames) (/ (* 1000 draw) frames)
+          (/ ubytes 1024.0 frames) (/ dbytes 1024.0 frames))))
 
 (defun bench-frame-svg--push (spec rows-fn)
   "Ms per 10-level push of a 25-level book into SPEC; ROWS-FN maps the book."
@@ -220,6 +238,39 @@ STEP is called with the frame number."
                                            :px (vector (plist-get item :x) (plist-get item :y)))))))
       (eas-view-close view))))
 
+(defun bench-frame-svg--sweep (template frames)
+  "Ms per pointermove of vega TEMPLATE over a grid of its plot, FRAMES of them.
+The sweep `eas-perf' runs: any scene, points or shapes."
+  (let* ((view (eas-view-open template :bindings (eas-template-example template) :target 'svg))
+         (size (plist-get (eas-view-scene view) :size))
+         (w (or (plist-get size :w) 800)) (h (or (plist-get size :h) 500))
+         (bench-frame-svg--workload-frames (min frames bench-frame-svg-frames)))
+    (unwind-protect
+        (bench-frame-svg--time
+         view (lambda (i)
+                (eas-dispatch view (list :type "pointermove"
+                                         :px (vector (* w (/ (+ 0.5 (% (* 7 i) 20)) 20.0))
+                                                     (* h (/ (+ 0.5 (% (* 3 i) 10)) 10.0)))))))
+      (eas-view-close view))))
+
+(defun bench-frame-svg--first (template frames)
+  "Ms to open vega TEMPLATE (the update) and draw it, over FRAMES opens."
+  (let ((update 0.0) (draw 0.0) (ubytes 0) (dbytes 0)
+        (bindings (eas-template-example template)))
+    (garbage-collect)
+    (dotimes (_ frames)
+      (let ((t0 (float-time)) (m0 (memory-use-counts))
+            (view (eas-view-open template :bindings bindings :target 'svg)))
+        (let ((t1 (float-time)) (m1 (memory-use-counts)))
+          (bench-frame-svg--draw view)
+          (cl-incf update (- t1 t0))
+          (cl-incf draw (- (float-time) t1))
+          (cl-incf ubytes (bench-frame-svg--bytes m0 m1))
+          (cl-incf dbytes (bench-frame-svg--bytes m1 (memory-use-counts))))
+        (eas-view-close view)))
+    (list (/ (* 1000 update) frames) (/ (* 1000 draw) frames)
+          (/ ubytes 1024.0 frames) (/ dbytes 1024.0 frames))))
+
 (defun bench-frame-svg-rows ()
   "Rows (NAME UPDATE DRAW) over the live SVG workloads."
   (list (cons "ladder push (25 levels)" (bench-frame-svg--push bench-frame-svg--ladder #'identity))
@@ -228,7 +279,10 @@ STEP is called with the frame number."
         (cons "clock tick" (bench-frame-svg--play "clock"))
         (cons "pacman tick" (bench-frame-svg--play "pacman"))
         (cons "pi-monte-carlo slider step" (bench-frame-svg--slide "pi-monte-carlo" "num_points" 1000 10))
-        (cons "airport-connections hover" (bench-frame-svg--hover "airport-connections"))))
+        (cons "airport-connections hover" (bench-frame-svg--hover "airport-connections"))
+        (cons "county-unemployment hover" (bench-frame-svg--sweep "county-unemployment" 10))
+        (cons "airport-connections sweep" (bench-frame-svg--sweep "airport-connections" 40))
+        (cons "projections first render" (bench-frame-svg--first "projections" 2))))
 
 (defun bench-frame-svg-main ()
   "Bench per the command line: MODE [SRC] [FRAMES]."
@@ -244,9 +298,11 @@ STEP is called with the frame number."
     (bench-frame-svg--setup mode src)
     (setq gc-cons-threshold (* 64 1024 1024))
     (princ (format "mode %s, %s, %d frames\n\n" mode src bench-frame-svg-frames))
-    (princ "| workload | update ms | draw ms | frame ms |\n|---|---:|---:|---:|\n")
+    (princ (concat "| workload | update ms | draw ms | frame ms | update KB | draw KB |\n"
+                   "|---|---:|---:|---:|---:|---:|\n"))
     (dolist (r (bench-frame-svg-rows))
-      (princ (format "| %s | %.2f | %.2f | %.2f |\n" (nth 0 r) (nth 1 r) (nth 2 r) (+ (nth 1 r) (nth 2 r)))))))
+      (princ (format "| %s | %.2f | %.2f | %.2f | %.1f | %.1f |\n" (nth 0 r) (nth 1 r) (nth 2 r)
+                     (+ (nth 1 r) (nth 2 r)) (nth 3 r) (nth 4 r))))))
 
 (when (and noninteractive (not (bound-and-true-p bench-frame-svg-no-main))) (bench-frame-svg-main))
 

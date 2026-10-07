@@ -28,6 +28,39 @@ already has a template of that name: the gallery's heatmap is
 `hourly-heatmap` and its histogram `rug-histogram`. The old
 `vega/NAME` names still resolve, as deprecated aliases.
 
+## Demos
+
+One runnable demo per interaction of the design table
+(`docs/design/engine.md`, section 4), each on a financial-style chart and
+a non-financial one (a health or KPI series). Each recording plays the
+financial chart, then the other. The GUI recording is SVG frames and the
+terminal recording is the text backend's frames; both are driven
+headless through `eas-dispatch` (`scripts/eas-animate.el`).
+
+| interaction | demo | financial | non-financial | GUI | terminal |
+|---|---|---|---|---|---|
+| hover tooltip | [eas-demo-tooltip.el](examples/eas-demo-tooltip.el) | area: ACME close | bars: steps per weekday | [tooltip.gif](docs/screenshots/demos/tooltip.gif) | [tooltip-text.gif](docs/screenshots/demos/tooltip-text.gif) |
+| click actions and callbacks | [eas-demo-click.el](examples/eas-demo-click.el) | bars: sector returns, a Lisp callback | line: resting heart rate, copy-row | [click.gif](docs/screenshots/demos/click.gif) | [click-text.gif](docs/screenshots/demos/click-text.gif) |
+| brush (interval selection) | [eas-demo-brush.el](examples/eas-demo-brush.el) | line: ACME close | line: resting heart rate | [brush.gif](docs/screenshots/demos/brush.gif) | [brush-text.gif](docs/screenshots/demos/brush-text.gif) |
+| legend toggle | [eas-demo-legend.el](examples/eas-demo-legend.el) | multi: three tickers | multi: weekly KPIs | [legend.gif](docs/screenshots/demos/legend.gif) | [legend-text.gif](docs/screenshots/demos/legend-text.gif) |
+| zoom and pan | [eas-demo-zoom.el](examples/eas-demo-zoom.el) | series-line: ACME close | area: daily steps | [zoom.gif](docs/screenshots/demos/zoom.gif) | [zoom-text.gif](docs/screenshots/demos/zoom-text.gif) |
+| crosshair | [eas-demo-crosshair.el](examples/eas-demo-crosshair.el) | line (crosshair slot): ACME close | multi + rule layer: weekly KPIs | [crosshair.gif](docs/screenshots/demos/crosshair.gif) | [crosshair-text.gif](docs/screenshots/demos/crosshair-text.gif) |
+| sliders and params | [eas-demo-sliders.el](examples/eas-demo-sliders.el) | multi: rebase slider | air-traffic: month slider | [sliders.gif](docs/screenshots/demos/sliders.gif) | [sliders-text.gif](docs/screenshots/demos/sliders-text.gif) |
+| live push and stream | [eas-demo-live.el](examples/eas-demo-live.el) | series-line: ACME ticks | line: heart-rate monitor | [live.gif](docs/screenshots/demos/live.gif) | [live-text.gif](docs/screenshots/demos/live-text.gif) |
+| linked views | [eas-demo-linked.el](examples/eas-demo-linked.el) | series-line: overview and detail | area: overview and detail | [linked.gif](docs/screenshots/demos/linked.gif) | [linked-text.gif](docs/screenshots/demos/linked-text.gif) |
+| drill | [eas-demo-drill.el](examples/eas-demo-drill.el) | bars: monthly volume -> daily closes | bars: weekly steps -> days | [drill.gif](docs/screenshots/demos/drill.gif) | [drill-text.gif](docs/screenshots/demos/drill-text.gif) |
+
+Run one from the repository root: `emacs -Q --batch -L src -l
+examples/eas-demo-brush.el` prints the text chart and what inspect
+answers after each event; `emacs -Q -L src -l examples/eas-demo-brush.el`
+opens both charts in eas-mode buffers to drive by hand;
+`EAS_DEMO_RECORD=1` in batch re-records the two GIFs (rsvg-convert and
+ImageMagick needed). An agent's end-to-end session, from `bin/eas
+describe` to a brush and `export --vl`, is in
+[docs/agent-transcript.md](docs/agent-transcript.md).
+
+![Brushing a price series and a heart-rate series](docs/screenshots/demos/brush.gif)
+
 ## Screenshots
 
 Hovering airport after airport on the `airport-connections` template

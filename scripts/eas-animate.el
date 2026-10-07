@@ -22,6 +22,9 @@
 ;;   {"type": "pointermove", "px": [x, y], ...}  an event/v1, one frame
 ;;   {"pointer": [x, y]}                          place the pointer
 ;;   {"hold": N}                                  N frames, no event
+;;   (:call FN)                                   FN called with the view, one
+;;                                                frame (Lisp jobs only; a view
+;;                                                it returns is drawn from then on)
 ;;   {"glide": TARGET, "frames": N}               N eased pointermoves
 ;;   {"visit": {"mark", "key", "by", "ranks" or "values"},
 ;;    "glide": N, "hold": H}                      glide to each datum and hold
@@ -125,6 +128,7 @@ explicit event/v1 to dispatch."
                (when (plist-get step :px) (setq pointer (plist-get step :px)))
                (frame :pointer pointer :event step))
               ((plist-get step :pointer) (setq pointer (plist-get step :pointer)))
+              ((plist-get step :call) (frame :pointer pointer :call (plist-get step :call)))
               ((plist-get step :visit)
                (let ((visit (plist-get step :visit)))
                  (dolist (value (eas-animate-visit-values scene visit))
@@ -195,7 +199,11 @@ ECHO, a string, is drawn as an echo-area line under it."
                       (let* ((next (or (next-single-property-change i 'face row) (length row)))
                              (run (substring-no-properties row i next))
                              (face (get-text-property i 'face row))
-                             (color (or (and (consp face) (plist-get face :foreground)) fg)))
+                             (color (or (and (consp face) (plist-get face :foreground)) fg))
+                             (back (and (consp face) (plist-get face :background))))
+                        (when back
+                          (insert (format "<rect x=\"%s\" y=\"%s\" width=\"%s\" height=\"%s\" fill=\"%s\"/>"
+                                          (* i cw) (* r ch) (* (- next i) cw) ch back)))
                         (unless (string-blank-p run)
                           ;; Each glyph at its cell: braille falls back
                           ;; to a font whose advance is not the cell's.
@@ -237,6 +245,9 @@ The tooltip shows once the pointer has rested TIP-DELAY frames."
              (px (plist-get f :pointer))
              (on (eas-animate--inside-p scene px)))
         (cond ((plist-get f :event) (eas-dispatch view (plist-get f :event)))
+              ((plist-get f :call)
+               (let ((next (funcall (plist-get f :call) view)))
+                 (when (eas-view-p next) (setq view next scene (eas-view-scene view)))))
               ((and (plist-get f :move) on)
                (eas-dispatch view (list :type "pointermove" :px px)))
               ((and (plist-get f :move) inside) (eas-dispatch view '(:type "pointerleave"))))

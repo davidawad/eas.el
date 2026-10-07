@@ -64,10 +64,56 @@ Bits: 1 up, 2 down, 4 left, 8 right.")
   (and (equal (plist-get mark :mark) "rect")
        (member (plist-get item :orient) '(nil "none"))))
 
+(defvar eas-text-tile--pool (make-vector 64 nil)
+  "Tile records free for reuse, a stack in its first `eas-text-tile--free'.
+A frame of a tiled view (pacman's maze) records thousands of cells:
+reusing the records spares a vector each (eas-b2s.5).")
+
+(defvar eas-text-tile--free 0 "Records on `eas-text-tile--pool'.")
+
+(defvar eas-text-tile--table nil
+  "A cell table free for the next view's tiles, or nil while one is in use.")
+
 (defun eas-text-tile--record (i)
   "The tile record of cell index I, made when missing."
   (or (gethash i eas-text-tile--cells)
-      (puthash i (vector nil nil 0 nil nil nil) eas-text-tile--cells)))
+      (puthash i (if (= eas-text-tile--free 0) (vector nil nil 0 nil nil nil)
+                   (let ((rec (aref eas-text-tile--pool (setq eas-text-tile--free (1- eas-text-tile--free)))))
+                     (aset eas-text-tile--pool eas-text-tile--free nil)
+                     (aset rec 0 nil) (aset rec 1 nil) (aset rec 2 0) (aset rec 3 nil) (aset rec 4 nil) (aset rec 5 nil)
+                     rec))
+               eas-text-tile--cells)))
+
+(defun eas-text-tile-table ()
+  "An empty cell table for `eas-text-tile--cells'.
+Give it back with `eas-text-tile-release' once resolved."
+  (or (prog1 eas-text-tile--table (setq eas-text-tile--table nil))
+      (make-hash-table :test 'eql)))
+
+(defun eas-text-tile-release (table)
+  "Return TABLE's records to the pool and keep TABLE, emptied, for reuse."
+  (maphash (lambda (_ rec)
+             (when (= eas-text-tile--free (length eas-text-tile--pool))
+               (setq eas-text-tile--pool (vconcat eas-text-tile--pool (make-vector (length eas-text-tile--pool) nil))))
+             (aset eas-text-tile--pool eas-text-tile--free rec)
+             (setq eas-text-tile--free (1+ eas-text-tile--free)))
+           table)
+  (clrhash table)
+  (setq eas-text-tile--table table))
+
+(defvar eas-text-tile--derived (make-hash-table :test 'eq :weakness 'key)
+  "Interned props -> ((BG . PROPS) ...) derived from them by a tile.")
+
+(defun eas-text-tile--derived (props bg)
+  "PROPS with face foreground BG, or with no face when BG is nil; shared.
+PROPS are interned (`eas-text--item-props'), so are these: a frame
+derives them once per color, not once per tile (eas-b2s.5)."
+  (let ((known (gethash props eas-text-tile--derived)))
+    (or (cdr (assoc bg known))
+        (let ((p (if bg (plist-put (copy-sequence props) 'face (list :foreground bg))
+                   (let ((p (copy-sequence props))) (cl-remf p 'face) p))))
+          (puthash props (cons (cons bg p) known) eas-text-tile--derived)
+          p))))
 
 (defun eas-text-tile--clear-p (item)
   "Non-nil when ITEM's fill paints nothing."
@@ -109,8 +155,8 @@ Inside CLIP, in COLOR at PRIO; PROPS go to cells nothing holds."
          (glyph (eas-text--translucent ?█ alpha))
          (bg (and (not clear) (eq glyph ?█) (eas-text-tile--fill (plist-get item :fill))))
          (props (let ((p (eas-text--item-props view mark item (plist-get item :datum))))
-                  (if bg (plist-put p 'face (list :foreground bg)) p)))
-         (hover (let ((p (copy-sequence props))) (cl-remf p 'face) p))
+                  (if bg (eas-text-tile--derived p bg) p)))
+         (hover (eas-text-tile--derived props nil))
          (stroke (eas-text-tile--stroke item)))
     (unless (or (< w 0.01) (< h 0.01))
       (cl-loop for row from (max r0 (aref clip 1) 0) below (min r1 (aref clip 3) (eas-text--grid-rows g))

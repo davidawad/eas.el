@@ -24,6 +24,9 @@
 (require 'eas-template)
 (require 'eas-render-cache)
 (require 'eas-mode-patch)
+(require 'eas-mode-strip)
+(require 'eas-text-arc)
+(require 'eas-arc)
 
 (defun eas-text-frames-test--book ()
   "A 40-level book with random sizes."
@@ -42,6 +45,17 @@
     :layer [(:mark "bar" :encoding (:color (:field "side" :type "nominal")))
             (:mark (:type "text" :align "left" :dx 3) :encoding (:text (:field "label")))]))
 
+(defun eas-text-frames-test--fresh (scene)
+  "SCENE rendered from scratch: no cache, no memo, no pooled cell."
+  (let ((eas-render-cache-enabled nil)
+        (eas-text--props-memo (make-hash-table :test 'equal))
+        (eas-text--reversed (make-hash-table :test 'eq :weakness 'key))
+        (eas-text-arc--memo (make-hash-table :test 'equal))
+        (eas-text-tile--derived (make-hash-table :test 'eq :weakness 'key))
+        (eas-text--free-conses nil) (eas-text-tile--table nil)
+        (eas-text-tile--pool (make-vector 1 nil)) (eas-text-tile--free 0))
+    (eas-text-render scene)))
+
 (defun eas-text-frames-test--check (view steps)
   "Check each frame of VIEW, driven by STEPS (functions of the frame number).
 The cached lines equal an uncached render, and a buffer patched with
@@ -53,7 +67,7 @@ The cached lines equal an uncached render, and a buffer patched with
         (funcall step (cl-incf i))
         (let* ((scene (eas-view-scene view))
                (lines (eas-text-render-lines scene))
-               (full (let ((eas-render-cache-enabled nil)) (eas-text-render scene)))
+               (full (eas-text-frames-test--fresh scene))
                (strip (propertize (format " frame %d" (% i 3)) 'face 'shadow)))
           (should (equal-including-properties (list i (mapconcat #'identity lines "\n")) (list i full)))
           (with-current-buffer patched
@@ -118,6 +132,97 @@ The cached lines equal an uncached render, and a buffer patched with
                                                           :px (vector (random (round (plist-get size :w)))
                                                                       (random (round (plist-get size :h)))))))))
       (eas-view-close view))))
+
+(ert-deftest eas-text-frames-random-pacman-ticks-equal-full-renders ()
+  "Pacman ticks (pooled tile records) by random steps, with hovers."
+  (let* ((clock 1.7e9)
+         (eas-play-clock (lambda () clock))
+         (_ (random "eas-b2s.5 pacman"))
+         (view (eas-play-open "pacman" :bindings (eas-template-example "pacman")
+                              :target 'text :size '(:cols 80 :rows 30)))
+         (size (plist-get (eas-view-scene view) :size)))
+    (unwind-protect
+        (eas-text-frames-test--check
+         view (cl-loop repeat 10
+                       collect (lambda (_)
+                                 (if (< (random 4) 3)
+                                     (progn (cl-incf clock (1+ (random 3))) (eas-play-tick view))
+                                   (eas-dispatch view (list :type "pointermove"
+                                                            :px (vector (random (max 1 (round (plist-get size :w))))
+                                                                        (random (max 1 (round (plist-get size :h)))))))))))
+      (eas-play-detach view)
+      (eas-view-close view))))
+
+(defun eas-text-frames-test--depth (book)
+  "BOOK's rows with a cumulative :cum per side, a depth chart's data."
+  (let ((acc (list (cons "bid" 0) (cons "ask" 0))))
+    (vconcat (mapcar (lambda (r)
+                       (let ((cell (assoc (plist-get r :side) acc)))
+                         (setcdr cell (+ (cdr cell) (plist-get r :size)))
+                         (append r (list :cum (cdr cell)))))
+                     book))))
+
+(ert-deftest eas-text-frames-random-depth-pushes-equal-full-renders ()
+  "Random pushes to a stepped two-sided depth area (pooled slices)."
+  (let* ((eas-views (make-hash-table :test 'equal))
+         (_ (random "eas-b2s.5 depth"))
+         (view (eas-view-open
+                `(:data (:values ,(eas-text-frames-test--depth (eas-text-frames-test--book)))
+                  :width 600 :height 300
+                  :mark (:type "area" :interpolate "step-after" :fillOpacity 0.6 :line t)
+                  :encoding (:x (:field "price" :type "quantitative" :scale (:domain [87 113]))
+                             :y (:field "cum" :type "quantitative")
+                             :color (:field "side" :type "nominal")))
+                :target 'text :size '(:cols 60 :rows 24))))
+    (unwind-protect
+        (eas-text-frames-test--check
+         view (cl-loop repeat 10
+                       collect (lambda (_)
+                                 (eas-dispatch view (list :type "push" :key "price"
+                                                          :rows (eas-text-frames-test--depth
+                                                                 (eas-text-frames-test--book)))))))
+      (eas-view-close view))))
+
+(ert-deftest eas-text-frames-strip-memo-equals-a-fresh-strip ()
+  "The remembered strip equals one computed afresh, frame after frame."
+  (let* ((clock 1.7e9)
+         (eas-play-clock (lambda () clock))
+         (_ (random "eas-b2s.5 strip"))
+         (view (eas-play-open "pacman" :bindings (eas-template-example "pacman")
+                              :target 'text :size '(:cols 80 :rows 30)))
+         (size (plist-get (eas-view-scene view) :size)))
+    (unwind-protect
+        (dotimes (i 12)
+          (pcase (random 3)
+            (0 (cl-incf clock (random 3)) (eas-play-tick view))
+            (1 (eas-dispatch view (list :type "pointermove"
+                                        :px (vector (random (max 1 (round (plist-get size :w))))
+                                                    (random (max 1 (round (plist-get size :h))))))))
+            (_ (eas-dispatch view '(:type "pointerleave"))))
+          (let ((memo (eas-mode-strip-string view)))
+            (should (eq memo (eas-mode-strip-string view)))
+            (should (equal-including-properties
+                     (list i memo)
+                     (list i (let ((eas-mode-strip--memo (make-hash-table :test 'eq :weakness 'key)))
+                               (eas-mode-strip-string view)))))))
+      (eas-play-detach view)
+      (eas-view-close view))))
+
+(ert-deftest eas-text-frames-arc-memo-replays-the-same-dots ()
+  "An arc's remembered dots are the dots it tests inside, in order."
+  (let ((item '(:cx 40.0 :cy 30.0 :outerRadius 22.0 :innerRadius 6.0 :startAngle 0.3 :endAngle 2.4))
+        (eas-text-arc--memo (make-hash-table :test 'equal))
+        (direct nil) (replayed nil) (again nil))
+    (let ((cx 40.0) (cy 30.0) (r 22.0) (sx 4.0) (sy 4.0))
+      (cl-loop for dy from (floor (- cy r) sy) to (ceiling (+ cy r) sy)
+               do (cl-loop for dx from (floor (- cx r) sx) to (ceiling (+ cx r) sx)
+                           when (eas-arc-contains-p item (* (+ dx 0.5) sx) (* (+ dy 0.5) sy))
+                           do (push (cons dx dy) direct))))
+    (eas-text-arc-dots item 8 16 (lambda (dx dy) (push (cons dx dy) replayed)))
+    (eas-text-arc-dots item 8 16 (lambda (dx dy) (push (cons dx dy) again)))
+    (should direct)
+    (should (equal direct replayed))
+    (should (equal direct again))))
 
 (ert-deftest eas-text-frames-patch-survives-outside-edits ()
   "The retained model notices text it did not write and diffs the buffer."

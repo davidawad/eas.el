@@ -205,3 +205,131 @@ phase is about allocation, not instructions.
    The text side should not write a line whose cells did not change
    (done) and should keep `face` values `eq` across frames so that
    redisplay's face cache hits (phase 1 does this).
+
+## Phase 2 (eas-b2s.5): allocation and the GC policy
+
+Same box. Base is phase 1 as it landed with the readout (a8de075), in a
+git worktree; both trees benched in the same run. Since phase 1 the
+fixed readout line landed, so pacman's base frame is dearer than in
+the tables above (its strip is formatted through components).
+
+### What changed
+
+| change | file | effect |
+|---|---|---|
+| item props interned per (ink, view, mark, datum, color, tooltip, ink function): a lookup with a reused key, no plist, face or tooltip string per item | eas-text.el | equal props are `eq` across items and frames |
+| label clash test as plain loops (it ran a closure per span per text item, in the update) | eas-text-labels.el | ladder update −12 KB |
+| tile records pooled, the tile table reused; tile-derived props (fill face, hover) shared per interned props | eas-text-tile.el | pacman render −170 KB |
+| area slices built from reused conses, freed when the mark resolves; the resolve's neighbour tests without closures | eas-text.el | depth render −240 KB with the compose change |
+| row compose: chars through reused vectors, runs set as they end (no run list), reversed plists memoized per interned props | eas-text.el | a row allocates its string and intervals only |
+| arc dots memoized per (item, cell size) as a packed vector | eas-text-arc.el | clock render 198 → 53 KB |
+| strip memoized per view: the second ask in a frame is the same string; a frame whose strip context (fields, env, theme) is `equal` reuses it | eas-mode-strip.el | one strip per change, not two per frame |
+| live text redraws call `eas-gc-defer`, as events already did | eas-mode.el | see below |
+
+Output is unchanged: goldens untouched, `make test` passes, and
+`src/eas-text-frames-test.el` now also renders the "full" frame with
+every memo and pool fresh (props, reversed plists, arcs, tile records,
+slices), and adds random pacman ticks, depth pushes, a strip-memo check
+and an arc-memo check.
+
+### Allocation per frame (byte-compiled, KB, batch)
+
+| workload | update before → after | render before → after | patch before → after |
+|---|---|---|---|
+| order-book ladder push | 221 → 209 | 120 → 77 | 53 → 29 |
+| depth-live push | 279 → 279 | 566 → 327 | 101 → 84 |
+| clock tick | 107 → 104 | 228 → 53 | 72 → 45 |
+| pacman tick | 291 → 290 | 333 → 164 | 445 → 228 |
+| airport-connections hover | 3608 → 3608 | 503 → 332 | 188 → 150 |
+
+The text side (render + patch) is now 98 KB (clock) to 411 KB (depth);
+the update (eas-b2s.3's) allocates 100 KB to 3.6 MB a frame and is
+now the larger share on every workload. Under 100 KB a frame for the
+text side holds for the clock only: depth composes most of its rows
+every push (its area moves everywhere), and pacman's strip changes
+every tick.
+
+### Batch frames (interactive GC policy, gc-cons-percentage 0.1)
+
+**Byte-compiled**, ms per frame (GC with collections in parentheses):
+
+| workload | total before → after | render+patch before → after | GC before → after | KB/frame before → after |
+|---|---|---|---|---|
+| order-book ladder push | 18.01 → **13.13** | 4.73 → 3.92 | 11.35 (60) → 7.55 (45) | 382 → 301 |
+| depth-live push | 32.76 → **26.72** | 7.59 → 7.55 | 23.02 (129) → 17.06 (94) | 932 → 677 |
+| clock tick | 13.91 → **10.50** | 4.03 → 3.55 | 8.71 (42) → 5.78 (28) | 289 → 189 |
+| pacman tick | 44.75 → **29.62** | 9.06 → 8.23 | 32.64 (153) → 18.11 (78) | 1069 → 609 |
+| pi-monte-carlo step | 1184.77 → **1132.59** | 12.62 → 11.83 | 873.14 (563) → 812.30 (499) | 42054 → 41441 |
+| airport-connections hover | 33.04 → **28.34** | 6.99 → 6.55 | 16.34 (43) → 12.32 (31) | 3311 → 3106 |
+
+**Native-compiled**, ms per frame (GC with collections in parentheses):
+
+| workload | total before → after | render+patch before → after | GC before → after | KB/frame before → after |
+|---|---|---|---|---|
+| order-book ladder push | 13.57 → **11.45** | 2.36 → 2.09 | 9.96 (60) → 8.10 (45) | 382 → 301 |
+| depth-live push | 30.65 → **24.52** | 4.87 → 4.95 | 24.19 (126) → 17.95 (92) | 932 → 677 |
+| clock tick | 11.39 → **7.87** | 2.15 → 1.72 | 8.38 (39) → 5.55 (26) | 289 → 189 |
+| pacman tick | 34.34 → **22.09** | 5.07 → 4.46 | 27.36 (140) → 15.63 (72) | 1069 → 609 |
+| airport-connections hover | 24.48 → **22.26** | 3.83 → 3.85 | 13.80 (43) → 11.21 (31) | 3307 → 3102 |
+
+With the threshold eas-gc sets (`gc-cons-threshold` 64 MB in the batch Emacs, byte-compiled, same run), ms per frame:
+
+| workload | base total | now total | base render+patch | now render+patch |
+|---|---|---|---|---|
+| order-book ladder push | 5.98 | 5.80 | 4.25 | 4.00 |
+| depth-live push | 9.91 | 10.80 | 7.50 | 8.13 |
+| clock tick | 4.87 | 4.59 | 3.80 | 3.50 |
+| pacman tick | 11.41 | 10.50 | 8.18 | 7.11 |
+| airport-connections hover | 16.73 | 16.46 | 6.30 | 5.96 |
+
+Without collections the two trees cost the same instructions within noise (depth's render is 0.7 ms dearer, the price of freeing its slices); the batch gain above is fewer collections, and in a terminal most of it comes from the policy.
+
+### In a real terminal
+
+`scripts/bench-frame-tty.el`, `emacs -nw` 110x45 in `tmux -L eas`,
+byte-compiled, update + redraw + `redisplay`, 40 frames; the buffer
+equalled a render from scratch after every workload in every run.
+
+| workload | base | allocation only (`eas-gc-cons-threshold` nil) | now (deferred GC) | base / now |
+|---|---|---|---|---|
+| order-book ladder push | 21.89 | 18.71 | **9.15** | 2.4x |
+| depth-live push | 43.82 | 39.15 | **15.72** | 2.8x |
+| clock tick | 22.40 | 13.91 | **8.51** | 2.6x |
+| pacman tick | 50.93 | 34.77 | **16.09** | 3.2x |
+| airport-connections hover | 43.05 | 36.39 | **26.05** | 1.7x |
+
+### Why the GC policy
+
+A collection traces the live heap, so its cost does not depend on how
+much garbage it frees: fewer collections is cheaper, whatever the
+frame allocates. eas-gc.el (fc-qx1.9) already raises
+`gc-cons-threshold` to `eas-gc-cons-threshold` (64 MB) on the first
+event of an interaction and collects once Emacs has been idle a second.
+Live frames, a push or a tick arriving from a process or a timer, never
+went through it: at 4 pushes a second the default threshold collected
+every 0.8 MB, every other frame. A text redraw now calls
+`eas-gc-defer` too. Batch Emacs is left alone (so the batch table
+above still shows collections), and `eas-gc-cons-threshold` nil turns
+it off. Frames that arrive while Emacs stays idle keep the raised
+threshold, so collection happens about every 64 MB (a couple of
+hundred frames), each one tracing the same live heap as before.
+
+### Frame pacing
+
+A redraw is already coalesced: `eas-mode--schedule` arms one idle
+timer per buffer and pushes that arrive before it fires change the
+view only, so a burst draws once, after input and redisplay. Hidden
+views do not draw (eas-live). Nothing was added.
+
+### Not done, and why
+
+- **Row-granular dirtiness** (paint only the rows a step touched).
+  Every write site (tiles, bands, arcs, the inline bar loop) would
+  have to record its rows first. With allocation down, paint is 2–6 ms
+  of instructions; it is the next step for the ladder and depth.
+- **Writing the diff straight into the buffer**: the patch
+  (eas-mode-patch.el) is the SVG box's file this round; it already
+  writes only changed runs of changed rows (0.3–1.2 ms).
+- **Strip**: pacman's strip reads values that change every tick;
+  eas-strip.el and the component formatter (not in this scope) are
+  most of what remains of its patch stage.

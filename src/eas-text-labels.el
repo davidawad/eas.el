@@ -38,13 +38,19 @@ on the item's x, one row per line from its y."
                collect (cons (+ (floor (/ y (float ch))) i) (cons start (+ start len)))))))
 
 (defun eas-text-labels--clash-p (spans kept)
-  "Non-nil when one of SPANS touches one of KEPT (same row, a cell apart)."
-  (seq-some (lambda (s)
-              (seq-some (lambda (k) (and (= (car s) (car k))
-                                         (< (cadr s) (1+ (cddr k)))
-                                         (< (cadr k) (1+ (cddr s)))))
-                        kept))
-            spans))
+  "Non-nil when one of SPANS touches one of KEPT (same row, a cell apart).
+Plain loops: this runs per text item per frame, and a closure per span
+was most of a ladder push's allocation (eas-b2s.5)."
+  (let ((clash nil))
+    (while (and spans (not clash))
+      (let ((s (car spans)) (ks kept))
+        (while (and ks (not clash))
+          (let ((k (car ks)))
+            (when (and (= (car s) (car k)) (< (cadr s) (1+ (cddr k))) (< (cadr k) (1+ (cddr s))))
+              (setq clash t)))
+          (setq ks (cdr ks))))
+      (setq spans (cdr spans)))
+    clash))
 
 (defun eas-text-labels-thin (view metrics)
   "VIEW with text items that would print over a kept one hidden.

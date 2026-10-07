@@ -178,7 +178,11 @@ Both must have the same SVG data and the same :map hot spots."
               (insert "\n" (eas-mode-strip-string view)))
             (eas-mode--hot-spot-keys image)))
          ;; Terminal hover moves one column: rewrite only changed cells (fc-qx1.14).
-         (t (eas-mode--flush-replaced old nil)
+         ;; A live frame (a push, a tick) defers collection as an event
+         ;; does: at 4 frames a second the default threshold collected
+         ;; every other frame, most of each frame's time (eas-b2s.5).
+         (t (eas-gc-defer)
+            (eas-mode--flush-replaced old nil)
             (eas-mode-patch-lines (nconc (eas-text-render-lines scene) (list (eas-mode-strip-string view)))))))
       (if (eas-mode--gui-p) (goto-char (min pos (point-max)))
         (goto-char (point-min))

@@ -34,17 +34,50 @@
 (defvar eas-mode--view)
 (declare-function eas-mode--readout "eas-mode" ())
 
+(defvar eas-mode-strip--memo (make-hash-table :test 'eq :weakness 'key)
+  "View -> [SCENE PLAN STATE SIZE WIDTH GUI CONTEXT TEXT] of its last strip.")
+
+(defun eas-mode-strip--context-key (ctx scene)
+  "The parts of CTX, the default readout's context for SCENE, it depends on.
+That is all of it but the view, and the scene's width (the GUI image's)."
+  (list (plist-get ctx :strip-fields) (plist-get ctx :env) (plist-get ctx :theme)
+        (plist-get (plist-get scene :size) :w)))
+
 (defun eas-mode-strip-string (view)
   "VIEW's readout (by default the values strip) as propertized lines.
 It takes exactly the lines the chart reserves (`eas-readout-max-lines')
 and is no wider than the chart (fc-qx1.52, eas-anj): the fit drops,
 abbreviates, then elides rather than wrap.  In a GUI frame the lines
-are drawn as one SVG image of fixed size."
+are drawn as one SVG image of fixed size.
+The default readout is remembered per view (eas-b2s.5): asked again for
+the same scene and state (the redraw, then the readout) it is the same
+string, and a frame whose strip reads the same values reuses it."
   (let* ((width (eas-readout-width view))
-         (atoms (eas-readout-atoms view))
+         (gui (and (eq (eas-view-target view) 'svg) (display-graphic-p) (image-type-available-p 'svg)))
+         (lean (and (null eas-readout-functions) (null (eas-readout--declared view :readout))))
+         (memo (and lean (gethash view eas-mode-strip--memo)))
+         (scene (eas-view-scene view)) (plan (eas-view-plan view)) (state (eas-view-state view))
+         (size (eas-view-size view)))
+    (if (and memo (eq (aref memo 0) scene) (eq (aref memo 1) plan) (eq (aref memo 2) state)
+             (equal (aref memo 3) size) (eql (aref memo 4) width) (eq (aref memo 5) gui))
+        (aref memo 7)
+      (let* ((ctx (and lean (eas-readout-context view t)))
+             (ckey (and lean (eas-mode-strip--context-key ctx scene)))
+             (text (if (and memo (equal (aref memo 3) size) (eql (aref memo 4) width) (eq (aref memo 5) gui)
+                            (equal (aref memo 6) ckey))
+                       (aref memo 7)
+                     (eas-mode-strip--string view width gui ctx))))
+        (when lean
+          (puthash view (vector scene plan state size width gui ckey text) eas-mode-strip--memo))
+        text))))
+
+(defun eas-mode-strip--string (view width gui ctx)
+  "VIEW's readout in WIDTH columns, as an image when GUI; CTX its context.
+Nil CTX lets `eas-readout-atoms' build it."
+  (let* ((atoms (eas-readout-atoms view nil ctx))
          (lines (eas-readout-render view (max 1 (1- width)) nil atoms))
          (text (mapconcat (lambda (spans) (concat " " (eas-component-propertize spans))) lines "\n"))
-         (image (and (eq (eas-view-target view) 'svg) (display-graphic-p) (image-type-available-p 'svg)
+         (image (and gui
                      (create-image (eas-readout-svg view (plist-get (plist-get (eas-view-scene view) :size) :w)
                                                     (default-line-height) (face-foreground 'eas-strip nil t) atoms)
                                    'svg t))))

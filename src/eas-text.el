@@ -178,14 +178,49 @@ dot and skips the dot when it says nil."
   (when-let* ((tip (plist-get item :tooltip)))
     (mapconcat (lambda (p) (format "%s: %s" (plist-get p :title) (plist-get p :value))) tip "\n")))
 
+(defvar eas-text--props-memo (make-hash-table :test 'equal)
+  "Interned item props: (INK VIEW MARK DATUM COLOR TOOLTIP . LEGIBLE) -> plist.
+INK is `eas-text-ink--colors', LEGIBLE what else ink depends on.
+A frame looks props up instead of consing a plist, a face and a tooltip
+string per item (eas-b2s.5); equal inputs give one `eq' plist, which
+rows compare and redisplay's face cache hit cheaply.  Never mutate one.")
+
+(defvar eas-text--props-memo-max 8192
+  "Entries `eas-text--props-memo' holds before it starts afresh.")
+
+(defvar eas-text--props-key (make-list 8 nil)
+  "The key `eas-text--item-props' looks up with, reused (no allocation).")
+
 (defun eas-text--item-props (view mark item datum)
-  "Text properties for a cell of ITEM (DATUM) in MARK of VIEW."
-  (let ((color (let ((f (plist-get item :fill)) (s (plist-get item :stroke)))
-                 (if (or (null f) (equal f "none")) s f))))
-    (append (list 'eas-view (plist-get view :id) 'eas-mark (plist-get mark :id) 'eas-datum datum)
-            (when-let* ((tip (eas-text--tooltip item))) (list 'help-echo tip))
-            (when-let* ((ink (and color (not (equal color "none")) (eas-text-ink-legible color))))
-              (list 'face (list :foreground ink))))))
+  "Text properties for a cell of ITEM (DATUM) in MARK of VIEW.
+The result is shared (`eas-text--props-memo'): copy it before changing it."
+  (let* ((color (let ((f (plist-get item :fill)) (s (plist-get item :stroke)))
+                  (if (or (null f) (equal f "none")) s f)))
+         (key eas-text--props-key) (k key))
+    (if (null eas-text-ink--colors) (eas-text--item-props-1 view mark item datum color)
+      (setcar k eas-text-ink--colors) (setq k (cdr k))
+      (setcar k (plist-get view :id)) (setq k (cdr k))
+      (setcar k (plist-get mark :id)) (setq k (cdr k))
+      (setcar k datum) (setq k (cdr k))
+      (setcar k color) (setq k (cdr k))
+      (setcar k (plist-get item :tooltip)) (setq k (cdr k))
+      ;; The ink function and its threshold (a test may rebind them).
+      (setcar k (symbol-function 'eas-text-ink-legible)) (setcar (cdr k) eas-text-ink-min-contrast)
+      (prog1 (or (gethash key eas-text--props-memo)
+                 (progn
+                   (when (>= (hash-table-count eas-text--props-memo) eas-text--props-memo-max)
+                     (clrhash eas-text--props-memo))
+                   (puthash (copy-sequence key) (eas-text--item-props-1 view mark item datum color)
+                            eas-text--props-memo)))
+        ;; Let go of the datum: the scratch key must not keep it alive.
+        (setcar (nthcdr 3 key) nil) (setcar (nthcdr 5 key) nil)))))
+
+(defun eas-text--item-props-1 (view mark item datum color)
+  "Text properties for ITEM (DATUM) in MARK of VIEW drawn in COLOR, consed."
+  (append (list 'eas-view (plist-get view :id) 'eas-mark (plist-get mark :id) 'eas-datum datum)
+          (when-let* ((tip (eas-text--tooltip item))) (list 'help-echo tip))
+          (when-let* ((ink (and color (not (equal color "none")) (eas-text-ink-legible color))))
+            (list 'face (list :foreground ink)))))
 
 (defun eas-text--xs (points)
   "The x of each of POINTS, as a vector `eas-text--interp' bisects."
@@ -201,6 +236,26 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
                (q (aref points (if (and (< (aref p 0) x) (< i (1- n))) (1+ i) (if (> i 0) (1- i) i)))))
           (if (= (aref p 0) (aref q 0)) (aref p 1)
             (+ (aref p 1) (* (- (aref q 1) (aref p 1)) (/ (- x (aref p 0)) (float (- (aref q 0) (aref p 0))))))))))))
+
+(defvar eas-text--free-conses nil
+  "Conses free for reuse: area slices are made of them (eas-b2s.5).
+An area records a slice per cell it covers, every frame; the slices
+die when the mark's cells are resolved, so they go back here.")
+
+(defsubst eas-text--cons (a b)
+  "A cons of A and B, reused from `eas-text--free-conses' when it can be."
+  (let ((c eas-text--free-conses))
+    (if (null c) (cons a b)
+      (setq eas-text--free-conses (cdr c))
+      (setcar c a) (setcdr c b)
+      c)))
+
+(defun eas-text--free-list (list)
+  "Give LIST's conses back to `eas-text--free-conses'."
+  (while list
+    (let ((next (cdr list)))
+      (setcar list nil) (setcdr list eas-text--free-conses)
+      (setq eas-text--free-conses list list next))))
 
 (defun eas-text--series (g view mark item clip prio)
   "Draw line or area ITEM of MARK in VIEW into G at PRIO inside CLIP."
@@ -228,8 +283,10 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
                              for y0 = (* row ch) for y1 = (* (1+ row) ch)
                              for covered = (- (min y1 bottom) (max y0 top))
                              when (> covered 0)
-                             do (push (list top bottom (funcall props-fn cx))
-                                      (gethash (+ col (* row (eas-text--grid-cols g))) (eas-text--grid-bands g)))
+                             do (let ((i (+ col (* row (eas-text--grid-cols g)))) (bands (eas-text--grid-bands g)))
+                                  (puthash i (eas-text--cons (eas-text--cons top (eas-text--cons bottom (eas-text--cons (funcall props-fn cx) nil)))
+                                                             (gethash i bands))
+                                           bands))
                              do (cond
                                  ((>= covered (- ch 0.01)) (eas-text--put g col row ?█ (funcall props-fn cx) prio))
                                  ((and (> top y0) (> covered 0))
@@ -256,11 +313,22 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
         (let ((p (aref points 0)) (eas-text--dot-prio prio))
           (eas-text--dot-line g (aref p 0) (aref p 1) (aref p 0) (aref p 1) props-fn clip))))))
 
+(defun eas-text--reach-p (segs y)
+  "Non-nil when one of SEGS ((TOP BOTTOM PROPS) ...) ends at or below Y."
+  (while (and segs (< (cadr (car segs)) y)) (setq segs (cdr segs)))
+  segs)
+
+(defun eas-text--start-p (segs y)
+  "Non-nil when one of SEGS ((TOP BOTTOM PROPS) ...) begins at or above Y."
+  (while (and segs (> (car (car segs)) y)) (setq segs (cdr segs)))
+  segs)
+
 (defun eas-text--resolve-bands (g prio)
   "Compose the cells of grid G that area slices drawn at PRIO tile.
 See `eas-text-band-resolve'.  Then forget the slices."
   (let* ((ch (eas-text--grid-ch g)) (cols (eas-text--grid-cols g)) (bands (eas-text--grid-bands g))
          (slack (/ ch 4.0)))
+    (unless (zerop (hash-table-count bands))
     (maphash (lambda (i segs)
                ;; A slice can be recorded past the grid's edge; it draws nothing.
                (when (and (< -1 i (length (eas-text--grid-prio g)))
@@ -270,8 +338,8 @@ See `eas-text-band-resolve'.  Then forget the slices."
                      ;; The newest slice covers the cell: `eas-text-band-resolve'
                      ;; gives its full block, given a second slice to tile with.
                      (when (or (cdr segs)
-                               (cl-some (lambda (s) (>= (cadr s) (- y0 slack))) (gethash (- i cols) bands))
-                               (cl-some (lambda (s) (<= (car s) (+ y0 ch slack))) (gethash (+ i cols) bands)))
+                               (eas-text--reach-p (gethash (- i cols) bands) (- y0 slack))
+                               (eas-text--start-p (gethash (+ i cols) bands) (+ y0 ch slack)))
                        (aset (eas-text--grid-chars g) i ?█)
                        (aset (eas-text--grid-props g) i (nth 2 own)))
                  (pcase (let ((y0 (* (/ i cols) ch)))
@@ -290,7 +358,11 @@ See `eas-text-band-resolve'.  Then forget the slices."
                                 (plist-put (copy-sequence props) 'face
                                            (append (list :background bg) (plist-get props 'face)))))))))))))
              bands)
-    (clrhash bands)))
+    (maphash (lambda (_ segs)
+               (dolist (s segs) (eas-text--free-list s))
+               (eas-text--free-list segs))
+             bands)
+    (clrhash bands))))
 
 (defun eas-text--arc-dot (g dx dy props i clip arcs)
   "Record braille dot DX DY of arc item I (PROPS) of G in ARCS within CLIP.
@@ -559,10 +631,11 @@ sits under strokes.  Later marks win ties."
   "Draw every mark of VIEW into grid G, clipped to its plot."
   (let ((prios (mapcar (lambda (p) (/ p 100.0)) (eas-text--mark-prios view)))
         (clip (eas-text--clip g view))
-        (eas-text-tile--cells (make-hash-table :test 'eql)))
+        (eas-text-tile--cells (eas-text-tile-table)))
     (seq-doseq (mark (plist-get view :marks))
       (eas-text--mark g view mark (pop prios) clip))
-    (eas-text-tile-resolve g)))
+    (eas-text-tile-resolve g)
+    (eas-text-tile-release eas-text-tile--cells)))
 
 (defun eas-text--tiled-p (view)
   "Non-nil when some rect of VIEW draws as a tile (`eas-text-tile-p').
@@ -777,39 +850,74 @@ cell has dots, so must its dot props and whether its dots show
              (setq i (1+ i)))
            (= i b)))))
 
+(defvar eas-text--row-scratch (make-vector 0 nil)
+  "Chars of the row being composed, reused (eas-b2s.5).")
+
+(defvar eas-text--row-vectors (make-vector 0 nil)
+  "A reused vector of each length N, to `concat' a row of N chars from.")
+
+(defvar eas-text--reversed (make-hash-table :test 'eq :weakness 'key)
+  "Props -> `eas-text--plist-reverse' of them; interned props hit.")
+
+(defun eas-text--row-vector (n)
+  "A vector of length N reused across rows."
+  (when (>= n (length eas-text--row-vectors))
+    (setq eas-text--row-vectors (vconcat eas-text--row-vectors (make-vector (- (1+ n) (length eas-text--row-vectors)) nil))))
+  (or (aref eas-text--row-vectors n) (aset eas-text--row-vectors n (make-vector n nil))))
+
+(defun eas-text--cell-props (g i shade)
+  "The props cell I of grid G composes with; SHADE colors a brush."
+  (let* ((use-dots (and (> (aref (eas-text--grid-dots g) i) 0)
+                        (<= (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
+         (p (if use-dots (aref (eas-text--grid-dot-props g) i) (aref (eas-text--grid-props g) i))))
+    (if-let* ((brush (aref (eas-text--grid-brush g) i))) (eas-text--brush-props p brush shade) p)))
+
 (defun eas-text--compose-row (g row shade)
-  "Return ROW of grid G as a propertized string; SHADE colors a brush."
-  (let ((cols (eas-text--grid-cols g)))
-      (let ((runs nil) (chars nil) (props :unset)
-            ;; Blank cells past the last glyph are trimmed, unless brushed.
-            (end (cl-loop for col downfrom (1- cols) to 0
-                          for i = (+ col (* row cols))
-                          unless (and (eq (aref (eas-text--grid-chars g) i) ?\s) (null (aref (eas-text--grid-brush g) i))
-                                      (or (zerop (aref (eas-text--grid-dots g) i))
-                                          (> (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
-                          return (1+ col)
-                          finally return 0)))
-        ;; One string per row; each run of equal props is set on it
-        ;; (eas-b2s.1: a string per run cost 20 KB a row on a map).
-        (let ((start 0) (n 0))
-          (dotimes (col end)
-            (let* ((i (+ col (* row cols)))
-                   (dots (aref (eas-text--grid-dots g) i))
-                   (use-dots (and (> dots 0) (<= (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
-                   (char (if use-dots (+ #x2800 dots) (aref (eas-text--grid-chars g) i)))
-                   (p (if use-dots (aref (eas-text--grid-dot-props g) i) (aref (eas-text--grid-props g) i)))
-                   (p (if-let* ((brush (aref (eas-text--grid-brush g) i))) (eas-text--brush-props p brush shade) p)))
-              (unless (or (eq p props) (equal p props))
-                (when (> n start) (push (list start n props) runs))
-                (setq start n props p))
-              (unless (eq char 0) (push char chars) (setq n (1+ n)))))
-          (when (> n start) (push (list start n props) runs)))
-        (let ((string (concat (nreverse chars))))
-          (pcase-dolist (`(,s ,e ,p) runs)
-            (unless (or (null p) (eq p :unset))
-              ;; In the order `concat' leaves a propertized run's plist.
-              (set-text-properties s e (eas-text--plist-reverse p) string)))
-          string))))
+  "Return ROW of grid G as a propertized string; SHADE colors a brush.
+One string per row; each run of equal props is set on it, in the order
+`concat' would leave them (eas-b2s.1).  The chars go through reused
+vectors and runs are set as they end, so a row allocates its string
+and its intervals only (eas-b2s.5)."
+  (let* ((cols (eas-text--grid-cols g)) (base (* row cols))
+         (chars (eas-text--grid-chars g)) (dots (eas-text--grid-dots g))
+         (prio (eas-text--grid-prio g)) (dot-prio (eas-text--grid-dot-prio g))
+         (brush (eas-text--grid-brush g))
+         ;; Blank cells past the last glyph are trimmed, unless brushed.
+         (end (let ((col (1- cols)))
+                (while (and (>= col 0)
+                            (let ((i (+ base col)))
+                              (and (eq (aref chars i) ?\s) (null (aref brush i))
+                                   (or (zerop (aref dots i)) (> (aref prio i) (aref dot-prio i))))))
+                  (setq col (1- col)))
+                (1+ col)))
+         (scratch (if (>= (length eas-text--row-scratch) cols) eas-text--row-scratch
+                    (setq eas-text--row-scratch (make-vector cols nil))))
+         (n 0))
+    (dotimes (col end)
+      (let* ((i (+ base col)) (d (aref dots i))
+             (char (if (and (> d 0) (<= (aref prio i) (aref dot-prio i))) (+ #x2800 d) (aref chars i))))
+        (unless (eq char 0) (aset scratch n char) (setq n (1+ n)))))
+    (let ((string (let ((v (eas-text--row-vector n)))
+                    (dotimes (k n) (aset v k (aref scratch k)))
+                    (concat v)))
+          (start 0) (k 0) (props :unset))
+      (dotimes (col end)
+        (let* ((i (+ base col)) (p (eas-text--cell-props g i shade)))
+          (unless (or (eq p props) (equal p props))
+            (when (> k start) (eas-text--set-run string start k props))
+            (setq start k props p))
+          (unless (and (eq (aref chars i) 0) (not (and (> (aref dots i) 0) (<= (aref prio i) (aref dot-prio i)))))
+            (setq k (1+ k)))))
+      (when (> k start) (eas-text--set-run string start k props))
+      string)))
+
+(defun eas-text--set-run (string start end props)
+  "Set PROPS on STRING from START to END, in `concat''s order."
+  (unless (or (null props) (eq props :unset))
+    (set-text-properties start end
+                         (or (gethash props eas-text--reversed)
+                             (puthash props (eas-text--plist-reverse props) eas-text--reversed))
+                         string)))
 
 (defun eas-text--plist-reverse (plist)
   "PLIST with its property-value pairs in reverse order."

@@ -102,7 +102,7 @@
     "example": "../examples/vega/edge-bundling.data.json",
     "vega": {
       "status": "partial",
-      "note": "Bundled links and leaf labels match Vega. Hovering a label draws its links in colorOut/colorIn as Vega does, but the linked labels are not bolded or recolored (Vega's indata tests), and the tension, radius, extent, rotate, text and layout widgets are slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0350 (was 0.02 against vg2svg); geometry matches; the rest is the font-raster floor: the references' sans-serif is Helvetica (node-canvas on macOS), native SVG here is drawn in Arimo (Arial metrics), so glyph edges differ while positions match.",
+      "note": "Bundled links and leaf labels match Vega. Hovering a label draws its links in colorOut/colorIn as Vega does, but the linked labels are not bolded or recolored (Vega's indata tests), and the tension, radius, extent, rotate, text and layout widgets are slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12c with rsvg-convert and Arimo: ratio 0.0350 (was 0.02 against vg2svg). Geometry and the left-aligned labels match to the pixel; the gap is the right-aligned labels on the left half: node-canvas right-aligns text by pango's integer pixel extent, x minus ceil(width), so the reference's labels sit up to 1px further out than an SVG text-anchor end puts them. Shifting each label by ceil(width) - width in a probe drops the ratio to 0.0143; the rest is glyph raster (Helvetica in the reference, Arimo here) and the legend's entry spacing (2-3px). Neither Vega nor eas rounds text widths, so the engine does not emulate it.",
       "ratio": 0.035
     }
   },

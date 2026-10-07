@@ -308,6 +308,154 @@ still load. Inside a template body:
 A template may hold a facet, and a wrapped `concat` (`"columns"`) whose
 views an `x-eas:each` expands.
 
+## Interaction
+
+### Hover readout
+
+Every live chart reserves its readout lines under the plot before the
+first draw, whether or not anything is hovered. The plot is compiled
+that much shorter. Hovering then changes only the readout's own cells
+(and pixels in a GUI frame), never the chart's layout. By default the
+readout is one line, the values strip:
+
+```
+ latest  date=Mar 11, 2026  value=109
+ cursor  date=Mar 05, 2026  AAPL=106.3  MSFT=98.2
+```
+
+The readout stays on one line. When it is too long, the fit first drops
+the lowest-priority fields, then abbreviates labels (`volume=` becomes
+`vol=`), then shortens numbers (`1234567` becomes `1.23M`), then elides
+with `…`. It wraps only when `max_lines` allows more than one line.
+Tooltips shown in the echo area also stay on one line, because a taller
+echo area would resize the chart's window. The header line exists from
+the start for the same reason.
+
+A chart says what its readout shows in `x-eas.readout`. The short form
+is a list of fields:
+
+```json
+"x-eas": {"readout": {
+  "max_lines": 1,
+  "separator": "  ",
+  "fields": [
+    {"field": "date", "format": {"type": "time", "pattern": "%b %d, %Y"}, "priority": 100},
+    {"field": "close", "label": "C", "labelSep": " ", "priority": 90,
+     "format": {"type": "number", "decimals": 2},
+     "rules": [{"test": "datum.close >= datum.open", "color": "green", "bold": true},
+               {"test": "datum.close < datum.open", "color": "red"}]},
+    {"field": "volume", "short": "v", "format": {"type": "si"}, "priority": 10},
+    {"field": "note", "rules": [{"test": "!datum.note", "hide": true}]}]}}
+```
+
+A field has `field` (a datum field) or `value` (any value, often
+`{"expr": ...}`), plus `label` (the field name by default), `short`
+(the abbreviated label), `labelSep` (`=` by default), `format`,
+`priority` (higher stays longer, 50 by default), `keep`, `style`,
+`labelStyle` and `rules`. A format is a d3-format string, or
+`{"type": "number" | "percent" | "currency" | "time" | "si",
+"decimals": N, "symbol": "$", "pattern": "%b %d"}`. Each format has a
+shorter form that the fit uses. Every rule whose Vega-expression `test`
+holds on the datum applies its `color`, `background`, `bold`, `italic`,
+`dim` and `underline`, or `hide`s the field.
+
+#### Components
+
+The readout is a tree of components, in the style of React. A component
+is a named, registered renderer that takes props and a context (the
+datum, the view and the theme) and returns styled output for both
+backends: propertized text in terminals and SVG `<tspan>`s in GUI
+frames. A prop may be `{"expr": E}`, evaluated on the datum. In
+expressions, `at` is `"cursor"` or `"latest"`, `hovered` says whether a
+datum is hovered, and `view` is the view id.
+
+```json
+"x-eas": {"readout": {"component": "row", "props": {"sep": "  "}, "children": [
+  {"component": "when", "props": {"test": "hovered"},
+   "children": [{"component": "text", "props": {"template": "{date}"}}],
+   "else": [{"component": "text", "props": {"text": {"expr": "at"}, "priority": 10}}]},
+  {"component": "field", "props": {"field": "close", "format": {"type": "currency"}}},
+  {"component": "when", "props": {"test": "datum.close >= datum.open", "style": {"color": "green"}},
+   "children": [{"component": "badge", "props": {"text": "UP", "background": "green"}}],
+   "else": [{"component": "badge", "props": {"text": "DOWN", "background": "red"}}]},
+  {"component": "sep"},
+  {"component": "sparkline", "props": {"values": {"expr": "[datum.low, datum.open, datum.close, datum.high]"}}},
+  {"component": "fields", "props": {"source": "hover", "priority": 20}}]}}
+```
+
+| component | props | draws |
+|---|---|---|
+| `text` | `text` or `template` (`{field}` placeholders), `short` | a literal |
+| `field` | see above | `label=value` |
+| `row` | `sep` (two spaces), `style`; children | children side by side |
+| `when` | `test` (required), `style`; children, `else` | children when `test` holds (with `style` over them), else the `else` branch; with a `style` and no `else`, the children unstyled |
+| `sep` | `text` (` │ `), `style` | a separator, dropped at a line's ends |
+| `badge` | `text`, `color`, `background` | ` TEXT ` on a background |
+| `sparkline` | `values` (an array), `max` | `▁▃▅█` |
+| `fields` | `source` (`auto`, `strip`, `hover`), `labelSep`, `sep`, `priority` | the view's own fields: the strip, or the hovered datum's tooltip |
+
+`text`, `field`, `badge` and `sparkline` also take `priority`, `keep`
+and `style`. A string is a text node, an object with `field` is a field
+node, and `{"fields": [...]}` is a row. Props are checked against each
+component's schema. A fault, such as an unknown component, an unknown
+prop, a wrong type or a missing required prop, is an `INVALID_INPUT`
+error with a JSON path like `/x-eas/readout/children/1/props/labl`.
+`eas-readout-validate` raises it. A live readout shows it in place
+instead of breaking the chart.
+
+Fitting measures the whole tree before rendering anything, so dropping,
+abbreviating and eliding work across nested components. Each
+component's output is a list of atoms. An atom is the unit that is
+dropped whole, and it carries a full, a short and a shorter form.
+
+Packages register their own components with `eas-define-component`:
+
+```elisp
+(eas-define-component "ohlc-change"
+  :doc "Close minus open, colored by sign."
+  :props '((up :type color :default "green")
+           (down :type color :default "red")
+           (decimals :type integer :default 2))
+  :render
+  (lambda (props ctx)
+    (let* ((d (plist-get ctx :datum))
+           (x (- (plist-get d :close) (plist-get d :open))))
+      (list (eas-component-atom
+             (list (eas-component-span
+                    (format (format "%%+.%df" (plist-get props :decimals)) x)
+                    (list :color (plist-get props (if (>= x 0) :up :down)))))
+             :priority 70)))))
+```
+
+The props schema lists `(NAME :type TYPE :default D :required R :enum
+VALUES :doc S)`. TYPE is one of `string number integer boolean color
+style format expr array rules any`. RENDER receives the props, already
+validated, with defaults applied and expressions evaluated, and a
+context: `:datum :view :theme :env :given :path`, plus `:children`
+when the component is defined with `:children t`.
+`eas-component-render-children` renders those children (one list of
+atoms per child) and `eas-component-restyle` lays a style over atoms.
+`eas-component-atom SPANS &key short shorter priority keep role` builds
+an atom, and `eas-component-span TEXT STYLE` a span. STYLE is a plist
+of `:color :background :bold :italic :dim :underline`.
+
+For anything a spec cannot say, `eas-readout-functions` is the Lisp
+hook. Each function receives the datum, the view and the context and
+may return propertized text. The first non-nil result is the readout,
+fitted to the reserved lines like a component's output. Add a function
+buffer-locally to change one chart's readout:
+
+```elisp
+(add-hook 'eas-readout-functions
+          (lambda (datum _view _ctx)
+            (when datum
+              (propertize (format "close %s" (plist-get datum :close)) 'face 'bold))))
+```
+
+Textual tooltips use the same API. `x-eas.tooltip` is a component tree
+for the hovered datum, shown on one line in the echo area or in a GUI
+tooltip frame.
+
 ## Callbacks
 
 A click on a chart (mouse-1 in a GUI frame, `RET` at point in a

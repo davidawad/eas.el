@@ -25,6 +25,7 @@
 
 (require 'eas-view)
 (require 'eas-tip)
+(require 'eas-readout)
 
 (defconst eas-mode-tip-map-marks '("bar" "rect" "point" "circle" "square" "text")
   "Marks `eas-svg-hot-spots' gives :map areas, whose help-echo Emacs shows.")
@@ -41,7 +42,8 @@ Elsewhere, or with `tooltip-mode' off, TEXT goes to the echo area."
            (bound-and-true-p tooltip-mode) (fboundp 'tooltip-show))
       (if text (tooltip-show text) (tooltip-hide))
     (let ((message-log-max nil))
-      (cond (text (message "%s" text))
+      ;; One line: a taller echo area would resize the chart (eas-anj).
+      (cond (text (message "%s" (eas-readout-echo-line text)))
             (eas-mode-tip--shown (message nil)))))
   (setq eas-mode-tip--shown (and text t)))
 
@@ -50,9 +52,11 @@ Elsewhere, or with `tooltip-mode' off, TEXT goes to the echo area."
   (and hover (list (plist-get hover :view) (plist-get hover :mark) (plist-get hover :datum))))
 
 (defun eas-mode-tip-text (view)
-  "Tooltip text of VIEW's hovered datum, or nil."
-  (eas-tip-text (eas-tip-tooltip (eas-view-scene view) (eas-view-plan view)
-                                     (plist-get (eas-view-state view) :hover))))
+  "Tooltip text of VIEW's hovered datum, or nil.
+The chart's x-eas.tooltip component tree says it when it has one."
+  (or (eas-readout-tooltip-string view)
+      (eas-tip-text (eas-tip-tooltip (eas-view-scene view) (eas-view-plan view)
+                                     (plist-get (eas-view-state view) :hover)))))
 
 (defun eas-mode-tip--own-p (view)
   "Non-nil unless Emacs displays VIEW's hovered datum itself via a :map area."

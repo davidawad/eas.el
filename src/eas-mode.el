@@ -34,6 +34,7 @@
 (require 'eas-crosshair)
 (require 'eas-mode-patch)
 (require 'eas-mode-strip)
+(require 'eas-readout)
 (require 'eas-gc)
 (require 'eas-live)
 
@@ -108,13 +109,14 @@ Collection waits until Emacs is idle (`eas-gc-defer')."
 ;;; Rendering
 
 (defun eas-mode--window-size (window target)
-  "Size to compile for WINDOW and TARGET, leaving a line for the values strip.
+  "Size to compile for WINDOW and TARGET, leaving the readout's lines.
 A text chart is as wide as WINDOW shows a line whole: its body less
 line numbers and, in a terminal, the column the truncation glyph takes
 \(`window-max-chars-per-line'), so no line ends in `$' (fc-qx1.52)."
   (if (eq target 'svg)
       (cons (window-body-width window t)
-            (- (window-body-height window t) 4 (with-selected-window window (default-line-height))))
+            (- (window-body-height window t) 4
+               (* (eas-mode--readout-lines) (with-selected-window window (default-line-height)))))
     ;; A terminal window with a neighbour to its right also loses the
     ;; vertical-border column: `window-max-chars-per-line' still counts it,
     ;; so a full-width line ends in `$' (seen in neomacs -nw, 2026-10-05).
@@ -122,7 +124,13 @@ line numbers and, in a terminal, the column the truncation glyph takes
                            (if (and (not (display-graphic-p (window-frame window)))
                                     (window-right window))
                                1 0)))
-          :rows (max 6 (- (window-body-height window) 2)))))
+          ;; The header line counts once: the body excludes it when it is set.
+          :rows (max 6 (- (window-body-height window) (eas-mode--readout-lines)
+                          (if (buffer-local-value 'header-line-format (window-buffer window)) 0 1))))))
+
+(defun eas-mode--readout-lines ()
+  "Lines this buffer's view reserves for its readout (eas-anj)."
+  (if eas-mode--view (eas-readout-max-lines eas-mode--view) 1))
 
 (defun eas-mode--flush-replaced (old new)
   "Drop image OLD from the image cache, unless the image NEW repeats it.

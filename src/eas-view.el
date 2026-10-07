@@ -103,6 +103,10 @@ for the new rows (`eas-compile-rows-patch')."
   (let ((values (plist-get (plist-get spec :data) :values)))
     (and (vectorp values) values)))
 
+(defvar eas-view-open-functions nil
+  "Hook run with VIEW and its SOURCE when `eas-view-open' registered VIEW.
+Resolving strips x-eas from the spec; extensions read theirs here.")
+
 (cl-defun eas-view-open (source &key id subject bindings rows size target cell)
   "Open a live view of SOURCE and register it; return the view.
 SOURCE is a template name (resolved with BINDINGS) or a chart/v1 spec.
@@ -129,6 +133,7 @@ TARGET and CELL are as in `eas-compile'."
                   (eas-view-scene view) (eas-view--compile view))))
       (eas-unsupported-feature (eas-view--fallback view err)))
     (puthash (eas-view-id view) view eas-views)
+    (run-hook-with-args 'eas-view-open-functions view source)
     view))
 
 (defun eas-view--fallback (view err)

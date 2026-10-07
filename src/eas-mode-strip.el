@@ -16,6 +16,7 @@
 
 (require 'eas-view)
 (require 'eas-strip)
+(require 'eas-readout)
 
 (defface eas-strip '((t :inherit shadow))
   "Face of the values strip under a live chart."
@@ -33,17 +34,25 @@
 (declare-function eas-mode--readout "eas-mode" ())
 
 (defun eas-mode-strip-string (view)
-  "VIEW's values strip as a propertized line."
-  (let* ((text (concat " " (eas-strip-format (eas-strip (eas-view-scene view) (eas-view-plan view)
-                                                        (eas-view-state view)))))
-         (size (eas-view-size view))
-         ;; In a terminal the strip is no wider than the chart it reads
-         ;; (fc-qx1.52): a longer line ends in a truncation glyph.
-         (text (if (and (eq (eas-view-target view) 'text) (plist-get size :cols))
-                   (truncate-string-to-width text (plist-get size :cols) nil nil "…")
-                 text)))
-    (propertize text 'face 'eas-strip 'eas-strip t 'keymap eas-mode-strip-map
-                'help-echo nil 'pointer 'arrow)))
+  "VIEW's readout (by default the values strip) as propertized lines.
+It takes exactly the lines the chart reserves (`eas-readout-max-lines')
+and is no wider than the chart (fc-qx1.52, eas-anj): the fit drops,
+abbreviates, then elides rather than wrap.  In a GUI frame the lines
+are drawn as one SVG image of fixed size."
+  (let* ((width (eas-readout-width view))
+         (atoms (eas-readout-atoms view))
+         (lines (eas-readout-render view (max 1 (1- width)) nil atoms))
+         (text (mapconcat (lambda (spans) (concat " " (eas-component-propertize spans))) lines "\n"))
+         (image (and (eq (eas-view-target view) 'svg) (display-graphic-p) (image-type-available-p 'svg)
+                     (create-image (eas-readout-svg view (plist-get (plist-get (eas-view-scene view) :size) :w)
+                                                    (default-line-height) (face-foreground 'eas-strip nil t) atoms)
+                                   'svg t))))
+    (add-face-text-property 0 (length text) 'eas-strip t text)
+    (add-text-properties 0 (length text)
+                         (append (list 'eas-strip t 'keymap eas-mode-strip-map 'help-echo nil 'pointer 'arrow)
+                                 (and image (list 'display image)))
+                         text)
+    text))
 
 (defun eas-mode-strip-update (view)
   "Rewrite the strip line of the current buffer (showing VIEW) when it changed."

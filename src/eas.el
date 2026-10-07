@@ -4,7 +4,7 @@
 
 ;; Author: David Awad <me@davidaw.ad>
 ;; Maintainer: David Awad <me@davidaw.ad>
-;; Version: 0.2.1
+;; Version: 0.2.2
 ;; Package-Requires: ((emacs "30.1"))
 ;; Keywords: data, multimedia, tools, hypermedia
 ;; URL: https://github.com/davidawad/eas.el

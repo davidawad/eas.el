@@ -25,13 +25,13 @@
     },
     "example": "../examples/vega/flight-passengers.data.json",
     "vega": {
-      "status": "partial",
-      "note": "line, points, signed percent axis and dashed zero rule match. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0477 (was 0.0615 against vg2svg); the comparison no longer emulates vg2svg's text widths; the line still sits about 2 px higher than Vega's, as the fitted plot is a little shorter.",
+      "status": "pass",
+      "note": "Line, points, signed percent axis and the dashed zero line match. The zero line is Vega's: the 0 grid line drawn #888 and dashed by conditional gridColor and gridDash (crisp on the half pixel, under the line), not a rule mark; the title room is Vega's union of title and subtitle bounds, so the plot is no longer 2 px shorter. What remains is the font-raster floor (Helvetica in the reference, Arimo here). Re-measured in eas-7r1.12e (rsvg-convert, Arimo): ratio 0.0236 (was 0.0477; 0.0615 against vg2svg).",
       "size": [
         500,
         250
       ],
-      "ratio": 0.0477
+      "ratio": 0.0236, "threshold": 0.03
     }
   },
   "title": {
@@ -83,7 +83,8 @@
             "grid": true,
             "tickCount": 5,
             "labelOverlap": false,
-            "gridColor": "#eee",
+            "gridColor": {"condition": {"test": "datum.value === 0", "value": "#888"}, "value": "#eee"},
+            "gridDash": {"condition": {"test": "datum.value === 0", "value": [5, 4]}, "value": []},
             "title": {"x-eas:slot": "yTitle"},
             "titleAlign": "left",
             "titleAngle": 0,
@@ -93,7 +94,6 @@
             "titleFontWeight": "normal",
             "titleX": 1,
             "titleY": 0,
-            "zindex": 1,
             "labelExpr": "datum.value ? datum.label : ''"
           }
         }
@@ -111,11 +111,6 @@
           }
         }
       ]
-    },
-    {
-      "transform": [{"aggregate": []}, {"calculate": "0", "as": "change"}],
-      "mark": {"type": "rule", "stroke": "#888", "strokeDash": [5, 4], "strokeWidth": 1},
-      "encoding": {"y": {"field": "change", "type": "quantitative"}}
     }
   ],
   "config": {

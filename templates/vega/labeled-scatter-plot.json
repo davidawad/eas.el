@@ -70,7 +70,7 @@
       "example": "labeled-scatter-plot",
       "spec": "test/vega-examples/specs/labeled-scatter-plot.vg.json",
       "status": "partial",
-      "note": "Points, trend and axes match; the label transform places labels clear of points, trend and each other, but not label for label as Vega's bitmap does. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0334 (was 0.049 against vg2svg); the canvas reference draws Vega's label transform (the vg2svg one left every label at the origin); labels are placed clear of points and each other but not label for label.",
+      "note": "Points, trend and axes match; the label transform places labels clear of points, trend and each other, but not label for label as Vega's bitmap does. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0334 (was 0.049 against vg2svg); the canvas reference draws Vega's label transform (the vg2svg one left every label at the origin); labels are placed clear of points and each other but not label for label. Re-measured in eas-7r1.12e: ratio 0.0334, unchanged. Most labels sit where Vega's do; a few dozen take another anchor or neighbour, as eas's label transform tests boxes where Vega's tests a rasterized bitmap of marks and labels, and the chart's top is 3 px lower than the reference's (Vega's top bound reaches 3 px higher; not traced).",
       "ratio": 0.0334,
       "threshold": 0.07,
       "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"

@@ -103,7 +103,7 @@
       "example": "job-voyager",
       "spec": "test/vega-examples/specs/job-voyager.vg.json",
       "status": "partial",
-      "note": "Stacked areas, per-series opacity, peak labels (sized, faded by quantile, aligned by year) and the sex and search filters match; clicking an area to search for its job is not reproduced, and area seams and label fonts differ slightly. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0675 (was 0.0716 against vg2svg).",
+      "note": "Stacked areas, per-series opacity, peak labels (sized, faded by quantile, aligned by year) and the sex and search filters match; clicking an area to search for its job is not reproduced, and area seams and label fonts differ slightly. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0675 (was 0.0716 against vg2svg). Re-measured in eas-7r1.12e: ratio 0.0675, unchanged; the chart is 851 px wide against Vega's 862 (not traced), so the comparison aligns it 11 px over.",
       "ratio": 0.0675,
       "threshold": 0.1,
       "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"

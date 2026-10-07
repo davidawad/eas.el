@@ -23,7 +23,7 @@
       "label_extent": {"type": "number", "default": null, "doc": "least room for the value labels in pixels; null fits them"}
     },
     "example": "../examples/vega/time-units.data.json",
-    "vega": {"status": "partial", "note": "Weekday bars, axis, title and italic subtitle match and hover fills a bar firebrick, but the band scale is not rounded (scale.round is not drawn natively), so bar edges sit up to a pixel off. The time unit and measure selects are slots (unit, format, op). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0376 (was 0.0355 against vg2svg); the template declares Vega's autosize fit (600x300, padding included) instead of a 549x230 plot, so the canvas matches; the example keeps label_extent 23, nearer Vega's.", "ratio": 0.0376, "threshold": 0.08}
+    "vega": {"status": "pass", "note": "Weekday bars, axis, title and italic subtitle match and hover fills a bar firebrick. The time unit and measure selects are slots (unit, format, op). The band scale rounds as Vega's (round: true, half up), the labels' extent is fitted (the example's 23 px label_extent was a vg2svg-era fit) and the title room is Vega's union of title and subtitle bounds, so bars, ticks and plot edges land on the reference's pixels; what remains is the font-raster floor (Helvetica in the reference, Arimo here). Re-measured in eas-7r1.12e (rsvg-convert, Arimo): ratio 0.0124 (was 0.0376); before that, 0.0355 against vg2svg.", "ratio": 0.0124, "threshold": 0.03}
   },
   "title": {"text": {"x-eas:slot": "title"}, "subtitle": {"x-eas:slot": "subtitle"}, "frame": "group",
             "subtitleFontStyle": "italic", "subtitleColor": "#000", "subtitleFontSize": 12},
@@ -45,7 +45,7 @@
   "mark": {"type": "bar"},
   "encoding": {
     "x": {"field": "unit", "timeUnit": {"x-eas:slot": "unit"}, "type": "ordinal", "title": null,
-          "scale": {"paddingInner": 0.05, "paddingOuter": 0.05},
+          "scale": {"paddingInner": 0.05, "paddingOuter": 0.05, "round": true},
           "axis": {"format": {"x-eas:slot": "format"}, "labelAngle": 0}},
     "y": {"field": "value", "type": "quantitative", "title": {"x-eas:slot": "y_title"}, "axis": {"tickCount": 7, "minExtent": {"x-eas:slot": "label_extent"}}},
     "color": {"condition": {"param": "hover", "empty": false, "value": {"x-eas:slot": "hover_color"}},

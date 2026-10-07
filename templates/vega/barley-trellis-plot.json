@@ -45,7 +45,7 @@
       },
       "spacing": {
         "type": "number",
-        "default": 1,
+        "default": 4,
         "doc": "pixels between a panel and the next one's title"
       },
       "title": {
@@ -62,10 +62,10 @@
     "vega": {
       "example": "barley-trellis-plot",
       "spec": "test/vega-examples/specs/barley-trellis-plot.vg.json",
-      "status": "partial",
-      "note": "Every panel, point, dashed grid, both side axes and the legend are drawn, but rows drift a pixel from Vega's (scale round: true is not reproduced), which the thin dashed grid magnifies. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0890 (was 0.0863 against vg2svg).",
-      "ratio": 0.089,
-      "threshold": 0.11,
+      "status": "pass",
+      "note": "Every panel, point, dashed grid, both side axes and the legend match: the point and x scales round as Vega's (round: true, half up, so alternate panels no longer drift a pixel), the site label sits on its panel's frame (labelPadding 0) with Vega's 115 px panel step, the legend has Vega's padding 4, the x axis keeps all 15 labels (labelOverlap false) and the frame stroke is on the half pixel. Left: Vega's spec leaves 15 px above the first panel where a Vega-Lite facet leaves its header's 12 (eas has no per-side padding), so the chart is 3 px shorter, and the font-raster floor (Helvetica in the reference, Arimo here). Re-measured in eas-7r1.12e (rsvg-convert, Arimo): ratio 0.0479 (was 0.0890; 0.0863 against vg2svg).",
+      "ratio": 0.0479,
+      "threshold": 0.06,
       "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
@@ -169,7 +169,7 @@
       "labelFontWeight": "bold",
       "labelFontSize": 11,
       "labelColor": "#000",
-      "labelPadding": 3
+      "labelPadding": 0
     }
   },
   "columns": 1,
@@ -191,12 +191,14 @@
         "type": "quantitative",
         "scale": {
           "zero": true,
-          "nice": true
+          "nice": true,
+          "round": true
         },
         "axis": {
           "zindex": 1,
           "title": null,
-          "tickCount": 10
+          "tickCount": 10,
+          "labelOverlap": false
         }
       },
       "stroke": {
@@ -209,7 +211,8 @@
             "x-eas:slot": "groupTitle"
           },
           "symbolStrokeWidth": 2,
-          "symbolSize": 50
+          "symbolSize": 50,
+          "padding": 4
         }
       }
     },
@@ -237,7 +240,8 @@
             },
             "scale": {
               "type": "point",
-              "padding": 1
+              "padding": 1,
+              "round": true
             },
             "axis": {
               "tickSize": 0,
@@ -298,7 +302,8 @@
             },
             "scale": {
               "type": "point",
-              "padding": 1
+              "padding": 1,
+              "round": true
             },
             "axis": {
               "orient": "right",

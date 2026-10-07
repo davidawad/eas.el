@@ -53,8 +53,9 @@
     "example": "../examples/vega/u-district-cuisine.data.json",
     "vega": {
       "status": "pass",
-      "note": "kernel densities with counts placed in pixel rows; landmarks, baselines and row names as rules and text; rows in category order set the drawing order; the reference's font fallback differs",
-      "ratio": 0.0286
+      "note": "kernel densities with counts placed in pixel rows; landmarks, baselines and row names as rules and text; rows in category order set the drawing order; the reference's font fallback differs. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0381 (was 0.0286 against vg2svg); the comparison no longer emulates vg2svg's text widths. The reference's text is Avenir Next (the spec's font list; macOS), which this box lacks, so its title and labels are drawn in another face and the taller title band lowers the ridges 2 px: the pass threshold is 0.045 for that font.",
+      "ratio": 0.0381,
+      "threshold": 0.045
     }
   },
   "title": {"text": {"x-eas:slot": "title"}, "anchor": "start", "frame": "group", "dx": -1},

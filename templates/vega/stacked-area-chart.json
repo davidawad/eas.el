@@ -49,10 +49,10 @@
       "example": "stacked-area-chart",
       "spec": "test/vega-examples/specs/stacked-area-chart.vg.json",
       "status": "pass",
-      "note": "A stack transform sorted by series, monotone areas over a point scale without padding.",
-      "ratio": 0.0068,
+      "note": "A stack transform sorted by series, monotone areas over a point scale without padding. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0075 (was 0.0068 against vg2svg).",
+      "ratio": 0.0075,
       "threshold": 0.05,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

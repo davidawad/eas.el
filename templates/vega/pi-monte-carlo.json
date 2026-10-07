@@ -41,8 +41,8 @@
     "example": "../examples/vega/pi-monte-carlo.data.json",
     "vega": {
       "status": "pass",
-      "note": "A slider picks the sample size; the left panel colours points inside the quarter circle and the right one plots the running estimate. eas random() is deterministic per row instead of Math.random, so the points differ from the reference and the ratio measures the scatter, not the layout. Pixel ratio against ref/pi-monte-carlo.png: 0.173.",
-      "ratio": 0.1731,
+      "note": "A slider picks the sample size; the left panel colours points inside the quarter circle and the right one plots the running estimate. eas random() is deterministic per row instead of Math.random, so the points differ from the reference and the ratio measures the scatter, not the layout. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.1759 (was 0.1731 against vg2svg); Vega's points are Math.random.",
+      "ratio": 0.1759,
       "threshold": 0.23
     }
   },

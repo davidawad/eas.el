@@ -45,8 +45,8 @@
     "example": "../examples/vega/brushing-scatter-plots.data.json",
     "vega": {
       "status": "pass",
-      "note": "One interval brush shared by the 16 cells (a top-level param with views) greys the points outside it in every cell. Vega lays the cells on a fixed 140px grid; Vega-Lite concatenation spaces rows around their axis labels, so rows sit a few pixels off. Pixel ratio against ref/brushing-scatter-plots.png: 0.051.",
-      "ratio": 0.0514,
+      "note": "One interval brush shared by the 16 cells (a top-level param with views) greys the points outside it in every cell. Vega lays the cells on a fixed 140px grid; Vega-Lite concatenation spaces rows around their axis labels, so rows sit a few pixels off. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0587 (was 0.0514 against vg2svg).",
+      "ratio": 0.0587,
       "threshold": 0.08
     }
   },

@@ -82,8 +82,8 @@
     "example": "../examples/vega/tree-layout.data.json",
     "vega": {
       "status": "pass",
-      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0130 (Vega's own SVG through the same rasterizer: 0.0127). Layout, links and labels match Vega exactly (tree is Buchheim/Reingold-Tilford as d3). Vega's bound widgets (labels, layout, links, separation) are the slots of the same names.",
-      "ratio": 0.02
+      "note": "Layout, links and labels match Vega exactly (tree is Buchheim/Reingold-Tilford as d3). Vega's bound widgets (labels, layout, links, separation) are the slots of the same names. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.1230 (was 0.02 against vg2svg); geometry matches; the rest is the font-raster floor: the references' sans-serif is Helvetica (node-canvas on macOS), native SVG here is drawn in Arimo (Arial metrics), so glyph edges differ while positions match.",
+      "ratio": 0.123
     }
   },
   "title": {

@@ -34,8 +34,8 @@
     "example": "../examples/vega/parallel-coordinates.data.json",
     "vega": {
       "status": "pass",
-      "note": "x-eas transform parallel-coordinates scales each field on its own niced domain and emits the axes as tick rows; axes drawn as rules and text on a rounded point scale",
-      "ratio": 0.0236
+      "note": "x-eas transform parallel-coordinates scales each field on its own niced domain and emits the axes as tick rows; axes drawn as rules and text on a rounded point scale. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0222 (was 0.0236 against vg2svg); the comparison emulated vg2svg's 0.8 em text widths and aligned a white native image against the transparent reference by ink profiles that saw every white pixel as ink; both are fixed.",
+      "ratio": 0.0222
     }
   },
   "title": {"x-eas:slot": "title"},

@@ -86,8 +86,8 @@
     ],
     "vega": {
       "status": "pass",
-      "note": "The arrows, page up/down, home and end scroll the window of rows (x-eas.on key handlers) and the scrollbar thumb follows. Vega also scrolls with the wheel and by dragging the thumb, which are not bound. Pixel ratio against ref/table-scrollbar.png: 0.056.",
-      "ratio": 0.0557,
+      "note": "The arrows, page up/down, home and end scroll the window of rows (x-eas.on key handlers) and the scrollbar thumb follows. Vega also scrolls with the wheel and by dragging the thumb, which are not bound. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0475 (was 0.0557 against vg2svg).",
+      "ratio": 0.0475,
       "threshold": 0.08
     }
   },

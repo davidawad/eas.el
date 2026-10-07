@@ -36,7 +36,7 @@
       },
       "width": {
         "type": "number",
-        "default": 555,
+        "default": 562,
         "doc": "plot width (Vega fits a 650x300 canvas, which leaves a 555x268 plot)"
       },
       "height": {
@@ -56,8 +56,8 @@
     "example": "../examples/vega/stock-index-chart.data.json",
     "vega": {
       "status": "pass",
-      "note": "The index date follows the pointer (a nearest point selection on x) and every series is indexed to it. Vega fits a 650x300 canvas; the default width and height are the plot size that leaves. Pixel ratio against ref/stock-index-chart.png: 0.035.",
-      "ratio": 0.0345,
+      "note": "The index date follows the pointer (a nearest point selection on x) and every series is indexed to it. Vega fits a 650x300 canvas; the default width and height are the plot size that leaves. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0512 (was 0.0345 against vg2svg); plot width 555 was fitted to the vg2svg reference's estimated label widths; 562 is what Vega's 650x300 fit leaves with real metrics.",
+      "ratio": 0.0512,
       "threshold": 0.06
     }
   },

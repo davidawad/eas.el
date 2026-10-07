@@ -111,6 +111,22 @@ Rows cycle filters 0-4."
     (should (equal (plist-get r :size-delta) [4 3]))
     (should (equal (plist-get r :offset) [-3 -2]))))
 
+(eas-png-test--deftest eas-png-compare-aligns-on-a-transparent-reference
+  "A transparent reference and a white native image share a background."
+  (let* ((ref (eas-png-test--rect (eas-png-test--canvas 60 40) 10 10 20 15 '(42 120 214)))
+         (native (eas-png-test--rect (eas-png-test--canvas 64 43 '(255 255 255)) 13 12 20 15 '(42 120 214)))
+         (s (plist-get ref :rgba)))
+    ;; Clear the reference's background to transparent black; the rect stays opaque.
+    (dotimes (k (* 60 40))
+      (unless (= (aref s (* 4 k)) 42) (dotimes (c 4) (aset s (+ (* 4 k) c) 0))))
+    ;; Only the rect is ink, in both images.
+    (let ((p (eas-png--profiles native (eas-png--background ref))))
+      (should (= (cl-count-if #'cl-plusp (car p)) 20))
+      (should (= (cl-count-if #'cl-plusp (cdr p)) 15)))
+    (let ((r (eas-png-compare native ref)))
+      (should (= (plist-get r :ratio) 0))
+      (should (equal (plist-get r :offset) [-3 -2])))))
+
 (eas-png-test--deftest eas-png-compare-counts-real-differences
   (let* ((ref (eas-png-test--rect (eas-png-test--canvas 50 20) 5 5 10 10 '(42 120 214)))
          (native (eas-png-test--rect (eas-png-test--rect (eas-png-test--canvas 50 20) 5 5 10 10 '(42 120 214))

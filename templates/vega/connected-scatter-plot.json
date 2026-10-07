@@ -66,10 +66,10 @@
       "example": "connected-scatter-plot",
       "spec": "test/vega-examples/specs/connected-scatter-plot.vg.json",
       "status": "pass",
-      "note": "Cardinal path through points in data order, side-placed year labels, and a second axis per side over the shared scales (resolve.axis independent).",
-      "ratio": 0.0347,
+      "note": "Cardinal path through points in data order, side-placed year labels, and a second axis per side over the shared scales (resolve.axis independent). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0301 (was 0.0347 against vg2svg).",
+      "ratio": 0.0301,
       "threshold": 0.06,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

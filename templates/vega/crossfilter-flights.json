@@ -95,8 +95,8 @@
     "example": "../examples/vega/crossfilter-flights.data.json",
     "vega": {
       "status": "pass",
-      "note": "Each histogram carries a Vega-Lite interval brush; brushing one filters the other two (crossfilter). The example binds every tenth row of flights-200k.json (20,000 flights), so bar heights differ by sampling. Vega's bin-step sliders and wheel zoom of a brush are not ported. Pixel ratio against ref/crossfilter-flights.png: 0.065.",
-      "ratio": 0.0645,
+      "note": "Each histogram carries a Vega-Lite interval brush; brushing one filters the other two (crossfilter). The example binds every tenth row of flights-200k.json (20,000 flights), so bar heights differ by sampling. Vega's bin-step sliders and wheel zoom of a brush are not ported. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0658 (was 0.0645 against vg2svg).",
+      "ratio": 0.0658,
       "threshold": 0.1
     }
   },

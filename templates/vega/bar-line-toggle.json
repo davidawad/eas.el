@@ -72,8 +72,8 @@
     "example": "../examples/vega/bar-line-toggle.data.json",
     "vega": {
       "status": "pass",
-      "note": "The DataPoints slider switches between labelled columns (up to 50 points) and a basis-interpolated line. The example's first 25 values are the reference's (Vega draws them with Math.random), the rest are seeded. Vega's line-mode y axis is not drawn. Pixel ratio against ref/bar-line-toggle.png: 0.046.",
-      "ratio": 0.0457,
+      "note": "The DataPoints slider switches between labelled columns (up to 50 points) and a basis-interpolated line. The example's first 25 values are the reference's (Vega draws them with Math.random), the rest are seeded. Vega's line-mode y axis is not drawn. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0379 (was 0.0457 against vg2svg); Vega draws the values with Math.random, so the example's first 25 values are now the canvas reference's.",
+      "ratio": 0.0379,
       "threshold": 0.07
     }
   },

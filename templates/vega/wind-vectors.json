@@ -78,10 +78,10 @@
     "example": "../examples/vega/wind-vectors.data.json",
     "vega": {
       "status": "pass",
-      "ratio": 0.0001,
+      "ratio": 0.0,
       "threshold": 0.03,
-      "note": "Point scales over longitude and latitude (north up), wedge symbols turned by direction + 180 and sized by speed, rainbow over 0..360: ratio 0.00003 against ref/wind-vectors.png (5 px size delta). No new transform needed.",
-      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+      "note": "Point scales over longitude and latitude (north up), wedge symbols turned by direction + 180 and sized by speed, rainbow over 0..360: ratio 0.00003 against ref/wind-vectors.png (5 px size delta). No new transform needed. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0000 (was 0.0001 against vg2svg).",
+      "rasterizer": "rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica"
     }
   },
   "title": {

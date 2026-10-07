@@ -102,8 +102,8 @@
     "example": "../examples/vega/edge-bundling.data.json",
     "vega": {
       "status": "partial",
-      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0148 (Vega's own SVG through the same rasterizer: 0.0128). Bundled links and leaf labels match Vega. Hovering a label draws its links in colorOut/colorIn as Vega does, but the linked labels are not bolded or recolored (Vega's indata tests), and the tension, radius, extent, rotate, text and layout widgets are slots.",
-      "ratio": 0.02
+      "note": "Bundled links and leaf labels match Vega. Hovering a label draws its links in colorOut/colorIn as Vega does, but the linked labels are not bolded or recolored (Vega's indata tests), and the tension, radius, extent, rotate, text and layout widgets are slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0350 (was 0.02 against vg2svg); geometry matches; the rest is the font-raster floor: the references' sans-serif is Helvetica (node-canvas on macOS), native SVG here is drawn in Arimo (Arial metrics), so glyph edges differ while positions match.",
+      "ratio": 0.035
     }
   },
   "title": {

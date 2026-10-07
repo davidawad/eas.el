@@ -65,12 +65,12 @@
     "example": "../examples/vega/arc-diagram.data.json",
     "vega": {
       "status": "pass",
-      "ratio": 0.0448,
+      "ratio": 0.0534,
       "offset": [
         10,
         0
       ],
-      "note": "4.5% of pixels differ at offset [10, 0]: label glyphs and anti-aliasing. Arcs are 32-segment line marks, one per link; the graph transform supplies node order and degree. Vega's headless text-width estimate pads its canvas 10px further left."
+      "note": "Arcs are 32-segment line marks, one per link; the graph transform supplies node order and degree. The reference pads its canvas 10px further left. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0534 (was 0.0448 against vg2svg); the example's height is 387 (was 436, room for vg2svg's estimated label lengths), so the canvas is Vega's 800x397 less the 10 px the reference pads left; the ratio rises only because the empty band no longer pads the denominator."
     }
   },
   "title": {

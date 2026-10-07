@@ -87,8 +87,8 @@
     "example": "../examples/vega/radial-tree-layout.data.json",
     "vega": {
       "status": "pass",
-      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0173 (Vega's own SVG through the same rasterizer: 0.0183). Angles, spokes and rotated labels match Vega. Vega's bound widgets (labels, radius, extent, rotate, layout, links) are slots.",
-      "ratio": 0.025
+      "note": "Angles, spokes and rotated labels match Vega. Vega's bound widgets (labels, radius, extent, rotate, layout, links) are slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0466 (was 0.025 against vg2svg); geometry matches; the rest is the font-raster floor: the references' sans-serif is Helvetica (node-canvas on macOS), native SVG here is drawn in Arimo (Arial metrics), so glyph edges differ while positions match.",
+      "ratio": 0.0466
     }
   },
   "title": {

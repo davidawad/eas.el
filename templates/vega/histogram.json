@@ -19,7 +19,7 @@
       "label_extent": {"type": "number", "default": null, "doc": "least room for the count labels in pixels; null fits them"}
     },
     "example": "../examples/vega/histogram.data.json",
-    "vega": {"status": "pass", "note": "Bins of step 0.1 over [-1, 1], rug and axes match; hover fills a bin firebrick. The bin step and offset sliders are slots (step, extent). Ratio 0.0244 at best alignment with resvg here.", "ratio": 0.0244, "threshold": 0.05}
+    "vega": {"status": "pass", "note": "Bins of step 0.1 over [-1, 1], rug and axes match; hover fills a bin firebrick. The bin step and offset sliders are slots (step, extent). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0277 (was 0.0244 against vg2svg); the example's label_extent 31, fitted to the vg2svg reference, is gone; the canvas now matches.", "ratio": 0.0277, "threshold": 0.05}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

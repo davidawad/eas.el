@@ -50,8 +50,8 @@
     "example": "../examples/vega/serpentine-timeline.data.json",
     "vega": {
       "status": "pass",
-      "note": "x-eas transform serpentine lays the domain along the path; label offsets rotated in expressions as Vega applies dx/dy after rotation; sliders are slots; label halos and the arrow glyph's white stroke are left out",
-      "ratio": 0.0084
+      "note": "x-eas transform serpentine lays the domain along the path; label offsets rotated in expressions as Vega applies dx/dy after rotation; sliders are slots; label halos and the arrow glyph's white stroke are left out. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0151 (was 0.0084 against vg2svg); the comparison no longer emulates vg2svg's text widths.",
+      "ratio": 0.0151
     }
   },
   "title": {"x-eas:slot": "title"},

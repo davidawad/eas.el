@@ -91,8 +91,8 @@
     "example": "../examples/vega/zoomable-circle-packing.data.json",
     "vega": {
       "status": "partial",
-      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0090 (Vega's own SVG through the same rasterizer: n/a (timer)). The initial view matches. Clicking a circle opens a zoomed view (the zoom-subtree action re-lays its subtree out, which is d3's zoom geometry) and clicking the focused circle zooms out, but without Vega's animated transition, the shift-click details panel or the slow-motion modifier; the help text describes eas's clicks.",
-      "ratio": 0.015
+      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0090 (Vega's own SVG through the same rasterizer: n/a (timer)). The initial view matches. Clicking a circle opens a zoomed view (the zoom-subtree action re-lays its subtree out, which is d3's zoom geometry) and clicking the focused circle zooms out, but without Vega's animated transition, the shift-click details panel or the slow-motion modifier; the help text describes eas's clicks. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0109 (was 0.015 against vg2svg).",
+      "ratio": 0.0109
     }
   },
   "title": {

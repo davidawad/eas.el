@@ -123,8 +123,8 @@
     "example": "../examples/vega/treemap.data.json",
     "vega": {
       "status": "pass",
-      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0338 (Vega's own SVG through the same rasterizer: 0.0338). Rectangles match Vega's to the pixel; hovering a leaf fills it red as in Vega. The layout and aspectRatio widgets are the method and ratio slots.",
-      "ratio": 0.04
+      "note": "Rectangles match Vega's to the pixel; hovering a leaf fills it red as in Vega. The layout and aspectRatio widgets are the method and ratio slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0348 (was 0.04 against vg2svg); geometry matches; the rest is the font-raster floor: the references' sans-serif is Helvetica (node-canvas on macOS), native SVG here is drawn in Arimo (Arial metrics), so glyph edges differ while positions match.",
+      "ratio": 0.0348
     }
   },
   "title": {

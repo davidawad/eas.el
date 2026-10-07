@@ -22,7 +22,7 @@
       "label_extent": {"type": "number", "default": null, "doc": "least room for the y labels in pixels; null fits them"}
     },
     "example": "../examples/vega/binned-scatter-plot.data.json",
-    "vega": {"status": "pass", "note": "Binned cells sized by count with a size legend match; Vega's legend format s reads as ~s here. Ratio 0.0293 at best alignment with resvg here.", "ratio": 0.0293, "threshold": 0.06}
+    "vega": {"status": "pass", "note": "Binned cells sized by count with a size legend match; Vega's legend format s reads as ~s here. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0400 (was 0.0293 against vg2svg); the example's label_extent 23, fitted to the vg2svg reference, is gone; the canvas now matches.", "ratio": 0.04, "threshold": 0.06}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

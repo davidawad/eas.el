@@ -70,10 +70,10 @@
       "example": "pie-chart",
       "spec": "test/vega-examples/specs/pie-chart.vg.json",
       "status": "pass",
-      "note": "Arcs in data order with category20; the angle, radius and corner sliders are slots.",
-      "ratio": 0.0044,
+      "note": "Arcs in data order with category20; the angle, radius and corner sliders are slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0040 (was 0.0044 against vg2svg).",
+      "ratio": 0.004,
       "threshold": 0.05,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

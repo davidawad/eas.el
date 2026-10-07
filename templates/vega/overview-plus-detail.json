@@ -52,8 +52,8 @@
     "example": "../examples/vega/overview-plus-detail.data.json",
     "vega": {
       "status": "pass",
-      "note": "Brushing the overview (a Vega-Lite interval selection) sets the detail view's x domain. Vega's firebrick brush edges are drawn as the brush's stroke once a brush exists, not as a line at the left edge before one does. Pixel ratio against ref/overview-plus-detail.png: 0.020.",
-      "ratio": 0.0197,
+      "note": "Brushing the overview (a Vega-Lite interval selection) sets the detail view's x domain. Vega's firebrick brush edges are drawn as the brush's stroke once a brush exists, not as a line at the left edge before one does. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0220 (was 0.0197 against vg2svg).",
+      "ratio": 0.022,
       "threshold": 0.04
     }
   },

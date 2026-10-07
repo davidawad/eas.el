@@ -156,9 +156,9 @@
     ],
     "vega": {
       "status": "partial",
-      "note": "The first frame matches (the binding precomputes Vega's hsl terrain colours and a solid-cell grid). Gravity, landing, running (left, right), jumping (up) and dashing (z) run on a 50 ms timer; Emacs reports no key release, so a press runs for 6 frames. Not ported: the background image, the dash trail, Vega's exact collision response and its 17 ms frames. Pixel ratio against ref/platformer.png: 0.000.",
-      "ratio": 0.0,
-      "threshold": 0.01
+      "note": "The first frame matches (the binding precomputes Vega's hsl terrain colours and a solid-cell grid). Gravity, landing, running (left, right), jumping (up) and dashing (z) run on a 50 ms timer; Emacs reports no key release, so a press runs for 6 frames. Not ported: the background image, the dash trail, Vega's exact collision response and its 17 ms frames. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.3595 (was 0.0 against vg2svg); the canvas reference is not Vega's intended frame: node-canvas ignores the terrain's d3 hsl() fill objects (non-string fillStyle), so the blocks keep a stale dark fill, and it fetched the remote background image, which eas never downloads. The threshold covers that reference.",
+      "ratio": 0.3595,
+      "threshold": 0.37
     }
   },
   "title": {

@@ -24,7 +24,8 @@
     "export": {"vega-lite": false, "reason": "19 of its 24 projections (airy, armadillo, ...) are d3-geo-projection's; Vega-Lite only knows d3-geo's own, so bin/chart cannot export it"},
     "vega": {
       "status": "partial",
-      "note": "all 24 gallery projections draw natively and their country and sphere paths equal d3-geo-projection's to 1e-9 (peirceQuincuncial's graticule meridians resample differently near its poles); against ref/projections.png, the Vega site's 360 px thumbnail, the 940x1740 render scaled to it differs by ratio 0.0747 (resvg); Vega clips the graticule and countries to each projection's sphere outline, which Vega-Lite cannot express, so the interrupted projections draw the parts of countries their cuts split across the gaps"
+      "note": "all 24 gallery projections draw natively and their country and sphere paths equal d3-geo-projection's to 1e-9 (peirceQuincuncial's graticule meridians resample differently near its poles); against ref/projections.png, the Vega site's 360 px thumbnail, the 940x1740 render scaled to it differs by ratio 0.0747 (resvg); Vega clips the graticule and countries to each projection's sphere outline, which Vega-Lite cannot express, so the interrupted projections draw the parts of countries their cuts split across the gaps. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0791.",
+      "ratio": 0.0791
     }
   },
   "title": {"x-eas:slot": "title"},

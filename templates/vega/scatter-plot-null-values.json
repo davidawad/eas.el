@@ -29,12 +29,12 @@
       },
       "width": {
         "type": "number",
-        "default": 369,
+        "default": 450,
         "doc": "plot width; the null strip and axes sit outside it"
       },
       "height": {
         "type": "number",
-        "default": 390
+        "default": 450
       },
       "title": {
         "type": "string",
@@ -51,10 +51,10 @@
       "example": "scatter-plot-null-values",
       "spec": "test/vega-examples/specs/scatter-plot-null-values.vg.json",
       "status": "pass",
-      "note": "Null points sit in strips outside the plot with the axes offset past them, plus the both-null count; Vega's field dropdowns are the x and y slots.",
-      "ratio": 0.0367,
+      "note": "Null points sit in strips outside the plot with the axes offset past them, plus the both-null count; Vega's field dropdowns are the x and y slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0078 (was 0.0367 against vg2svg); the template declares Vega's autosize fit (450x450) instead of a 369x390 plot fitted to the vg2svg reference, and centres the end labels (labelFlush false, which offset axes ignored in SVG until now).",
+      "ratio": 0.0078,
       "threshold": 0.06,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {
@@ -69,6 +69,7 @@
   "height": {
     "x-eas:slot": "height"
   },
+  "autosize": {"type": "fit"},
   "data": {
     "name": "data"
   },
@@ -158,6 +159,7 @@
       },
       "axis": {
         "offset": 23,
+        "labelFlush": false,
         "format": "s",
         "title": {
           "x-eas:slot": "x"

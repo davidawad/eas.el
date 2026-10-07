@@ -54,10 +54,10 @@
       "example": "radar-chart",
       "spec": "test/vega-examples/specs/radar-chart.vg.json",
       "status": "pass",
-      "note": "Polar positions computed by calculate on linear x and y; polygons are filled closed lines; the canvas keeps padding for the key labels (autosize none is not reproduced).",
-      "ratio": 0.0093,
+      "note": "Polar positions computed by calculate on linear x and y; polygons are filled closed lines; the canvas keeps padding for the key labels (autosize none is not reproduced). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0057 (was 0.0093 against vg2svg).",
+      "ratio": 0.0057,
       "threshold": 0.05,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

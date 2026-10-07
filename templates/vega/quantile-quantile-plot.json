@@ -21,7 +21,7 @@
       "label_extent": {"type": "number", "default": null, "doc": "least room for the y labels in pixels; null fits them"}
     },
     "example": "../examples/vega/quantile-quantile-plot.data.json",
-    "vega": {"status": "pass", "note": "Both Q-Q panels with a shared y scale match. The quantile-count slider is the step slot and the dataset select is the data slot. Ratio 0.0091 at best alignment with resvg here.", "ratio": 0.0091, "threshold": 0.03}
+    "vega": {"status": "pass", "note": "Both Q-Q panels with a shared y scale match. The quantile-count slider is the step slot and the dataset select is the data slot. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0174 (was 0.0091 against vg2svg); the example's label_extent 39 and spacing 21, fitted to the vg2svg reference, are gone; Vega's layout padding of 10 applies.", "ratio": 0.0174, "threshold": 0.03}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

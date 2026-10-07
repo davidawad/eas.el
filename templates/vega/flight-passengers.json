@@ -26,9 +26,12 @@
     "example": "../examples/vega/flight-passengers.data.json",
     "vega": {
       "status": "partial",
-      "note": "line, points, signed percent axis and dashed zero rule match; the reference's autosize fit shrinks the plot to about 170 px to make room for its title as vg2svg over-estimates it (0.8 em a character), which eas's container fit does not reproduce",
-      "size": [500, 250],
-      "ratio": 0.0615
+      "note": "line, points, signed percent axis and dashed zero rule match. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0477 (was 0.0615 against vg2svg); the comparison no longer emulates vg2svg's text widths; the line still sits about 2 px higher than Vega's, as the fitted plot is a little shorter.",
+      "size": [
+        500,
+        250
+      ],
+      "ratio": 0.0477
     }
   },
   "title": {

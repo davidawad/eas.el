@@ -121,7 +121,7 @@ outward direction (+1 or -1)."
            (pad (or (plist-get axis :label-pad) (plist-get metrics :label-pad)))
            (size (or (plist-get (plist-get axis :style) :labelFontSize) (plist-get metrics :label-size)))
            (lweight (plist-get (plist-get axis :style) :labelFontWeight))
-           (flush (and horiz (eq (plist-get axis :discrete) :false)))
+           (flush (and horiz (eq (plist-get axis :discrete) :false) (not (eq (plist-get axis :label-flush) :false))))
            (angle (if horiz (plist-get axis :labelAngle) 0))
            (band (equal (plist-get scale :type) "band"))
            (ticks (mapcar (lambda (tk) (if band (plist-put tk :pos (- (plist-get tk :pos) 0.5)) tk))

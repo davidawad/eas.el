@@ -63,8 +63,8 @@
     "example": "../examples/vega/sunburst.data.json",
     "vega": {
       "status": "pass",
-      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0002 (Vega's own SVG through the same rasterizer: 0.0002). Arcs (arc mark with theta2/radius2) match Vega's partition; hover strokes the arc red, but its strokeWidth stays 0.5 (a conditional strokeWidth on arcs is not drawn). In a terminal, wedges thinner than a character cell draw no cell (eas-text-check reports them at 60x16).",
-      "ratio": 0.005
+      "note": "Arcs (arc mark with theta2/radius2) match Vega's partition; hover strokes the arc red, but its strokeWidth stays 0.5 (a conditional strokeWidth on arcs is not drawn). In a terminal, wedges thinner than a character cell draw no cell (eas-text-check reports them at 60x16). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0000 (was 0.005 against vg2svg).",
+      "ratio": 0.0
     }
   },
   "title": {

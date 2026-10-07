@@ -29,6 +29,7 @@
 (require 'eas-hit)
 (require 'eas-compile-scales)
 (require 'eas-compile-place)
+(require 'eas-container)
 (require 'eas-marks-bounds)
 (require 'eas-theme)
 (require 'eas-font-file)
@@ -484,6 +485,7 @@ runtime keeps the plan so that a selection change can patch it
                                       ;; A top-level padding overrides config.padding, as in Vega-Lite.
                                       (let ((p (plist-get spec :padding))) (and (numberp p) (list :padding p)))))
            (metrics (eas-layout-metrics target cell config))
+           (eas-container-autosize (eas-container-autosize-of spec))
            (cellv (plist-get metrics :cell))
            (size (cond ((and (consp size) (plist-get size :cols))
                         (cons (* (plist-get size :cols) (aref cellv 0)) (* (plist-get size :rows) (aref cellv 1))))
@@ -520,6 +522,14 @@ runtime keeps the plan so that a selection change can patch it
                      (let ((dx (- (plist-get g :x0) (car o))) (dy (- (plist-get g :y0) (cdr o))))
                        (dolist (u (plist-get g :units))
                          (plist-put u :items (eas-marks-translate (plist-get u :items) dx dy)))))))
+        ;; An autosize fit counts that overhang in its size: shrink the
+        ;; plot by what the canvas exceeds and compute the items again.
+        (when (and (null size) (not (eas-layout-text-p metrics))
+                   (eas-container-refit tree total metrics))
+          (dolist (g groups) (dolist (u (plist-get g :units)) (plist-put u :items nil)))
+          (setq total (eas-place-layout tree metrics title-h nil t))
+          (dolist (g groups) (eas-compile--ranges g))
+          (eas-compile--measure-marks groups metrics state))
         (unless size (setq total (eas-compile--title-width total groups metrics spec title)))
         (list :spec spec :metrics metrics :groups groups :total total :title title :env env
               :cut (plist-get tree :cut))))))

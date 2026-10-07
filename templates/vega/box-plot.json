@@ -20,7 +20,7 @@
       "label_extent": {"type": "number", "default": null, "doc": "least room for the category labels in pixels; null fits them"}
     },
     "example": "../examples/vega/box-plot.data.json",
-    "vega": {"status": "pass", "note": "Whiskers, rounded quartile boxes and median lines per species match, band axis ticks at band edges included. Ratio 0.0100 at best alignment with resvg here.", "ratio": 0.01, "threshold": 0.03}
+    "vega": {"status": "pass", "note": "Whiskers, rounded quartile boxes and median lines per species match, band axis ticks at band edges included. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0131 (was 0.01 against vg2svg); the example's label_extent 79 (fitted to the vg2svg reference's estimated label widths) is gone; the label column is fitted to the labels.", "ratio": 0.0131, "threshold": 0.03}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

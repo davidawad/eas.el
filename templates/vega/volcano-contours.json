@@ -104,10 +104,10 @@
     "example": "../examples/vega/volcano-contours.data.json",
     "vega": {
       "status": "pass",
-      "ratio": 0.0036,
+      "ratio": 0.0024,
       "threshold": 0.03,
-      "note": "isocontour (marching squares, linear smoothing) of the grid at 90..190 step 5, geopath under an identity projection fitted to the plot, drawn as path-shaped points: ratio 0.0036 against ref/volcano-contours.png (2 px size delta). The paths are pixels of the template's width and height, so the chart keeps that size (as Vega's autosize none).",
-      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+      "note": "isocontour (marching squares, linear smoothing) of the grid at 90..190 step 5, geopath under an identity projection fitted to the plot, drawn as path-shaped points: ratio 0.0036 against ref/volcano-contours.png (2 px size delta). The paths are pixels of the template's width and height, so the chart keeps that size (as Vega's autosize none). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0024 (was 0.0036 against vg2svg).",
+      "rasterizer": "rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica"
     }
   },
   "title": {

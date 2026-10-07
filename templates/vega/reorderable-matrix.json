@@ -73,12 +73,12 @@
     },
     "vega": {
       "status": "pass",
-      "ratio": 0.0321,
+      "ratio": 0.0457,
       "offset": [
-        55,
-        55
+        0,
+        0
       ],
-      "note": "3.2% of pixels differ at offset [55, 55], mostly label glyphs; Vega's headless text-width estimate pads its canvas 55px further left and up. The graph transform orders nodes by group and supplies the node pairs (cross) and links. Dragging a row or column label moves that node (eas-force-drag.el)."
+      "note": "The canvases agree; label glyphs differ. The graph transform orders nodes by group and supplies the node pairs (cross) and links. Dragging a row or column label moves that node (eas-force-drag.el). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0457 (was 0.0321 against vg2svg); the recorded offset [55, 55] was the vg2svg canvas's; the canvases now agree at [0, 0], and the font-raster floor: the references' sans-serif is Helvetica (node-canvas on macOS), native SVG here is drawn in Arimo (Arial metrics), so glyph edges differ while positions match."
     }
   },
   "title": {

@@ -89,12 +89,12 @@
     },
     "vega": {
       "status": "pass",
-      "ratio": 0.0001,
+      "ratio": 0.0,
       "offset": [
         0,
         0
       ],
-      "note": "The d3-force port lays the graph out exactly as Vega (0.01% of pixels differ at offset [0, 0]). Links are rule marks; dragging a node pins it and reruns the simulation (eas-force-drag.el). Vega's radius, charge and distance sliders are the nodeRadius, nodeCharge and linkDistance slots."
+      "note": "The d3-force port lays the graph out exactly as Vega (0.01% of pixels differ at offset [0, 0]). Links are rule marks; dragging a node pins it and reruns the simulation (eas-force-drag.el). Vega's radius, charge and distance sliders are the nodeRadius, nodeCharge and linkDistance slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0000 (was 0.0001 against vg2svg)."
     }
   },
   "title": {

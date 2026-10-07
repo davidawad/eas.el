@@ -21,7 +21,7 @@
       "height": {"type": "number", "default": 455, "doc": "plot height; the tallest stack times (diameter + 1) fits it exactly"}
     },
     "example": "../examples/vega/wheat-plot.data.json",
-    "vega": {"status": "pass", "note": "Rings stacked per anchored bin at their exact values, with bin-edge grid lines, match; hover strokes a ring firebrick. The diameter, offset and step sliders are slots. Vega laid the reference out with estimated text widths, so its canvas is 11px wider (label overhang). Ratio 0.0221 at best alignment with resvg here.", "ratio": 0.0221, "threshold": 0.05, "size": 15}
+    "vega": {"status": "pass", "note": "Rings stacked per anchored bin at their exact values, with bin-edge grid lines, match; hover strokes a ring firebrick. The diameter, offset and step sliders are slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0223 (was 0.0221 against vg2svg).", "ratio": 0.0223, "threshold": 0.05, "size": 15}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

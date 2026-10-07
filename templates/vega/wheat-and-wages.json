@@ -42,8 +42,8 @@
     "example": "../examples/vega/wheat-and-wages.data.json",
     "vega": {
       "status": "pass",
-      "note": "two data slots (prices and wages, reigns); bars offset 17 px right as Vega's left-anchored rects",
-      "ratio": 0.0101
+      "note": "two data slots (prices and wages, reigns); bars offset 17 px right as Vega's left-anchored rects. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0103 (was 0.0101 against vg2svg).",
+      "ratio": 0.0103
     }
   },
   "title": {"x-eas:slot": "title"},

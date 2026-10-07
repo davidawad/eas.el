@@ -56,8 +56,8 @@
     "example": "../examples/vega/zoomable-binned-plot.data.json",
     "vega": {
       "status": "partial",
-      "note": "The density heatmap and the points pan and zoom together (a param bound to scales), but the bins stay those of the full extent: Vega re-bins the visible domain while zooming, which Vega-Lite cannot express. Pixel ratio against ref/zoomable-binned-plot.png: 0.032.",
-      "ratio": 0.0317,
+      "note": "The density heatmap and the points pan and zoom together (a param bound to scales), but the bins stay those of the full extent: Vega re-bins the visible domain while zooming, which Vega-Lite cannot express. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0318 (was 0.0317 against vg2svg).",
+      "ratio": 0.0318,
       "threshold": 0.05
     }
   },

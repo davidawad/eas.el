@@ -22,7 +22,7 @@
       "label_extent": {"type": "number", "default": null, "doc": "least room for the count labels in pixels; null fits them"}
     },
     "example": "../examples/vega/histogram-null-values.data.json",
-    "vega": {"status": "pass", "note": "The grey null bar beside the bins shares the y scale; hover fills a bar firebrick. The maxbins select is a slot. Ratio 0.0207 at best alignment with resvg here.", "ratio": 0.0207, "threshold": 0.05}
+    "vega": {"status": "pass", "note": "The grey null bar beside the bins shares the y scale; hover fills a bar firebrick. The maxbins select is a slot. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0440 (was 0.0207 against vg2svg); unchanged; its two-view concatenation does not take Vega's autosize fit, and dropping its label_extent measures worse.", "ratio": 0.044, "threshold": 0.05}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

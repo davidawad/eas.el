@@ -96,13 +96,10 @@
     "example": "../examples/vega/density-heatmaps.data.json",
     "vega": {
       "status": "partial",
-      "ratio": 0.0946,
+      "ratio": 0.0344,
       "threshold": 0.12,
-      "compare": {
-        "height": 200
-      },
-      "note": "Faceted kde2d heatmaps (viridis of value/max per Origin, smoothed images), bold headers, axes and the 0..1 gradient legend match; the legend title is one line (Vega-Lite's array titles are not drawn natively), so the chart is about 60 px wider than Vega's: ratio 0.095 against the site thumbnail at its height, 0.031 at the scale that aligns the plots with the legend masked.",
-      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+      "note": "Faceted kde2d heatmaps (viridis of value/max per Origin, smoothed images), bold headers, axes and the 0..1 gradient legend match; the legend title is one line (Vega-Lite's array titles are not drawn natively). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0344 (was 0.0946 against vg2svg); it was measured against the site thumbnail; the reference is now full size, and the template carries Vega's axis defaults, 13 px headers and Vega's 10 y ticks. Still partial: the legend title is one line where Vega draws two, so the canvas is 75 px wider.",
+      "rasterizer": "rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica"
     }
   },
   "title": {
@@ -174,7 +171,8 @@
       "title": null,
       "header": {
         "labelFontWeight": "bold",
-        "labelFontSize": 12
+        "labelFontSize": 13,
+        "labelColor": "#000"
       }
     }
   },
@@ -217,7 +215,8 @@
             },
             "axis": {
               "domain": false,
-              "offset": 2
+              "offset": 2,
+              "tickCount": 10
             }
           },
           "y2": {
@@ -280,6 +279,9 @@
   "config": {
     "view": {
       "stroke": null
-    }
+    },
+    "font": "sans-serif",
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"}
   }
 }

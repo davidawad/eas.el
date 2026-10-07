@@ -49,10 +49,10 @@
       "example": "stacked-bar-chart",
       "spec": "test/vega-examples/specs/stacked-bar-chart.vg.json",
       "status": "pass",
-      "note": "A Vega-Lite stack transform sorted by series puts the first series at the bottom, as Vega's; hovering fades a slice.",
-      "ratio": 0.0233,
+      "note": "A Vega-Lite stack transform sorted by series puts the first series at the bottom, as Vega's; hovering fades a slice. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0228 (was 0.0233 against vg2svg).",
+      "ratio": 0.0228,
       "threshold": 0.05,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

@@ -29,8 +29,8 @@
     "example": "../examples/vega/falkensee-population.data.json",
     "vega": {
       "status": "pass",
-      "note": "periods as a second data slot with a top-left legend; the title is a slot (Vega computes it from the data extent)",
-      "ratio": 0.0211
+      "note": "periods as a second data slot with a top-left legend; the title is a slot (Vega computes it from the data extent). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0291 (was 0.0211 against vg2svg); the comparison no longer emulates vg2svg's text widths.",
+      "ratio": 0.0291
     }
   },
   "title": {"x-eas:slot": "title"},

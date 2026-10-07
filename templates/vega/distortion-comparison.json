@@ -22,7 +22,8 @@
     "example": "../examples/vega/distortion-comparison.data.json",
     "vega": {
       "status": "pass",
-      "note": "native SVG vs ref/distortion-comparison.png: ratio 0.0001 at 900x500 (resvg); Vega's geoCentroid and geoArea with a projection are the x-eas geo-measure transform (eas-geoshape.el), materialized at resolve, so the circles are plain Vega-Lite at pixel positions; scaleFactor stays an input, but the projection selects are slots, since resolve computes the areas once; hover outlines are not drawn"
+      "note": "native SVG vs ref/distortion-comparison.png: ratio 0.0001 at 900x500 (resvg); Vega's geoCentroid and geoArea with a projection are the x-eas geo-measure transform (eas-geoshape.el), materialized at resolve, so the circles are plain Vega-Lite at pixel positions; scaleFactor stays an input, but the projection selects are slots, since resolve computes the areas once; hover outlines are not drawn. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0000.",
+      "ratio": 0.0
     }
   },
   "title": {"x-eas:slot": "title"},

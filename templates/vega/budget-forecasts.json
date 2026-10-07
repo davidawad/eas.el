@@ -47,8 +47,8 @@
     "example": "../examples/vega/budget-forecasts.data.json",
     "vega": {
       "status": "pass",
-      "note": "static: the vintage slider (current) is a slot, the hover tooltip is left out; band starts reproduced with a quantitative x over [first, last + 1]",
-      "ratio": 0.0021
+      "note": "static: the vintage slider (current) is a slot, the hover tooltip is left out; band starts reproduced with a quantitative x over [first, last + 1] Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0024 (was 0.0021 against vg2svg).",
+      "ratio": 0.0024
     }
   },
   "title": {"x-eas:slot": "title"},

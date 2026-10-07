@@ -25,7 +25,8 @@
     "example": "../examples/vega/earthquakes.data.json",
     "vega": {
       "status": "pass",
-      "note": "native SVG vs ref/earthquakes.png: ratio 0.0131 (resvg), the canvas 3x6 px larger for the quakes overhanging the view; the orthographic projection clips to the visible hemisphere as d3 does; quakes are Vega-Lite circles of area pi r^2 with Vega's pointRadius r = quake_size * sqrt(exp(mag) / 100), and a filter drops those on the far side, which Vega's geoshape clip hides"
+      "note": "native SVG vs ref/earthquakes.png: ratio 0.0131 (resvg), the canvas 3x6 px larger for the quakes overhanging the view; the orthographic projection clips to the visible hemisphere as d3 does; quakes are Vega-Lite circles of area pi r^2 with Vega's pointRadius r = quake_size * sqrt(exp(mag) / 100), and a filter drops those on the far side, which Vega's geoshape clip hides. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0067.",
+      "ratio": 0.0067
     }
   },
   "title": {"x-eas:slot": "title"},

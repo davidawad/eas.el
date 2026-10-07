@@ -34,8 +34,8 @@
     "example": "../examples/vega/annual-temperature.data.json",
     "vega": {
       "status": "pass",
-      "note": "one area per hour placed in pixel rows; the hour axis is an independent ordinal y",
-      "ratio": 0.0019
+      "note": "one area per hour placed in pixel rows; the hour axis is an independent ordinal y. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0085 (was 0.0019 against vg2svg); the comparison no longer emulates vg2svg's text widths.",
+      "ratio": 0.0085
     }
   },
   "title": {"text": {"x-eas:slot": "title"}, "anchor": "start", "offset": 4},

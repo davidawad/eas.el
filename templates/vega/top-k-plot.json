@@ -14,19 +14,20 @@
       "format": {"type": "string", "default": "$,d", "doc": "d3 format of the value axis"},
       "title": {"type": "string", "default": ""},
       "description": {"type": "string", "default": "The k categories with the largest aggregate of a value, largest first.", "doc": "the takeaway; alt text and table-view fallback"},
-      "width": {"type": "number", "default": 360},
-      "height": {"type": "number", "default": 370},
+      "width": {"type": "number", "default": 500, "doc": "total width; the labels, axes and title fit in it (autosize fit)"},
+      "height": {"type": "number", "default": 410, "doc": "total height; the axes and title fit in it (autosize fit)"},
       "label_extent": {"type": "number", "default": null, "doc": "least room for the category labels in pixels; null fits them"},
       "padding": {"type": "number", "default": 5, "doc": "pixels around the chart"}
     },
     "example": "../examples/vega/top-k-plot.data.json",
-    "vega": {"status": "pass", "note": "Bars, band padding, $ axis and start-anchored title match. The k slider is a live range input (param k); the average/median/sum select is the op slot, as Vega-Lite aggregate ops are static. Vega laid the reference out with estimated text widths, so its canvas is 21px wider (label overhang). Ratio 0.0134 at best alignment with resvg here.", "ratio": 0.0134, "threshold": 0.03, "size": 25}
+    "vega": {"status": "pass", "note": "Bars, band padding, $ axis and start-anchored title match. The k slider is a live range input (param k); the average/median/sum select is the op slot, as Vega-Lite aggregate ops are static. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0313 (was 0.0134 against vg2svg); the example's label_extent 135 and 309 px plot width were fitted to the vg2svg reference's estimated text widths; the template now declares Vega's autosize fit (500x410 overall), which the engine sizes from the 20 labels shown, so the canvas matches (510x420) and the differing pixels are label glyphs only.", "ratio": 0.0313, "threshold": 0.04, "size": 25}
   },
   "title": {"text": {"x-eas:slot": "title"}, "frame": "group"},
   "description": {"x-eas:slot": "description"},
   "width": {"x-eas:slot": "width"},
   "height": {"x-eas:slot": "height"},
   "padding": {"x-eas:slot": "padding"},
+  "autosize": {"type": "fit"},
   "data": {"name": "data"},
   "params": [
     {"name": "k", "value": {"x-eas:slot": "k"}, "bind": {"input": "range", "min": 1, "max": 50, "step": 1}}

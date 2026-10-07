@@ -41,8 +41,8 @@
     "example": "../examples/vega/calendar-view.data.json",
     "vega": {
       "status": "pass",
-      "note": "facet per year; week and month offsets computed in expressions, month and year labels as text; clamped diverging colours with a left-titled horizontal gradient legend; width 966 spans 53-week years",
-      "ratio": 0.0135
+      "note": "facet per year; week and month offsets computed in expressions, month and year labels as text; clamped diverging colours with a left-titled horizontal gradient legend; width 966 spans 53-week years. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0156 (was 0.0135 against vg2svg); row facets summed the shared y axis's width and the year labels' overhang left of the plot, where Vega takes the farther of the two (src/eas-facet-layout.el); the comparison no longer emulates vg2svg's text widths.",
+      "ratio": 0.0156
     }
   },
   "title": {"x-eas:slot": "title"},

@@ -71,8 +71,8 @@
     ],
     "vega": {
       "status": "pass",
-      "note": "Every second (x-eas.timer) each bar becomes a new sample: its mean plus trend plus uniform noise hashed from the bar and the sample counter; noise and trend are sliders. Vega samples with Math.random, so the ratio measures the random heights. Pixel ratio against ref/hypothetical-outcome-plots.png: 0.124.",
-      "ratio": 0.1239,
+      "note": "Every second (x-eas.timer) each bar becomes a new sample: its mean plus trend plus uniform noise hashed from the bar and the sample counter; noise and trend are sliders. Vega samples with Math.random, so the ratio measures the random heights. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.1143 (was 0.1239 against vg2svg); Vega's draws are Math.random.",
+      "ratio": 0.1143,
       "threshold": 0.17
     }
   },

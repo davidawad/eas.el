@@ -25,7 +25,7 @@
       "description": {"type": "string", "default": "Interactive map of U.S. airport connections in 2008."}
     },
     "example": "../examples/vega/airport-connections.data.json",
-    "vega": {"status": "partial", "ratio": 0.458, "offset": [-16, -14], "note": "Airports, their sizes, the fixed albersUsa projection (scale 1200), the Voronoi cells (cells slot) and the routes of the hovered airport match Vega; the state shapes behind them are TopoJSON geopaths, which eas does not draw, hence 46% of pixels differ. The title does not follow the hovered airport."}
+    "vega": {"status": "partial", "ratio": 0.4578, "offset": [-16, -14], "note": "Airports, their sizes, the fixed albersUsa projection (scale 1200), the Voronoi cells (cells slot) and the routes of the hovered airport match Vega; the state shapes behind them are TopoJSON geopaths, which eas does not draw, hence 46% of pixels differ. The title does not follow the hovered airport. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.4578 (was 0.458 against vg2svg)."}
   },
   "description": {"x-eas:slot": "description"},
   "title": {"text": {"x-eas:slot": "title"}, "anchor": "end", "fontSize": 20, "fontWeight": "normal"},

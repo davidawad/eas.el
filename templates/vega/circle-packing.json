@@ -58,8 +58,8 @@
     "example": "../examples/vega/circle-packing.data.json",
     "vega": {
       "status": "pass",
-      "note": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0001 (Vega's own SVG through the same rasterizer: 0.0001). Circles match d3's pack to the last bit; hover outlines the circle red with tooltips.",
-      "ratio": 0.005
+      "note": "Circles match d3's pack to the last bit; hover outlines the circle red with tooltips. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0000 (was 0.005 against vg2svg).",
+      "ratio": 0.0
     }
   },
   "title": {

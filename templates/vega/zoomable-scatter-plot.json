@@ -54,7 +54,7 @@
     "example": "../examples/vega/zoomable-scatter-plot.data.json",
     "vega": {
       "status": "pass",
-      "note": "Drag pans and the wheel (or + and -) zooms through a param bound to scales; the point under the pointer turns firebrick. Vega grows the points as it zooms in; here they keep their size. Pixel ratio against ref/zoomable-scatter-plot.png: 0.012.",
+      "note": "Drag pans and the wheel (or + and -) zooms through a param bound to scales; the point under the pointer turns firebrick. Vega grows the points as it zooms in; here they keep their size. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0121 (was 0.0121 against vg2svg).",
       "ratio": 0.0121,
       "threshold": 0.03
     }

@@ -47,8 +47,8 @@
     "example": "../examples/vega/interactive-legend.data.json",
     "vega": {
       "status": "pass",
-      "note": "Clicking a legend entry (shift adds more) and brushing along x fade the other points, through a legend-bound point param and an interval param. Pixel ratio against ref/interactive-legend.png: 0.035.",
-      "ratio": 0.0351,
+      "note": "Clicking a legend entry (shift adds more) and brushing along x fade the other points, through a legend-bound point param and an interval param. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0404 (was 0.0351 against vg2svg).",
+      "ratio": 0.0404,
       "threshold": 0.06
     }
   },

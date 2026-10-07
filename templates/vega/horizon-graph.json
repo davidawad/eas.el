@@ -67,10 +67,10 @@
       "example": "horizon-graph",
       "spec": "test/vega-examples/specs/horizon-graph.vg.json",
       "status": "pass",
-      "note": "One clipped area layer per band offset; Vega's click-to-cycle layer count is the offsets slot (one entry per layer).",
-      "ratio": 0.0149,
+      "note": "One clipped area layer per band offset; Vega's click-to-cycle layer count is the offsets slot (one entry per layer). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0150 (was 0.0149 against vg2svg).",
+      "ratio": 0.015,
       "threshold": 0.05,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

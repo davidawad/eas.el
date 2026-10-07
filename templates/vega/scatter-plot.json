@@ -53,10 +53,10 @@
       "example": "scatter-plot",
       "spec": "test/vega-examples/specs/scatter-plot.vg.json",
       "status": "pass",
-      "note": "Hollow circles sized by a third field with a size legend; the canvas is narrower only because Vega's reference over-estimates text width.",
-      "ratio": 0.0384,
+      "note": "Hollow circles sized by a third field with a size legend. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0340 (was 0.0384 against vg2svg).",
+      "ratio": 0.034,
       "threshold": 0.06,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

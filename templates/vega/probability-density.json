@@ -21,7 +21,7 @@
       "height": {"type": "number", "default": 100}
     },
     "example": "../examples/vega/probability-density.data.json",
-    "vega": {"status": "pass", "note": "KDE area, normal-estimate line, rug and top-left legend match. KDE is sampled on 200 even steps where Vega samples adaptively; the legend label is not truncated as Vega's estimated width truncates it. Bandwidth and pdf/cdf inputs are slots (bandwidth, cumulative). Vega laid the reference out with estimated text widths, so its canvas is 11px wider (label overhang). Ratio 0.0223 at best alignment with resvg here.", "ratio": 0.0223, "threshold": 0.05, "size": 15}
+    "vega": {"status": "pass", "note": "KDE area, normal-estimate line, rug and top-left legend match. KDE is sampled on 200 even steps where Vega samples adaptively; the legend label is not truncated as Vega's estimated width truncates it. Bandwidth and pdf/cdf inputs are slots (bandwidth, cumulative). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0215 (was 0.0223 against vg2svg).", "ratio": 0.0215, "threshold": 0.05, "size": 15}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

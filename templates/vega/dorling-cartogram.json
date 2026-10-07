@@ -100,12 +100,12 @@
     "example": "../examples/vega/dorling-cartogram.data.json",
     "vega": {
       "status": "partial",
-      "ratio": 0.0242,
+      "ratio": 0.024,
       "offset": [
         0,
         0
       ],
-      "note": "Circles, labels and colors match Vega (2.4% of pixels differ); the binding carries each state's d3 geoCentroid (eas reads no TopoJSON; scripts/eas-vega-network-data.mjs) and the force transform projects it with albersUsa at scale 1100. The legend is a color gradient: Vega's merged size-and-fill symbol legend is not drawn."
+      "note": "Circles, labels and colors match Vega (2.4% of pixels differ); the binding carries each state's d3 geoCentroid (eas reads no TopoJSON; scripts/eas-vega-network-data.mjs) and the force transform projects it with albersUsa at scale 1100. The legend is a color gradient: Vega's merged size-and-fill symbol legend is not drawn. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0240 (was 0.0242 against vg2svg)."
     }
   },
   "title": {

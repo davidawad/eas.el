@@ -18,18 +18,19 @@
       "title": {"type": "string", "default": ""},
       "subtitle": {"type": "string", "default": ""},
       "description": {"type": "string", "default": "A measure of dated rows aggregated per time unit.", "doc": "the takeaway; alt text and table-view fallback"},
-      "width": {"type": "number", "default": 549},
-      "height": {"type": "number", "default": 230},
+      "width": {"type": "number", "default": 600},
+      "height": {"type": "number", "default": 300},
       "label_extent": {"type": "number", "default": null, "doc": "least room for the value labels in pixels; null fits them"}
     },
     "example": "../examples/vega/time-units.data.json",
-    "vega": {"status": "partial", "note": "Weekday bars, axis, title and italic subtitle match and hover fills a bar firebrick, but the band scale is not rounded (scale.round is not drawn natively), so bar edges sit up to a pixel off. The time unit and measure selects are slots (unit, format, op). Ratio 0.0355 at best alignment with resvg here.", "ratio": 0.0355, "threshold": 0.08}
+    "vega": {"status": "partial", "note": "Weekday bars, axis, title and italic subtitle match and hover fills a bar firebrick, but the band scale is not rounded (scale.round is not drawn natively), so bar edges sit up to a pixel off. The time unit and measure selects are slots (unit, format, op). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0376 (was 0.0355 against vg2svg); the template declares Vega's autosize fit (600x300, padding included) instead of a 549x230 plot, so the canvas matches; the example keeps label_extent 23, nearer Vega's.", "ratio": 0.0376, "threshold": 0.08}
   },
   "title": {"text": {"x-eas:slot": "title"}, "subtitle": {"x-eas:slot": "subtitle"}, "frame": "group",
             "subtitleFontStyle": "italic", "subtitleColor": "#000", "subtitleFontSize": 12},
   "description": {"x-eas:slot": "description"},
   "width": {"x-eas:slot": "width"},
   "height": {"x-eas:slot": "height"},
+  "autosize": {"type": "fit", "contains": "padding"},
   "data": {"name": "data"},
   "params": [
     {"name": "hover", "select": {"type": "point", "on": "pointermove", "fields": ["unit"]}}

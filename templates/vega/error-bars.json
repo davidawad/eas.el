@@ -58,10 +58,10 @@
       "example": "error-bars",
       "spec": "test/vega-examples/specs/error-bars.vg.json",
       "status": "pass",
-      "note": "Mean and error bar per category; Vega's measure dropdown is the measure slot (ci, stderr, stdev, iqr); ci is bootstrapped, so its bars vary slightly.",
-      "ratio": 0.0226,
+      "note": "Mean and error bar per category; Vega's measure dropdown is the measure slot (ci, stderr, stdev, iqr); ci is bootstrapped, so its bars vary slightly. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0227 (was 0.0226 against vg2svg).",
+      "ratio": 0.0227,
       "threshold": 0.05,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

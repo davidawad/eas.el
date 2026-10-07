@@ -36,8 +36,8 @@
     "example": "../examples/vega/heatmap.data.json",
     "vega": {
       "status": "pass",
-      "note": "rect per day and hour with a niced sequential colour domain; day and hour computed from the timestamp",
-      "ratio": 0.0083
+      "note": "rect per day and hour with a niced sequential colour domain; day and hour computed from the timestamp. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0158 (was 0.0083 against vg2svg); the comparison no longer emulates vg2svg's text widths.",
+      "ratio": 0.0158
     }
   },
   "title": {

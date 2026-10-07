@@ -184,19 +184,25 @@ once DIFFERING exceeds BOUND."
 
 (defun eas-png--profiles (img bg)
   "Ink of IMG per column and per row, as (COLUMNS . ROWS) vectors.
-Ink is any pixel whose RGB differs from BG; background runs are
-skipped with `compare-strings'."
+Ink is any pixel whose color, composited over white as the comparison
+sees it, differs from BG's: a transparent reference and an opaque
+white native image share a background.  Background runs are skipped
+with `compare-strings'."
   (let* ((w (plist-get img :w)) (h (plist-get img :h)) (s (plist-get img :rgba))
-         (r (nth 0 bg)) (g (nth 1 bg)) (b (nth 2 bg))
-         (bgrow (apply #'unibyte-string (apply #'append (make-list w bg))))
+         (paper (eas-png--rgb-at (apply #'unibyte-string bg) 0))
+         (r (nth 0 paper)) (g (nth 1 paper)) (b (nth 2 paper))
+         ;; Skip runs of IMG's own background when it looks like BG.
+         (own (eas-png--background img))
+         (bgrow (apply #'unibyte-string
+                       (apply #'append (make-list w (if (equal (eas-png--rgb-at s 0) paper) own bg)))))
          (cols (make-vector w 0)) (rows (make-vector h 0)))
     (dotimes (y h)
       (let ((o (* 4 y w)) (i 0))
         (while (< i w)
           (let ((m (compare-strings s (+ o (* 4 i)) (+ o (* 4 w)) bgrow (* 4 i) (* 4 w))))
             (if (eq m t) (setq i w)
-              (let* ((j (+ i (/ (1- (abs m)) 4))) (q (+ o (* 4 j))))
-                (unless (and (= (aref s q) r) (= (aref s (+ q 1)) g) (= (aref s (+ q 2)) b))
+              (let* ((j (+ i (/ (1- (abs m)) 4))) (q (+ o (* 4 j))) (c (eas-png--rgb-at s q)))
+                (unless (and (= (nth 0 c) r) (= (nth 1 c) g) (= (nth 2 c) b))
                   (aset cols j (1+ (aref cols j)))
                   (aset rows y (1+ (aref rows y))))
                 (setq i (1+ j))))))))

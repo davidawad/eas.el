@@ -263,14 +263,17 @@ everything around them and the header items, as
     (let* ((hx (min 0 (apply #'min 0 (mapcar (lambda (row) (aref (car row) 0)) boxes))))
            (indep-y (memq :y (plist-get meta :independent)))
            (axis-w (lambda (g) (if indep-y 0 (eas-facet-layout--axis-width g))))
-           (hleft (apply #'min left (mapcar (lambda (row) (- hx (funcall axis-w (car row)))) rows))))
+           ;; The axis and what the marks overhang share the space left
+           ;; of the plot: the cell reaches the farther of the two.
+           (reach (lambda (g) (min hx (- (funcall axis-w g)))))
+           (hleft (apply #'min left (mapcar (lambda (row) (funcall reach (car row))) rows))))
       (when (eas-facet-layout--labels-p rhdr rlabels)
         (let* ((lp (eas-facet-layout--num rhdr :labelPadding 10))
                (size (eas-facet-layout--num rhdr :labelFontSize 10))
                (angle (eas-facet-layout--num rhdr :labelAngle -90)))
           (cl-loop for row in rows for i from 0 for label across rlabels
                    do (let* ((g (car row)) (o (funcall origin g))
-                             (axis (- (+ (car o) hx) (funcall axis-w g)))
+                             (axis (+ (car o) (funcall reach g)))
                              (e (eas-facet-layout--row-label-extent rhdr label metrics))
                              (rotated (= (cdr e) 0))
                              (x (if rotated (- axis lp) (- axis lp (cdr e))))

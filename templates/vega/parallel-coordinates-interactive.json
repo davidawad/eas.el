@@ -69,8 +69,8 @@
     "example": "../examples/vega/parallel-coordinates-interactive.data.json",
     "vega": {
       "status": "partial",
-      "note": "Every dimension gets its own nice axis, computed in transforms (fold, normalize, ticks flattened per axis), coloured by Horsepower on Vega's turbo extent. Clicking a line highlights it; Vega's per-axis brushes and draggable axes are not expressible in Vega-Lite and are not ported. Pixel ratio against ref/parallel-coordinates-interactive.png: 0.062.",
-      "ratio": 0.0619,
+      "note": "Every dimension gets its own nice axis, computed in transforms (fold, normalize, ticks flattened per axis), coloured by Horsepower on Vega's turbo extent. Clicking a line highlights it; Vega's per-axis brushes and draggable axes are not expressible in Vega-Lite and are not ported. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0524 (was 0.0619 against vg2svg).",
+      "ratio": 0.0524,
       "threshold": 0.09
     }
   },

@@ -28,7 +28,8 @@
     "example": "../examples/vega/world-map.data.json",
     "vega": {
       "status": "pass",
-      "note": "native SVG vs ref/world-map.png: ratio 0.0071 at 900x500 (resvg), paths equal d3-geo's to 1e-10; type, scale, rotate and center are params bound to inputs; the hovered country's firebrick outline is a mouseover selection; Vega's invert checkbox and border-width text input are slots (land, border, graticule colors and border_width)"
+      "note": "native SVG vs ref/world-map.png: ratio 0.0071 at 900x500 (resvg), paths equal d3-geo's to 1e-10; type, scale, rotate and center are params bound to inputs; the hovered country's firebrick outline is a mouseover selection; Vega's invert checkbox and border-width text input are slots (land, border, graticule colors and border_width). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0000.",
+      "ratio": 0.0
     }
   },
   "title": {"x-eas:slot": "title"},

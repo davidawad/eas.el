@@ -21,7 +21,7 @@
       "height": {"type": "number", "default": 68.25, "doc": "plot height; the tallest stack times the dot diameter in pixels fits it exactly"}
     },
     "example": "../examples/vega/dot-plot.data.json",
-    "vega": {"status": "pass", "note": "Density dot plot via the x-eas dotbin transform (Vega's dotbin, smoothed) beside the histogram dot plot. The step slider, offset radio and smooth checkbox are slots; height must fit the tallest stack. Ratio 0.0077 at best alignment with resvg here.", "ratio": 0.0077, "threshold": 0.03}
+    "vega": {"status": "pass", "note": "Density dot plot via the x-eas dotbin transform (Vega's dotbin, smoothed) beside the histogram dot plot. The step slider, offset radio and smooth checkbox are slots; height must fit the tallest stack. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0150 (was 0.0077 against vg2svg).", "ratio": 0.015, "threshold": 0.03}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

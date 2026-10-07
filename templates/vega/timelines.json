@@ -32,8 +32,8 @@
     "example": "../examples/vega/timelines.data.json",
     "vega": {
       "status": "pass",
-      "note": "people and events as two data slots; band step fixed at 16 px so bars and labels keep Vega's offsets from the band top",
-      "ratio": 0.0074
+      "note": "people and events as two data slots; band step fixed at 16 px so bars and labels keep Vega's offsets from the band top. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0107 (was 0.0074 against vg2svg); the comparison no longer emulates vg2svg's text widths.",
+      "ratio": 0.0107
     }
   },
   "title": {"x-eas:slot": "title"},

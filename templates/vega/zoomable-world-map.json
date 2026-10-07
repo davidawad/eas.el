@@ -25,7 +25,8 @@
     "example": "../examples/vega/zoomable-world-map.data.json",
     "vega": {
       "status": "pass",
-      "note": "native SVG vs ref/zoomable-world-map.png: ratio 0.0000 at 900x500 (resvg); scale, rotateX and centerY are params: a wheel event scales by the zoom step clamped to 150-3000, a drag adds the inverted longitude and latitude deltas as Vega's invert(projection, xy()) does (eas-geoshape-interact.el), and range inputs set them too"
+      "note": "native SVG vs ref/zoomable-world-map.png: ratio 0.0000 at 900x500 (resvg); scale, rotateX and centerY are params: a wheel event scales by the zoom step clamped to 150-3000, a drag adds the inverted longitude and latitude deltas as Vega's invert(projection, xy()) does (eas-geoshape-interact.el), and range inputs set them too. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0000.",
+      "ratio": 0.0
     }
   },
   "title": {"x-eas:slot": "title"},

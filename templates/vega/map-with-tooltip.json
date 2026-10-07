@@ -27,7 +27,8 @@
     "example": "../examples/vega/map-with-tooltip.data.json",
     "vega": {
       "status": "partial",
-      "note": "the map and its legend match ref/map-with-tooltip.png: ratio 0.0156 at 960x530 (resvg), mercator at scale 900 centred on [-95, 38]; Vega's 30 px top padding is a 530 px view with the map 30 px lower; the tooltip is Vega-Lite's own (the county's key and rate): Vega's custom tooltip, a rounded group following the pointer that redraws the hovered county under a second projection centred on its inverted centroid, has no Vega-Lite form"
+      "note": "the map and its legend match ref/map-with-tooltip.png: ratio 0.0156 at 960x530 (resvg), mercator at scale 900 centred on [-95, 38]; Vega's 30 px top padding is a 530 px view with the map 30 px lower; the tooltip is Vega-Lite's own (the county's key and rate): Vega's custom tooltip, a rounded group following the pointer that redraws the hovered county under a second projection centred on its inverted centroid, has no Vega-Lite form. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0073.",
+      "ratio": 0.0073
     }
   },
   "title": {"x-eas:slot": "title"},

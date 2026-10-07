@@ -60,8 +60,8 @@
     ],
     "vega": {
       "status": "pass",
-      "note": "Ticks every second while shown (x-eas.timer, event.local); the hands are tapered trails through Vega's hand outlines and the hour marks rotated triangles. The example pins the reference's time. Pixel ratio against ref/clock.png: 0.049.",
-      "ratio": 0.0486,
+      "note": "Ticks every second while shown (x-eas.timer, event.local); the hands are tapered trails through Vega's hand outlines and the hour marks rotated triangles. The example pins the reference's time. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0540 (was 0.0486 against vg2svg); the reference was drawn at 04:14:50; the example pins that time.",
+      "ratio": 0.054,
       "threshold": 0.08
     }
   },

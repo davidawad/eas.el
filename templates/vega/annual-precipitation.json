@@ -113,10 +113,10 @@
     "example": "../examples/vega/annual-precipitation.data.json",
     "vega": {
       "status": "partial",
-      "ratio": 0.0323,
+      "ratio": 0.0292,
       "threshold": 0.05,
-      "note": "Countries from TopoJSON and isocontours of the lon/lat grid (500..2500 mm) through geopath under naturalEarth1 (scale 110, translate [300 150]), quantized bluepurple legend labelled 500..2,500 with its title on the left: the map is pixel-identical to ref/annual-precipitation.png with the legend masked (ratio 0.0), 0.032 overall because Vega centres the legend (config.legend.layout, which Vega-Lite cannot express) and truncates its title at titleLimit; legend titleAnchor is reported unsupported.",
-      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+      "note": "Countries from TopoJSON and isocontours of the lon/lat grid (500..2500 mm) through geopath under naturalEarth1 (scale 110, translate [300 150]), quantized bluepurple legend labelled 500..2,500 with its title on the left: the map is pixel-identical to ref/annual-precipitation.png with the legend masked (ratio 0.0), 0.032 overall because Vega centres the legend (config.legend.layout, which Vega-Lite cannot express) and truncates its title at titleLimit; legend titleAnchor is reported unsupported. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0292 (was 0.0323 against vg2svg).",
+      "rasterizer": "rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica"
     }
   },
   "title": {

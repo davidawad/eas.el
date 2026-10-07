@@ -28,8 +28,8 @@
     "example": "../examples/vega/weekly-temperature.data.json",
     "vega": {
       "status": "pass",
-      "note": "nested record/normal/actual/forecast objects flattened to columns in the binding; insets as band fractions of the rounded band",
-      "ratio": 0.0256
+      "note": "nested record/normal/actual/forecast objects flattened to columns in the binding; insets as band fractions of the rounded band. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0286 (was 0.0256 against vg2svg).",
+      "ratio": 0.0286
     }
   },
   "title": {"x-eas:slot": "title"},

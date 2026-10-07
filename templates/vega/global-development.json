@@ -101,8 +101,8 @@
     "example": "../examples/vega/global-development.data.json",
     "vega": {
       "status": "pass",
-      "note": "A Year slider picks the year (Vega drags a country along its path instead); hovering a country draws its path through the years and its name. Pixel ratio against ref/global-development.png: 0.003.",
-      "ratio": 0.0034,
+      "note": "A Year slider picks the year (Vega drags a country along its path instead); hovering a country draws its path through the years and its name. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0031 (was 0.0034 against vg2svg).",
+      "ratio": 0.0031,
       "threshold": 0.02
     }
   },

@@ -151,8 +151,8 @@
     ],
     "vega": {
       "status": "partial",
-      "note": "The first frame matches. The arrows steer the eater on a 500 ms timer (x-eas.timer, x-eas.on); gums score 10 and power gums 50; ghosts chase along the longer axis and wander when blocked; a ghost on the eater restarts the game. Not ported: power mode (fleeing, edible ghosts), Vega's ghost decision tables and ghost shapes (drawn as discs). Pixel ratio against ref/pacman.png: 0.011.",
-      "ratio": 0.0114,
+      "note": "The first frame matches. The arrows steer the eater on a 500 ms timer (x-eas.timer, x-eas.on); gums score 10 and power gums 50; ghosts chase along the longer axis and wander when blocked; a ghost on the eater restarts the game. Not ported: power mode (fleeing, edible ghosts), Vega's ghost decision tables and ghost shapes (drawn as discs). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0115 (was 0.0114 against vg2svg).",
+      "ratio": 0.0115,
       "threshold": 0.03
     }
   },

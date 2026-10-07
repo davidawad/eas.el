@@ -26,7 +26,8 @@
     "example": "../examples/vega/county-unemployment.data.json",
     "vega": {
       "status": "pass",
-      "note": "native SVG vs ref/county-unemployment.png: ratio 0.0165 at 960x500 (resvg); albersUsa is d3's composite (lower 48, Alaska, Hawaii insets) and its paths equal d3-geo's; the hovered county turns red through a mouseover selection"
+      "note": "native SVG vs ref/county-unemployment.png: ratio 0.0165 at 960x500 (resvg); albersUsa is d3's composite (lower 48, Alaska, Hawaii insets) and its paths equal d3-geo's; the hovered county turns red through a mouseover selection. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0078.",
+      "ratio": 0.0078
     }
   },
   "title": {"x-eas:slot": "title"},

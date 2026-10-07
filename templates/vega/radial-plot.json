@@ -51,10 +51,10 @@
       "example": "radial-plot",
       "spec": "test/vega-examples/specs/radial-plot.vg.json",
       "status": "pass",
-      "note": "Angle and sqrt radius from the same value, labels radiusOffset 8 outside; hover turns a wedge pink.",
-      "ratio": 0.0059,
+      "note": "Angle and sqrt radius from the same value, labels radiusOffset 8 outside; hover turns a wedge pink. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0034 (was 0.0059 against vg2svg).",
+      "ratio": 0.0034,
       "threshold": 0.05,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

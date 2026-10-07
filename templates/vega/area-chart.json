@@ -62,10 +62,10 @@
       "example": "area-chart",
       "spec": "test/vega-examples/specs/area-chart.vg.json",
       "status": "pass",
-      "note": "Monotone area; Vega's interpolate dropdown is the interpolate slot.",
-      "ratio": 0.0098,
+      "note": "Monotone area; Vega's interpolate dropdown is the interpolate slot. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0117 (was 0.0098 against vg2svg).",
+      "ratio": 0.0117,
       "threshold": 0.05,
-      "measured": "eas-vega-std-basic oracle, rasterized by resvg 2.6 with a stand-in sans font (no rsvg-convert in the authoring box)"
+      "measured": "eas-vega-std-basic oracle, rasterized by rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica (eas-7r1.12)"
     }
   },
   "title": {

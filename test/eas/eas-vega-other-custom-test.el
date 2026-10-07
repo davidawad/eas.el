@@ -53,21 +53,12 @@
          (bindings (or bindings (eas-template-read-bindings (eas-template-example-file template)))))
     (eas-resolve template bindings)))
 
-(defun eas-vega-other-custom-estimate-width (text size &optional _weight)
-  "Vega's text width estimate: 0.8 SIZE per character of TEXT, floored.
-vg2svg without node-canvas lays text out this way, so the references
-were; their glyphs are still drawn in the real font.  Characters count
-as JavaScript does, in UTF-16 units: one past U+FFFF counts twice."
-  (float (floor (* 0.8 size (+ (length text)
-                               (cl-count-if (lambda (c) (> c #xFFFF)) text))))))
-
 (defmacro eas-vega-other-custom--native (&rest body)
   "Run BODY in the references' zone, unrestricted by supported.json.
-Text is measured as the references measured it."
+The references are vg2png renders with node-canvas, which measures
+text with real font metrics, as eas does."
   `(let ((eas-time-zone eas-vega-other-custom-zone) (eas-spec-supported-function nil))
-     (cl-letf (((symbol-function 'eas-font-text-width)
-                #'eas-vega-other-custom-estimate-width))
-       ,@body)))
+     ,@body))
 
 (defun eas-vega-other-custom-size (name)
   "The (W . H) pixel size NAME's x-eas.vega fits its container to, or nil.
@@ -110,10 +101,12 @@ plist, or nil without a rasterizer."
                    (if (<= (plist-get aligned :ratio) (plist-get unshifted :ratio)) aligned unshifted)))
         (unless out (delete-file mine))))))
 
-(defun eas-vega-other-custom-passes-p (cmp)
-  "Non-nil when comparison CMP is within the pass bounds."
+(defun eas-vega-other-custom-passes-p (cmp &optional threshold)
+  "Non-nil when comparison CMP is within the pass bounds.
+THRESHOLD, a verdict's own, replaces `eas-vega-other-custom-threshold'
+where a reference's fonts are not available here."
   (let ((delta (plist-get cmp :size-delta)))
-    (and (<= (plist-get cmp :ratio) eas-vega-other-custom-threshold)
+    (and (<= (plist-get cmp :ratio) (or threshold eas-vega-other-custom-threshold))
          (<= (max (abs (aref delta 0)) (abs (aref delta 1))) 8))))
 
 ;;; Templates
@@ -236,7 +229,7 @@ quarter (plus 0.005) of its recorded ratio."
       (should (equal (list name (<= (plist-get cmp :ratio) (+ 0.005 (* 1.25 (plist-get verdict :ratio)))))
                      (list name t)))
       (when (equal (plist-get verdict :status) "pass")
-        (should (equal (list name (eas-vega-other-custom-passes-p cmp)) (list name t)))))))
+        (should (equal (list name (eas-vega-other-custom-passes-p cmp (plist-get verdict :threshold))) (list name t)))))))
 
 ;;; Transforms
 

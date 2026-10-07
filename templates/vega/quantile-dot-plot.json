@@ -21,7 +21,7 @@
       "height": {"type": "number", "default": 90}
     },
     "example": "../examples/vega/quantile-dot-plot.data.json",
-    "vega": {"status": "pass", "note": "Twenty log-normal quantile dots via dotbin, the dots below the threshold in firebrick, the rule and its 5.0% readout match. The threshold is a live range input instead of click and drag; the quantile-count slider becomes the data slot. Ratio 0.0081 at best alignment with resvg here.", "ratio": 0.0081, "threshold": 0.03}
+    "vega": {"status": "pass", "note": "Twenty log-normal quantile dots via dotbin, the dots below the threshold in firebrick, the rule and its 5.0% readout match. The threshold is a live range input instead of click and drag; the quantile-count slider becomes the data slot. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0155 (was 0.0081 against vg2svg).", "ratio": 0.0155, "threshold": 0.03}
   },
   "title": {"x-eas:slot": "title"},
   "description": {"x-eas:slot": "description"},

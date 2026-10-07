@@ -75,12 +75,12 @@
     "example": "../examples/vega/packed-bubble-chart.data.json",
     "vega": {
       "status": "pass",
-      "ratio": 0.0012,
+      "ratio": 0.0013,
       "offset": [
         5,
         20
       ],
-      "note": "0.12% of pixels differ at offset [5, 20] (Vega's left and top padding). The Vega example's force is not static, so its reference is the first frame, after one tick: the example binding sets iterations to 1; the template's default, 300, draws the settled packing."
+      "note": "0.12% of pixels differ at offset [5, 20] (Vega's left and top padding). The Vega example's force is not static, so its reference is the first frame, after one tick: the example binding sets iterations to 1; the template's default, 300, draws the settled packing. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0013 (was 0.0012 against vg2svg)."
     }
   },
   "title": {

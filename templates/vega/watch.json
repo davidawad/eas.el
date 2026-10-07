@@ -62,8 +62,8 @@
     ],
     "vega": {
       "status": "pass",
-      "note": "Ticks every second while shown (Vega every 10 ms, so the second hand jumps rather than sweeps). The example pins the reference's time. Pixel ratio against ref/watch.png: 0.018.",
-      "ratio": 0.0184,
+      "note": "Ticks every second while shown (Vega every 10 ms, so the second hand jumps rather than sweeps). The example pins the reference's time. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0188 (was 0.0184 against vg2svg); the reference was drawn at 04:14:29; the example pins that time.",
+      "ratio": 0.0188,
       "threshold": 0.04
     }
   },

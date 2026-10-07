@@ -78,13 +78,10 @@
     "example": "../examples/vega/contour-plot.data.json",
     "vega": {
       "status": "pass",
-      "ratio": 0.0147,
+      "ratio": 0.0078,
       "threshold": 0.03,
-      "compare": {
-        "width": 360
-      },
-      "note": "kde2d per Origin on the scales' nice zero domains (grids match Vega's to Float32 precision), a heatmap image per group (tableau10 by Origin, opacity value/max shared) and 3 shared isocontour levels as lines in data units cut to the grid: ratio 0.0147 against the 360 px site thumbnail. Vega's resolve/bandwidth/counts widgets are template slots.",
-      "rasterizer": "resvg 2 (rsvg-convert was not available where this was measured)"
+      "note": "kde2d per Origin on the scales' nice zero domains (grids match Vega's to Float32 precision), a heatmap image per group (tableau10 by Origin, opacity value/max shared) and 3 shared isocontour levels as lines in data units cut to the grid. Vega's resolve/bandwidth/counts widgets are template slots. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0078 (was 0.0147 against vg2svg); it was measured against the 360 px site thumbnail; the reference is now full size, and the template carries Vega's axis defaults (bold black titles, black labels).",
+      "rasterizer": "rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica"
     }
   },
   "title": {
@@ -390,5 +387,10 @@
         ]
       }
     }
-  ]
+  ],
+  "config": {
+    "font": "sans-serif",
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"}
+  }
 }

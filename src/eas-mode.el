@@ -124,6 +124,19 @@ line numbers and, in a terminal, the column the truncation glyph takes
                                1 0)))
           :rows (max 6 (- (window-body-height window) 2)))))
 
+(defun eas-mode--flush-replaced (old new)
+  "Drop image OLD from the image cache, unless the image NEW repeats it.
+NEW is the image drawn next, or nil.
+Each redraw is a new image; without a flush the cache keeps every one
+\(fc-qx1.23: +1.28 MB per 800x400 move; fc-qx1.24: about 8 MB per
+frame on a 1000x640 NS window).  When NEW has the same :data as OLD, the two
+share one cache entry: flushing it would rasterize the same SVG again
+\(fc-qx1.24: 90 ms for a hover that changed nothing), so it stays."
+  (when (and (eq (car-safe old) 'image) (fboundp 'image-flush)
+             (not (and (eq (car-safe new) 'image)
+                       (equal (plist-get (cdr old) :data) (plist-get (cdr new) :data)))))
+    (image-flush old t)))
+
 (defun eas-mode-redraw (&optional buffer)
   "Redraw BUFFER (default current) from its view's scene."
   (with-current-buffer (or buffer (current-buffer))
@@ -133,19 +146,19 @@ line numbers and, in a terminal, the column the truncation glyph takes
            ;; Text lines change length as labels change: keep point's cell.
            (line (line-number-at-pos)) (col (current-column)))
       (let ((old (get-text-property (point-min) 'display)))
-        ;; Each redraw is a new image; without a flush the image cache
-        ;; keeps every one (fc-qx1.23: +1.28 MB per 800x400 move).
-        (when (and (eq (car-safe old) 'image) (fboundp 'image-flush)) (image-flush old t)))
-      (cond
-       ((not (eas-view-interactive view)) (erase-buffer) (eas-mode--insert-static view))
-       ((eas-mode--gui-p)
+        (cond
+         ((not (eas-view-interactive view))
+          (eas-mode--flush-replaced old nil) (erase-buffer) (eas-mode--insert-static view))
+         ((eas-mode--gui-p)
           (let ((image (eas-svg-image scene :scale 1)))
+            (eas-mode--flush-replaced old image)
             (erase-buffer)
             (insert-image image "[chart]")
             (insert "\n" (eas-mode-strip-string view))
             (eas-mode--hot-spot-keys image)))
-       ;; Terminal hover moves one column: rewrite only changed cells (fc-qx1.14).
-       (t (eas-mode-patch-text (concat (eas-text-render scene) "\n" (eas-mode-strip-string view)))))
+         ;; Terminal hover moves one column: rewrite only changed cells (fc-qx1.14).
+         (t (eas-mode--flush-replaced old nil)
+            (eas-mode-patch-text (concat (eas-text-render scene) "\n" (eas-mode-strip-string view))))))
       (if (eas-mode--gui-p) (goto-char (min pos (point-max)))
         (goto-char (point-min))
         (forward-line (1- line))

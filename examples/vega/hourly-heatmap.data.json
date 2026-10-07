@@ -1,6 +1,6 @@
 {
   "title": "Seattle Annual Temperatures",
   "data": {
-    "file": "../../test/vega-examples/data/seattle-weather-hourly-normals.csv"
+    "file": "../data/vega/seattle-weather-hourly-normals.csv"
   }
 }

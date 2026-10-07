@@ -38,10 +38,13 @@
 (require 'eas-data)
 
 (defconst eas-template--root
-  (file-name-directory
-   (directory-file-name
-    (file-name-directory (or load-file-name buffer-file-name default-directory))))
-  "The repository root (one level above src/).")
+  (let ((here (file-name-directory (or load-file-name buffer-file-name default-directory))))
+    (if (file-directory-p (expand-file-name "templates" here)) here
+      (file-name-directory (directory-file-name here))))
+  "The root that templates/ and examples/ hang off.
+The directory of this file when templates/ sits next to it (a flat
+package install, as MELPA builds it), else one level up (the
+repository, where this file is in src/).")
 
 (defvar eas-template-directories
   (list (expand-file-name "templates" eas-template--root)

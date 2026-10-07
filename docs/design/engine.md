@@ -356,7 +356,7 @@ threshold.
 `templates/vega/` holds one template per example of the Vega gallery
 (vega.github.io/vega/examples, epic `eas-7r1`), named plainly
 (`box-plot`), each with its binding in `examples/vega/` that
-reproduces the gallery chart from `test/vega-examples/data`. A
+reproduces the gallery chart from `examples/data/vega/`. A
 template's `x-eas.vega` records how close it comes to
 `test/vega-examples/ref/NAME.png`: `{"status": "pass"|"partial"|
 "unsupported", "note", "ratio", "threshold"}`, `ratio` being the
@@ -390,8 +390,10 @@ under plain names (`bar-chart`, eas-7r1), each with
 image (`status`, `note`, `ratio`, `threshold`; `make
 test-gallery-vega` holds them to it). In an example's bindings a data
 slot bound to `{"file": F}` reads a relative F beside the example file
-(`eas-template-read-bindings`), so the examples point at
-`test/vega-examples/data/` instead of copying it.
+(`eas-template-read-bindings`). The examples read
+`examples/data/vega/`, a copy of the files they use from
+`test/vega-examples/data/`, so an installed package (MELPA ships
+`templates/` and `examples/`, not `test/`) still resolves them.
 
 Slots reach further than whole nodes (`eas-agt.3`):
 `{"x-eas:slot": S, "key": "a.b"}` reads into an object slot, and

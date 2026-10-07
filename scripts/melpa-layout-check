@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# eas as MELPA installs it.  recipes/eas is expanded by MELPA's own
+# package-build into one flat temp directory (src/*.el and src/*.json
+# at the top, templates/ and examples/ beside them), which is then
+# byte-compiled with only that directory on load-path (warnings are
+# errors), loaded for the doctor (every template's example resolves
+# and renders, supported.json is found) and linted with package-lint.
+# package-build and package-lint come from MELPA into a temp
+# package-user-dir, so this needs the network.
+#   scripts/melpa-layout-check            KEEP=1 keeps the temp directory
+set -euo pipefail
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+emacs="${EMACS:-emacs}"
+tmp="$(mktemp -d)"
+if [ -z "${KEEP:-}" ]; then trap 'rm -rf "$tmp"' EXIT; else echo "melpa-layout-check: keeping $tmp"; fi
+check="$root/scripts/eas-melpa-check.el"
+stage() { "$emacs" -Q --batch -l "$check" -f eas-melpa-check-batch "$@"; }
+flat="$tmp/eas"
+mkdir -p "$flat"
+
+echo "== fetch package-build and package-lint"
+stage fetch "$tmp/elpa" > "$tmp/fetch.log" 2>&1 || { cat "$tmp/fetch.log"; exit 1; }
+ls "$tmp/elpa" | grep -v archives
+echo "== copy the recipe's files"
+stage copy "$tmp/elpa" "$root" "$flat"
+echo "== byte-compile in $flat"
+(cd "$tmp" && "$emacs" -Q --batch -L "$flat" --eval '(setq byte-compile-error-on-warn t)' \
+   -f batch-byte-compile "$flat"/*.el)
+echo "== doctor"
+(cd "$tmp" && "$emacs" -Q --batch -L "$flat" -l "$check" -f eas-melpa-check-batch doctor "$flat")
+echo "== package-lint"
+stage lint "$tmp/elpa" "$flat"
+echo "melpa-layout-check: ok"

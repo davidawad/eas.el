@@ -10,6 +10,7 @@
 #   make bench            the 1k/10k/100k ladder against bench-budget.json
 #   make bench-budget     re-measure the budget's references (review the diff)
 #   make tty-check        real-terminal check in tmux (private server -L eas)
+#   make melpa-check      recipes/eas installed flat: compile, doctor, package-lint
 #   make clean            remove byte-compiled files
 #
 # EAS_UPDATE_GOLDEN=1 rewrites goldens; TEST_SKIP_LOG=FILE logs skips.
@@ -32,7 +33,7 @@ $(BATCH) --eval '(dolist (f (append (directory-files "src" t "-test\\.el\\'"'"'"
 endef
 
 .PHONY: all test compile checkdoc test-gallery $(GALLERY_TARGETS) \
-        test-gallery-conformance test-gallery-vega bench bench-budget tty-check clean
+        test-gallery-conformance test-gallery-vega bench bench-budget tty-check melpa-check clean
 
 all: compile test
 
@@ -72,6 +73,10 @@ bench-budget:
 
 tty-check:
 	scripts/eas-tty-check.sh
+
+# Needs the network: package-build and package-lint come from MELPA.
+melpa-check:
+	scripts/melpa-layout-check
 
 clean:
 	rm -f src/*.elc test/eas/*.elc scripts/*.elc

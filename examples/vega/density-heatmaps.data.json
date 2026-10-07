@@ -1,5 +1,5 @@
 {
   "data": {
-    "file": "../../test/vega-examples/data/cars.json"
+    "file": "../data/vega/cars.json"
   }
 }

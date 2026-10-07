@@ -155,7 +155,8 @@ eas needs GNU Emacs 30.1 or newer and has no other dependencies.
 ```
 
 The templates live in `templates/` beside `src/`, and eas finds them
-from where `src/` is. To add your own, push directories onto
+from where `src/` is: next to the libraries in a flat install (MELPA,
+recipe in `recipes/eas`), else one level up. To add your own, push directories onto
 `eas-template-directories`.
 
 ## Quick start

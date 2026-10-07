@@ -1,5 +1,5 @@
 {
-  "world": {"url": "test/vega-examples/data/world-110m.json", "feature": "countries"},
+  "world": {"url": "examples/data/vega/world-110m.json", "feature": "countries"},
   "projections": ["azimuthalEquidistant", "conicConformal", "gnomonic", "mercator", "stereographic",
                   "airy", "armadillo", "baker", "berghaus", "bottomley", "collignon", "eckert1", "guyou",
                   "hammer", "littrow", "mollweide", "wagner6", "wiechel", "winkel3",

@@ -18,7 +18,8 @@ contract of each layer.
 | `test/eas/` | `eas-test-support.el` (shared helpers) and `golden/` (exact text, JSON and SVG goldens) |
 | `test/conformance/` | conformance specs, text goldens, bin/chart reference PNGs (`ref/`) |
 | `test/vl-examples/` | the official Vega-Lite gallery by group: specs, `status.json`, reference PNGs, `custom/` specs |
-| `templates/`, `examples/` | template specs and their example bindings |
+| `templates/`, `examples/` | template specs and their example bindings; `examples/data/` holds every file an example reads |
+| `recipes/eas` | the MELPA recipe; MELPA installs it flat (libraries, `templates/`, `examples/` in one directory) |
 | `bin/eas` | shell entry point for the stateless verbs |
 | `scripts/` | bench, gallery bench, tty check, checkdoc runner, screenshots, design spikes |
 | `docs/design/` | engine design, measured spikes, gallery coverage |
@@ -36,6 +37,7 @@ make test-gallery-GROUP           # one gallery group: area-circular bar calcula
 make test-gallery-conformance     # conformance oracle + template text gallery
 make bench                        # latency ladder vs src/bench-budget.json
 make tty-check                    # real emacs -nw inside tmux -L eas
+make melpa-check                  # recipe installed flat: compile, doctor, package-lint (network)
 ```
 
 - Run the gallery one group at a time. Never use `make -j` on

@@ -1,5 +1,5 @@
 {
-  "states": {"url": "test/vega-examples/data/us-10m.json", "feature": "states"},
+  "states": {"url": "examples/data/vega/us-10m.json", "feature": "states"},
   "airports": [
     {"iata":"ABE","name":"Lehigh Valley International","latitude":40.65236278,"longitude":-75.44040167},
     {"iata":"ABI","name":"Abilene Regional","latitude":32.41132,"longitude":-99.68189722},

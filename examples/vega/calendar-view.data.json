@@ -1,5 +1,5 @@
 {
   "data": {
-    "file": "../../test/vega-examples/data/sp500-2000.csv"
+    "file": "../data/vega/sp500-2000.csv"
   }
 }

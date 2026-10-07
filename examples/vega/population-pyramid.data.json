@@ -1,5 +1,5 @@
 {
   "data": {
-    "file": "../../test/vega-examples/data/population.json"
+    "file": "../data/vega/population.json"
   }
 }

@@ -1,4 +1,4 @@
 {
-  "world": {"url": "test/vega-examples/data/world-110m.json", "feature": "countries"},
-  "quakes": {"url": "test/vega-examples/data/earthquakes.json"}
+  "world": {"url": "examples/data/vega/world-110m.json", "feature": "countries"},
+  "quakes": {"url": "examples/data/vega/earthquakes.json"}
 }

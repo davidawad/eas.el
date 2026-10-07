@@ -3,7 +3,7 @@
 Every example of the Vega gallery (https://vega.github.io/vega/examples/)
 has an eas template, `templates/vega/NAME.json`, with an example binding
 `examples/vega/NAME.data.json` that reproduces it from the vendored data in
-`test/vega-examples/data`.  Each template takes its data and fields as slots,
+`examples/data/vega` (the files it uses, copied from `test/vega-examples/data`).  Each template takes its data and fields as slots,
 so a caller binds their own data: `eas-resolve "NAME" BINDINGS`.  NAME is the
 example's, except for the two whose name eas's own templates already hold:
 `heatmap` is `hourly-heatmap` and `histogram` is `rug-histogram`

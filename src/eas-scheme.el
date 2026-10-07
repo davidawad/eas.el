@@ -128,12 +128,14 @@
         (string-to-number (substring color 5 7) 16)))
 
 (defun eas-scheme-interpolate (stops tt)
-  "The color at TT in [0, 1] along STOPS, piecewise linear in RGB (d3 piecewise)."
-  (let* ((n (1- (length stops))) (tt (max 0.0 (min 1.0 (float tt))))
-         (i (min (1- n) (floor (* tt n)))) (f (- (* tt n) i)))
+  "The color at TT along STOPS, piecewise linear in RGB (d3 piecewise).
+Past [0, 1] (a scheme extent such as [0.05, 1.3]) the end segment
+extends and each channel clamps to [0, 255], as in d3."
+  (let* ((n (1- (length stops))) (tt (float tt))
+         (i (max 0 (min (1- n) (floor (* tt n))))) (f (- (* tt n) i)))
     (if (< n 1) (aref stops 0)
       (apply #'format "#%02x%02x%02x"
-             (cl-mapcar (lambda (a b) (round (+ a (* f (- b a)))))
+             (cl-mapcar (lambda (a b) (max 0 (min 255 (round (+ a (* f (- b a)))))))
                         (eas-scheme--hex (aref stops i)) (eas-scheme--hex (aref stops (1+ i))))))))
 
 (defun eas-scheme--extent (scheme)

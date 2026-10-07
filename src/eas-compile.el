@@ -108,7 +108,9 @@ lines and areas keep them (their default breaks the path instead)."
                                  (member (plist-get d :type) '("quantitative" "temporal")))
                        collect (eas-encode-field d))))
     (if (or (null keys) (member type '("line" "area"))) rows
-      (vconcat (seq-remove (lambda (row) (seq-some (lambda (k) (memq (plist-get row k) '(nil :null))) keys)) rows)))))
+      (vconcat (cl-loop for row being the elements of rows
+                        unless (cl-loop for k in keys thereis (memq (plist-get row k) '(nil :null)))
+                        collect row)))))
 
 (defun eas-compile--unit (node ctx env)
   "Compile unit NODE under CTX into a unit plist (rows, encoding, mark).

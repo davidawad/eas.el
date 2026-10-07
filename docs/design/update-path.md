@@ -299,15 +299,188 @@ the slider runs at 50 steps a second.
    domains) could patch while only the estimate panel recompiles; that
    needs the layout of one concat cell to be redone in place, which today
    is all or nothing.
-3. **Items kept across full compiles.** A pi-mc step that adds 5 points
-   rebuilds the items of the 500 it already drew (about 12 ms of the
-   step). Per-row marks could keep the item of every row equal to the
-   last plan's at the same position, as pushes already do
-   (`eas-compile-rows--items`), when the unit's encoding, the params it
-   names, its scales and its bounds are unchanged. Not built: on an
-   unsized SVG the first layout's bounds differ from the final,
-   translated ones whenever marks overhang, so the check rarely holds
-   without also keeping the pre-translation items.
+3. **Items kept across full compiles.** Built in the third pass (below):
+   the items are kept before any translation, keyed by the bounds they
+   were drawn in, so the overhang relayout does not defeat it.
 4. **Per-row transform reuse for pushes.** A keyed push re-runs row-local
    transforms (calculate, filter, timeUnit) over every row; an output
    kept per source row would make that proportional to the rows pushed.
+
+## Third pass: maps, kept items, fewer allocations (eas-b2s.8)
+
+Scope: the county-unemployment hover, the first render of the map
+templates, and allocation on every live workload, in the update path
+(compile, scene, hit test). The renderers (eas-text*, eas-svg*,
+eas-mode*, eas-readout*) belong to another box and were not touched.
+Every golden is unchanged; each change below has a property test
+against a full compile from nothing (`src/eas-update-test.el`,
+`src/eas-spec-test.el`), and test references for a full compile now
+bind the new cross-compile caches fresh.
+
+### County hover: 30.6 to 2.0 ms a frame (byte, svg, with the render)
+
+- **Geoshape units patch item by item** (`eas-geoshape-row-fn`). A hover
+  rebuilt the style and tooltip of all 3000+ counties because geoshape
+  was listed with lines and areas as "rebuild every item". Shapes are
+  per-row items like points, so `eas-patch--items` now rebuilds only
+  the rows whose selection membership changed. Pushes still build a
+  map's shapes afresh (a fitted projection may move).
+- **Hit testing scans only shapes within reach** (`eas-intersect--anchors`).
+  A pointer touches a shape within its symbol radius plus slop of the
+  anchor, so a large geoshape mark keeps its anchors sorted by x, hung
+  off its hit index (which a hover patch keeps), and tests the window
+  `|dx| <= radius + slop` instead of every shape. A test checks it
+  against a full scan at 300 random pointers.
+
+The update path alone (no render, 8 frames, byte) went from 25.7 ms and
+4.2 MB to 0.46 ms and 64 KB a frame on svg, and from 8.2 ms and 1.5 MB
+to 0.39 ms and 40 KB on text; what is left of the 2 ms frame is the
+renderer's.
+
+### Map first render: projections 2185 to 73 ms warm, 1960 to 1362 ms cold
+
+The projections template draws 24 maps of the same world. Its first
+render projected that world 24 times and serialized it to JSON 24
+times to hash the spec, every time it was opened.
+
+- **Projected shapes are kept by geometry** (`eas-geoshape--identity`).
+  The retained table keyed shapes by row, which every compile copies;
+  it now keys a feature by its geometry object (a geometry by its
+  coordinates, the sphere by the projection alone), which copies
+  share, and holds 32 projections instead of 4 (the template has 24).
+  Graticules are made once per parameters so their lines are kept
+  too.
+- **Map files are read once** (`eas-topojson--files`): the geojson
+  adapter caches a file's features by file, mtime and options, as
+  `eas-data-url--cache` does for data URLs, so every resolve shares
+  them (and so their projections).
+- **Resolve shares data** (`eas-resolve--strip`): stripping x-eas keys
+  no longer copies parts without any, and walks an array shared by
+  several views once.
+- **The spec hash encodes each large array once**
+  (`eas-resolve-hash`): arrays of 64 or more are encoded (canonical
+  JSON, UTF-8) once per object and spliced into the hash input. The
+  result is still sha256 of the whole canonical JSON; a test checks it
+  equals `eas-content-hash`, non-ASCII text included.
+- **Centroids sum rings first** (`eas-geo-path-centroid`): rings decide
+  a shape's centroid whenever they have an area, so the per-segment
+  lengths (a sqrt and two expt each) are summed only when they do not.
+  The ring sums run in the same order; a test checks the result is
+  identical to the bit.
+
+Warm is a second open in the same session (what `make bench`'s
+render/ workloads measure); cold is the first open in a fresh Emacs.
+Cold, the remaining 1.36 s is d3's projection pipeline itself
+(rotation, clipping, resampling, Guyou's elliptic integrals) over about
+600k points: closures per stage per point, ported to be exact to
+d3-geo. Making it cheaper means fusing stages per projection type,
+which is a rewrite of eas-geo-stream, not a cache.
+
+| template, byte, svg | warm, main | warm, now | cold, main | cold, now |
+|---|---:|---:|---:|---:|
+| projections | 2185 ms | 73 ms | 1960 ms | 1362 ms |
+| county-unemployment | 926 ms | 80 ms | 830 ms | 802 ms |
+| world-map | 81 ms | 7 ms | 91 ms | 89 ms |
+
+### Items kept across full compiles: pi-monte-carlo 40.3 to 27.8 ms
+
+`eas-marks--kept-items`: a per-row unit (points, text, bars, rules)
+keeps the item each row drew, by unit path. The next compile reuses
+the item of every row equal to the last one's, when everything else
+the item reads is equal: encoding, mark, the unit's scales, the plot
+bounds it was drawn in, metrics, the params its encoding or mark names,
+time zone, locale, font family and count title, and the registered font
+faces. A unit with a selection condition (`{"param": ...}`) keeps
+nothing, since its items read the view state. The bounds are those of
+the draw, before the overhang relayout translates items, so an unsized
+SVG's two layouts each find theirs.
+
+A property test moves a slider that a colour test reads while a data
+domain moves in another view, with pushes in between, on both targets;
+it fails when the param check is removed.
+
+### Allocation
+
+From memory profiles of each workload's update path:
+
+- **Per-row closures and lists.** Window transforms make each row's
+  sort key once (they made two to four lists per row widening frames
+  to peers); grouping, `eas-encode-active`, `eas-compile--valid-rows`
+  and series keys loop without a closure per row; compiled expression
+  calls with one or two arguments call the function (resolved at
+  compile) directly, with no closure or argument list per row.
+- **Axes are placed once per input** (`eas-layout-axis-place`). A
+  stream's full compiles placed the same axes, measuring every label,
+  frame after frame. The placement is memoized on equal axis, scale,
+  bounds, metrics, font, zone and locale (cleared when a font is
+  registered).
+- **Scale functions are made once per scale** (`eas-scale-fn`): a
+  stream keeps its scale objects across pushes, so a band scale's
+  value index is no longer rebuilt every frame.
+
+### Per-template update closures
+
+The bead asked for each template's update path compiled once into a
+specialized closure. Profiles after the changes above do not show a
+generic dispatch layer worth one: pushes and ticks spend about 1 ms
+or less in the update path (ladder 0.8, clock 0.4, pacman 1.3 ms, byte),
+spread over transforms, scale comparison and item building. The
+specialization is built where the time was: expressions (since
+eas-b2s.3, now with direct calls), scale functions per scale object,
+items per row across compiles, and axis placement. What remains generic
+per row is `eas-marks--pos` re-reading a unit's encoding and scales for
+every row (about a fifth of the candle stream's update); a per-unit
+position closure is the next step there.
+
+### Before and after
+
+Same box, one run after another, `scripts/eas-perf.sh report` (20
+frames, 8 for pi-monte-carlo and the county hover, 2 opens for render/):
+main (6d49ffe) against this branch. A frame includes the render (SVG
+string, or text patched into a buffer). Milliseconds are medians;
+KB is allocation per frame, byte-compiled.
+
+| workload | target | byte ms main | byte ms now | native ms main | native ms now | KB main | KB now |
+|---|---|---:|---:|---:|---:|---:|---:|
+| ladder-25 | svg | 0.95 | 0.93 | 0.62 | 0.57 | 215 | 204 |
+| ladder-25 | text | 3.66 | 3.62 | 2.02 | 1.97 | 362 | 352 |
+| ladder-100 | svg | 2.01 | 1.98 | 1.39 | 1.25 | 529 | 481 |
+| ladder-100 | text | 7.89 | 7.72 | 4.62 | 4.47 | 908 | 860 |
+| depth-25 | svg | 3.29 | 2.26 | 2.08 | 1.29 | 554 | 368 |
+| depth-25 | text | 3.79 | 3.69 | 2.34 | 2.30 | 657 | 637 |
+| depth-100 | svg | 2.79 | 2.78 | 1.85 | 1.80 | 945 | 801 |
+| depth-100 | text | 4.41 | 4.41 | 2.91 | 2.83 | 1079 | 1056 |
+| candles | svg | 2.74 | 2.66 | 1.92 | 1.72 | 1317 | 1186 |
+| candles | text | 9.17 | 9.21 | 6.24 | 6.05 | 2402 | 2312 |
+| clock | svg | 0.50 | 0.48 | 0.35 | 0.31 | 117 | 113 |
+| clock | text | 2.66 | 2.63 | 1.40 | 1.39 | 276 | 272 |
+| pacman | svg | 1.27 | 1.36 | 0.78 | 0.87 | 315 | 317 |
+| pacman | text | 4.99 | 5.08 | 2.96 | 3.06 | 628 | 630 |
+| pi-monte-carlo | svg | 40.30 | 27.78 | 27.61 | 18.35 | 11741 | 8328 |
+| pi-monte-carlo | text | 42.44 | 31.10 | 28.63 | 21.07 | 10577 | 7480 |
+| hover-airports | svg | 0.45 | 0.44 | 0.27 | 0.29 | 228 | 229 |
+| hover-airports | text | 3.50 | 3.47 | 2.11 | 2.11 | 805 | 805 |
+| hover-counties | svg | 30.60 | 1.96 | 20.44 | 1.49 | 5408 | 1300 |
+| hover-counties | text | 3.98 | 2.19 | 2.44 | 1.28 | 3245 | 1826 |
+| render/county-unemployment | svg | 925.56 | 79.56 | 701.48 | 52.81 | 331188 | 24467 |
+| render/county-unemployment | text | 910.52 | 77.12 | 687.65 | 49.88 | 310865 | 22602 |
+| render/projections | svg | 2184.91 | 72.95 | 1746.00 | 61.13 | 830661 | 25450 |
+| render/projections | text | 2123.60 | 73.87 | 1685.35 | 59.34 | 809064 | 65202 |
+| render/world-map | svg | 81.05 | 7.33 | 65.63 | 4.50 | 34497 | 1552 |
+| render/world-map | text | 80.72 | 10.02 | 65.84 | 5.92 | 35693 | 3746 |
+
+Pacman is unchanged within noise (+0.3% allocation: the bookkeeping of
+kept items for units it rebuilds each tick). The airport hover's text
+frame is the renderer's.
+
+### Validation
+
+- `make test`: 768 tests, 763 passed, 0 unexpected, 5 skipped (no
+  `bin/chart`, no `rsvg-convert`, no Vega-Lite schema on the box).
+- `make compile`: checkdoc and byte-compile clean.
+- `make bench-check`: 228 of 228 workloads pass, byte and native.
+- `make test-gallery-conformance`: 7 passed, 3 skipped (no `bin/chart`,
+  no `rsvg-convert`), and the three failures main has too (the
+  `interactive/interactive_concat_layer` text golden, so
+  `eas-conformance-supported-json-is-current`, and templates missing
+  from `text-status.json`), with output identical to main's.

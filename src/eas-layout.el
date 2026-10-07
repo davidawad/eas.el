@@ -443,11 +443,40 @@ Overlapping labels drop their ticks too; lines sit at cell centres."
                       (list :text title :x (- x0 tick label-extent) :y (- y0 (plist-get metrics :title-size))
                             :align "left" :baseline "top" :angle 0)))))))
 
+(defvar eas-layout--placed (make-hash-table :test 'equal)
+  "(AXIS SCALE BOUNDS METRICS FONT ZONE) -> `eas-layout-axis-place' value.
+A stream's full compiles place the same axes frame after frame
+\=(eas-b2s.8); labels are measured once.  Cleared past
+`eas-layout-placed-max' entries.")
+
+(defvar eas-layout-placed-max 256 "Entries `eas-layout--placed' holds at most.")
+
+(defvar eas-layout--placed-faces nil
+  "The registered font faces `eas-layout--placed' was measured with.")
+
+(defvar eas-font-file--faces)
+
 (defun eas-layout-axis-place (axis scale bounds metrics)
   "Return AXIS with geometry for SCALE inside plot BOUNDS [x0 y0 w h].
 The svg result carries :bounds, Vega's axis bounds (ticks, visible
 labels, title) without the half-pixel translate of the drawn lines.
-METRICS gives the target."
+METRICS gives the target.  The value is shared between equal calls:
+do not change it."
+  (let ((key (list axis scale bounds metrics eas-font-family eas-time-zone system-time-locale))
+        (faces (bound-and-true-p eas-font-file--faces)))
+    ;; A font registered (or dropped) measures labels anew.
+    (unless (eq faces eas-layout--placed-faces)
+      (clrhash eas-layout--placed)
+      (setq eas-layout--placed-faces faces))
+    (or (gethash key eas-layout--placed)
+        (let ((value (eas-layout--axis-place-1 axis scale bounds metrics)))
+          (when (>= (hash-table-count eas-layout--placed) eas-layout-placed-max)
+            (clrhash eas-layout--placed))
+          ;; A copy: the caller's objects may change after it.
+          (puthash (copy-tree key t) value eas-layout--placed)))))
+
+(defun eas-layout--axis-place-1 (axis scale bounds metrics)
+  "Do `eas-layout-axis-place' of AXIS, SCALE, BOUNDS and METRICS."
   (eas-axis-pos-place
    axis scale bounds metrics
    (lambda (axis)

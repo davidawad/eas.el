@@ -131,8 +131,11 @@
       (should (= (eas-live-interval "other" 0.25) 0.25)))))
 
 (defun eas-live-test--full (view)
-  "The scene a full compile makes of VIEW's spec, rows, size and state."
-  (let ((state (eas-view-state view)))
+  "The scene a full compile makes of VIEW's spec, rows, size and state.
+From nothing: no items or axes kept from an earlier compile."
+  (let ((state (eas-view-state view))
+        (eas-marks--kept (make-hash-table :test 'equal))
+        (eas-layout--placed (make-hash-table :test 'equal)))
     (eas-params-with-state state
       (eas-compile-scene (eas-compile-plan (eas-view-spec view) :rows (plist-get (eas-view-data view) :rows)
                                            :size (eas-view-size view) :target (eas-view-target view)

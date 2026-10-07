@@ -24,11 +24,15 @@
 (require 'eas-transform)
 (require 'eas-transform-index)
 (require 'eas-expr)
+(require 'eas-intersect)
+(require 'eas-geo-stream)
 
 (defun eas-update-test--full (view)
   "The scene a full compile from nothing makes of VIEW: no kept runs."
   (let ((state (eas-view-state view))
-        (eas-compile-memo--frames (make-hash-table :test 'eq :weakness 'key)))
+        (eas-compile-memo--frames (make-hash-table :test 'eq :weakness 'key))
+        (eas-marks--kept (make-hash-table :test 'equal))
+        (eas-layout--placed (make-hash-table :test 'equal)))
     (eas-params-with-state state
       (eas-compile-scene (eas-compile-plan (eas-view-spec view) :rows (plist-get (eas-view-data view) :rows)
                                            :size (eas-view-size view) :target (eas-view-target view)
@@ -67,7 +71,8 @@ Also assert its dirty marks are sound (`eas-update-test--dirty-sound')."
   `(let ((eas-views (make-hash-table :test 'equal))
          (eas-update-test--last (make-hash-table :test 'eq))
          (eas-plays (make-hash-table :test 'equal))
-         (eas-compile-memo--frames (make-hash-table :test 'eq :weakness 'key)))
+         (eas-compile-memo--frames (make-hash-table :test 'eq :weakness 'key))
+         (eas-marks--kept (make-hash-table :test 'equal)))
      ,@body))
 
 (defun eas-update-test--next (seed)
@@ -539,6 +544,150 @@ what a full compile draws."
                                      :rows (vector (funcall candle (/ seed 11) last))))
             (eas-update-test--same view))
           (eas-view-close view))))))
+
+(defun eas-update-test--squares (seed n)
+  "N square GeoJSON features on a grid with random rates; one has no geometry.
+Rings run clockwise, as d3 wants a polygon smaller than a hemisphere."
+  (let ((s seed) (side (ceiling (sqrt n))))
+    (vconcat
+     (cl-loop for i below n
+              for x = (* 4 (% i side)) for y = (* 4 (/ i side))
+              collect (list :type "Feature" :id i
+                            :properties (list :rate (/ (% (setq s (eas-update-test--next s)) 100) 100.0))
+                            :geometry (if (= i 3) :null
+                                        (list :type "Polygon"
+                                              :coordinates (vector (vector (vector x y) (vector x (+ y 3))
+                                                                           (vector (+ x 3) (+ y 3)) (vector (+ x 3) y)
+                                                                           (vector x y))))))))))
+
+(ert-deftest eas-update-geoshape-hover-patches-items ()
+  "Hovering a map patches its shapes item by item, as a full compile draws.
+A fitted and a fixed projection, svg and text, with a feature that
+draws nothing; no hover makes a new plan, and only the hovered shapes
+are rebuilt."
+  (eas-update-test--with
+    (let* ((plans 0) (count (lambda (&rest _) (cl-incf plans))))
+      (advice-add 'eas-compile-plan :before count)
+      (unwind-protect
+          (cl-loop
+           for (projection target) in
+           '(((:type "mercator") svg) ((:type "mercator") text)
+             ((:type "equirectangular" :scale 400 :translate [20 250]) svg))
+           for k from 0 do
+           (let* ((spec (list :width 300 :height 200 :projection projection
+                              :params [(:name "hover" :select (:type "point" :on "mouseover" :clear "mouseout"))]
+                              :mark (list :type "geoshape" :stroke "white")
+                              :encoding (list :fill (list :condition (list :param "hover" :value "red" :empty :false)
+                                                          :field "properties.rate" :type "quantitative"
+                                                          :scale (list :type "quantize" :domain [0 1]
+                                                                       :scheme "blues"))
+                                              :tooltip (list :field "properties.rate" :type "quantitative"
+                                                             :format ".1%"))))
+                  (view (eas-view-open (eas-json-encode spec) :id (format "map%d" k) :target target
+                                       :size (if (eq target 'text) '(:cols 80 :rows 30) '(400 . 300))
+                                       :rows (eas-update-test--squares (+ 5 k) 70)))
+                  (scene-size (plist-get (eas-view-scene view) :size))
+                  (w (plist-get scene-size :w)) (h (plist-get scene-size :h))
+                  (seed (+ 17 k)) (made 0))
+             (dotimes (_ 10)
+               (setq seed (eas-update-test--next seed))
+               (let ((before plans))
+                 (eas-dispatch view (list :type "pointermove"
+                                          :px (vector (* w (/ (% seed 97) 97.0))
+                                                      (* h (/ (% (/ seed 97) 89) 89.0)))))
+                 (cl-incf made (- plans before)))
+               (eas-update-test--same view))
+             ;; Right on a shape's anchor, where the pointer touches it.
+             (let ((items (plist-get (aref (plist-get (aref (plist-get (eas-view-scene view) :views) 0) :marks) 0)
+                                     :items)))
+               (dotimes (i 6)
+                 (let ((item (aref items (% (* 7 i) (length items))))
+                       (before plans))
+                   (eas-dispatch view (list :type "pointermove"
+                                            :px (vector (+ (plist-get item :x) (* 0.5 i)) (plist-get item :y))))
+                   (cl-incf made (- plans before))
+                   (eas-update-test--same view)
+                   (when (< i 3)
+                     (should (seq-some (lambda (it) (equal (plist-get it :fill) "red"))
+                                       (plist-get (aref (plist-get (aref (plist-get (eas-view-scene view) :views) 0)
+                                                                   :marks)
+                                                        0)
+                                                  :items)))))))
+             (should (equal (list k made) (list k 0)))
+             (eas-view-close view)))
+        (advice-remove 'eas-compile-plan count)))))
+
+(ert-deftest eas-update-geoshape-intersect-window-equals-scan ()
+  "The anchor window over a map's shapes touches what a full scan does.
+Random pointers, near anchors and between them, on a fitted map."
+  (eas-update-test--with
+    (let* ((spec (list :width 300 :height 200 :projection '(:type "mercator")
+                       :mark "geoshape" :encoding (list :fill (list :field "properties.rate" :type "quantitative"))))
+           (view (eas-view-open (eas-json-encode spec) :id "window" :size '(400 . 300)
+                                :rows (eas-update-test--squares 9 80)))
+           (scene (eas-view-scene view))
+           (mark (aref (plist-get (aref (plist-get scene :views) 0) :marks) 0))
+           (items (plist-get mark :items))
+           (seed 23) (hits 0))
+      (should (eas-intersect--anchors mark))
+      (dotimes (i 300)
+        (setq seed (eas-update-test--next seed))
+        (let* ((item (aref items (% seed (length items))))
+               (x (+ (plist-get item :x) (- (% (/ seed 7) 13) 6) (* 0.25 (% i 4))))
+               (y (+ (plist-get item :y) (- (% (/ seed 91) 9) 4)))
+               (fast (eas-intersect-mark scene mark x y))
+               (scan (cl-letf (((symbol-function 'eas-intersect--anchors) #'ignore))
+                       (eas-intersect-mark scene mark x y))))
+          (when fast (cl-incf hits))
+          (should (equal fast scan))))
+      (should (> hits 50))
+      (eas-view-close view))))
+
+(ert-deftest eas-update-kept-items-follow-params-and-rows ()
+  "Items kept across full compiles redraw when a param they name moves.
+A slider moves a data domain in one layer (a full compile every step)
+while the other layer's colour test reads the slider; random steps and
+keyed pushes equal full compiles, for both targets."
+  (eas-update-test--with
+    (let ((spec (list :width 300 :height 200
+                      :params [(:name "cut" :value 50 :bind (:input "range" :min 0 :max 100))]
+                      :hconcat
+                      (vector (list :mark "point"
+                                    :encoding (list :x (list :field "x" :type "quantitative"
+                                                             :scale (list :domain [0 100]))
+                                                    :y (list :field "y" :type "quantitative"
+                                                             :scale (list :domain [0 100]))
+                                                    :color (list :condition (list :test "datum.x > cut" :value "red")
+                                                                 :value "steelblue")))
+                              (list :transform [(:filter "datum.x <= cut")]
+                                    :mark "bar"
+                                    :encoding (list :x (list :field "x" :type "quantitative")
+                                                    :y (list :field "size" :type "quantitative")))))))
+      (dolist (target '(svg text))
+        (let ((view (eas-view-open (eas-json-encode spec) :id (format "kept-%s" target) :target target
+                                   :size (if (eq target 'text) '(:cols 100 :rows 30) nil)
+                                   :rows (eas-update-test--rows 31 40)))
+              (seed 5))
+          (dotimes (i 14)
+            (setq seed (eas-update-test--next seed))
+            (if (= 0 (% i 4))
+                (eas-dispatch view (list :type "push" :key "id" :rows (eas-update-test--rows seed 3)))
+              (eas-dispatch view (list :type "param" :param "cut" :value (% seed 101))))
+            (eas-update-test--same view))
+          (eas-view-close view))))))
+
+(ert-deftest eas-update-ring-centroid-equals-the-full-sums ()
+  "The rings-first centroid is the one every sum gives, to the bit.
+Random paths: rings, lines, both, degenerate rings and none."
+  (let ((seed 41))
+    (cl-flet ((num () (setq seed (eas-update-test--next seed)) (/ (- (% seed 20001) 10000) 37.0)))
+      (dotimes (k 200)
+        (let ((paths (cl-loop for p below (% k 4)
+                              collect (cons (if (= 0 (% (+ k p) 3)) nil t)
+                                            (if (= 0 (% (+ k p) 7)) (make-vector 6 1.5)
+                                              (vconcat (cl-loop for i below (* 2 (+ 2 (% (+ k p) 9))) collect (num))))))))
+          (dolist (result (list (list :paths paths) (list :paths paths :circles (list (vector (num) (num) 2.0)))))
+            (should (equal (eas-geo-path-centroid result) (eas-geo--path-centroid-1 result)))))))))
 
 (provide 'eas-update-test)
 ;;; eas-update-test.el ends here

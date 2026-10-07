@@ -131,23 +131,73 @@ a cell's centre, and one event log must hover the same datum on both."
                when (> (sqrt (/ (or (plist-get (aref items i) :size) 30) float-pi)) eas-intersect--big-radius)
                collect i))))
 
-(defun eas-intersect--candidates (mark px py)
-  "Item indexes of MARK worth testing against PX PY."
+(defvar eas-intersect--anchors (make-hash-table :test 'eq :weakness 'key)
+  "Shapes index -> [XS ORDER REACH] or `none' (`eas-intersect--shape-window').")
+
+(defun eas-intersect--anchors (mark)
+  "MARK's shape anchors sorted by x, as [XS ORDER REACH], or nil.
+XS ascend, ORDER holds the item index of each, REACH is the symbol
+radius.  The table hangs off MARK's index, which a hover patch
+keeps: patched shapes are restyled, never moved.  Nil when an item is
+measured otherwise than from its anchor."
+  (let ((index (plist-get mark :index)))
+    (when index
+      (let ((v (with-memoization (gethash index eas-intersect--anchors)
+                 (let ((items (plist-get mark :items)) (pairs nil))
+                   (if (cl-loop for i below (length items)
+                                for item = (aref items i)
+                                always (and (numberp (plist-get item :x)) (numberp (plist-get item :y))
+                                            (not (plist-member item :w)) (not (plist-member item :x1))
+                                            (not (plist-member item :size)))
+                                do (push (cons (plist-get item :x) i) pairs))
+                       (let ((sorted (sort (nreverse pairs) (lambda (a b) (< (car a) (car b))))))
+                         ;; Every symbol has the default size (`eas-intersect--item').
+                         (vector (vconcat (mapcar #'car sorted)) (vconcat (mapcar #'cdr sorted))
+                                 (sqrt (/ 30 float-pi))))
+                     'none)))))
+        (and (vectorp v) v)))))
+
+(defun eas-intersect--shape-window (mark px reach)
+  "Item indexes of geoshape MARK whose anchor is within REACH of PX in x.
+Ascending, as a full scan visits them.  MARK must have an anchors
+table (`eas-intersect--anchors')."
+  (let ((a (eas-intersect--anchors mark)))
+    (let* ((xs (aref a 0)) (order (aref a 1)) (n (length xs))
+           ;; A touch is within the symbol radius plus REACH of the anchor,
+           ;; so |dx| is too (a micropixel more for rounding).
+           (r (+ (aref a 2) reach 1e-6)) (lo 0) (hi n) out)
+      (while (< lo hi)
+        (let ((mid (/ (+ lo hi) 2)))
+          (if (< (aref xs mid) (- px r)) (setq lo (1+ mid)) (setq hi mid))))
+      (while (and (< lo n) (<= (aref xs lo) (+ px r)))
+        (push (aref order lo) out)
+        (setq lo (1+ lo)))
+      (sort out #'<))))
+
+(defun eas-intersect--candidates (mark px py &optional slop)
+  "Item indexes of MARK worth testing against PX PY.
+SLOP is the reach beyond a mark's extent (`eas-intersect--slop')."
   (let ((items (plist-get mark :items)))
-    (if (and (member (plist-get mark :mark) '("point" "circle" "square" "text"))
-             (> (length items) 64))
-        ;; The grid index finds the nearest centre without a scan (fc-qx1.9);
-        ;; a large symbol can hold PX PY far from its centre (circle packing).
-        (let ((near (when-let* ((c (eas-hit-mark mark px py))) (list (plist-get c :item)))))
-          (if (equal (plist-get mark :mark) "text") near
-            (delete-dups (append near (eas-intersect--big-items mark)))))
-      (number-sequence 0 (1- (length items))))))
+    (cond
+     ((and (member (plist-get mark :mark) '("point" "circle" "square" "text"))
+           (> (length items) 64))
+      ;; The grid index finds the nearest centre without a scan (fc-qx1.9);
+      ;; a large symbol can hold PX PY far from its centre (circle packing).
+      (let ((near (when-let* ((c (eas-hit-mark mark px py))) (list (plist-get c :item)))))
+        (if (equal (plist-get mark :mark) "text") near
+          (delete-dups (append near (eas-intersect--big-items mark))))))
+     ;; A map's shapes touch near their anchors (eas-b2s.8): scan only
+     ;; the ones within reach in x.
+     ((and slop (equal (plist-get mark :mark) "geoshape") (> (length items) 64)
+           (eas-intersect--anchors mark))
+      (eas-intersect--shape-window mark px slop))
+     (t (number-sequence 0 (1- (length items)))))))
 
 (defun eas-intersect-mark (scene mark px py)
   "Hit (as `eas-hit-mark') of PX PY on MARK of SCENE when it touches, else nil."
   (let* ((slop (eas-intersect--slop scene)) (kind (plist-get mark :mark))
          (items (plist-get mark :items)) (reach (+ slop 8)) best)
-    (dolist (i (eas-intersect--candidates mark px py))
+    (dolist (i (eas-intersect--candidates mark px py slop))
       (let ((item (aref items i)))
         (unless (eas-intersect--hidden-p item)
           (when-let* ((dt (eas-intersect--item kind item px py reach))

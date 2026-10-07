@@ -238,14 +238,32 @@ is VIEW's JSON pointer, for findings."
                                                               :values (car cell)))))
       out)))
 
+(defvar eas-resolve--stripped nil
+  "Large array -> its stripped form, during one `eas-resolve--strip'.
+A grid of maps holds one map's data in every cell: it is walked once.")
+
 (defun eas-resolve--strip (node)
-  "Return NODE without x-eas keys, recursively."
+  "Return NODE without x-eas keys, recursively.
+A part with none is returned as it is, not copied: data arrays stay the
+objects their source made (`eas-resolve-hash' encodes each once)."
   (cond
-   ((vectorp node) (vconcat (mapcar #'eas-resolve--strip node)))
+   ((vectorp node)
+    (let ((hit (and eas-resolve--stripped (gethash node eas-resolve--stripped))))
+      (or hit
+          (let* ((out (mapcar #'eas-resolve--strip node))
+                 (same (let ((i -1)) (cl-loop for x in out always (eq x (aref node (setq i (1+ i)))))))
+                 (value (if same node (vconcat out))))
+            (when (and eas-resolve--stripped (>= (length node) 64))
+              (puthash node value eas-resolve--stripped))
+            value))))
    ((and (eas-object-p node) node)
-    (cl-loop for (key value) on node by #'cddr
-             unless (string-prefix-p ":x-eas" (symbol-name key))
-             append (list key (eas-resolve--strip value))))
+    (let ((same t) out)
+      (cl-loop for (key value) on node by #'cddr
+               do (if (string-prefix-p ":x-eas" (symbol-name key)) (setq same nil)
+                    (let ((v (eas-resolve--strip value)))
+                      (unless (eq v value) (setq same nil))
+                      (setq out (cons v (cons key out))))))
+      (if same node (nreverse out))))
    (t node)))
 
 (defvar eas-facet-keep)
@@ -258,7 +276,7 @@ VALUES come from `eas-template-bind'; nil for a plain spec."
          ;; Font files register here, so pure Vega-Lite keeps only family names.
          (_ (eas-font-file-register-spec body))
          (body (eas-resolve--materialize body nil ""))
-         (body (eas-resolve--strip body)))
+         (body (let ((eas-resolve--stripped (make-hash-table :test 'eq))) (eas-resolve--strip body))))
     (if (plist-get body :$schema)
         body
       (cons :$schema (cons eas-spec-schema-url body)))))
@@ -273,9 +291,59 @@ files are found beside the template's file."
     (eas-resolve-spec (plist-get template :spec)
                         (eas-template-bind template bindings))))
 
+(defconst eas-resolve--hash-min 64
+  "Arrays at least this long are encoded once for `eas-resolve-hash'.")
+
+(defvar eas-resolve--hash-pieces (make-hash-table :test 'eq :weakness 'key)
+  "Array -> its canonical JSON as UTF-8 bytes, for `eas-resolve-hash'.
+Data arrays (a map's features, a file's rows) are shared between
+resolves and never changed in place, so each is encoded once.")
+
+(defvar eas-resolve--hash-token
+  (format "eas-resolve-piece-%x%x" (random most-positive-fixnum) (random most-positive-fixnum))
+  "Prefix of the strings that stand for encoded arrays in a hash frame.")
+
 (defun eas-resolve-hash (resolved)
-  "Return the content hash of the RESOLVED spec."
-  (eas-content-hash resolved))
+  "Return the content hash of the RESOLVED spec.
+The same as `eas-content-hash' of it: sha256 of its canonical compact
+JSON.  Each large array is encoded once and spliced in wherever it
+occurs: a grid of maps shares one map's data between its cells, and a
+spec whose data was hashed before costs only its small rest (eas-b2s.8)."
+  (let* ((pieces nil) (n 0)
+         (frame (cl-labels
+                    ((walk (v)
+                       (cond
+                        ((vectorp v)
+                         (if (< (length v) eas-resolve--hash-min)
+                             (vconcat (mapcar #'walk v))
+                           (push (with-memoization (gethash v eas-resolve--hash-pieces)
+                                   (encode-coding-string (eas-json-encode (eas-json-canonical v)) 'utf-8))
+                                 pieces)
+                           (format "%s-%d" eas-resolve--hash-token (prog1 n (setq n (1+ n))))))
+                        ((and (consp v) (keywordp (car v)))
+                         (let (pairs)
+                           (while v
+                             (push (cons (car v) (walk (cadr v))) pairs)
+                             (setq v (cddr v)))
+                           (cl-loop for (k . x) in (sort pairs (lambda (a b)
+                                                                 (string< (symbol-name (car a))
+                                                                          (symbol-name (car b)))))
+                                    append (list k x))))
+                        (t v))))
+                  (walk resolved)))
+         (bytes (encode-coding-string (eas-json-encode frame) 'utf-8))
+         (pieces (vconcat (nreverse pieces)))
+         (marker (encode-coding-string (concat "\"" eas-resolve--hash-token "-") 'utf-8))
+         (out nil) (pos 0))
+    ;; Tokens appear in the order they were made: splice each piece in.
+    (while (when-let* ((at (string-search marker bytes pos)))
+             (let* ((num (+ at (length marker)))
+                    (close (string-search "\"" bytes num)))
+               (push (substring bytes pos at) out)
+               (push (aref pieces (string-to-number (substring bytes num close))) out)
+               (setq pos (1+ close)))))
+    (push (substring bytes pos) out)
+    (concat "sha256:" (secure-hash 'sha256 (apply #'concat (nreverse out))))))
 
 (provide 'eas-resolve)
 ;;; eas-resolve.el ends here

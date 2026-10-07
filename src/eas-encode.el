@@ -192,9 +192,13 @@ with the least or greatest argument, as Vega-Lite's argmin_ARG.FIELD."
   "Return the definition in force for ROW: a matching condition or DEF.
 ENV holds param values for test predicates."
   (let ((conds (plist-get def :condition)))
-    (or (seq-find (lambda (c) (eas-encode--condition-holds c row env))
-                  (cond ((vectorp conds) conds) (conds (list conds))))
-        def)))
+    ;; Once per row and channel: no closure, no list (eas-b2s.8).
+    (cond ((null conds) def)
+          ((vectorp conds)
+           (or (cl-loop for c across conds thereis (and (eas-encode--condition-holds c row env) c))
+               def))
+          ((eas-encode--condition-holds conds row env) conds)
+          (t def))))
 
 (defun eas-encode-data-def (def)
   "DEF, or for a value DEF its first field condition (which owns the scale)."

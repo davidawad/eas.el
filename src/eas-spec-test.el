@@ -137,6 +137,26 @@
     (should (equal (eas-resolve-hash a) (eas-resolve-hash b)))
     (should (string-prefix-p "sha256:" (eas-resolve-hash a)))))
 
+(ert-deftest eas-resolve-hash-is-the-content-hash ()
+  "Spliced, memoized array pieces hash as the whole canonical JSON does.
+Large and small arrays, nested objects, non-ASCII text, and a second
+hash of the same arrays (from the piece cache) after they are reused."
+  (let* ((rows (vconcat (cl-loop for i below 150
+                                 collect (list :z i :a (format "r\u00e9%d" i) :m (vector i (* 0.5 i))))))
+         (big (vconcat (number-sequence 0 99)))
+         (spec (list :mark "bar" :title "caf\u00e9 \u2014 \u00fcber"
+                     :data (list :values rows)
+                     :layer (vector (list :encoding (list :y (list :field "z") :x (list :field "a")))
+                                    (list :data (list :values big) :mark "tick"))
+                     :x-eas (list :nested (vector big big)))))
+    (should (equal (eas-resolve-hash spec) (eas-content-hash spec)))
+    (should (equal (eas-resolve-hash spec) (eas-content-hash spec)))
+    (let ((other (plist-put (copy-sequence spec) :mark "point")))
+      (should (equal (eas-resolve-hash other) (eas-content-hash other)))
+      (should-not (equal (eas-resolve-hash other) (eas-resolve-hash spec))))
+    (let ((tpl (eas-resolve "county-unemployment" (eas-template-example "county-unemployment"))))
+      (should (equal (eas-resolve-hash tpl) (eas-content-hash tpl))))))
+
 (ert-deftest eas-resolve-materializes-domain-transforms ()
   (let ((eas-transforms nil))
     (eas-register-transform

@@ -146,10 +146,28 @@ and the end segments extrapolate."
   "Index of V in discrete SCALE's domain, or nil."
   (seq-position (plist-get scale :domain) v #'equal))
 
+(defvar eas-scale--fns (make-hash-table :test 'eq :weakness 'key)
+  "Scale -> (FIELDS . FUNCTION) made by `eas-scale-fn'.
+A stream keeps its scales across pushes, so a band scale's index is
+built once, not per frame (eas-b2s.8).  FIELDS are the values the
+function read, compared by identity before reuse.")
+
+(defun eas-scale--fn-fields (scale)
+  "Return, as a list, the SCALE values `eas-scale-fn' depends on."
+  (list (plist-get scale :type) (plist-get scale :domain) (plist-get scale :range)
+        (plist-get scale :round) (plist-get scale :start) (plist-get scale :step)
+        (plist-get scale :reverse)))
+
 (defun eas-scale-fn (scale)
   "Return a function mapping data values through SCALE, precomputed.
 Equivalent to `eas-scale-apply' but without per-call dispatch; used
-in compile's per-row loops."
+in compile's per-row loops.  Made once per SCALE object."
+  (let ((hit (gethash scale eas-scale--fns)) (fields (eas-scale--fn-fields scale)))
+    (if (and hit (cl-every #'eq (car hit) fields)) (cdr hit)
+      (cdr (puthash scale (cons fields (eas-scale--fn-1 scale)) eas-scale--fns)))))
+
+(defun eas-scale--fn-1 (scale)
+  "Do `eas-scale-fn' for SCALE."
   (let ((domain (plist-get scale :domain)) (range (plist-get scale :range)))
     (pcase (plist-get scale :type)
       ((and "linear" (guard (> (length domain) 2)))

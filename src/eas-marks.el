@@ -568,7 +568,98 @@ path (eas-marks-path.el); LTTB thins x-ordered runs above MAX-POINTS."
   "Return the scene items for UNIT drawn with SCALES inside BOUNDS.
 METRICS are the layout's."
   (let ((eas-marks--cache (make-hash-table :test 'equal)))
-    (eas-marks--items unit scales bounds metrics)))
+    (or (eas-marks--kept-items unit scales bounds metrics)
+        (eas-marks--items unit scales bounds metrics))))
+
+;;; Items kept across compiles (eas-b2s.8)
+
+;; A full compile rebuilds every item, though a slider step of
+;; pi-monte-carlo leaves the 1000 points of its left panel where they
+;; were.  A per-row unit keeps what each row drew, by its path; the
+;; next compile reuses the item of every row equal to the last one's
+;; when everything else an item reads is equal too.
+
+(defvar eas-marks--kept (make-hash-table :test 'equal)
+  "Unit path -> (INPUTS . PER-ROW): what `eas-marks--kept-items' drew.
+INPUTS is `eas-marks--kept-inputs'; PER-ROW a vector of each row's
+item (or nil) for the rows vector it holds as its first element.")
+
+(defvar eas-marks-kept-max 64 "Unit paths `eas-marks--kept' holds at most.")
+
+(defvar eas-marks--kept-faces nil
+  "The registered font faces `eas-marks--kept' was drawn with.")
+
+(defvar eas-font-file--faces)
+
+(defun eas-marks--param-free-p (value)
+  "Non-nil when VALUE has no {\"param\": ...}: no selection test."
+  (cond ((vectorp value) (cl-every #'eas-marks--param-free-p value))
+        ((and (consp value) (keywordp (car value)))
+         (and (not (plist-member value :param))
+              (cl-loop for (_ x) on value by #'cddr always (eas-marks--param-free-p x))))
+        (t t)))
+
+(defvar eas-marks--kept-texts (make-hash-table :test 'eq :weakness 'key)
+  "Encoding -> (MARK . TEXT) for `eas-marks--kept-text'.")
+
+(defun eas-marks--kept-text (enc mark)
+  "ENC and MARK printed, to find the params they name; nil with a selection.
+Kept per encoding object, which a patched unit keeps."
+  (let ((hit (gethash enc eas-marks--kept-texts)))
+    (if (and hit (eq (car hit) mark)) (cdr hit)
+      (cdr (puthash enc (cons mark (and (eas-marks--param-free-p enc) (eas-marks--param-free-p mark)
+                                        (format "%S" (list enc mark))))
+                    eas-marks--kept-texts)))))
+
+(defun eas-marks--kept-inputs (unit scales bounds metrics)
+  "What UNIT's items read besides its rows, or nil when they read state.
+SCALES BOUNDS METRICS as for `eas-marks-items'.  The params of the
+unit's env that its encoding or mark names are in; a selection test
+reads the view state, so a unit with one keeps nothing."
+  (let* ((enc (plist-get unit :encoding)) (mark (plist-get unit :mark))
+         (text (eas-marks--kept-text enc mark)))
+    (when text
+      (let ((env (plist-get unit :env)))
+        (list enc mark scales bounds metrics
+              (cl-loop for (k v) on env by #'cddr
+                       when (string-match-p (concat "\\_<" (regexp-quote (eas-key-name k)) "\\_>") text)
+                       append (list k v))
+              (plist-get unit :aggregated) (plist-get unit :params) (plist-get unit :scale-keys)
+              eas-time-zone system-time-locale eas-font-family eas-encode-count-title)))))
+
+(defun eas-marks--kept-items (unit scales bounds metrics)
+  "UNIT's items with each row equal to the last compile's drawn as then.
+Return nil (draw afresh) unless UNIT is a per-row mark whose other
+inputs (`eas-marks--kept-inputs') are equal to the last ones.  SCALES
+BOUNDS METRICS as for `eas-marks-items'.  Rows that changed are drawn
+again; what every row drew is kept for the next compile."
+  (let ((path (plist-get unit :path)) row-fn inputs)
+    (when (and (stringp path) (vectorp (plist-get unit :rows))
+               (member (plist-get (plist-get unit :mark) :type)
+                       '("point" "circle" "square" "text" "bar" "rect" "rule" "tick"))
+               (not (and (fboundp 'eas-polar-unit-p) (eas-polar-unit-p unit)))
+               (setq inputs (eas-marks--kept-inputs unit scales bounds metrics))
+               (setq row-fn (eas-marks-row-fn unit scales bounds metrics)))
+      (let ((faces (bound-and-true-p eas-font-file--faces)))
+        (unless (eq faces eas-marks--kept-faces)
+          (clrhash eas-marks--kept)
+          (setq eas-marks--kept-faces faces)))
+      (let* ((rows (plist-get unit :rows)) (n (length rows))
+             (old (gethash path eas-marks--kept))
+             (same (and old (equal (car old) inputs)))
+             (old-rows (and same (aref (cdr old) 0))) (old-items (and same (aref (cdr old) 1)))
+             (m (if same (min n (length old-rows)) 0))
+             (per-row (make-vector n nil)) out)
+        (dotimes (i n)
+          (let* ((row (aref rows i))
+                 (item (if (and (< i m) (equal row (aref old-rows i))) (aref old-items i)
+                         (funcall row-fn row i))))
+            (aset per-row i item)
+            (when item (push item out))))
+        (when (and (null old) (>= (hash-table-count eas-marks--kept) eas-marks-kept-max))
+          (clrhash eas-marks--kept))
+        (puthash path (cons inputs (vector rows per-row)) eas-marks--kept)
+        (vconcat (nreverse out))))))
 
 (defun eas-marks-row-fn (unit scales bounds metrics)
   "Return the function (ROW I) -> item for UNIT, or nil for series.
@@ -578,7 +669,8 @@ Call it inside `eas-marks-with-cache'."
     ((or "point" "circle" "square" "text") (eas-marks--point-row unit scales bounds metrics))
     ((or "bar" "rect") (eas-marks--bar-row unit scales bounds metrics))
     ((or "rule" "tick") (eas-marks--rule-row unit scales bounds))
-    ("image" (eas-marks-image-row unit scales bounds))))
+    ("image" (eas-marks-image-row unit scales bounds))
+    ("geoshape" (eas-geoshape-row-fn unit scales bounds))))
 
 (defmacro eas-marks-with-cache (&rest body)
   "Run BODY with a fresh per-unit accessor cache."
@@ -586,6 +678,7 @@ Call it inside `eas-marks-with-cache'."
 
 (declare-function eas-polar-unit-p "eas-polar")
 (declare-function eas-geoshape-items "eas-geoshape")
+(declare-function eas-geoshape-row-fn "eas-geoshape")
 (declare-function eas-polar-items "eas-polar")
 
 (defun eas-marks--items (unit scales bounds metrics)

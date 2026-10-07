@@ -37,7 +37,7 @@ whatever its type; size does too, except for trails (fc-qx1.41)."
 (defun eas-marks--series-key (unit row &optional defs)
   "The series a ROW of a line/area UNIT belongs to.
 DEFS is UNIT's `eas-marks--series-defs', when already computed."
-  (mapcar (lambda (d) (and d (eas-encode-raw d row))) (or defs (eas-marks--series-defs unit))))
+  (cl-loop for d in (or defs (eas-marks--series-defs unit)) collect (and d (eas-encode-raw d row))))
 
 (defun eas-marks--stack-ranks (rows by domains)
   "Vector of each of ROWS' positions in DOMAINS (lists), one per def in BY."

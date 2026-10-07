@@ -138,6 +138,11 @@
     (if (or (file-readable-p here) (not (boundp 'eas-template--root))) here
       (expand-file-name file eas-template--root))))
 
+(defvar eas-topojson--files (make-hash-table :test 'equal)
+  "(FILE MTIME REST) -> features read from a map file by the adapter.
+As `eas-data-url--cache': every resolve of a template shares the rows,
+so their shapes are projected once (`eas-geoshape--projected').")
+
 (defun eas-topojson--geojson-rows (value)
   "Rows (features) of geojson adapter VALUE; see the commentary."
   (cond
@@ -147,7 +152,11 @@
     (let ((file (eas-topojson--file (plist-get value :url))))
       (unless (file-readable-p file)
         (eas-shape-invalid (format "No readable map file %s" file) nil "url"))
-      (eas-topojson--geojson-rows (append (list :topology (eas-json-read-file file)) (eas--plist-without value :url)))))
+      (let* ((rest (eas--plist-without value :url))
+             (key (list file (file-attribute-modification-time (file-attributes file)) rest)))
+        (or (gethash key eas-topojson--files)
+            (puthash key (eas-topojson--geojson-rows (append (list :topology (eas-json-read-file file)) rest))
+                     eas-topojson--files)))))
    ((plist-get value :topology)
     (let ((top (plist-get value :topology)))
       (if (equal (plist-get top :type) "Topology")

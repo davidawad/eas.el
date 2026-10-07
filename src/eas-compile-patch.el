@@ -254,7 +254,7 @@ Return the plan, nil, or `refused' when new rows moved a scale."
                       fresh))
                    ((eas-patch--mentions (plist-get unit :encoding) changed)
                     (if (or (eas-patch--positional-p unit changed)
-                            (member (plist-get (plist-get unit :mark) :type) '("line" "area" "trail" "geoshape"))
+                            (member (plist-get (plist-get unit :mark) :type) '("line" "area" "trail"))
                             (null (plist-get unit :items))
                             ;; A test condition may read any param: rebuild every item.
                             (seq-some (lambda (d) (let ((c (plist-get d :condition)))

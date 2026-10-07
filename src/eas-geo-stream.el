@@ -293,6 +293,26 @@ Each closed ring's signed area summed, then made positive."
 (defun eas-geo-path-centroid (result)
   "Planar centroid [X Y] of a path RESULT, d3's path.centroid; nil if empty.
 Rings weigh by area, else lines by length, else points count."
+  (or (eas-geo--ring-centroid result) (eas-geo--path-centroid-1 result)))
+
+(defun eas-geo--ring-centroid (result)
+  "Area-weighted centroid [X Y] of path RESULT's rings, or nil.
+The sums `eas-geo--path-centroid-1' makes for rings, in its order, so a
+map's shapes skip measuring their lines (eas-b2s.8)."
+  (let ((x2 0.0) (y2 0.0) (z2 0.0))
+    (dolist (p (plist-get result :paths))
+      (when (car p)
+        (let* ((flat (cdr p)) (n (/ (length flat) 2)))
+          (dotimes (i n)
+            (let* ((j (mod (1+ i) n))
+                   (ax (aref flat (* 2 i))) (ay (aref flat (1+ (* 2 i))))
+                   (bx (aref flat (* 2 j))) (by (aref flat (1+ (* 2 j))))
+                   (z (- (* ay bx) (* ax by))))
+              (setq x2 (+ x2 (* z (+ ax bx))) y2 (+ y2 (* z (+ ay by))) z2 (+ z2 (* 3 z))))))))
+    (and (/= z2 0) (vector (/ x2 z2) (/ y2 z2)))))
+
+(defun eas-geo--path-centroid-1 (result)
+  "Do `eas-geo-path-centroid' of RESULT, every sum."
   (let ((x2 0.0) (y2 0.0) (z2 0.0) (x1 0.0) (y1 0.0) (z1 0.0) (x0 0.0) (y0 0.0) (z0 0))
     (dolist (p (plist-get result :paths))
       (let* ((flat (cdr p)) (n (/ (length flat) 2)))

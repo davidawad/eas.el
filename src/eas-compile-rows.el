@@ -73,7 +73,9 @@ layout's."
   (let ((rows (plist-get unit :rows)) (old-rows (plist-get old :rows))
         (items (plist-get old :items)))
     (when (and (vectorp items) (= (length items) (length old-rows) (length rows))
-               (not (eas-polar-unit-p unit)))
+               (not (eas-polar-unit-p unit))
+               ;; A pushed map may fit its projection anew: build its shapes.
+               (not (equal (plist-get (plist-get unit :mark) :type) "geoshape")))
       (eas-marks-with-cache
        (when-let* ((row-fn (eas-marks-row-fn
                             unit (eas-independent-unit-scales group unit)

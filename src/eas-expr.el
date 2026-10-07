@@ -377,7 +377,7 @@ The caller binds `eas-expr--random-calls', as `eas-expr-evaluate' does."
     (`(:lit ,v) (lambda (_d _e) v))
     (`(:array ,items)
      (let ((fs (mapcar #'eas-expr-compile items)))
-       (lambda (d e) (vconcat (mapcar (lambda (f) (funcall f d e)) fs)))))
+       (lambda (d e) (vconcat (cl-loop for f in fs collect (funcall f d e))))))
     (`(:object ,pairs)
      (let ((fs (mapcar (lambda (p) (cons (eas-key (car p)) (eas-expr-compile (cdr p)))) pairs)))
        (lambda (d e) (cl-loop for (k . f) in fs append (list k (funcall f d e))))))
@@ -404,9 +404,17 @@ The caller binds `eas-expr--random-calls', as `eas-expr-evaluate' does."
     (`(:binary ,op ,a ,b) (eas-expr--compile-binary op (eas-expr-compile a) (eas-expr-compile b)))
     (`(:call "random" ,_) (lambda (d _e) (eas-expr--random d)))
     (`(:call ,name ,args)
-     (let ((fs (mapcar #'eas-expr-compile args)))
-       (lambda (d e) (apply (cdr (assoc name eas-expr-functions))
-                            (mapcar (lambda (f) (funcall f d e)) fs)))))
+     ;; One, two or more arguments: no closure or list per call (eas-b2s.8).
+     (let ((fs (mapcar #'eas-expr-compile args))
+           (fn (cdr (assoc name eas-expr-functions))))
+       (if (null fn)
+           (lambda (d e) (apply (cdr (assoc name eas-expr-functions))
+                                (cl-loop for f in fs collect (funcall f d e))))
+         (pcase (length fs)
+           (1 (let ((f1 (car fs))) (lambda (d e) (funcall fn (funcall f1 d e)))))
+           (2 (let ((f1 (car fs)) (f2 (cadr fs)))
+                (lambda (d e) (let ((x (funcall f1 d e))) (funcall fn x (funcall f2 d e))))))
+           (_ (lambda (d e) (apply fn (cl-loop for f in fs collect (funcall f d e)))))))))
     (_ (lambda (_d _e) nil))))
 
 (defun eas-expr--date-part (key &optional offset)
@@ -425,7 +433,9 @@ The caller binds `eas-expr--random-calls', as `eas-expr-evaluate' does."
 
 (defun eas-expr--num-fn (fn)
   "Wrap numeric FN so its arguments are coerced to numbers."
-  (lambda (&rest args) (apply fn (mapcar #'eas-expr--number args))))
+  (lambda (&rest args)
+    (if (and args (null (cdr args))) (funcall fn (eas-expr--number (car args)))
+      (apply fn (mapcar #'eas-expr--number args)))))
 
 (defconst eas-expr-functions
   `(("abs" . ,(eas-expr--num-fn #'abs))

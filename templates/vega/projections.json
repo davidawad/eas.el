@@ -24,8 +24,9 @@
     "export": {"vega-lite": false, "reason": "19 of its 24 projections (airy, armadillo, ...) are d3-geo-projection's; Vega-Lite only knows d3-geo's own, so bin/chart cannot export it"},
     "vega": {
       "status": "partial",
-      "note": "all 24 gallery projections draw natively and their country and sphere paths equal d3-geo-projection's to 1e-9 (peirceQuincuncial's graticule meridians resample differently near its poles); against ref/projections.png, the Vega site's 360 px thumbnail, the 940x1740 render scaled to it differs by ratio 0.0747 (resvg); Vega clips the graticule and countries to each projection's sphere outline, which Vega-Lite cannot express, so the interrupted projections draw the parts of countries their cuts split across the gaps. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0791.",
-      "ratio": 0.0791
+      "note": "all 24 gallery projections draw natively and their country and sphere paths equal d3-geo-projection's to 1e-9 (peirceQuincuncial's graticule meridians resample differently near its poles). ref/projections.png is the Vega site's 360 px thumbnail, not a vg2png render: the 940x1740 render scaled to 360 px differs from it by resampling along every coastline, 0.0017-0.0046 of the pixels per panel, about 0.065 in all. The rest (about 0.01) is Vega's mark clip {\"sphere\": \"projection\"}, which Vega-Lite cannot express and eas has no extension for: armadillo, berghaus, collignon, the three interrupted projections and polyhedralButterfly draw the graticule and the parts of countries their cuts split across the gaps. Against the thumbnail, re-measured in eas-7r1.12b with rsvg-convert and Arimo: ratio 0.0791.",
+      "ratio": 0.0791,
+      "threshold": 0.09
     }
   },
   "title": {"x-eas:slot": "title"},

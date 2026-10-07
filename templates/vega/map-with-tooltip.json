@@ -26,9 +26,10 @@
     },
     "example": "../examples/vega/map-with-tooltip.data.json",
     "vega": {
-      "status": "partial",
-      "note": "the map and its legend match ref/map-with-tooltip.png: ratio 0.0156 at 960x530 (resvg), mercator at scale 900 centred on [-95, 38]; Vega's 30 px top padding is a 530 px view with the map 30 px lower; the tooltip is Vega-Lite's own (the county's key and rate): Vega's custom tooltip, a rounded group following the pointer that redraws the hovered county under a second projection centred on its inverted centroid, has no Vega-Lite form. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0073.",
-      "ratio": 0.0073
+      "status": "pass",
+      "note": "the map and its legend match ref/map-with-tooltip.png: mercator at scale 900 centred on [-95, 38]; Vega's 30 px top padding is a 530 px view with the map 30 px lower; the legend takes Vega's own look (bold black 11 px title, black 10 px labels, which the bin/chart theme otherwise greys and lightens). The tooltip is Vega-Lite's own (the county's key and rate): Vega's custom tooltip, a rounded group following the pointer that redraws the hovered county under a second projection centred on its inverted centroid, has no Vega-Lite form; it only draws on hover, so the static reference does not show it. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12b with rsvg-convert and Arimo: ratio 0.0008 (was 0.0073 with the theme's legend look); the rest is glyph rasterization of the legend text.",
+      "ratio": 0.0008,
+      "threshold": 0.01
     }
   },
   "title": {"x-eas:slot": "title"},
@@ -37,6 +38,8 @@
   "height": {"x-eas:slot": "height"},
   "padding": 0,
   "background": "white",
+  "config": {"font": "sans-serif",
+             "legend": {"labelColor": "#000", "labelFontSize": 10, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"}},
   "data": {"name": "shapes"},
   "transform": [
     {"lookup": {"x-eas:slot": "shape_key"},

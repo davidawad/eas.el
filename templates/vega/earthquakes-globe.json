@@ -20,13 +20,17 @@
       "description": {"type": "string", "default": "Rotating globe animation depicting earthquake locations. Background - pseudorandomly distributed 'stars'.", "doc": "the takeaway; alt text and table-view fallback"}
     },
     "example": "../examples/vega/earthquakes-globe.data.json",
+    "timer": {"interval": 100},
+    "on": [{"events": "timer", "param": "angle", "update": "paused ? angle : (angle <= -180 ? 180 : angle - 1)"},
+           {"events": ["key:space", "key:p"], "param": "paused", "update": "!paused"}],
     "vega": {
       "status": "partial",
-      "note": "the globe (orthographic, #000022 sphere, translucent white countries), the magnitude rings (stroke colored on Vega's 8-color linear scale, radius circle_size * sqrt(exp(mag) / 100), width 1 + 0.15 r, far side filtered as the circle clip hides it), the title and subtitle, and the one symbol legend of magnitudes 1-9 sized and colored as the rings (a size and a color of one field merge, as in Vega-Lite) match ref/earthquakes-globe.png (ratio 0.0232, resvg; canvas 626x658 against 625x658); not reproduced: the stars' positions (random in Vega; x random and y a hash of it here, as eas's random() repeats within a row), the sphere's gradient stroke (its midpoint color), the legend's row spacing by symbol size, the Tahoma font, and the timer rotation and click-to-pause (the angle is a range input). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0170.",
-      "ratio": 0.017
+      "note": "the globe (orthographic, #000022 sphere, translucent white countries), the magnitude rings (stroke colored on Vega's 8-color linear scale, radius circle_size * sqrt(exp(mag) / 100), width 1 + 0.15 r, far side filtered as the circle clip hides it), the Tahoma title, subtitle and legend title (sans-serif where Tahoma is missing), the one symbol legend of magnitudes 1-9 sized and colored as the rings (a size and a color of one field merge, as in Vega-Lite) and the rotation (x-eas.timer every 100 ms turns the globe a degree, 180 after -180, as Vega's timer signal) match. Not reproduced: the stars' positions (random() in Vega), the sphere's gradient stroke (eas paints gradients on fills only; drawn in its midpoint color, invisible at opacity 0.3), click-to-pause (space or p pauses: x-eas.on has no click event), and Vega's legend layout, which is a Vega quirk: its symbol size and stroke width encodes leave the entries' symbol and label positions NaN, so canvas draws every symbol and label at its entry's origin and stacks rows on symbol bounds grown by the miter limit (r + 2 strokeWidth). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12b with rsvg-convert and Arimo: ratio 0.0170, of which the Tahoma title and subtitle drawn in Arimo are 0.009, the legend 0.006, the stars 0.002 and the globe 0.0017.",
+      "ratio": 0.017,
+      "threshold": 0.03
     }
   },
-  "title": {"text": {"x-eas:slot": "title"}, "subtitle": {"x-eas:slot": "subtitle"}, "anchor": "start",
+  "title": {"text": {"x-eas:slot": "title"}, "subtitle": {"x-eas:slot": "subtitle"}, "anchor": "start", "font": "Tahoma, sans-serif", "subtitleFont": "Tahoma, sans-serif",
             "color": "#dddddd", "fontSize": 18, "fontWeight": "normal", "subtitleColor": "#888888", "subtitlePadding": 5},
   "description": {"x-eas:slot": "description"},
   "width": {"x-eas:slot": "size"},
@@ -36,7 +40,8 @@
   "config": {"legend": {"titleColor": "#dddddd", "labelColor": "#dddddd"}},
   "params": [
     {"name": "angle", "value": {"x-eas:slot": "angle"}, "bind": {"input": "range", "min": -180, "max": 180, "step": 1}},
-    {"name": "circleSize", "value": {"x-eas:slot": "circle_size"}}
+    {"name": "circleSize", "value": {"x-eas:slot": "circle_size"}},
+    {"name": "paused", "value": false}
   ],
   "layer": [
     {
@@ -86,7 +91,7 @@
             "stroke": {"field": "Magnitude", "type": "quantitative",
                        "scale": {"domain": [1.9, 2.9, 3.9, 4.9, 5.9, 6.9, 7.9, 8.9],
                                  "range": ["#afeeee", "#98fb98", "#adff2f", "#ffff00", "#ffd700", "#ff8c00", "#ff0000", "#800000"]},
-                       "legend": {"orient": "left", "offset": -50, "title": "Magnitude", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                       "legend": {"orient": "left", "offset": -50, "title": "Magnitude", "titleFont": "Tahoma, sans-serif", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9],
                                   "titleFontSize": 14, "labelFontSize": 13}},
             "size": {"field": "Magnitude", "type": "quantitative",
                      "scale": {"type": "linear", "domain": [1, 2, 3, 4, 5, 6, 7, 8, 9],

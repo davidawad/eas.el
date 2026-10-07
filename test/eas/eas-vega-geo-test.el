@@ -23,7 +23,7 @@
 (defconst eas-vega-geo-templates
   '(("world-map" . "pass") ("county-unemployment" . "pass") ("earthquakes" . "pass")
     ("projections" . "partial") ("zoomable-world-map" . "pass") ("distortion-comparison" . "pass")
-    ("map-with-tooltip" . "partial") ("earthquakes-globe" . "partial"))
+    ("map-with-tooltip" . "pass") ("earthquakes-globe" . "partial"))
   "The map templates of templates/vega/ and the status each records.")
 
 (defun eas-vega-geo-template (name)
@@ -332,6 +332,24 @@ a hole, a resampled meridian, the sphere and a point."
     (let ((m (car (eas-vega-geo-marks (eas-view-scene view) "geoshape"))))
       (should (= (plist-get (plist-get (plist-get m :geo) :resolved) :scale) 3000)))))
 
+(ert-deftest eas-vega-geo-globe-rotates-and-pauses ()
+  "The globe turns a degree a tick (180 follows -180); space pauses it."
+  (let* ((tpl (eas-vega-geo-template "earthquakes-globe"))
+         (eas-views (make-hash-table :test 'equal)) (eas-plays (make-hash-table :test 'equal))
+         (view (let ((default-directory eas-test-root))
+                 (eas-view-open (plist-get tpl :name) :bindings (eas-template-read-bindings (eas-template-example-file tpl)))))
+         (angle (lambda () (plist-get (eas-compile--env (eas-view-spec view) (eas-view-state view)) :angle))))
+    (eas-play-tick view 100.0)
+    (eas-play-tick view 200.0)
+    (should (= (funcall angle) -2))
+    (eas-play-key view "space")
+    (eas-play-tick view 300.0)
+    (should (= (funcall angle) -2))
+    (eas-play-key view "space")
+    (eas-dispatch view '(:type "param" :param "angle" :value -180))
+    (eas-play-tick view 400.0)
+    (should (= (funcall angle) 180))))
+
 (ert-deftest eas-vega-geo-choropleth-joins-and-quantizes ()
   (let* ((tpl (eas-vega-geo-template "county-unemployment"))
          (shapes (vector (append '(:type "Feature" :id 1) (cddr (cddr eas-vega-geo--square)))
@@ -384,13 +402,14 @@ Twelve countries; for the choropleths, the shapes of a few counties."
 
 (defconst eas-vega-geo-ratios
   '(("world-map" . 0.03) ("county-unemployment" . 0.03) ("earthquakes" . 0.03) ("zoomable-world-map" . 0.03)
-    ("distortion-comparison" . 0.03) ("map-with-tooltip" . 0.03) ("earthquakes-globe" . 0.05) ("projections" . 0.09))
+    ("distortion-comparison" . 0.03) ("map-with-tooltip" . 0.01) ("earthquakes-globe" . 0.03) ("projections" . 0.09))
   "Pixel ratio each template's render stays within against its reference.
 Measured against the vg2png (node-canvas) references with rsvg-convert
 and Arimo (eas-7r1.12): world-map 0.0000, county-unemployment 0.0078,
 earthquakes 0.0067, zoomable-world-map 0.0000, distortion-comparison
-0.0000, map-with-tooltip 0.0073, earthquakes-globe 0.0170 (partial) and
-projections 0.0791 against its 360 px thumbnail (partial).")
+0.0000, earthquakes-globe 0.0170 (partial) and projections 0.0791
+against its 360 px thumbnail (partial); map-with-tooltip 0.0008 with
+Vega's legend look (eas-7r1.12b; 0.0073 before).")
 
 (ert-deftest eas-vega-geo-templates-match-their-references ()
   "Each map template against test/vega-examples/ref/NAME.png (needs rsvg-convert)."

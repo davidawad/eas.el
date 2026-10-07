@@ -164,7 +164,7 @@ in compile's per-row loops."
                     (let ((v (if (and time (not (numberp v))) (eas-time-parse v) v)))
                       (and (numberp v) (if (= d0 d1) mid (+ r0 (* k (- v d0)))))))))
          (if (eq (plist-get scale :round) t)
-             (lambda (v) (let ((p (funcall fn v))) (and p (float (round p)))))
+             (lambda (v) (let ((p (funcall fn v))) (and p (float (floor (+ p 0.5))))))
            fn)))
       ((or "band" "point" "ordinal")
        (let ((index (make-hash-table :test 'equal)) (i 0))
@@ -182,10 +182,11 @@ in compile's per-row loops."
 
 (defun eas-scale-apply (scale value)
   "Map data VALUE through SCALE; nil when VALUE has no position.
-A continuous SCALE with :round t snaps positions to whole pixels."
+A continuous SCALE with :round t snaps positions to whole pixels, half
+up as d3's interpolateRound."
   (if (and (eq (plist-get scale :round) t)
            (member (plist-get scale :type) '("linear" "log" "sqrt" "pow" "time" "utc")))
-      (let ((p (eas-scale--apply scale value))) (if (numberp p) (float (round p)) p))
+      (let ((p (eas-scale--apply scale value))) (if (numberp p) (float (floor (+ p 0.5))) p))
     (eas-scale--apply scale value)))
 
 (defun eas-scale--apply (scale value)

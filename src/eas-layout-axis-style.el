@@ -9,7 +9,8 @@
 ;; override tick, label and title geometry for that axis alone (tickSize,
 ;; labelPadding, labelAlign, labelBaseline, labelOffset, titlePadding), rewrite each
 ;; label with labelExpr (datum.value and datum.label; an array result is
-;; a multi-line label) and give ticks and grid lines conditional dashes:
+;; a multi-line label) and give ticks and grid lines conditional dashes
+;; (and grid lines a conditional gridColor, the same way):
 ;;
 ;;   "gridDash": {"condition": {"test": {"field": "value", "timeUnit": "month",
 ;;                                       "equal": 1}, "value": []},
@@ -55,11 +56,18 @@
       (plist-get (or hit def) :value))))
 
 (defun eas-layout-axis-style-tick (axis value label)
-  "Return per-tick properties of AXIS for VALUE: :tick-dash and :grid-dash.
-LABEL is the tick's label, for conditions."
-  (cl-loop for (key . model) in '((:tickDash . :tick-dash) (:gridDash . :grid-dash))
-           for v = (and (plist-member axis key) (eas-layout-axis-style--value (plist-get axis key) value label))
-           when (and (vectorp v) (> (length v) 0)) append (list model v)))
+  "Return per-tick properties of AXIS for VALUE.
+These are :tick-dash, :grid-dash and, for a conditional gridColor,
+:grid-color.  LABEL is the tick's label, for conditions."
+  (append
+   (cl-loop for (key . model) in '((:tickDash . :tick-dash) (:gridDash . :grid-dash))
+            for v = (and (plist-member axis key) (eas-layout-axis-style--value (plist-get axis key) value label))
+            when (and (vectorp v) (> (length v) 0)) append (list model v))
+   ;; A plain gridColor is axis style; a conditional one picks per tick.
+   (let ((gc (plist-get axis :gridColor)))
+     (when (and (consp gc) (keywordp (car gc)))
+       (let ((v (eas-layout-axis-style--value gc value label)))
+         (when (stringp v) (list :grid-color v)))))))
 
 (provide 'eas-layout-axis-style)
 ;;; eas-layout-axis-style.el ends here

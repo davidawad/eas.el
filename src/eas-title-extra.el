@@ -25,6 +25,8 @@
 
 (declare-function eas-title--object "eas-title")
 (declare-function eas-title--line-height "eas-title")
+(declare-function eas-title--get "eas-title")
+(declare-function eas-title-lines "eas-title")
 (declare-function eas-title-style "eas-title")
 
 (defconst eas-title-extra-subtitle-padding 3 "Vega's default title.subtitlePadding.")
@@ -53,9 +55,30 @@ METRICS measures the subtitle."
   (let ((lines (eas-title-extra-subtitle-lines spec)))
     (cond ((null lines) 0)
           ((eas-layout-text-p metrics) (* (length lines) (plist-get metrics :chart-title-size)))
-          (t (let ((size (eas-title-extra--size spec metrics)))
-               (+ (eas-title-extra--get spec metrics :subtitlePadding eas-title-extra-subtitle-padding)
-                  (eas-title--line-height size) (* (1- (length lines)) (+ size 2))))))))
+          (t (let* ((size (eas-title-extra--size spec metrics))
+                    (title (eas-title--get spec metrics :fontSize :chart-title-size))
+                    (n (length (eas-title-lines spec))))
+               ;; Vega's room is the union of the title's bounds and the
+               ;; subtitle's, which sits the title's bounds height plus
+               ;; subtitlePadding below it; less the title's own room.
+               (- (+ (eas-title-extra--bounds-height title n)
+                     (eas-title-extra-subtitle-padding spec metrics)
+                     (eas-title-extra--bounds-top size)
+                     (eas-title-extra--bounds-height size (length lines)))
+                  (eas-title-extra--bounds-top title)
+                  (eas-title--line-height title) (* (1- n) (+ title 2))))))))
+
+(defun eas-title-extra-subtitle-padding (spec metrics)
+  "SPEC's subtitlePadding under METRICS (config.title), default 3."
+  (eas-title-extra--get spec metrics :subtitlePadding eas-title-extra-subtitle-padding))
+
+(defun eas-title-extra--bounds-top (size)
+  "Top of Vega's bounds of top-baseline text of font SIZE, from its y."
+  (- (eas-layout--round (* 0.79 size)) (eas-layout--round (* 0.8 size))))
+
+(defun eas-title-extra--bounds-height (size n)
+  "Height of Vega's bounds of N lines of font SIZE, lines size + 2 apart."
+  (+ size (* (1- n) (+ size 2))))
 
 (defun eas-title-extra-apply (title spec metrics)
   "Scene TITLE of SPEC with its dx/dy applied and its :subtitle placed.
@@ -79,8 +102,8 @@ METRICS gives the config; under text METRICS dx/dy do not apply."
                         (append
                          (list :text (string-join lines " ") :x x :align (plist-get title :align) :baseline "top"
                                :y (if text (+ y (* n size))
-                                    (+ y (eas-title--line-height size) (* (1- n) (+ size 2))
-                                       (eas-title-extra--get spec metrics :subtitlePadding eas-title-extra-subtitle-padding)))
+                                    (+ y (eas-title-extra--bounds-height size n)
+                                       (eas-title-extra-subtitle-padding spec metrics)))
                                :fontSize (if text size sub)
                                :fontWeight (eas-title-extra--get spec metrics :subtitleFontWeight "normal")
                                :color (eas-title-extra--get spec metrics :subtitleColor "black"))

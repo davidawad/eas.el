@@ -304,6 +304,12 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
   "SVG font-family for an axis or legend FONT property, or nil."
   (and (stringp font) (eas-svg--font font)))
 
+(defun eas-svg-frame-offset (frame view)
+  "Vega's group stroke offset for a view FRAME under config VIEW.
+Half a pixel for a stroke about 1 px wide, so it lands on whole pixels."
+  (let ((sw (or (plist-get view :strokeWidth) 1)))
+    (if (and (stringp (plist-get frame :stroke)) (numberp sw) (< 0.5 sw 1.5)) (- 0.5 (abs (- sw 1))) 0)))
+
 (defun eas-svg--axis (axis theme)
   "SVG nodes for placed AXIS under THEME."
   (let* ((horizontal (member (plist-get axis :orient) '("bottom" "top")))
@@ -314,7 +320,8 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
          out)
     (seq-doseq (tk (plist-get axis :ticks))
       (when (plist-get tk :grid)
-        (push (eas-svg--line (plist-get tk :grid) (funcall get :gridColor) (or (funcall get :gridWidth) 1)
+        (push (eas-svg--line (plist-get tk :grid) (or (plist-get tk :grid-color) (funcall get :gridColor))
+                               (or (funcall get :gridWidth) 1)
                                (funcall get :gridOpacity) (or (plist-get tk :grid-dash) (eas-svg--dash (funcall get :gridDash)))
                                (funcall get :gridCap))
               out)))
@@ -442,7 +449,8 @@ follows :grid-zindex when it has one."
         ;; The view's background: config.view fill under its frame stroke.
         (let ((frame (plist-get view :frame)) (vc (plist-get (plist-get scene :config) :view)))
           (when (and (not (eq (plist-get view :cell) :false)) (or frame (stringp (plist-get vc :fill))))
-            (push (eas-svg--node 'rect :x (aref b 0) :y (aref b 1) :width (aref b 2) :height (aref b 3)
+            (push (eas-svg--node 'rect :x (+ (aref b 0) (eas-svg-frame-offset frame vc))
+                                 :y (+ (aref b 1) (eas-svg-frame-offset frame vc)) :width (aref b 2) :height (aref b 3)
                                  :fill (let ((f (plist-get vc :fill))) (if (stringp f) f "none"))
                                  :stroke (plist-get frame :stroke) :stroke-width (plist-get vc :strokeWidth)
                                  :stroke-dasharray (and (vectorp (plist-get vc :strokeDash)) (mapconcat #'eas-svg--n (plist-get vc :strokeDash) ","))

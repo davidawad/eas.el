@@ -26,6 +26,7 @@
 (require 'eas-legend-orient)
 (require 'eas-legend-merge)
 (require 'eas-legend-title)
+(require 'eas-legend-pad)
 
 (declare-function eas-expr--string "eas-expr")
 (declare-function eas-legend-row-p "eas-legend-row")
@@ -383,9 +384,13 @@ METRICS are the layout's."
 
 (defun eas-legend-place (legend x y metrics)
   "Return LEGEND with geometry, its top-left corner at X Y.
-METRICS are the layout's."
-  (let ((metrics (eas-legend-style-metrics legend metrics)))
-    (eas-legend-style-looks
+METRICS are the layout's.  Its padding (eas-legend-pad.el) insets the
+content and grows the box."
+  (let* ((pad (eas-legend-pad legend metrics))
+         (x (+ x pad)) (y (+ y pad))
+         (metrics (eas-legend-style-metrics legend metrics)))
+    (eas-legend-pad-box
+     (eas-legend-style-looks
      (cond ((and (eas-layout-text-p metrics) (plist-get legend :wrap-width))
             (eas-legend-text-orient-place-row legend x y metrics))
            ((eas-layout-text-p metrics) (eas-legend--place-text legend x y metrics))
@@ -398,7 +403,8 @@ METRICS are the layout's."
             (eas-legend-row-place legend x y metrics))
            ((eas-legend-orient-row-p legend metrics) (eas-legend-orient-place-row legend x y metrics))
            ((equal (plist-get legend :type) "gradient") (eas-legend--place-gradient legend x y metrics))
-           (t (eas-legend--place-symbols legend x y metrics))))))
+           (t (eas-legend--place-symbols legend x y metrics))))
+     pad)))
 
 (provide 'eas-legend)
 ;;; eas-legend.el ends here

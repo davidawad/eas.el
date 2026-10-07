@@ -74,12 +74,12 @@ When WICK is non-nil, use only the left dot column for a narrower wick."
   "Encode eight-sample MASK with the nearest available block-element glyph."
   (let* ((mask (logand mask 255))
          (best (car eas-glyph-eighth-block-candidates))
-         (distance (logcount (logxor mask (car best)))))
+         (best-distance (logcount (logxor mask (car best)))))
     (dolist (candidate (cdr eas-glyph-eighth-block-candidates))
       (let ((candidate-distance (logcount (logxor mask (car candidate)))))
-        (when (< candidate-distance distance)
+        (when (< candidate-distance best-distance)
           (setq best candidate
-                distance candidate-distance))))
+                best-distance candidate-distance))))
     (cdr best)))
 
 (defun eas-glyph-lower (eighths)

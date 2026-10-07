@@ -194,8 +194,7 @@ Return (:name :ok :features :svg :text :error)."
                                                         eas-chart-rsvg-program))))
                        :null))))
 
-(with-eval-after-load 'eas-describe
-  (add-hook 'eas-describe-functions #'eas-conformance-describe))
+(add-hook 'eas-describe-functions #'eas-conformance-describe)
 
 (require 'eas-vl-gallery)
 (require 'eas-vl-gallery-custom)

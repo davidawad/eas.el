@@ -47,10 +47,10 @@
 
 (defun eas-geo-proj--multiplex (streams)
   "A stream sending everything to each of STREAMS."
-  (cl-flet ((all (slot) (lambda (&rest args) (dolist (s streams) (apply (funcall slot s) args)))))
-    (eas-geo-stream--make :point (all #'eas-geo-stream-point) :line-start (all #'eas-geo-stream-line-start)
-                          :line-end (all #'eas-geo-stream-line-end) :polygon-start (all #'eas-geo-stream-polygon-start)
-                          :polygon-end (all #'eas-geo-stream-polygon-end) :sphere (all #'eas-geo-stream-sphere))))
+  (cl-flet ((to-each (slot) (lambda (&rest args) (dolist (s streams) (apply (funcall slot s) args)))))
+    (eas-geo-stream--make :point (to-each #'eas-geo-stream-point) :line-start (to-each #'eas-geo-stream-line-start)
+                          :line-end (to-each #'eas-geo-stream-line-end) :polygon-start (to-each #'eas-geo-stream-polygon-start)
+                          :polygon-end (to-each #'eas-geo-stream-polygon-end) :sphere (to-each #'eas-geo-stream-sphere))))
 
 (defun eas-geo-proj--berghaus-sphere (sink)
   "Stream d3's five-lobed Berghaus outline (degrees) into SINK."

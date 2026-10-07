@@ -76,8 +76,7 @@
     ("darkgold" . "3c3c3c584b37725e348c7631ae8b2bcfa424ecc31ef9de30fff184ffffff")
     ("darkgreen" . "3a3a3a215748006f4d048942489e4276b340a6c63dd2d836ffeb2cffffaa")
     ("darkmulti" . "3737371f5287197d8c29a86995ce3fffe800ffffff")
-    ("darkred" . "3434347036339e3c38cc4037e75d1eec8620eeab29f0ce32ffeb2c")
-    )
+    ("darkred" . "3434347036339e3c38cc4037e75d1eec8620eeab29f0ce32ffeb2c"))
   "Vega's continuous schemes: (NAME . HEX-RUN), interpolated piecewise in RGB.")
 
 (defconst eas-scheme-discrete
@@ -96,8 +95,7 @@
     ("set2" . "66c2a5fc8d628da0cbe78ac3a6d854ffd92fe5c494b3b3b3")
     ("set3" . "8dd3c7ffffb3bebadafb807280b1d3fdb462b3de69fccde5d9d9d9bc80bdccebc5ffed6f")
     ("tableau10" . "4c78a8f58518e4575672b7b254a24beeca3bb279a2ff9da69d755dbab0ac")
-    ("tableau20" . "4c78a89ecae9f58518ffbf7954a24b88d27ab79a20f2cf5b43989483bcb6e45756ff9d9879706ebab0acd67195fcbfd2b279a2d6a5c99e765fd8b5a5")
-    )
+    ("tableau20" . "4c78a89ecae9f58518ffbf7954a24b88d27ab79a20f2cf5b43989483bcb6e45756ff9d9879706ebab0acd67195fcbfd2b279a2d6a5c99e765fd8b5a5"))
   "Vega's discrete schemes: (NAME . HEX-RUN).")
 
 (defun eas-scheme--colors (run)

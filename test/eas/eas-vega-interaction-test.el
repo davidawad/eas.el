@@ -387,6 +387,15 @@ where Vega does, on the padding's outer edges, with one."
                          :axis)))
     (should (equal (plist-get axis :offset) '(:expr "-(200 + 20)")))))
 
+(ert-deftest eas-vega-interaction-scheme-extent-extrapolates ()
+  "A scheme extent past 1 extends the last segment, clamped, as d3 does."
+  (let ((stops ["#000000" "#808080" "#a0a0a0"]))
+    (should (equal (eas-scheme-interpolate stops 0.75) "#909090"))
+    (should (equal (eas-scheme-interpolate stops 1.5) "#c0c0c0"))
+    (should (equal (eas-scheme-interpolate stops 4.0) "#ffffff"))
+    (should (equal (eas-scheme-interpolate stops -1.0) "#000000")))
+  (should (equal (aref (eas-scheme-ramp '(:name "turbo" :extent [0.05 1.3])) 31) "#450000")))
+
 (ert-deftest eas-vega-interaction-platformer-falls-lands-and-jumps ()
   "Gravity pulls the player onto the terrain; up jumps off it."
   (eas-vega-interaction-with

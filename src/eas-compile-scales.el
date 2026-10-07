@@ -193,9 +193,10 @@ PAIRS are the channel's (UNIT . DEF) pairs."
 
 (defun eas-compile--domain (domain env channel)
   "Resolve an explicit scale DOMAIN on CHANNEL in ENV.
-DOMAIN is an array, or {\"param\": NAME} for the interval selection
-NAME's range (nil while empty)."
-  (cond ((vectorp domain) domain)
+DOMAIN is an array, whose {\"expr\": E} entries are evaluated in
+ENV, or {\"param\": NAME} for the interval selection NAME's range
+\(nil while empty)."
+  (cond ((vectorp domain) (eas-compile--range domain env))
         ((and (consp domain) (plist-get domain :param))
          (let* ((store (plist-get env (eas-key (plist-get domain :param))))
                 (r (and (consp store) (or (plist-get store (eas-key (or (plist-get domain :encoding) (eas-key-name channel))))

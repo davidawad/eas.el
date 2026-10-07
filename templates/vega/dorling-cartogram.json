@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "dorling-cartogram",
-    "namespace": "vega",
+    "aliases": ["vega/dorling-cartogram"],
     "version": "1.0.0",
     "doc": "A Dorling cartogram: one circle per region at its projected centroid, sized and colored by a value, pushed apart by collision and pulled back to the centroid.",
     "slots": {

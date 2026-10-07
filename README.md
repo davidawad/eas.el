@@ -22,8 +22,11 @@ Every one of the 94 examples in the [Vega gallery](https://vega.github.io/vega/e
 is also a template you can bind your own data to: trees, treemaps,
 sunbursts, force-directed graphs, word clouds, contours, maps and
 projections, and interactive ones down to pacman. `(eas-resolve
-"vega/treemap" BINDINGS)`; see `docs/design/vega-gallery-coverage.md`
-for what each covers.
+"treemap" BINDINGS)`; see `docs/design/vega-gallery-coverage.md`
+for what each covers. They take the example's name, except where eas
+already has a template of that name: the gallery's heatmap is
+`hourly-heatmap` and its histogram `rug-histogram`. The old
+`vega/NAME` names still resolve, as deprecated aliases.
 
 ## Screenshots
 
@@ -228,6 +231,9 @@ A template is a chart/v1 spec with declared, typed slots. It lives in
 render as-is. This package ships `line`, `series-line`, `multi`, `area`,
 `bars`, `histogram`, `heatmap`, `sparkline` and the animated
 `air-traffic`. A domain package, such
+
+`bars`, `histogram`, `heatmap` and `sparkline`, plus the gallery
+templates of `templates/vega/` (`treemap`, `sunburst`, ...). A domain package, such
 as financial-chart.el with its candlestick, depth and payoff charts,
 supplies only templates and transforms
 (`eas-register-transform`). It never draws.

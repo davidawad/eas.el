@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "budget-forecasts",
-    "namespace": "vega",
+    "aliases": ["vega/budget-forecasts"],
     "version": "1.0.0",
     "doc": "Forecasts versus reality: one faint line per forecast vintage, the realised values as a bold line, up to a chosen vintage.",
     "slots": {

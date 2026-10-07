@@ -27,6 +27,9 @@
 ;; a namespace: `eas-template-add-directory' with NAMESPACE (or
 ;; "x-eas.namespace" in the template) registers "NAMESPACE/NAME".  A
 ;; bare NAME still finds a namespaced template when only one has it.
+;; A template may list old names in "x-eas.aliases"; they still find
+;; it.  The gallery templates in templates/vega/ register under plain
+;; names (treemap) and keep "vega/NAME" as a deprecated alias.
 
 ;;; Code:
 
@@ -44,14 +47,11 @@
   (list (expand-file-name "templates" eas-template--root)
         (expand-file-name "templates/vega" eas-template--root))
   "Directories whose *.json files are eas templates.
-templates/vega holds the Vega example gallery's templates.")
+templates/vega holds the templates drawn from the Vega example gallery.")
 
-(defvar eas-template-namespaces
-  (list (cons (file-name-as-directory (expand-file-name "templates/vega" eas-template--root))
-              "vega"))
+(defvar eas-template-namespaces nil
   "Alist of (DIRECTORY . NAMESPACE) for `eas-template-directories'.
-A template loaded from DIRECTORY registers as \"NAMESPACE/NAME\".
-The Vega gallery's templates (templates/vega) register as \"vega/NAME\".")
+A template loaded from DIRECTORY registers as \"NAMESPACE/NAME\".")
 
 (defvar eas--templates nil
   "Loaded templates: alist of (NAME . PLIST) with :spec :meta :path.
@@ -168,11 +168,21 @@ A template that fails to load is skipped and recorded in
        (seq-filter (lambda (entry) (string-suffix-p (concat "/" name) (car entry)))
                    eas--templates)))
 
+(defun eas-template--aliased (name)
+  "The template whose x-eas.aliases lists NAME, or nil."
+  (and (stringp name)
+       (cdr (seq-find (lambda (entry)
+                        (seq-contains-p (plist-get (plist-get (cdr entry) :meta) :aliases)
+                                        name))
+                      eas--templates))))
+
 (defun eas-template-get (name)
   "Return the template plist NAME or signal NOT_FOUND.
-A bare NAME finds \"NAMESPACE/NAME\" when exactly one namespace has it."
+A bare NAME finds \"NAMESPACE/NAME\" when exactly one namespace has it.
+NAME may also be an alias a template lists in x-eas.aliases."
   (unless eas--templates (eas-template-reload))
   (or (alist-get name eas--templates nil nil #'equal)
+      (eas-template--aliased name)
       (let ((matches (eas-template--unqualified name)))
         (cond ((= (length matches) 1) (cdar matches))
               (matches
@@ -189,6 +199,7 @@ A bare NAME finds \"NAMESPACE/NAME\" when exactly one namespace has it."
   "Non-nil when a template is registered as NAME, bare or namespaced."
   (and (stringp name)
        (or (member name (eas-template-names))
+           (eas-template--aliased name)
            (= (length (eas-template--unqualified name)) 1))
        t))
 

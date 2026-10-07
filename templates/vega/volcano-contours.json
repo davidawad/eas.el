@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "volcano-contours",
-    "namespace": "vega",
+    "aliases": ["vega/volcano-contours"],
     "version": "1.0.0",
     "doc": "Filled contours of a value grid (an elevation model): marching-squares isocontours at thresholds, colored by threshold.",
     "slots": {

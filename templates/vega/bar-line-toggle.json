@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "bar-line-toggle",
+    "aliases": ["vega/bar-line-toggle"],
     "version": "1.0.0",
     "doc": "The first N points of a series, as labelled columns up to a threshold and as a smooth line beyond it; a slider picks N (Vega gallery: bar-line-toggle).",
     "slots": {

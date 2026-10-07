@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "binned-scatter-plot",
-    "namespace": "vega",
+    "aliases": ["vega/binned-scatter-plot"],
     "version": "1.0.0",
     "doc": "Scatter plot of two numeric fields binned into a grid: one circle per occupied cell, its area the count of rows in it.",
     "slots": {

@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "labeled-scatter-plot",
-    "namespace": "vega",
+    "aliases": ["vega/labeled-scatter-plot"],
     "version": "1.0.0",
     "doc": "Vega gallery labelled scatter plot: points with a quadratic trend line, each labelled where its text overlaps no point, the trend or another label.",
     "slots": {

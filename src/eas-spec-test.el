@@ -175,7 +175,7 @@ Such a template uses a capability Vega-Lite lacks and says why in
 (ert-deftest eas-template-eas-only-exports-say-why ()
   ;; Every eas-only template names its reason; keep the list short.
   (should (equal (seq-filter #'eas-spec-test--eas-only-p (eas-template-names))
-                 '("vega/projections"))))
+                 '("projections"))))
 
 (ert-deftest eas-resolve-output-passes-bin-chart-check ()
   (eas-test-require-chart)

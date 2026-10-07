@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "county-unemployment",
-    "namespace": "vega",
+    "aliases": ["vega/county-unemployment"],
     "version": "1.0.0",
     "doc": "A choropleth: each shape filled by a value joined from a table by key, on a quantized blue scale (albersUsa by default).",
     "slots": {

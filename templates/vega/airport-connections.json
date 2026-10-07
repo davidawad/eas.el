@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "airport-connections",
-    "namespace": "vega",
+    "aliases": ["vega/airport-connections"],
     "version": "1.0.0",
     "doc": "Airports on a map, sized by the flights that leave them; hovering an airport (its Voronoi cell) draws its routes.",
     "slots": {

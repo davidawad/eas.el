@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "serpentine-timeline",
-    "namespace": "vega",
+    "aliases": ["vega/serpentine-timeline"],
     "version": "1.0.0",
     "doc": "A serpentine timeline: a dashed path running back and forth down the page, ticked and labelled along its length, with labelled milestones.",
     "slots": {

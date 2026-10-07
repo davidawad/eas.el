@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "arc-diagram",
-    "namespace": "vega",
+    "aliases": ["vega/arc-diagram"],
     "version": "1.0.0",
     "doc": "An arc diagram: nodes on a line in data order, sized by degree, each link a semicircle above them as wide as its weight.",
     "slots": {

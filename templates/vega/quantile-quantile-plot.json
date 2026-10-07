@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "quantile-quantile-plot",
-    "namespace": "vega",
+    "aliases": ["vega/quantile-quantile-plot"],
     "version": "1.0.0",
     "doc": "Quantile-quantile plots: the quantiles of a numeric field against those of the uniform and of the standard normal distribution.",
     "slots": {

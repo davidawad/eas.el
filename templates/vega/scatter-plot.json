@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "scatter-plot",
-    "namespace": "vega",
+    "aliases": ["vega/scatter-plot"],
     "version": "1.0.0",
     "doc": "Vega gallery scatter plot: hollow circles of y against x, sized by a third field, with a size legend.",
     "slots": {

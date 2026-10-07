@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "beeswarm-plot",
-    "namespace": "vega",
+    "aliases": ["vega/beeswarm-plot"],
     "version": "1.0.0",
     "doc": "A beeswarm: one dot per row, pulled by x and y forces to the center of its category's band and kept apart by collision.",
     "slots": {

@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "u-district-cuisine",
-    "namespace": "vega",
+    "aliases": ["vega/u-district-cuisine"],
     "version": "1.0.0",
     "doc": "A ridgeline of densities: one overlapping kernel-density area per category along a position, coloured by group, under labelled landmarks.",
     "slots": {

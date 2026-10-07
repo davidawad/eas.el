@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "reorderable-matrix",
-    "namespace": "vega",
+    "aliases": ["vega/reorderable-matrix"],
     "version": "1.0.0",
     "doc": "An adjacency matrix: one cell per pair of nodes, filled where a link joins them, colored by the group both share; rows and columns follow the sort field.",
     "slots": {

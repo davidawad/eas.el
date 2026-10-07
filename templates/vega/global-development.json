@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "global-development",
+    "aliases": ["vega/global-development"],
     "version": "1.0.0",
     "doc": "Countries by fertility and life expectancy for one year, picked with a slider; hovering a country draws its path through the years (Vega gallery: global-development).",
     "slots": {

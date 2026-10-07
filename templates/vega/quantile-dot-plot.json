@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "quantile-dot-plot",
-    "namespace": "vega",
+    "aliases": ["vega/quantile-dot-plot"],
     "version": "1.0.0",
     "doc": "Quantile dot plot: n quantiles of an outcome stacked as dots, so k dots read as k/n chance; dots below a threshold turn red and a rule reads off the chance below it.",
     "slots": {

@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "platformer",
+    "aliases": ["vega/platformer"],
     "version": "1.0.0",
     "doc": "A side-scrolling platform game over pixel terrain: the arrows run and jump, z dashes, gravity pulls the player onto the ground (Vega gallery: platformer).",
     "slots": {

@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "overview-plus-detail",
+    "aliases": ["vega/overview-plus-detail"],
     "version": "1.0.0",
     "doc": "A detail area chart over an overview area chart; brushing the overview zooms the detail (Vega gallery: overview-plus-detail).",
     "slots": {

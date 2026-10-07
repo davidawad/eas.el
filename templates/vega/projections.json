@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "projections",
-    "namespace": "vega",
+    "aliases": ["vega/projections"],
     "version": "1.0.0",
     "doc": "A grid of world maps, one per projection type: sphere, graticule and countries, each labelled with its projection's name.",
     "slots": {

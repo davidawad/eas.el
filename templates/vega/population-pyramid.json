@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "population-pyramid",
-    "namespace": "vega",
+    "aliases": ["vega/population-pyramid"],
     "version": "1.0.0",
     "doc": "Vega gallery population pyramid: females and males per age group back to back for one year; a slider picks the year.",
     "slots": {

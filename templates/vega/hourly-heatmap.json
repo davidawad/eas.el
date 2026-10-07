@@ -1,8 +1,8 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
-    "template": "heatmap",
-    "namespace": "vega",
+    "template": "hourly-heatmap",
+    "aliases": ["vega/heatmap"],
     "version": "1.0.0",
     "doc": "A day-by-hour heatmap: one thin cell per day and hour of the day, coloured by a value on a sequential scheme.",
     "slots": {
@@ -33,7 +33,7 @@
         "doc": "the takeaway; alt text and table-view fallback"
       }
     },
-    "example": "../examples/vega/heatmap.data.json",
+    "example": "../examples/vega/hourly-heatmap.data.json",
     "vega": {
       "status": "pass",
       "note": "rect per day and hour with a niced sequential colour domain; day and hour computed from the timestamp. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0158 (was 0.0083 against vg2svg); the comparison no longer emulates vg2svg's text widths.",

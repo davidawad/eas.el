@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "interactive-legend",
+    "aliases": ["vega/interactive-legend"],
     "version": "1.0.0",
     "doc": "A scatter plot of open circles: clicking a legend entry (shift adds more) and brushing along x fade the other points (Vega gallery: interactive-legend).",
     "slots": {

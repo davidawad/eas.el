@@ -41,16 +41,16 @@
   "Alist of (NAME . RESOLVED-SPEC): resolving runs simulations, so once.")
 
 (defun eas-vega-network-spec (name)
-  "The resolved spec of template vega/NAME with its example binding."
+  "The resolved spec of template NAME with its example binding."
   (or (alist-get name eas-vega-network--specs nil nil #'equal)
       (eas-vega-network-with-templates
         (setf (alist-get name eas-vega-network--specs nil nil #'equal)
-              (eas-resolve (concat "vega/" name) (eas-template-example (concat "vega/" name)))))))
+              (eas-resolve name (eas-template-example name))))))
 
 (defun eas-vega-network-meta (name)
-  "The x-eas.vega block of template vega/NAME."
+  "The x-eas.vega block of template NAME."
   (eas-vega-network-with-templates
-    (plist-get (plist-get (eas-template-get (concat "vega/" name)) :meta) :vega)))
+    (plist-get (plist-get (eas-template-get name) :meta) :vega)))
 
 (defun eas-vega-network-xy (rows &optional n)
   "The (X Y) of the first N (all) of ROWS."
@@ -89,11 +89,11 @@ With N, only its first N nodes and the links among them."
   "Most nodes, airports or rows a bounded example binding keeps.")
 
 (defun eas-vega-network-bounded (name)
-  "Template vega/NAME's example binding cut to `eas-vega-network-bound' rows.
+  "Template NAME's example binding cut to `eas-vega-network-bound' rows.
 Links and routes keep only those among the kept nodes and airports;
 a simulation runs 60 ticks; the matrix shrinks to fit its nodes."
   (let* ((n eas-vega-network-bound)
-         (b (copy-sequence (eas-template-example (concat "vega/" name))))
+         (b (copy-sequence (eas-template-example name)))
          (airports (and (plist-get b :airports) (seq-take (plist-get b :airports) n)))
          (codes (mapcar (lambda (a) (plist-get a :iata)) airports)))
     (dolist (slot '(:nodes :data))
@@ -106,7 +106,7 @@ a simulation runs 60 ticks; the matrix shrinks to fit its nodes."
                          (vconcat (seq-filter (lambda (f) (and (member (plist-get f :origin) codes)
                                                                (member (plist-get f :destination) codes)))
                                               (plist-get b :flights))))))
-    (when (plist-get (plist-get (plist-get (eas-template-get (concat "vega/" name)) :meta) :slots) :iterations)
+    (when (plist-get (plist-get (plist-get (eas-template-get name) :meta) :slots) :iterations)
       (setq b (plist-put b :iterations (min 60 (or (plist-get b :iterations) 60)))))
     (when (equal name "reorderable-matrix")
       (setq b (plist-put b :size (* 10 (length (plist-get b :nodes))))))
@@ -280,7 +280,7 @@ a simulation runs 60 ticks; the matrix shrinks to fit its nodes."
         (should (member (plist-get meta :status) '("pass" "partial" "unsupported")))
         (should (stringp (plist-get meta :note)))
         (should (equal (cons name (eas-spec-check spec)) (list name)))
-        (let* ((small (eas-resolve (concat "vega/" name) (eas-vega-network-bounded name)))
+        (let* ((small (eas-resolve name (eas-vega-network-bounded name)))
                (scene (eas-compile small :target 'text :size '(:cols 100 :rows 30))))
           (should (equal (cons name (eas-spec-check small)) (list name)))
           (should (equal (cons name (eas-text-check scene 100)) (list name))))))))
@@ -318,7 +318,7 @@ It renders the full examples, so it runs with the conformance gallery."
   "Dragging a node pins it where it is dropped; replay redraws the same; dblclick frees it."
   (eas-vega-network-with-templates
     (let* ((bindings (eas-vega-network-bounded "force-directed-layout"))
-           (view (eas-view-open "vega/force-directed-layout" :bindings bindings))
+           (view (eas-view-open "force-directed-layout" :bindings bindings))
            (node (lambda (v i) (nth i (seq-filter (lambda (r) (equal (plist-get r :eas_kind) "node"))
                                                   (plist-get (eas-view-data v) :rows)))))
            (myriel (funcall node view 0))
@@ -330,7 +330,7 @@ It renders the full examples, so it runs with the conformance gallery."
       (let ((rows (plist-get (eas-view-data view) :rows)))
         (eas-dispatch view '(:type "drag" :from [5 5] :to [600 400]))
         (should (eq rows (plist-get (eas-view-data view) :rows))))
-      (let ((fresh (eas-view-open "vega/force-directed-layout" :bindings bindings :id "fresh")))
+      (let ((fresh (eas-view-open "force-directed-layout" :bindings bindings :id "fresh")))
         (eas-replay fresh (eas-view-log view))
         (should (equal (plist-get (eas-view-data fresh) :rows) (plist-get (eas-view-data view) :rows))))
       (eas-dispatch view '(:type "dblclick" :px [100 100]))
@@ -339,7 +339,7 @@ It renders the full examples, so it runs with the conformance gallery."
 (ert-deftest eas-vega-network-matrix-drag-reorders ()
   "Dragging a row label moves that node's row; a column label its column."
   (eas-vega-network-with-templates
-    (let* ((view (eas-view-open "vega/reorderable-matrix" :bindings (eas-vega-network-bounded "reorderable-matrix")))
+    (let* ((view (eas-view-open "reorderable-matrix" :bindings (eas-vega-network-bounded "reorderable-matrix")))
            (order (lambda (name) (plist-get (seq-find (lambda (r) (and (equal (plist-get r :eas_kind) "node")
                                                                        (equal (plist-get r :name) name)))
                                                       (plist-get (eas-view-data view) :rows))
@@ -365,7 +365,7 @@ It renders the full examples, so it runs with the conformance gallery."
   "Hovering an airport draws the routes from it; the map starts with none."
   (eas-vega-network-with-templates
     (let* ((bindings (eas-vega-network-bounded "airport-connections"))
-           (view (eas-view-open "vega/airport-connections" :bindings bindings))
+           (view (eas-view-open "airport-connections" :bindings bindings))
            (marks (lambda () (plist-get (aref (plist-get (eas-view-scene view) :views) 0) :marks)))
            (rules (lambda () (length (plist-get (seq-find (lambda (m) (equal (plist-get m :mark) "rule")) (funcall marks)) :items))))
            (circles (seq-find (lambda (m) (equal (plist-get m :mark) "circle")) (funcall marks)))

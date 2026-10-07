@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "donut-chart-labelled",
-    "namespace": "vega",
+    "aliases": ["vega/donut-chart-labelled"],
     "version": "1.0.0",
     "doc": "Vega gallery labelled donut: wedges in data order, each labelled beside the ring with a leader line; labels on a side never overlap.",
     "slots": {

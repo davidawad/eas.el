@@ -35,7 +35,7 @@
 
 (defun eas-vega-distributions-template (name)
   "The registered template of gallery example NAME."
-  (eas-template-get (concat "vega/" name)))
+  (eas-template-get (eas-test-gallery-template name)))
 
 (defun eas-vega-distributions-status (name)
   "The x-eas.vega object of example NAME's template."
@@ -43,7 +43,8 @@
 
 (defun eas-vega-distributions-spec (name &optional bindings)
   "Example NAME resolved with BINDINGS, by default its example's."
-  (eas-resolve (concat "vega/" name) (or bindings (eas-template-example (concat "vega/" name)))))
+  (let ((template (eas-test-gallery-template name)))
+    (eas-resolve template (or bindings (eas-template-example template)))))
 
 (defun eas-vega-distributions-ref (name)
   "The reference PNG of gallery example NAME."
@@ -51,7 +52,7 @@
 
 (defun eas-vega-distributions-view (name bindings)
   "Open template NAME with BINDINGS as a fresh view; return it."
-  (eas-view-open (concat "vega/" name) :bindings bindings :id (concat "vega-distributions:" name)))
+  (eas-view-open (eas-test-gallery-template name) :bindings bindings :id (concat "vega-distributions:" name)))
 
 (defun eas-vega-distributions-mark (view name)
   "The first mark called NAME in VIEW's scene."
@@ -92,18 +93,21 @@ of the best alignment."
 ;;; The templates
 
 (ert-deftest eas-vega-distributions-templates-are-registered ()
-  "Every example has a vega/ template, a binding and a recorded status."
+  "Every example has a template, a binding and a recorded status."
   (dolist (name eas-vega-distributions-names)
     (let* ((tpl (eas-vega-distributions-template name)) (status (eas-vega-distributions-status name)))
-      (should (equal (plist-get tpl :name) (concat "vega/" name)))
+      (should (equal (plist-get tpl :name) (eas-test-gallery-template name)))
       (should (file-exists-p (eas-template-example-file tpl)))
       (should (string-match-p "/examples/vega/" (eas-template-example-file tpl)))
       (should (member (plist-get status :status) '("pass" "partial" "unsupported")))
       (should (and (stringp (plist-get status :note)) (> (length (plist-get status :note)) 0)))
       (should (numberp (plist-get status :ratio)))
       (should (<= (plist-get status :ratio) (plist-get status :threshold)))))
-  ;; The bare name "histogram" is still the house template.
-  (should (equal (plist-get (eas-template-get "histogram") :name) "histogram")))
+  ;; "histogram" is still the house template; the gallery's is
+  ;; rug-histogram, and vega/histogram is its deprecated alias.
+  (should (equal (plist-get (eas-template-get "histogram") :name) "histogram"))
+  (should (equal (plist-get (eas-template-get "vega/histogram") :name) "rug-histogram"))
+  (should (equal (plist-get (eas-template-get "vega/box-plot") :name) "box-plot")))
 
 (ert-deftest eas-vega-distributions-examples-check-clean ()
   "Every example resolves to pure Vega-Lite the native engine draws."
@@ -248,7 +252,7 @@ of the best alignment."
 
 (ert-deftest eas-vega-distributions-quantile-dots-follow-the-threshold ()
   "Dots in bins below the threshold turn red; the readout moves with it."
-  (let* ((bind (eas-template-example "vega/quantile-dot-plot"))
+  (let* ((bind (eas-template-example "quantile-dot-plot"))
          (v (eas-vega-distributions-view "quantile-dot-plot" bind))
          (red (lambda () (seq-count (lambda (it) (equal (plist-get it :fill) "firebrick"))
                                     (plist-get (eas-vega-distributions-mark v "dots") :items))))

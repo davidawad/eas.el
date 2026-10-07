@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "distortion-comparison",
-    "namespace": "vega",
+    "aliases": ["vega/distortion-comparison"],
     "version": "1.0.0",
     "doc": "Area distortion between two projections: a circle per feature at its centroid under the base projection, one sized by its projected area under each projection, over the base projection's graticule.",
     "slots": {

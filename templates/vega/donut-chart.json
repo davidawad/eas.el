@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "donut-chart",
-    "namespace": "vega",
+    "aliases": ["vega/donut-chart"],
     "version": "1.0.0",
     "doc": "Vega gallery donut chart: one wedge per row, sized by value, around a hole.",
     "slots": {

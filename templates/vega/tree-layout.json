@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "tree-layout",
-    "namespace": "vega",
+    "aliases": ["vega/tree-layout"],
     "version": "1.0.0",
     "doc": "A horizontal node-link tree of id/parent rows: tidy or cluster layout, links as lines, curves, diagonals or elbows, nodes colored by depth.",
     "slots": {

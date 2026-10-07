@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "parallel-coordinates-interactive",
+    "aliases": ["vega/parallel-coordinates-interactive"],
     "version": "1.0.0",
     "doc": "Parallel coordinates: one line per row across an axis per dimension, each axis with its own nice scale, coloured by one dimension; clicking a line highlights it (Vega gallery: parallel-coordinates-interactive).",
     "slots": {

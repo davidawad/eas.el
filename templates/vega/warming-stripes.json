@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "warming-stripes",
-    "namespace": "vega",
+    "aliases": ["vega/warming-stripes"],
     "version": "1.0.0",
     "doc": "Warming stripes: one coloured stripe per year on a diverging scale centred on zero, with the base period bracketed above.",
     "slots": {

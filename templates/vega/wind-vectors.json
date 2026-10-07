@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "wind-vectors",
-    "namespace": "vega",
+    "aliases": ["vega/wind-vectors"],
     "version": "1.0.0",
     "doc": "A flow map of a vector field on a regular grid: one wedge per cell, turned to its direction, sized by speed, colored by direction.",
     "slots": {

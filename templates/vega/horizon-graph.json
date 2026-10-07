@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "horizon-graph",
-    "namespace": "vega",
+    "aliases": ["vega/horizon-graph"],
     "version": "1.0.0",
     "doc": "Vega gallery horizon graph: an area chart cut into bands of equal height, overlaid so a short chart keeps its resolution.",
     "slots": {

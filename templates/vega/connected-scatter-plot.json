@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "connected-scatter-plot",
-    "namespace": "vega",
+    "aliases": ["vega/connected-scatter-plot"],
     "version": "1.0.0",
     "doc": "Vega gallery connected scatter plot: a smooth path through (x, y) points in data order, each labelled on its chosen side.",
     "slots": {

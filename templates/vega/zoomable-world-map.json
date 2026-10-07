@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "zoomable-world-map",
-    "namespace": "vega",
+    "aliases": ["vega/zoomable-world-map"],
     "version": "1.0.0",
     "doc": "A world map that pans and zooms: the wheel scales the projection, a drag turns it (longitude) and moves its centre (latitude).",
     "slots": {

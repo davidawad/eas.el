@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "histogram-null-values",
-    "namespace": "vega",
+    "aliases": ["vega/histogram-null-values"],
     "version": "1.0.0",
     "doc": "Histogram of a numeric field that also counts its missing values, as a grey bar left of the bins.",
     "slots": {

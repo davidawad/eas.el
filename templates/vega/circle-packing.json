@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "circle-packing",
-    "namespace": "vega",
+    "aliases": ["vega/circle-packing"],
     "version": "1.0.0",
     "doc": "Circle packing of id/parent rows: each leaf a circle whose area is its value, nested inside its groups' circles, colored by depth.",
     "slots": {

@@ -279,7 +279,7 @@ a hole, a resampled meridian, the sphere and a point."
 (ert-deftest eas-vega-geo-templates-declare-their-status ()
   (dolist (entry eas-vega-geo-templates)
     (let* ((tpl (eas-vega-geo-template (car entry))) (meta (plist-get tpl :meta)))
-      (should (equal (plist-get tpl :name) (concat "vega/" (car entry))))
+      (should (equal (plist-get tpl :name) (car entry)))
       (should (equal (plist-get (plist-get meta :vega) :status) (cdr entry)))
       (should (stringp (plist-get (plist-get meta :vega) :note)))
       (should (file-exists-p (eas-template-example-file tpl))))))

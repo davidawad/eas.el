@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "packed-bubble-chart",
-    "namespace": "vega",
+    "aliases": ["vega/packed-bubble-chart"],
     "version": "1.0.0",
     "doc": "Packed bubbles: one labeled circle per row, its area proportional to a value, packed together by center, x, y and collision forces.",
     "slots": {

@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "zoomable-binned-plot",
+    "aliases": ["vega/zoomable-binned-plot"],
     "version": "1.0.0",
     "doc": "Points over a 2D binned density heatmap; drag pans and the wheel zooms both layers (Vega gallery: zoomable-binned-plot).",
     "slots": {

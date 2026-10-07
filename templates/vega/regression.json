@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "regression",
-    "namespace": "vega",
+    "aliases": ["vega/regression"],
     "version": "1.0.0",
     "doc": "Vega gallery regression: a scatter plot with a fitted trend line (linear, log, exp, pow, quad or poly).",
     "slots": {

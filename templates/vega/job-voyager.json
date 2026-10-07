@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "job-voyager",
-    "namespace": "vega",
+    "aliases": ["vega/job-voyager"],
     "version": "1.0.0",
     "doc": "Vega gallery job voyager: a stacked area per series and group (job and sex), shaded by its total, labelled at its peak; filter by group and by a search.",
     "slots": {

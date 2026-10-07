@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "annual-temperature",
-    "namespace": "vega",
+    "aliases": ["vega/annual-temperature"],
     "version": "1.0.0",
     "doc": "A ridgeline of the year: one area per hour of the day, stacked in rows, each tracing a value across the days of the year.",
     "slots": {

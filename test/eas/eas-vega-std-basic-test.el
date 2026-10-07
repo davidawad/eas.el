@@ -37,7 +37,7 @@
 
 (defun eas-vega-std-basic--name (name)
   "The registry name of Vega example NAME."
-  (concat "vega/" name))
+  name)
 
 (defun eas-vega-std-basic--meta (name)
   "The x-eas.vega block of example NAME's template."
@@ -99,11 +99,11 @@
 (ert-deftest eas-vega-std-basic-slots-take-a-callers-data ()
   "A caller's own rows and field names go through the slots."
   (let* ((rows [(:k "x" :n 3) (:k "y" :n 5)])
-         (spec (eas-resolve "vega/bar-chart" (list :data rows :category "k" :amount "n")))
+         (spec (eas-resolve "bar-chart" (list :data rows :category "k" :amount "n")))
          (bars (eas-vega-std-basic--items (eas-compile spec) "bar")))
     (should (= (length bars) 2)))
   (eas-test-should-code "FIELD_MISSING"
-    (eas-resolve "vega/pie-chart" (list :data [(:a 1)]))))
+    (eas-resolve "pie-chart" (list :data [(:a 1)]))))
 
 (defun eas-vega-std-basic--schema-faults (node path)
   "Vega-Lite schema faults under NODE at PATH, as a list of strings.
@@ -292,7 +292,7 @@ legend on a datum channel."
                                                                  collect (list :job job :sex sex :year year
                                                                                :perc 0.1))))))
          (eas-views (make-hash-table :test 'equal))
-         (v (eas-view-open "vega/job-voyager" :bindings (list :data rows)))
+         (v (eas-view-open "job-voyager" :bindings (list :data rows)))
          (areas (lambda () (length (eas-vega-std-basic--items (eas-view-scene v) "area")))))
     (should (= (funcall areas) 6))
     (eas-dispatch v '(:type "param" :param "query" :value "farm"))
@@ -346,7 +346,7 @@ Return the `eas-png-compare' plist with the better :ratio and :offset."
               (eas-chart-rasterize (eas-svg-render (eas-compile (eas-vega-std-basic--spec name))) png)
               (let ((cmp (eas-vega-std-basic--compare
                           png (eas-test-file "test/vega-examples/ref" (concat name ".png")))))
-                (message "vega/%s: ratio %.4f (threshold %s, status %s)" name (plist-get cmp :ratio)
+                (message "%s: ratio %.4f (threshold %s, status %s)" name (plist-get cmp :ratio)
                          threshold (plist-get meta :status))
                 (when (> (plist-get cmp :ratio) threshold)
                   (push (format "%s: ratio %.4f > %s" name (plist-get cmp :ratio) threshold) failures))))

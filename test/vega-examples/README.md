@@ -9,5 +9,7 @@ coverage target for eas templates.
   is measured with real font metrics). `projections` needs
   d3-geo-projection, so its ref is the Vega site's 360px thumbnail.
 - `manifest.json`: one row per example; `template` names the eas template
-  that reproduces it (`templates/vega/<name>.json`) and `status` is
+  that reproduces it (`templates/vega/<template>.json`, mostly the
+  example's name; `heatmap` is `hourly-heatmap` and `histogram` is
+  `rug-histogram`, as eas has its own of both) and `status` is
   `todo`, `pass`, `partial` or `unsupported` (with a reason).

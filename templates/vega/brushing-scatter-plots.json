@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "brushing-scatter-plots",
+    "aliases": ["vega/brushing-scatter-plots"],
     "version": "1.0.0",
     "doc": "A 4x4 scatter plot matrix with one brush linked across every cell (Vega gallery: brushing-scatter-plots).",
     "slots": {

@@ -4,7 +4,11 @@ Every example of the Vega gallery (https://vega.github.io/vega/examples/)
 has an eas template, `templates/vega/NAME.json`, with an example binding
 `examples/vega/NAME.data.json` that reproduces it from the vendored data in
 `test/vega-examples/data`.  Each template takes its data and fields as slots,
-so a caller binds their own data: `eas-resolve "vega/NAME" BINDINGS`.
+so a caller binds their own data: `eas-resolve "NAME" BINDINGS`.  NAME is the
+example's, except for the two whose name eas's own templates already hold:
+`heatmap` is `hourly-heatmap` and `histogram` is `rug-histogram`
+(`manifest.json`'s `template` field).  `vega/NAME` still resolves as a
+deprecated alias.
 
 Status is each template's `x-eas.vega` verdict, against
 `test/vega-examples/ref/NAME.png`; `manifest.json` carries the same per
@@ -49,5 +53,5 @@ Templates that need what Vega-Lite lacks use x-eas transforms and handlers
 stratify/tree/cluster/treemap/partition/pack and linkpath, force and voronoi,
 dotbin, kde2d and contour, the timer and key handlers of `x-eas.on`.  They
 resolve to Vega-Lite with those materialized, so bin/chart can export them,
-except `vega/projections`, whose d3-geo-projection projections Vega-Lite has
+except `projections`, whose d3-geo-projection projections Vega-Lite has
 no names for (`x-eas.export`).

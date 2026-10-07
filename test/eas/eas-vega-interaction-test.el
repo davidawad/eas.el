@@ -42,11 +42,11 @@ conformance gallery's few pixels.")
 
 (defun eas-vega-interaction-template (name)
   "The template plist of Vega example NAME."
-  (eas-template-get (concat "vega/" name)))
+  (eas-template-get name))
 
 (defun eas-vega-interaction-open (name &optional bindings)
   "Open a view of Vega example NAME with BINDINGS (default its example)."
-  (let ((template (concat "vega/" name)))
+  (let ((template name))
     (eas-view-open template :bindings (or bindings (eas-template-example template)) :id name)))
 
 (defun eas-vega-interaction-param (view name)
@@ -77,7 +77,7 @@ Ids, not positions: an active brush adds a mark in front."
 Return `eas-png-compare's plist; the caller skips without rsvg-convert."
   (let* ((eas-time-zone nil)
          (eas-spec-supported-function nil)
-         (spec (eas-resolve (concat "vega/" name) (eas-template-example (concat "vega/" name))))
+         (spec (eas-resolve name (eas-template-example name)))
          (png (make-temp-file "eas-vega" nil ".png")))
     (unwind-protect
         (progn (eas-chart-rasterize (eas-svg-render (eas-compile spec)) png)
@@ -89,12 +89,12 @@ Return `eas-png-compare's plist; the caller skips without rsvg-convert."
 ;;; Templates
 
 (ert-deftest eas-vega-interaction-templates-declare-their-verdict ()
-  "Every example has a vega/NAME template, an example and a recorded verdict."
+  "Every example has a NAME template, an example and a recorded verdict."
   (dolist (name eas-vega-interaction-names)
     (let* ((template (eas-vega-interaction-template name))
            (meta (plist-get template :meta))
            (vega (plist-get meta :vega)))
-      (should (equal (plist-get template :name) (concat "vega/" name)))
+      (should (equal (plist-get template :name) name))
       (should (equal (plist-get template :path) (eas-test-file "templates/vega" (concat name ".json"))))
       (should (file-exists-p (eas-template-example-file template)))
       (should (member (plist-get vega :status) '("pass" "partial" "unsupported")))
@@ -203,8 +203,8 @@ Vega reference (needs rsvg-convert)."
         (should (= (eas-vega-interaction-param view "sample") 3))
         (should (equal (last (eas-vega-interaction-summaries view) 2) '("param sample = 2" "param sample = 3")))
         (should-not (equal (funcall values view) first))
-        (let ((again (eas-view-open "vega/hypothetical-outcome-plots"
-                                    :bindings (eas-template-example "vega/hypothetical-outcome-plots") :id "again")))
+        (let ((again (eas-view-open "hypothetical-outcome-plots"
+                                    :bindings (eas-template-example "hypothetical-outcome-plots") :id "again")))
           (eas-replay again (eas-view-log view))
           (should (equal (funcall values again) (funcall values view))))))
     ;; The clock reads the local wall clock of the tick's time.
@@ -251,7 +251,7 @@ Vega reference (needs rsvg-convert)."
 (ert-deftest eas-vega-interaction-play-config-is-checked ()
   "Bad x-eas.timer and x-eas.on fail as data, naming the path; describe lists them."
   (should (equal (plist-get (plist-get (eas-describe) :play) :min-interval) eas-play-min-interval))
-  (should (equal (eas-play-config "vega/clock")
+  (should (equal (eas-play-config "clock")
                  (list :timer '(:interval 1000) :on [(:events "timer" :param "now" :update "event.local")])))
   (eas-test-should-code "INVALID_INPUT" (eas-play-check '(:timer (:interval 5))))
   (eas-test-should-code "INVALID_INPUT" (eas-play-check '(:timer (:interval 100 :every 2))))
@@ -380,7 +380,7 @@ where Vega does, on the padding's outer edges, with one."
     ;; Top axis 70px above the plot's top edge: 20px below its bottom.
     (should (= (plist-get x :offset) -70))
     (should (> (aref (plist-get x :domain-line) 1) (+ 11 50))))
-  (let ((axis (plist-get (plist-get (plist-get (eas-resolve "vega/zoomable-binned-plot"
+  (let ((axis (plist-get (plist-get (plist-get (eas-resolve "zoomable-binned-plot"
                                                             '(:data [(:u 0 :v 0)] :height 200))
                                                :encoding)
                                     :x)

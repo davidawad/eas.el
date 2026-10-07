@@ -45,6 +45,19 @@
      (should (equal (plist-get (eas-error-plist err) :code) ,code))
      (eas-error-plist err)))
 
+(defvar eas-test--gallery-templates nil
+  "Alist of (EXAMPLE . TEMPLATE) from test/vega-examples/manifest.json.")
+
+(defun eas-test-gallery-template (name)
+  "The template that reproduces Vega gallery example NAME.
+Most share the example's name; manifest.json records the others."
+  (unless eas-test--gallery-templates
+    (setq eas-test--gallery-templates
+          (mapcar (lambda (e) (cons (plist-get e :name) (plist-get e :template)))
+                  (plist-get (eas-json-read-file (eas-test-file "test/vega-examples/manifest.json"))
+                             :examples))))
+  (or (cdr (assoc name eas-test--gallery-templates)) name))
+
 (defvar eas-test-chart-program "chart"
   "The bin/chart executable used as the static oracle.")
 

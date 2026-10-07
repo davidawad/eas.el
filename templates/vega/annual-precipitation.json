@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "annual-precipitation",
-    "namespace": "vega",
+    "aliases": ["vega/annual-precipitation"],
     "version": "1.0.0",
     "doc": "Filled contours of a global longitude/latitude grid (annual precipitation) over country shapes, on a world map projection.",
     "slots": {

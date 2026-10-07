@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "dot-plot",
-    "namespace": "vega",
+    "aliases": ["vega/dot-plot"],
     "version": "1.0.0",
     "doc": "One dot per value, stacked: a Wilkinson density dot plot beside a histogram dot plot of the same field.",
     "slots": {

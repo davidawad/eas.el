@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "contour-plot",
-    "namespace": "vega",
+    "aliases": ["vega/contour-plot"],
     "version": "1.0.0",
     "doc": "A scatter plot overlaid with a 2D kernel density estimate per group: a density heatmap and contour lines.",
     "slots": {

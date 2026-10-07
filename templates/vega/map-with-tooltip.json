@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "map-with-tooltip",
-    "namespace": "vega",
+    "aliases": ["vega/map-with-tooltip"],
     "version": "1.0.0",
     "doc": "A choropleth on a mercator map centred by the caller, each region's name and value in its tooltip.",
     "slots": {

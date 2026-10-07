@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "top-k-plot-with-others",
-    "namespace": "vega",
+    "aliases": ["vega/top-k-plot-with-others"],
     "version": "1.0.0",
     "doc": "The top k-1 categories by an aggregate of a value, plus one bar aggregating every other category.",
     "slots": {

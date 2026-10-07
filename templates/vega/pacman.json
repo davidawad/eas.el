@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "pacman",
+    "aliases": ["vega/pacman"],
     "version": "1.0.0",
     "doc": "A playable maze game: the arrow keys steer the eater through a maze of gums every half second while ghosts chase it (Vega gallery: pacman).",
     "slots": {

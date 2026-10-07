@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "timelines",
-    "namespace": "vega",
+    "aliases": ["vega/timelines"],
     "version": "1.0.0",
     "doc": "Lifelines: one labelled line per person from birth to death with their term in office highlighted, under dated events.",
     "slots": {

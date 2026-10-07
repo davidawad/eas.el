@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "hypothetical-outcome-plots",
+    "aliases": ["vega/hypothetical-outcome-plots"],
     "version": "1.0.0",
     "doc": "An animated bar chart: every second each bar is redrawn as a random sample around its expected value, conveying uncertainty (Vega gallery: hypothetical-outcome-plots).",
     "slots": {

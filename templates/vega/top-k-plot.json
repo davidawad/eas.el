@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "top-k-plot",
-    "namespace": "vega",
+    "aliases": ["vega/top-k-plot"],
     "version": "1.0.0",
     "doc": "The k categories with the largest aggregate of a value, as horizontal bars, largest first.",
     "slots": {

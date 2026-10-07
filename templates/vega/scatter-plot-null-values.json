@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "scatter-plot-null-values",
-    "namespace": "vega",
+    "aliases": ["vega/scatter-plot-null-values"],
     "version": "1.0.0",
     "doc": "Vega gallery scatter plot with null values: points with both values in the plot, points missing one in a strip beside the opposite axis, and a count of rows missing both.",
     "slots": {

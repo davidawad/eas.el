@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "radial-plot",
-    "namespace": "vega",
+    "aliases": ["vega/radial-plot"],
     "version": "1.0.0",
     "doc": "Vega gallery radial plot: each value sets both its wedge's angle and (sqrt-scaled) radius, labelled outside.",
     "slots": {

@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "crossfilter-flights",
+    "aliases": ["vega/crossfilter-flights"],
     "version": "1.0.0",
     "doc": "Three cross-filtered histograms: brushing one filters the other two (Vega gallery: crossfilter-flights).",
     "slots": {

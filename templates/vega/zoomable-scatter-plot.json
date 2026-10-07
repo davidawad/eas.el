@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "zoomable-scatter-plot",
+    "aliases": ["vega/zoomable-scatter-plot"],
     "version": "1.0.0",
     "doc": "A scatter plot that pans (drag) and zooms (wheel, + and -) and highlights the point under the pointer (Vega gallery: zoomable-scatter-plot).",
     "slots": {

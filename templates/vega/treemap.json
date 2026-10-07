@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "treemap",
-    "namespace": "vega",
+    "aliases": ["vega/treemap"],
     "version": "1.0.0",
     "doc": "A treemap of id/parent rows: each leaf a rectangle sized by its value, groups colored and labelled, larger labels for shallower groups.",
     "slots": {

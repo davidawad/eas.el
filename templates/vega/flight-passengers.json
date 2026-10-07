@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "flight-passengers",
-    "namespace": "vega",
+    "aliases": ["vega/flight-passengers"],
     "version": "1.0.0",
     "doc": "Year-over-year change: a line with points of the relative change from a prior value, a dashed zero line, signed percent labels.",
     "slots": {

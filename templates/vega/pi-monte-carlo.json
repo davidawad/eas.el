@@ -2,6 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "pi-monte-carlo",
+    "aliases": ["vega/pi-monte-carlo"],
     "version": "1.0.0",
     "doc": "Estimating pi by random sampling: uniform points in the unit square, coloured by whether they fall inside the quarter circle, and the running estimate; a slider picks the sample size (Vega gallery: pi-monte-carlo).",
     "slots": {

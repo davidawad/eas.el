@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "edge-bundling",
-    "namespace": "vega",
+    "aliases": ["vega/edge-bundling"],
     "version": "1.0.0",
     "doc": "Hierarchical edge bundling: the leaves of an id/parent tree on a circle, and each source-target link drawn along the tree path between its ends, bundled.",
     "slots": {

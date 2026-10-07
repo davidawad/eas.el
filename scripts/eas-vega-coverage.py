@@ -20,7 +20,7 @@ DOC = ROOT / "docs" / "design" / "vega-gallery-coverage.md"
 
 
 def verdict(name):
-    """The x-eas.vega block of templates/vega/NAME.json."""
+    """The x-eas.vega block of template NAME (templates/vega/NAME.json)."""
     path = ROOT / "templates" / "vega" / f"{name}.json"
     return json.loads(path.read_text(encoding="utf-8"))["x-eas"]["vega"]
 
@@ -29,7 +29,7 @@ def manifest():
     """Rewrite manifest.json; return its examples."""
     data = json.loads(MANIFEST.read_text(encoding="utf-8"))
     for e in data["examples"]:
-        v = verdict(e["name"])
+        v = verdict(e["template"])
         e["status"] = v["status"]
         e.pop("reason", None)
         if v["status"] != "pass":

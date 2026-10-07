@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "zoomable-circle-packing",
-    "namespace": "vega",
+    "aliases": ["vega/zoomable-circle-packing"],
     "version": "1.0.0",
     "doc": "Circle packing of id/parent rows that zooms: clicking a circle lays its subtree out alone, clicking the circle in focus zooms back out.",
     "slots": {

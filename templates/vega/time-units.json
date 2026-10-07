@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "time-units",
-    "namespace": "vega",
+    "aliases": ["vega/time-units"],
     "version": "1.0.0",
     "doc": "Rows of a dated table aggregated by a time unit (year, month, day of month, weekday or hour): one bar per unit, its count or the mean of a measure.",
     "slots": {

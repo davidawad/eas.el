@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "density-heatmaps",
-    "namespace": "vega",
+    "aliases": ["vega/density-heatmaps"],
     "version": "1.0.0",
     "doc": "Small multiples of 2D kernel density heatmaps, one per group, each normalized to its own (or the shared) maximum.",
     "slots": {

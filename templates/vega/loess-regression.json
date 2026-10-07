@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "loess-regression",
-    "namespace": "vega",
+    "aliases": ["vega/loess-regression"],
     "version": "1.0.0",
     "doc": "Vega gallery loess regression: a scatter plot with a locally-weighted (loess) trend line.",
     "slots": {

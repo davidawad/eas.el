@@ -285,8 +285,7 @@ transform's own field. A path is drawn as a point's shape with
 `"shape": {"field": "path", "scale": null}` at `x = y = 0`, size 4:
 Vega-Lite scales a custom symbol by sqrt(size)/2 = 1, so the path
 stands where the projection put it, and the chart keeps the size the
-paths were made for. The templates in `templates/vega/` (namespace
-`vega`) use them for the Vega gallery's contour plot, density
+paths were made for. The templates in `templates/vega/` use them for the Vega gallery's contour plot, density
 heatmaps, volcano contours and annual precipitation.
 
 ### L2 spec: chart/v1
@@ -335,8 +334,8 @@ names them as `../examples/vega/NAME.data.json`), and its `x-eas.vega`
 records `{"status": "pass|partial|unsupported", "note"}` against the
 vendored reference.
 
-`templates/vega/` reproduces the Vega gallery (`eas-7r1`), namespace
-`vega` (`eas-template-add-directory` loads it). Each template's
+`templates/vega/` reproduces the Vega gallery (`eas-7r1`) under plain
+names (`treemap`), loaded by default. Each template's
 `x-eas.vega` records `status` (pass, partial, unsupported), a `note`
 and the `ratio` its example may differ from
 `test/vega-examples/ref/NAME.png` by; `examples/vega/NAME.data.json`
@@ -345,8 +344,8 @@ without node-canvas, so Vega padded their canvas by estimated text
 widths: the comparison aligns the plot origins first.
 
 The Vega gallery's examples (`test/vega-examples/`, epic `eas-7r1`)
-are templates in `templates/vega/`, registered under the `vega`
-namespace (`vega/clock`), each with its binding in `examples/vega/`
+are templates in `templates/vega/`, registered under plain names
+(`clock`), each with its binding in `examples/vega/`
 (the template's `example` is `../examples/vega/NAME.data.json`).
 `x-eas.vega` records the verdict against the Vega reference PNG:
 `{"status": "pass"|"partial"|"unsupported", "note", "ratio",
@@ -355,8 +354,8 @@ ratio and the `:gallery` test holds each example within its
 threshold.
 
 `templates/vega/` holds one template per example of the Vega gallery
-(vega.github.io/vega/examples, epic `eas-7r1`), namespaced `vega`
-(`vega/histogram`), each with its binding in `examples/vega/` that
+(vega.github.io/vega/examples, epic `eas-7r1`), named plainly
+(`box-plot`), each with its binding in `examples/vega/` that
 reproduces the gallery chart from `test/vega-examples/data`. A
 template's `x-eas.vega` records how close it comes to
 `test/vega-examples/ref/NAME.png`: `{"status": "pass"|"partial"|
@@ -368,8 +367,8 @@ binding may set `label_extent` (an axis `minExtent`) to keep the
 gallery's layout.
 
 `templates/vega/` holds one template per Vega gallery example
-(`test/vega-examples/`), namespaced `vega/NAME` and loaded with
-`(eas-template-add-directory "templates/vega")`; its bindings live in
+(`test/vega-examples/`), registered as plain NAME from the default
+`eas-template-directories`; its bindings live in
 `examples/vega/` (an `example` path is relative to the parent of the
 template's directory, so they read `../examples/vega/NAME.data.json`).
 Each records in `x-eas.vega` how it compares with Vega's reference
@@ -386,7 +385,7 @@ Eaches nest: the inner one's array may be `{"x-eas:item": KEY}` of the
 outer item, and `"../KEY"` reads the enclosing item (`eas-agt.3`).
 
 The templates of the Vega example gallery live in `templates/vega/`
-under the `vega` namespace (`vega/bar-chart`, eas-7r1), each with
+under plain names (`bar-chart`, eas-7r1), each with
 `x-eas.vega` recording how it compares with the gallery's reference
 image (`status`, `note`, `ratio`, `threshold`; `make
 test-gallery-vega` holds them to it). In an example's bindings a data
@@ -400,6 +399,7 @@ Slots reach further than whole nodes (`eas-agt.3`):
 references inside a string, as JSON literals or as raw text. A slot
 whose value is null leaves its property out. Template names may carry
 a namespace (`eas-template-add-directory DIR NAMESPACE`), and a
+template may list old names in `x-eas.aliases` that still find it. A
 template file that fails to load is skipped and reported rather than
 stopping the rest.
 
@@ -646,8 +646,8 @@ Two domain transforms join the vocabulary: `geo-measure` (projected
 centroid and area per feature, Vega's `geoCentroid` and `geoArea` with
 a projection; materialized at resolve, so export stays pure Vega-Lite)
 and `geo-point` (internal: the lowering's placeholder positions).
-`templates/vega/` holds the Vega gallery's maps as templates (namespace
-`vega`, loaded with `eas-template-add-directory` or `eas-template-load`);
+`templates/vega/` holds the Vega gallery's maps as templates (plain
+names such as `world-map`, loaded by default);
 each records `x-eas.vega.status` and a note against its
 `test/vega-examples/ref` image. Not drawn: the `identity` projection,
 `clip: {"sphere": ...}` (Vega's, which Vega-Lite cannot express), Vega's
@@ -806,10 +806,13 @@ renders natively without it (`eas-spec-props.el`, fc-qx1.43).
 | Vega-Lite coverage | conformance spec + compile support | `supported.json`, check |
 
 Templates for the Vega gallery (https://vega.github.io/vega/examples/)
-live in `templates/vega/` under the namespace `vega` (`vega/heatmap`,
-since `heatmap` is already a template), with their bindings in
-`examples/vega/`; they are not in the default template directories
-(load them with `eas-template-add-directory`). Each records its
+live in `templates/vega/` under plain names (`treemap`), with their
+bindings in `examples/vega/`. Two gallery examples share a name with an
+eas template, which keeps it: their templates are `hourly-heatmap`
+(gallery `heatmap`) and `rug-histogram` (gallery `histogram`);
+`manifest.json`'s `template` field maps each example to its template.
+The former `vega/NAME` names resolve as deprecated aliases
+(`x-eas.aliases`). Each records its
 verdict against `test/vega-examples/ref/NAME.png` in `x-eas.vega`
 (`status` pass, partial or unsupported, the measured `ratio`, a
 `note`, and `size` when it fits a container). The references were

@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "radial-tree-layout",
-    "namespace": "vega",
+    "aliases": ["vega/radial-tree-layout"],
     "version": "1.0.0",
     "doc": "A radial node-link tree of id/parent rows: tidy or cluster layout around the centre, links as lines, curves, diagonals or elbows, labels turned along their spokes.",
     "slots": {

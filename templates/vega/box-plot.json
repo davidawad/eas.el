@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "box-plot",
-    "namespace": "vega",
+    "aliases": ["vega/box-plot"],
     "version": "1.0.0",
     "doc": "One horizontal box plot per category: whiskers from min to max, a box from the first to the third quartile, a line at the median.",
     "slots": {

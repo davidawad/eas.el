@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "force-directed-layout",
-    "namespace": "vega",
+    "aliases": ["vega/force-directed-layout"],
     "version": "1.0.0",
     "doc": "A node-link diagram laid out by a force simulation (center, collide, nbody and link forces); drag a node to pin it.",
     "slots": {

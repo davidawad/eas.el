@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "error-bars",
-    "namespace": "vega",
+    "aliases": ["vega/error-bars"],
     "version": "1.0.0",
     "doc": "Vega gallery error bars: the mean of a value per category with an error bar (95% CI, standard error, standard deviation or IQR).",
     "slots": {

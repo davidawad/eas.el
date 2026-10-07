@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "wheat-plot",
-    "namespace": "vega",
+    "aliases": ["vega/wheat-plot"],
     "version": "1.0.0",
     "doc": "Wheat plot: values binned like a histogram, stacked within each bin in value order, each drawn as a ring at its exact value.",
     "slots": {

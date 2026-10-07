@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "weekly-temperature",
-    "namespace": "vega",
+    "aliases": ["vega/weekly-temperature"],
     "version": "1.0.0",
     "doc": "Weekly temperatures overlaid per day: record range, normal range, actual range, and forecast ranges drawn as an I-beam.",
     "slots": {

@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "stacked-area-chart",
-    "namespace": "vega",
+    "aliases": ["vega/stacked-area-chart"],
     "version": "1.0.0",
     "doc": "Vega gallery stacked area chart: monotone areas of y stacked by series c over a point x scale.",
     "slots": {

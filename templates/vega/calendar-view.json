@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "calendar-view",
-    "namespace": "vega",
+    "aliases": ["vega/calendar-view"],
     "version": "1.0.0",
     "doc": "A calendar of daily changes: one row of weeks per year, one square per day, months set apart, coloured by the change from the previous day.",
     "slots": {

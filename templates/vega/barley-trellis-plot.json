@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "barley-trellis-plot",
-    "namespace": "vega",
+    "aliases": ["vega/barley-trellis-plot"],
     "version": "1.0.0",
     "doc": "Vega gallery barley trellis: one panel per site (by median), a hollow point per variety and year, varieties sorted by median.",
     "slots": {

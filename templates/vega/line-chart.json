@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "line-chart",
-    "namespace": "vega",
+    "aliases": ["vega/line-chart"],
     "version": "1.0.0",
     "doc": "Vega gallery line chart: one line per series c over a point x scale; hovering a line fades it.",
     "slots": {

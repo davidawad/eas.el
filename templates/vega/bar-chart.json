@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "bar-chart",
-    "namespace": "vega",
+    "aliases": ["vega/bar-chart"],
     "version": "1.0.0",
     "doc": "Vega gallery bar chart: one bar per category; hovering a bar turns it red and shows its value above it.",
     "slots": {

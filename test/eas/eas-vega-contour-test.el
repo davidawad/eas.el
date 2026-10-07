@@ -43,11 +43,11 @@
                  a b)))
 
 (defmacro eas-vega-contour--with-templates (&rest body)
-  "Run BODY with templates/vega/ registered under the vega namespace only."
+  "Run BODY with only templates/vega/ registered."
   (declare (indent 0))
   `(let* ((dir (file-name-as-directory (eas-test-file "templates/vega")))
           (eas-template-directories (list dir))
-          (eas-template-namespaces (list (cons dir "vega")))
+          (eas-template-namespaces nil)
           (eas--templates nil)
           (eas-template-load-errors nil))
      ,@body))
@@ -60,10 +60,10 @@
   "Example name -> its resolved spec, so the slow resolves run once.")
 
 (defun eas-vega-contour--resolve (name)
-  "The resolved Vega-Lite spec of template vega/NAME with its example."
+  "The resolved Vega-Lite spec of template NAME with its example."
   (or (gethash name eas-vega-contour--resolved)
       (puthash name (eas-vega-contour--with-templates
-                      (eas-resolve (concat "vega/" name) (eas-template-example (concat "vega/" name))))
+                      (eas-resolve name (eas-template-example name)))
                eas-vega-contour--resolved)))
 
 (defun eas-vega-contour--meta (name)
@@ -351,11 +351,11 @@
 ;;; The templates
 
 (ert-deftest eas-vega-contour-templates-load-with-examples ()
-  "Every template loads as vega/NAME with its example and a recorded verdict."
+  "Every template loads as NAME with its example and a recorded verdict."
   (eas-vega-contour--with-templates
     (dolist (name eas-vega-contour--names)
-      (should (eas-template-p (concat "vega/" name)))
-      (should (file-exists-p (eas-template-example-file (eas-template-get (concat "vega/" name)))))
+      (should (eas-template-p name))
+      (should (file-exists-p (eas-template-example-file (eas-template-get name))))
       (should (member (plist-get (eas-vega-contour--meta name) :status) '("pass" "partial" "unsupported"))))
     (should-not eas-template-load-errors)))
 

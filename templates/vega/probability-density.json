@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "probability-density",
-    "namespace": "vega",
+    "aliases": ["vega/probability-density"],
     "version": "1.0.0",
     "doc": "Kernel density estimate of a numeric field as an area, the normal curve of its mean and deviation as a line, and a rug of every value.",
     "slots": {

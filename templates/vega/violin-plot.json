@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "violin-plot",
-    "namespace": "vega",
+    "aliases": ["vega/violin-plot"],
     "version": "1.0.0",
     "doc": "One horizontal violin per category: a mirrored kernel density estimate of a value, with its interquartile range and median marked.",
     "slots": {

@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "world-map",
-    "namespace": "vega",
+    "aliases": ["vega/world-map"],
     "version": "1.0.0",
     "doc": "A configurable map of the world: country shapes over a graticule, under any projection, with its type, scale, rotation and centre bound to inputs.",
     "slots": {

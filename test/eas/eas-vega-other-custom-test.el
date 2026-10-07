@@ -36,7 +36,7 @@
 
 (defun eas-vega-other-custom-template-file (name)
   "The template file of Vega example NAME."
-  (eas-test-file "templates/vega" (concat name ".json")))
+  (eas-test-file "templates/vega" (concat (eas-test-gallery-template name) ".json")))
 
 (defun eas-vega-other-custom-template (name)
   "The template plist of Vega example NAME, outside the global registry."
@@ -133,11 +133,11 @@ where a reference's fonts are not available here."
                   append (cons (eas-key-name k) (eas-vega-other-custom--keys v))))))
 
 (ert-deftest eas-vega-other-custom-templates-declare-their-verdicts ()
-  "Each of the thirteen templates loads as vega/NAME with an example and a verdict."
+  "Each of the thirteen templates loads as NAME with an example and a verdict."
   (dolist (name eas-vega-other-custom-names)
     (let* ((template (eas-vega-other-custom-template name))
            (verdict (eas-vega-other-custom-verdict name)))
-      (should (equal (plist-get template :name) (concat "vega/" name)))
+      (should (equal (plist-get template :name) (eas-test-gallery-template name)))
       (should (file-exists-p (eas-template-example-file template)))
       (should (member (plist-get verdict :status) eas-vega-other-custom-statuses))
       (should (stringp (plist-get verdict :note)))

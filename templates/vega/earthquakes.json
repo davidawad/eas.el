@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "earthquakes",
-    "namespace": "vega",
+    "aliases": ["vega/earthquakes"],
     "version": "1.0.0",
     "doc": "Point events on an orthographic globe, sized by magnitude, over country shapes; the globe's rotation and the dot size are bound to inputs.",
     "slots": {

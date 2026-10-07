@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "wheat-and-wages",
-    "namespace": "vega",
+    "aliases": ["vega/wheat-and-wages"],
     "version": "1.0.0",
     "doc": "Playfair's wheat and wages: price bars, a wage area and line, and a band of reigns above, alternating up and down.",
     "slots": {

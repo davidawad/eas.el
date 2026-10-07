@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "sunburst",
-    "namespace": "vega",
+    "aliases": ["vega/sunburst"],
     "version": "1.0.0",
     "doc": "A sunburst of id/parent rows: the root at the centre, each depth a ring, each node an arc whose angle is its value, colored by depth.",
     "slots": {

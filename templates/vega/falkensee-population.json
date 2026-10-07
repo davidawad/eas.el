@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "falkensee-population",
-    "namespace": "vega",
+    "aliases": ["vega/falkensee-population"],
     "version": "1.0.0",
     "doc": "An annotated line: a smooth line with points over time, with shaded periods named in a legend.",
     "slots": {

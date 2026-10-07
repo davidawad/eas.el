@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "grouped-bar-chart",
-    "namespace": "vega",
+    "aliases": ["vega/grouped-bar-chart"],
     "version": "1.0.0",
     "doc": "Vega gallery grouped bar chart: horizontal bars per category, one per position within it, each labelled with its value.",
     "slots": {

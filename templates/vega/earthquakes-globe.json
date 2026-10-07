@@ -2,7 +2,7 @@
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "x-eas": {
     "template": "earthquakes-globe",
-    "namespace": "vega",
+    "aliases": ["vega/earthquakes-globe"],
     "version": "1.0.0",
     "doc": "Point events as rings on a dark orthographic globe among stars, colored and sized by magnitude; the globe's rotation is bound to an input.",
     "slots": {

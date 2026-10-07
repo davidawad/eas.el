@@ -38,6 +38,18 @@ More: every gallery group as a composite in
 [docs/screenshots/composites](docs/screenshots/composites) and each chart
 on its own in [docs/screenshots/charts](docs/screenshots/charts).
 
+### Animation
+
+Templates can play. `air-traffic` animates the recovery of U.S. air
+travel from the BTS Air Traffic tables (2021-2024), month by month: an
+x-eas timer advances a `month` param, space pauses, the arrows and a
+month slider scrub. Its data, fields and series are slots, so any
+monthly table animates the same way. Drawn by the SVG renderer, one
+frame per tick (`scripts/eas-animate.sh air-traffic OUT.gif 48 250
+'{"month": 1}'`):
+
+![U.S. air traffic 2021-2024 animated month by month: enplanements and load factor](docs/screenshots/animations/air-traffic.gif)
+
 ### SVG backend
 
 These come from the native SVG renderer (`scripts/eas-screenshots.sh`,
@@ -214,7 +226,8 @@ verb.
 A template is a chart/v1 spec with declared, typed slots. It lives in
 `templates/NAME.json`, and `examples/NAME.data.json` holds bindings that
 render as-is. This package ships `line`, `series-line`, `multi`, `area`,
-`bars`, `histogram`, `heatmap` and `sparkline`. A domain package, such
+`bars`, `histogram`, `heatmap`, `sparkline` and the animated
+`air-traffic`. A domain package, such
 as financial-chart.el with its candlestick, depth and payoff charts,
 supplies only templates and transforms
 (`eas-register-transform`). It never draws.

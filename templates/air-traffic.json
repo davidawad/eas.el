@@ -1,0 +1,170 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "air-traffic",
+    "version": "1.0.0",
+    "doc": "Monthly series animated through time: two side-by-side panels draw their series month by month, highlight the current month, and play, pause or scrub with a timer and a month slider. The example animates the recovery of U.S. air travel, 2021-2024 (BTS Air Traffic tables).",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "tidy rows: one per series, year and month"},
+      "series": {"type": "field", "of": "data", "default": "table", "doc": "the column naming each row's series (a BTS table number)"},
+      "year": {"type": "field", "of": "data", "default": "year"},
+      "month": {"type": "field", "of": "data", "default": "month", "doc": "month of the year, 1-12"},
+      "value": {"type": "field", "of": "data", "default": "value"},
+      "left_series": {"type": "array", "default": [1, 2, 3], "doc": "the series drawn in the left panel"},
+      "right_series": {"type": "array", "default": [10, 11, 12], "doc": "the series drawn in the right panel"},
+      "labels": {"type": "array", "items": "string", "default": ["Systemwide", "Domestic", "International"], "doc": "legend label of the Nth series of each panel"},
+      "left_title": {"type": "string", "default": "Passenger enplanements (millions, seasonally adjusted)"},
+      "right_title": {"type": "string", "default": "Load factor (%, seasonally adjusted)"},
+      "left_domain": {"type": "array", "default": [0, 90], "doc": "y domain of the left panel, fixed so the axis holds still while playing"},
+      "right_domain": {"type": "array", "default": [0, 100], "doc": "y domain of the right panel"},
+      "start_year": {"type": "integer", "default": 2021, "doc": "the first month is January of this year"},
+      "months": {"type": "integer", "default": 48, "doc": "how many months the animation runs"},
+      "interval": {"type": "number", "default": 400, "doc": "milliseconds per month while playing"},
+      "width": {"type": "number", "default": 300, "doc": "width of each panel"},
+      "height": {"type": "number", "default": 200},
+      "title": {"type": "string", "default": "U.S. air travel recovers, month by month"},
+      "description": {"type": "string", "default": "Animated monthly series in two panels: lines drawn up to the current month, which is highlighted; space plays or pauses, left and right step a month."}
+    },
+    "example": "examples/air-traffic.data.json",
+    "timer": {"interval": 400},
+    "on": [
+      {"events": "timer", "param": "month",
+       "update": {"x-eas:expr": "playing ? (month >= {{months}} ? 1 : month + 1) : month"}},
+      {"events": ["key:space", "key:p"], "param": "playing", "update": "!playing"},
+      {"events": "key:left", "param": "month", "update": "max(month - 1, 1)"},
+      {"events": "key:right", "param": "month", "update": {"x-eas:expr": "min(month + 1, {{months}})"}},
+      {"events": "key:home", "param": "month", "update": "1"},
+      {"events": "key:end", "param": "month", "update": {"x-eas:expr": "{{months}}"}}
+    ]
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "data": {"name": "data"},
+  "params": [
+    {"name": "month", "value": {"x-eas:slot": "months"},
+     "bind": {"input": "range", "min": 1, "max": {"x-eas:slot": "months"}, "step": 1, "name": "month "}},
+    {"name": "playing", "value": true,
+     "bind": {"input": "checkbox", "name": "playing "}}
+  ],
+  "transform": [
+    {"calculate": {"x-eas:expr": "(datum[{{year}}] - {{start_year}}) * 12 + datum[{{month}}]"}, "as": "frame"},
+    {"filter": {"x-eas:expr": "datum.frame >= 1 && datum.frame <= month"}},
+    {"calculate": {"x-eas:expr": "datetime(datum[{{year}}], datum[{{month}}] - 1, 1)"}, "as": "date"},
+    {"calculate": {"x-eas:expr": "indexof({{left_series}}, datum[{{series}}]) >= 0 ? 'left' : indexof({{right_series}}, datum[{{series}}]) >= 0 ? 'right' : ''"}, "as": "panel"},
+    {"calculate": {"x-eas:expr": "{{labels}}[max(indexof({{left_series}}, datum[{{series}}]), indexof({{right_series}}, datum[{{series}}]))]"}, "as": "label"},
+    {"calculate": "datum.frame == month", "as": "current"}
+  ],
+  "hconcat": [
+    {
+      "width": {"x-eas:slot": "width"},
+      "height": {"x-eas:slot": "height"},
+      "title": {"text": {"x-eas:slot": "left_title"}, "fontSize": 11, "anchor": "start"},
+      "transform": [{"filter": "datum.panel == 'left'"}],
+      "layer": [
+        {
+          "transform": [{"filter": "datum.current"}],
+          "mark": {"type": "rule", "color": "#bbbbbb", "strokeDash": [3, 3]},
+          "encoding": {
+            "x": {"field": "date", "type": "temporal", "title": null,
+                  "scale": {"domain": [{"year": {"x-eas:slot": "start_year"}, "month": 1, "date": 1},
+                                       {"expr": {"x-eas:expr": "datetime({{start_year}}, {{months}} - 1, 1)"}}]},
+                  "axis": {"format": "%Y", "tickCount": "year"}}
+          }
+        },
+        {
+          "mark": {"type": "line", "strokeWidth": 2},
+          "encoding": {
+            "x": {"field": "date", "type": "temporal"},
+            "y": {"field": {"x-eas:slot": "value"}, "type": "quantitative", "title": null,
+                  "scale": {"domain": {"x-eas:slot": "left_domain"}, "nice": false}},
+            "color": {"field": "label", "type": "nominal", "title": null,
+                      "scale": {"domain": {"x-eas:slot": "labels"}},
+                      "legend": {"orient": "top", "direction": "horizontal"}}
+          }
+        },
+        {
+          "transform": [{"filter": "datum.current"}],
+          "mark": {"type": "point", "filled": true, "size": 60, "opacity": 1},
+          "encoding": {
+            "x": {"field": "date", "type": "temporal"},
+            "y": {"field": {"x-eas:slot": "value"}, "type": "quantitative"},
+            "color": {"field": "label", "type": "nominal"},
+            "tooltip": [
+              {"field": "label", "type": "nominal", "title": "series"},
+              {"field": "date", "type": "temporal", "timeUnit": "yearmonth", "title": "month"},
+              {"field": {"x-eas:slot": "value"}, "type": "quantitative"}
+            ]
+          }
+        },
+        {
+          "transform": [{"filter": "datum.current"}],
+          "mark": {"type": "text", "align": "left", "dx": 6, "fontSize": 10},
+          "encoding": {
+            "x": {"field": "date", "type": "temporal"},
+            "y": {"field": {"x-eas:slot": "value"}, "type": "quantitative"},
+            "text": {"field": {"x-eas:slot": "value"}, "type": "quantitative", "format": ".1f"},
+            "color": {"field": "label", "type": "nominal"}
+          }
+        },
+        {
+          "transform": [{"filter": "datum.current"},
+                        {"aggregate": [{"op": "max", "field": "date", "as": "date"}]},
+                        {"calculate": "timeFormat(datum.date, '%B %Y')", "as": "now"}],
+          "mark": {"type": "text", "align": "left", "baseline": "top", "dx": 6, "fontSize": 18, "fontWeight": "bold", "color": "#555555"},
+          "encoding": {
+            "x": {"value": 0},
+            "y": {"value": 0},
+            "text": {"field": "now", "type": "nominal"}
+          }
+        }
+      ]
+    },
+    {
+      "width": {"x-eas:slot": "width"},
+      "height": {"x-eas:slot": "height"},
+      "title": {"text": {"x-eas:slot": "right_title"}, "fontSize": 11, "anchor": "start"},
+      "transform": [{"filter": "datum.panel == 'right'"}],
+      "layer": [
+        {
+          "transform": [{"filter": "datum.current"}],
+          "mark": {"type": "rule", "color": "#bbbbbb", "strokeDash": [3, 3]},
+          "encoding": {
+            "x": {"field": "date", "type": "temporal", "title": null,
+                  "scale": {"domain": [{"year": {"x-eas:slot": "start_year"}, "month": 1, "date": 1},
+                                       {"expr": {"x-eas:expr": "datetime({{start_year}}, {{months}} - 1, 1)"}}]},
+                  "axis": {"format": "%Y", "tickCount": "year"}}
+          }
+        },
+        {
+          "mark": {"type": "line", "strokeWidth": 2},
+          "encoding": {
+            "x": {"field": "date", "type": "temporal"},
+            "y": {"field": {"x-eas:slot": "value"}, "type": "quantitative", "title": null,
+                  "scale": {"domain": {"x-eas:slot": "right_domain"}, "nice": false}},
+            "color": {"field": "label", "type": "nominal", "title": null,
+                      "scale": {"domain": {"x-eas:slot": "labels"}}, "legend": null}
+          }
+        },
+        {
+          "transform": [{"filter": "datum.current"}],
+          "mark": {"type": "point", "filled": true, "size": 60, "opacity": 1},
+          "encoding": {
+            "x": {"field": "date", "type": "temporal"},
+            "y": {"field": {"x-eas:slot": "value"}, "type": "quantitative"},
+            "color": {"field": "label", "type": "nominal"}
+          }
+        },
+        {
+          "transform": [{"filter": {"x-eas:expr": "datum.current && datum.label == {{labels}}[0]"}}],
+          "mark": {"type": "text", "align": "left", "dx": 6, "fontSize": 10},
+          "encoding": {
+            "x": {"field": "date", "type": "temporal"},
+            "y": {"field": {"x-eas:slot": "value"}, "type": "quantitative"},
+            "text": {"field": {"x-eas:slot": "value"}, "type": "quantitative", "format": ".1f"},
+            "color": {"field": "label", "type": "nominal"}
+          }
+        }
+      ]
+    }
+  ]
+}

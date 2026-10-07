@@ -293,7 +293,11 @@ returns is recorded as the click's `:result`, and an error as `:error`
 datum (the row; for areas, the target itself, so `datum.value` or
 `datum.x`; `target` names the whole target) or a predicate function of
 target and view. Several entries for one key are tried in order, so
-regions of one mark can run different callbacks. FN may also be a
+regions of one mark can run different callbacks. Entries with a
+`:when` come before unconditional ones (each group keeps its order),
+so a catch-all defined first never shadows a later `:when` entry; the
+first unconditional entry runs when no `:when` holds. Exactly one
+callback runs per click. FN may also be a
 registered action name (`echo`, `copy-row`, `drill`, ...).
 
 Per view, `(eas-action-bind VIEW KEY BINDING)` takes the same bindings:
@@ -302,7 +306,8 @@ an action name, a function, `(:fn FN :when P ARG V ...)`,
 JSON: `"x-eas": {"actions": {"main/0": [{"action": "echo", "when":
 "datum.v > 2"}]}}`. For each key the view's binding wins, then global
 entries for its template, then the template's actions, then global
-entries for any view. `eas-inspect` shows the last click with the
+entries for any view; the `:when`-first order applies inside each of
+these, so a template's catch-all still beats a global `:when` entry. `eas-inspect` shows the last click with the
 action it ran.
 
 ## Fonts

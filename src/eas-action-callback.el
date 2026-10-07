@@ -21,7 +21,9 @@
 ;;     target itself; `target' names the whole target), or a
 ;;     function called with the target and the view; a binding is a
 ;;     vector or list of candidates, the first whose :when holds runs,
-;;     so regions of one mark run different callbacks;
+;;     so regions of one mark run different callbacks.  Candidates
+;;     with a :when are tried before unconditional ones, each group in
+;;     its own order, so a catch-all never shadows a :when entry;
 ;;   - `eas-action-default-bindings' holds global entries keyed by
 ;;     template name (nil for any view) and binding key.  The order,
 ;;     for each key from the most specific: the view's
@@ -76,8 +78,9 @@ mark id, a click or legend param name, \"legend\", \"axis\",
 \"axis:CHANNEL\", \"title\", \"background\" or \"*\"), then the binding:
 :fn FUNCTION or :action NAME, optional :when (a Vega expression string
 or a predicate on target and view), :doc, and any args.  Entries with
-the same template and key are tried in order; the first whose :when
-holds runs.  `eas-define-callback' adds entries."
+the same template and key are tried in order, those with a :when
+before unconditional ones; the first that holds runs.
+`eas-define-callback' adds entries."
   :type '(repeat (plist :key-type symbol :value-type sexp))
   :group 'eas-action-callback)
 
@@ -162,12 +165,24 @@ predicate that fails does not hold."
         ((and (consp binding) (not (eas-object-p binding)) (not (functionp binding))) binding)
         (t (list binding))))
 
+(defun eas-action-callback--when (b)
+  "The :when of candidate B, or nil when B is unconditional."
+  (and (eas-object-p b) (plist-get b :when)))
+
+(defun eas-action-callback--ordered (binding)
+  "BINDING's candidates, those with a :when first.
+Each group keeps its own order, so an unconditional candidate never
+shadows a conditional one for the same key."
+  (let ((candidates (eas-action-callback--candidates binding)))
+    (append (seq-filter #'eas-action-callback--when candidates)
+            (seq-remove #'eas-action-callback--when candidates))))
+
 (defun eas-action-callback-pick (binding view target)
   "Return the first of BINDING's candidates whose :when is true.
-The :when is judged for TARGET in VIEW."
-  (seq-find (lambda (b) (and b (eas-action-callback-when-p (and (eas-object-p b) (plist-get b :when))
-                                                           target view)))
-            (eas-action-callback--candidates binding)))
+Candidates with a :when are tried before unconditional ones.  The
+:when is judged for TARGET in VIEW."
+  (seq-find (lambda (b) (and b (eas-action-callback-when-p (eas-action-callback--when b) target view)))
+            (eas-action-callback--ordered binding)))
 
 ;;; Area geometry
 

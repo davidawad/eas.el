@@ -210,6 +210,41 @@ Return the view's click."
                               :result)
                    "mid"))))
 
+;; eas-7r1.18: a catch-all defined first no longer shadows a later :when.
+(ert-deftest eas-action-callback-when-outranks-unconditional ()
+  (eas-action-callback-test--with-view v eas-action-callback-test--spec
+    (cl-flet ((result (i) (plist-get (plist-get (eas-dispatch v (list :type "click"
+                                                                      :px (eas-action-callback-test--centre v "main/0" i)))
+                                                :click)
+                                     :result)))
+      (eas-define-callback nil "*" (lambda (_t _v) "any"))
+      (eas-define-callback nil "*" (lambda (_t _v) "big") :when "datum.amount > 4")
+      (eas-define-callback nil "*" (lambda (_t _v) "mid") :when "datum.amount > 2")
+      ;; :when entries first, in definition order; then the catch-all.
+      (should (equal (mapcar #'result '(0 1 2)) '("any" "big" "mid")))
+      ;; Redefining the catch-all replaces it and keeps the order.
+      (eas-define-callback nil "*" (lambda (_t _v) "other"))
+      (should (equal (mapcar #'result '(0 1 2)) '("other" "big" "mid")))
+      ;; Same within one view binding.
+      (eas-action-bind v "main/0" (vector (lambda (_t _v) "view-any")
+                                          (list :fn (lambda (_t _v) "view-low") :when "datum.amount < 2")))
+      (should (equal (mapcar #'result '(0 1 2)) '("view-low" "view-any" "view-any"))))))
+
+(ert-deftest eas-action-callback-when-order-keeps-scope-precedence ()
+  (eas-action-callback-test--with-view v "bars"
+    (cl-flet ((result () (plist-get (plist-get (eas-dispatch v (list :type "click"
+                                                                     :px (eas-action-callback-test--centre v "main/0" 1)))
+                                               :click)
+                                    :result)))
+      ;; An any-view :when does not outrank the template's catch-all.
+      (eas-define-callback nil "main/0" (lambda (_t _v) "global-when") :when "true")
+      (eas-define-callback "bars" "main/0" (lambda (_t _v) "template-any"))
+      (should (equal (result) "template-any"))
+      ;; A mark key still outranks "*", however conditional "*" is.
+      (eas-remove-callback "bars" "main/0")
+      (eas-define-callback "bars" "*" (lambda (_t _v) "star-when") :when "true")
+      (should (equal (result) "global-when")))))
+
 ;;; Area targets: GUI (:map areas, mouse-1)
 
 (ert-deftest eas-action-callback-axis-title-and-background-in-svg ()

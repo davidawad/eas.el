@@ -369,6 +369,24 @@ Vega reference (needs rsvg-convert)."
            (marks (plist-get (aref (plist-get (eas-compile spec) :views) 0) :marks)))
       (should (equal (mapcar (lambda (i) (plist-get i :size)) (plist-get (aref marks 0) :items)) '(50 200))))))
 
+(ert-deftest eas-vega-interaction-axis-offset-expr ()
+  "An axis offset may be an ExprRef; zoomable-binned-plot puts its axes
+where Vega does, on the padding's outer edges, with one."
+  (let* ((spec '(:data (:values [(:a 1 :b 2) (:a 3 :b 4)]) :mark "point" :width 100 :height 50
+                 :encoding (:x (:field "a" :type "quantitative" :axis (:orient "top" :offset (:expr "-(50 + 20)")))
+                            :y (:field "b" :type "quantitative"))))
+         (axes (plist-get (aref (plist-get (eas-compile spec) :views) 0) :axes))
+         (x (seq-find (lambda (a) (equal (plist-get a :orient) "top")) axes)))
+    ;; Top axis 70px above the plot's top edge: 20px below its bottom.
+    (should (= (plist-get x :offset) -70))
+    (should (> (aref (plist-get x :domain-line) 1) (+ 11 50))))
+  (let ((axis (plist-get (plist-get (plist-get (eas-resolve "vega/zoomable-binned-plot"
+                                                            '(:data [(:u 0 :v 0)] :height 200))
+                                               :encoding)
+                                    :x)
+                         :axis)))
+    (should (equal (plist-get axis :offset) '(:expr "-(200 + 20)")))))
+
 (ert-deftest eas-vega-interaction-platformer-falls-lands-and-jumps ()
   "Gravity pulls the player onto the terrain; up jumps off it."
   (eas-vega-interaction-with

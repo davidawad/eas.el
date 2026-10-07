@@ -61,7 +61,11 @@ METRICS carries the config.  Return a plist to prepend to the model."
      (when (eq (funcall get :domain) :false) (list :no-domain t))
      (when (eq (funcall get :ticks) :false) (list :no-ticks t))
      (when (eq (funcall get :labels) :false) (list :no-labels t))
-     (let ((v (funcall get :offset))) (when (and (numberp v) (/= v 0)) (list :offset v)))
+     (let ((v (funcall get :offset)))
+       ;; An ExprRef offset ({"expr": "-(300 + 20)"}) reads no data.
+       (when (and (eas-object-p v) v (stringp (plist-get v :expr)))
+         (setq v (eas-expr-evaluate (plist-get v :expr) nil)))
+       (when (and (numberp v) (/= v 0)) (list :offset v)))
      (let ((v (funcall get :minExtent))) (when (and (numberp v) (> v 0)) (list :min-extent v)))
      (let ((v (funcall num :labelPadding))) (when v (list :label-pad v)))
      (let ((v (funcall num :titlePadding))) (when v (list :title-pad v)))

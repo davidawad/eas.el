@@ -56,9 +56,9 @@
     "example": "../examples/vega/zoomable-binned-plot.data.json",
     "vega": {
       "status": "partial",
-      "note": "The density heatmap and the points pan and zoom together (a param bound to scales), but the bins stay those of the full extent: Vega re-bins the visible domain while zooming, which Vega-Lite cannot express. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0318 (was 0.0317 against vg2svg).",
-      "ratio": 0.0318,
-      "threshold": 0.05
+      "note": "The density heatmap and the points pan and zoom together (a param bound to scales), but the bins stay those of the full extent: Vega re-bins the visible domain while zooming. Vega-Lite can say it (bin extent {param}), but eas does not yet feed a scales-bound selection's zoomed domains to a bin extent (they live in the view state's domains, not in the params) nor pick the extent's field. The axes sit where Vega's do (orient top and right with ExprRef offsets onto the padding's outer edges) and the cells are unstroked. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12d with rsvg-convert and Liberation Sans: ratio 0.0083 (was 0.0318: 0.0197 from the theme's white rect stroke, 0.0038 from the axis placement); the rest is Monaco falling back to a different monospace and dot antialiasing.",
+      "ratio": 0.0083,
+      "threshold": 0.015
     }
   },
   "title": {
@@ -76,7 +76,7 @@
   "height": {
     "x-eas:slot": "height"
   },
-  "padding": 5,
+  "padding": 0,
   "config": {
     "background": "transparent",
     "font": "sans-serif",
@@ -93,6 +93,9 @@
       "labelFont": "Monaco, Courier New, monospace",
       "grid": false,
       "title": null
+    },
+    "rect": {
+      "stroke": null
     }
   },
   "encoding": {
@@ -106,8 +109,13 @@
         "nice": false
       },
       "axis": {
-        "orient": "bottom",
-        "tickCount": 10
+        "orient": "top",
+        "tickCount": 10,
+        "offset": {
+          "expr": {
+            "x-eas:expr": "-({{height}} + 20)"
+          }
+        }
       }
     },
     "y": {
@@ -120,8 +128,13 @@
         "nice": false
       },
       "axis": {
-        "orient": "left",
-        "tickCount": 10
+        "orient": "right",
+        "tickCount": 10,
+        "offset": {
+          "expr": {
+            "x-eas:expr": "-({{width}} + 40)"
+          }
+        }
       }
     }
   },

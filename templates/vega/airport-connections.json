@@ -6,133 +6,620 @@
     "version": "1.0.0",
     "doc": "Airports on a map, sized by the flights that leave them; hovering an airport (its Voronoi cell) draws its routes.",
     "slots": {
-      "flights": {"shape": "plist", "required": true, "doc": "one row per route: origin, destination and a count"},
-      "airports": {"shape": "plist", "required": true, "doc": "one row per airport with its code, name, latitude and longitude"},
-      "origin": {"type": "field", "of": "flights", "default": "origin"},
-      "destination": {"type": "field", "of": "flights", "default": "destination"},
-      "count": {"type": "field", "of": "flights", "default": "count"},
-      "code": {"type": "field", "of": "airports", "default": "iata", "doc": "airport field the routes name"},
-      "name": {"type": "field", "of": "airports", "default": "name"},
-      "longitude": {"type": "field", "of": "airports", "default": "longitude"},
-      "latitude": {"type": "field", "of": "airports", "default": "latitude"},
-      "projection": {"type": "string", "default": "albersUsa", "doc": "albersUsa, albers or conicEqualArea"},
-      "scale": {"type": "number", "default": 1200, "doc": "the projection's scale"},
-      "translate": {"type": "array", "default": [450, 285], "doc": "the projection's translate, in pixels (the gallery's [450, 260] below its 25 px title band)"},
-      "states": {"shape": "geojson", "default": null, "doc": "the shapes drawn behind the airports: GeoJSON features, or TopoJSON {\"url\" or \"topology\", \"feature\"}"},
-      "cells": {"type": "boolean", "default": false, "doc": "outline every airport's Voronoi cell"},
-      "title": {"type": "string", "default": "U.S. Airports, 2008", "doc": "written right-aligned above the map, its baseline 25 px down"},
-      "width": {"type": "number", "default": 900},
-      "height": {"type": "number", "default": 585, "doc": "the canvas height, the title's band included"},
-      "description": {"type": "string", "default": "Interactive map of U.S. airport connections in 2008."}
+      "flights": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per route: origin, destination and a count"
+      },
+      "airports": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per airport with its code, name, latitude and longitude"
+      },
+      "origin": {
+        "type": "field",
+        "of": "flights",
+        "default": "origin"
+      },
+      "destination": {
+        "type": "field",
+        "of": "flights",
+        "default": "destination"
+      },
+      "count": {
+        "type": "field",
+        "of": "flights",
+        "default": "count"
+      },
+      "code": {
+        "type": "field",
+        "of": "airports",
+        "default": "iata",
+        "doc": "airport field the routes name"
+      },
+      "name": {
+        "type": "field",
+        "of": "airports",
+        "default": "name"
+      },
+      "longitude": {
+        "type": "field",
+        "of": "airports",
+        "default": "longitude"
+      },
+      "latitude": {
+        "type": "field",
+        "of": "airports",
+        "default": "latitude"
+      },
+      "projection": {
+        "type": "string",
+        "default": "albersUsa",
+        "doc": "albersUsa, albers or conicEqualArea"
+      },
+      "scale": {
+        "type": "number",
+        "default": 1200,
+        "doc": "the projection's scale"
+      },
+      "translate": {
+        "type": "array",
+        "default": [
+          450,
+          285
+        ],
+        "doc": "the projection's translate, in pixels (the gallery's [450, 260] below its 25 px title band)"
+      },
+      "states": {
+        "shape": "geojson",
+        "default": null,
+        "doc": "the shapes drawn behind the airports: GeoJSON features, or TopoJSON {\"url\" or \"topology\", \"feature\"}"
+      },
+      "cells": {
+        "type": "boolean",
+        "default": false,
+        "doc": "outline every airport's Voronoi cell"
+      },
+      "heading": {
+        "type": "string",
+        "default": "U.S. Airports, 2008",
+        "doc": "text drawn in the top-right corner, as in the Vega example"
+      },
+      "title": {
+        "type": "string",
+        "default": "",
+        "doc": "chart title"
+      },
+      "width": {
+        "type": "number",
+        "default": 900
+      },
+      "height": {
+        "type": "number",
+        "default": 585,
+        "doc": "the canvas height, the title's band included"
+      },
+      "description": {
+        "type": "string",
+        "default": "Interactive map of U.S. airport connections in 2008."
+      }
     },
     "example": "../examples/vega/airport-connections.data.json",
-    "vega": {"status": "pass", "ratio": 0.002, "offset": [0, 0], "note": "Airports, their sizes, the fixed albersUsa projection (scale 1200), the Voronoi cells (cells slot) and the routes of the hovered airport match Vega. The state shapes are a geoshape layer under the same projection (states slot, TopoJSON). Vega's 25 px top padding is folded into the canvas: height 585 and translate [450, 285], with the title a right-aligned text mark on y 25, so the canvas is the reference's 900x585 at offset [0, 0]. Engine causes fixed in eas-7r1.12f: a layer with its own data no longer runs its parents' transforms, and autosize none no longer grows the canvas for marks that overhang it (Alaska's Aleutians grew it 59 px). Not ported: the title does not follow the hovered airport, and the line/curve route shape has no input. Against the vg2png (node-canvas) reference: ratio 0.0020 (was 0.4578 without the states and with the grown canvas), measured with resvg 0.48 and Liberation Sans (Arimo's metrics) in eas-7r1.12f; librsvg could not be installed in that box, and resvg reads about 0.003 above rsvg-convert on these label-heavy charts."}
+    "vega": {
+      "status": "pass",
+      "ratio": 0.002,
+      "offset": [
+        0,
+        0
+      ],
+      "note": "Airports, their sizes, the fixed albersUsa projection (scale 1200), the Voronoi cells (cells slot) and the routes of the hovered airport match Vega. The state shapes are a geoshape layer under the same projection (states slot, TopoJSON). Vega's 25 px top padding is folded into the canvas: height 585 and translate [450, 285], with the title a right-aligned text mark on y 25, so the canvas is the reference's 900x585 at offset [0, 0]. Engine causes fixed in eas-7r1.12f: a layer with its own data no longer runs its parents' transforms, and autosize none no longer grows the canvas for marks that overhang it (Alaska's Aleutians grew it 59 px). Not ported: the title does not follow the hovered airport, and the line/curve route shape has no input. Against the vg2png (node-canvas) reference: ratio 0.0020 (was 0.4578 without the states and with the grown canvas), measured with resvg 0.48 and Liberation Sans (Arimo's metrics) in eas-7r1.12f; librsvg could not be installed in that box, and resvg reads about 0.003 above rsvg-convert on these label-heavy charts."
+    }
   },
-  "description": {"x-eas:slot": "description"},
-  "width": {"x-eas:slot": "width"},
-  "height": {"x-eas:slot": "height"},
+  "title": {
+    "x-eas:slot": "title"
+  },
+  "description": {
+    "x-eas:slot": "description"
+  },
+  "width": {
+    "x-eas:slot": "width"
+  },
+  "height": {
+    "x-eas:slot": "height"
+  },
   "padding": 0,
   "autosize": "none",
   "background": "white",
-  "config": {"view": {"stroke": null}},
-  "data": {"name": "flights"},
+  "config": {
+    "view": {
+      "stroke": null
+    }
+  },
+  "data": {
+    "name": "flights"
+  },
   "transform": [
     {
-      "x-eas:transform": "voronoi", "x": "x", "y": "y", "key": {"x-eas:slot": "origin"}, "polygon": "eas_cell",
+      "x-eas:transform": "voronoi",
+      "x": "x",
+      "y": "y",
+      "key": {
+        "x-eas:slot": "origin"
+      },
+      "polygon": "eas_cell",
       "transform": [
-        {"joinaggregate": [{"op": "sum", "field": {"x-eas:slot": "count"}, "as": "flights"}],
-         "groupby": [{"x-eas:slot": "origin"}]},
-        {"lookup": {"x-eas:slot": "origin"},
-         "from": {"data": {"name": "airports"}, "key": {"x-eas:slot": "code"},
-                  "fields": [{"x-eas:slot": "name"}, {"x-eas:slot": "longitude"}, {"x-eas:slot": "latitude"}]},
-         "as": ["eas_name", "eas_lon", "eas_lat"]},
-        {"lookup": {"x-eas:slot": "destination"},
-         "from": {"data": {"name": "airports"}, "key": {"x-eas:slot": "code"},
-                  "fields": [{"x-eas:slot": "longitude"}, {"x-eas:slot": "latitude"}]},
-         "as": ["eas_lon2", "eas_lat2"]},
-        {"filter": "isValid(datum.eas_lon) && isValid(datum.eas_lat)"},
-        {"x-eas:transform": "project", "fit": false,
-         "projection": {"type": {"x-eas:slot": "projection"}, "scale": {"x-eas:slot": "scale"}, "translate": {"x-eas:slot": "translate"}},
-         "longitude": "eas_lon", "latitude": "eas_lat",
-         "size": [{"x-eas:slot": "width"}, {"x-eas:slot": "height"}], "as": ["x", "eas_up"]},
-        {"x-eas:transform": "project", "fit": false,
-         "projection": {"type": {"x-eas:slot": "projection"}, "scale": {"x-eas:slot": "scale"}, "translate": {"x-eas:slot": "translate"}},
-         "longitude": "eas_lon2", "latitude": "eas_lat2",
-         "size": [{"x-eas:slot": "width"}, {"x-eas:slot": "height"}], "as": ["x2", "eas_up2"]},
-        {"filter": {"x-eas:expr": "datum.x !== 0 || datum.eas_up !== {{height}}"}},
-        {"calculate": {"x-eas:expr": "{{height}} - datum.eas_up"}, "as": "y"},
-        {"calculate": {"x-eas:expr": "{{height}} - datum.eas_up2"}, "as": "y2"}
+        {
+          "joinaggregate": [
+            {
+              "op": "sum",
+              "field": {
+                "x-eas:slot": "count"
+              },
+              "as": "flights"
+            }
+          ],
+          "groupby": [
+            {
+              "x-eas:slot": "origin"
+            }
+          ]
+        },
+        {
+          "lookup": {
+            "x-eas:slot": "origin"
+          },
+          "from": {
+            "data": {
+              "name": "airports"
+            },
+            "key": {
+              "x-eas:slot": "code"
+            },
+            "fields": [
+              {
+                "x-eas:slot": "name"
+              },
+              {
+                "x-eas:slot": "longitude"
+              },
+              {
+                "x-eas:slot": "latitude"
+              }
+            ]
+          },
+          "as": [
+            "eas_name",
+            "eas_lon",
+            "eas_lat"
+          ]
+        },
+        {
+          "lookup": {
+            "x-eas:slot": "destination"
+          },
+          "from": {
+            "data": {
+              "name": "airports"
+            },
+            "key": {
+              "x-eas:slot": "code"
+            },
+            "fields": [
+              {
+                "x-eas:slot": "longitude"
+              },
+              {
+                "x-eas:slot": "latitude"
+              }
+            ]
+          },
+          "as": [
+            "eas_lon2",
+            "eas_lat2"
+          ]
+        },
+        {
+          "filter": "isValid(datum.eas_lon) && isValid(datum.eas_lat)"
+        },
+        {
+          "x-eas:transform": "project",
+          "fit": false,
+          "projection": {
+            "type": {
+              "x-eas:slot": "projection"
+            },
+            "scale": {
+              "x-eas:slot": "scale"
+            },
+            "translate": {
+              "x-eas:slot": "translate"
+            }
+          },
+          "longitude": "eas_lon",
+          "latitude": "eas_lat",
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ],
+          "as": [
+            "x",
+            "eas_up"
+          ]
+        },
+        {
+          "x-eas:transform": "project",
+          "fit": false,
+          "projection": {
+            "type": {
+              "x-eas:slot": "projection"
+            },
+            "scale": {
+              "x-eas:slot": "scale"
+            },
+            "translate": {
+              "x-eas:slot": "translate"
+            }
+          },
+          "longitude": "eas_lon2",
+          "latitude": "eas_lat2",
+          "size": [
+            {
+              "x-eas:slot": "width"
+            },
+            {
+              "x-eas:slot": "height"
+            }
+          ],
+          "as": [
+            "x2",
+            "eas_up2"
+          ]
+        },
+        {
+          "filter": {
+            "x-eas:expr": "datum.x !== 0 || datum.eas_up !== {{height}}"
+          }
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{height}} - datum.eas_up"
+          },
+          "as": "y"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "{{height}} - datum.eas_up2"
+          },
+          "as": "y2"
+        }
       ]
     }
   ],
-  "encoding": {
-    "x": {"field": "x", "type": "quantitative", "axis": null,
-          "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
-    "y": {"field": "y", "type": "quantitative", "axis": null,
-          "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}}
-  },
   "layer": [
     {
       "x-eas:when": "states",
       "spec": {
-        "data": {"name": "states"},
-        "projection": {"type": {"x-eas:slot": "projection"}, "scale": {"x-eas:slot": "scale"}, "translate": {"x-eas:slot": "translate"}},
-        "mark": {"type": "geoshape", "fill": "#dedede", "stroke": "white", "strokeWidth": 1},
-        "encoding": {"x": null, "y": null}
+        "data": {
+          "name": "states"
+        },
+        "projection": {
+          "type": {
+            "x-eas:slot": "projection"
+          },
+          "scale": {
+            "x-eas:slot": "scale"
+          },
+          "translate": {
+            "x-eas:slot": "translate"
+          }
+        },
+        "mark": {
+          "type": "geoshape",
+          "fill": "#dedede",
+          "stroke": "white",
+          "strokeWidth": 1
+        },
+        "encoding": {}
       }
     },
     {
       "transform": [
-        {"window": [{"op": "row_number", "as": "eas_nth"}], "groupby": [{"x-eas:slot": "origin"}]},
-        {"filter": "datum.eas_nth === 1"}
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "eas_nth"
+            }
+          ],
+          "groupby": [
+            {
+              "x-eas:slot": "origin"
+            }
+          ]
+        },
+        {
+          "filter": "datum.eas_nth === 1"
+        }
       ],
-      "params": [{"name": "hover", "select": {"type": "point", "on": "pointermove", "nearest": true,
-                                              "fields": [{"x-eas:slot": "origin"}]}}],
-      "mark": {"type": "circle", "fill": "steelblue", "fillOpacity": 0.8, "opacity": 1,
-               "stroke": "white", "strokeWidth": 1.5},
+      "params": [
+        {
+          "name": "hover",
+          "select": {
+            "type": "point",
+            "on": "pointermove",
+            "nearest": true,
+            "fields": [
+              {
+                "x-eas:slot": "origin"
+              }
+            ]
+          }
+        }
+      ],
+      "mark": {
+        "type": "circle",
+        "fill": "steelblue",
+        "fillOpacity": 0.8,
+        "opacity": 1,
+        "stroke": "white",
+        "strokeWidth": 1.5
+      },
       "encoding": {
-        "size": {"field": "flights", "type": "quantitative", "legend": null, "scale": {"range": [16, 1000]}},
-        "order": {"field": "flights", "sort": "descending"},
+        "size": {
+          "field": "flights",
+          "type": "quantitative",
+          "legend": null,
+          "scale": {
+            "range": [
+              16,
+              1000
+            ]
+          }
+        },
+        "order": {
+          "field": "flights",
+          "sort": "descending"
+        },
         "tooltip": [
-          {"field": "eas_name", "type": "nominal", "title": "airport"},
-          {"field": {"x-eas:slot": "origin"}, "type": "nominal", "title": "code"},
-          {"field": "flights", "type": "quantitative"}
-        ]
+          {
+            "field": "eas_name",
+            "type": "nominal",
+            "title": "airport"
+          },
+          {
+            "field": {
+              "x-eas:slot": "origin"
+            },
+            "type": "nominal",
+            "title": "code"
+          },
+          {
+            "field": "flights",
+            "type": "quantitative"
+          }
+        ],
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              {
+                "x-eas:slot": "height"
+              },
+              0
+            ],
+            "nice": false,
+            "zero": false
+          }
+        }
       }
     },
     {
       "x-eas:when": "cells",
       "spec": {
         "transform": [
-          {"window": [{"op": "row_number", "as": "eas_nth"}], "groupby": [{"x-eas:slot": "origin"}]},
-          {"filter": "datum.eas_nth === 1 && isValid(datum.eas_cell)"},
-          {"flatten": ["eas_cell"]},
-          {"window": [{"op": "row_number", "as": "eas_vertex"}], "groupby": [{"x-eas:slot": "origin"}]},
-          {"calculate": "datum.eas_cell[0]", "as": "eas_vx"},
-          {"calculate": "datum.eas_cell[1]", "as": "eas_vy"}
+          {
+            "window": [
+              {
+                "op": "row_number",
+                "as": "eas_nth"
+              }
+            ],
+            "groupby": [
+              {
+                "x-eas:slot": "origin"
+              }
+            ]
+          },
+          {
+            "filter": "datum.eas_nth === 1 && isValid(datum.eas_cell)"
+          },
+          {
+            "flatten": [
+              "eas_cell"
+            ]
+          },
+          {
+            "window": [
+              {
+                "op": "row_number",
+                "as": "eas_vertex"
+              }
+            ],
+            "groupby": [
+              {
+                "x-eas:slot": "origin"
+              }
+            ]
+          },
+          {
+            "calculate": "datum.eas_cell[0]",
+            "as": "eas_vx"
+          },
+          {
+            "calculate": "datum.eas_cell[1]",
+            "as": "eas_vy"
+          }
         ],
-        "mark": {"type": "line", "stroke": "brown", "strokeWidth": 0.35},
+        "mark": {
+          "type": "line",
+          "stroke": "brown",
+          "strokeWidth": 0.35
+        },
         "encoding": {
-          "x": {"field": "eas_vx", "type": "quantitative", "axis": null,
-                "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
-          "y": {"field": "eas_vy", "type": "quantitative", "axis": null,
-                "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}},
-          "detail": {"field": {"x-eas:slot": "origin"}, "type": "nominal"},
-          "order": {"field": "eas_vertex", "type": "quantitative"}
+          "x": {
+            "field": "eas_vx",
+            "type": "quantitative",
+            "axis": null,
+            "scale": {
+              "domain": [
+                0,
+                {
+                  "x-eas:slot": "width"
+                }
+              ],
+              "nice": false,
+              "zero": false
+            }
+          },
+          "y": {
+            "field": "eas_vy",
+            "type": "quantitative",
+            "axis": null,
+            "scale": {
+              "domain": [
+                {
+                  "x-eas:slot": "height"
+                },
+                0
+              ],
+              "nice": false,
+              "zero": false
+            }
+          },
+          "detail": {
+            "field": {
+              "x-eas:slot": "origin"
+            },
+            "type": "nominal"
+          },
+          "order": {
+            "field": "eas_vertex",
+            "type": "quantitative"
+          }
         }
       }
     },
     {
-      "transform": [{"filter": {"param": "hover", "empty": false}},
-                    {"filter": "isValid(datum.x2) && (datum.x2 !== 0 || datum.y2 !== 0)"}],
-      "mark": {"type": "rule", "stroke": "black", "opacity": 0.35, "strokeWidth": 1},
-      "encoding": {"x2": {"field": "x2"}, "y2": {"field": "y2"}}
+      "transform": [
+        {
+          "filter": {
+            "param": "hover",
+            "empty": false
+          }
+        },
+        {
+          "filter": "isValid(datum.x2) && (datum.x2 !== 0 || datum.y2 !== 0)"
+        }
+      ],
+      "mark": {
+        "type": "rule",
+        "stroke": "black",
+        "opacity": 0.35,
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x2": {
+          "field": "x2"
+        },
+        "y2": {
+          "field": "y2"
+        },
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              0,
+              {
+                "x-eas:slot": "width"
+              }
+            ],
+            "nice": false,
+            "zero": false
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "domain": [
+              {
+                "x-eas:slot": "height"
+              },
+              0
+            ],
+            "nice": false,
+            "zero": false
+          }
+        }
+      }
     },
     {
-      "data": {"values": [{}]},
-      "mark": {"type": "text", "x": {"x-eas:slot": "width"}, "dx": -5, "y": 25, "align": "right", "baseline": "alphabetic",
-               "fontSize": 20, "fill": "black"},
-      "encoding": {"x": null, "y": null, "text": {"value": {"x-eas:slot": "title"}}}
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "x": {
+          "x-eas:slot": "width"
+        },
+        "dx": -5,
+        "y": 25,
+        "align": "right",
+        "baseline": "alphabetic",
+        "fontSize": 20,
+        "fill": "black"
+      },
+      "encoding": {
+        "text": {
+          "value": {
+            "x-eas:slot": "heading"
+          }
+        },
+        "x": {
+          "value": {
+            "x-eas:slot": "width"
+          }
+        },
+        "y": {
+          "value": 25
+        }
+      }
     }
   ]
 }

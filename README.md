@@ -30,6 +30,17 @@ already has a template of that name: the gallery's heatmap is
 
 ## Screenshots
 
+Hovering airport after airport on the `airport-connections` template
+draws each one's routes, driven headless with `eas-dispatch` pointer
+events and drawn by the SVG renderer (`scripts/eas-animate.el`, job
+`scripts/animations/airport-connections.json`):
+
+![Hover tour of the airport-connections map: routes fan out from each hub](docs/screenshots/animations/airport-connections.gif)
+
+The same tour in the text backend, as a terminal shows it, with the
+tooltip in the echo area:
+[airport-connections-text.gif](docs/screenshots/animations/airport-connections-text.gif).
+
 Live views in a terminal Emacs, a 3×3 grid of official Vega-Lite gallery
 examples per workspace, every one drawn by eas's text backend:
 

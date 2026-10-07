@@ -143,6 +143,27 @@ position are one gesture and one history entry."
 
 ;;; Pointer
 
+(defun eas-reduce--nearest-view (scene view movers)
+  "Return VIEW of SCENE cut to what the nearest selection of MOVERS hits.
+It keeps the marks whose rows carry the selection's fields, so a map
+drawn under the points does not win the hover with a datum lacking
+them; segments (rules from x1 to x2) drop out while other marks carry
+them, as their midpoints are no datum's position.  VIEW as it is when
+the selection names no fields or no mark carries them."
+  (let* ((p (seq-find (lambda (p) (plist-get (plist-get p :def) :nearest)) movers))
+         (keys (and p (plist-get (plist-get p :def) :fields)
+                    (mapcar #'eas-key (eas-params-point-fields scene p))))
+         (marks (and keys (seq-filter
+                           (lambda (m)
+                             (let ((rows (plist-get m :rows)))
+                               (and (> (length rows) 0)
+                                    (seq-every-p (lambda (k) (plist-member (aref rows 0) k)) keys))))
+                           (plist-get view :marks))))
+         (points (seq-remove (lambda (m) (let ((items (plist-get m :items)))
+                                           (and (> (length items) 0) (plist-member (aref items 0) :x1))))
+                             marks)))
+    (if marks (plist-put (copy-sequence view) :marks (vconcat (or points marks))) view)))
+
 (defun eas-reduce--hover (state scene px)
   "Hover at PX in SCENE: nearest datum plus pointermove-driven selections.
 Return the updated STATE."
@@ -153,7 +174,7 @@ Return the updated STATE."
                                             (equal (append (plist-get (plist-get p :def) :encodings) nil) '("x"))))
                            movers))
          (nearest (and view (or x-only (seq-some (lambda (p) (plist-get (plist-get p :def) :nearest)) movers))
-                       (eas-hit scene id px x-only)))
+                       (eas-hit scene (eas-reduce--nearest-view scene view movers) px x-only)))
          (nearest (and nearest (or x-only (<= (plist-get nearest :distance) eas-reduce-hover-radius)) nearest))
          ;; Marks interact only where the pointer touches them (fc-qx1.34);
          ;; an x-only crosshair snaps anywhere in the plot.

@@ -1,0 +1,20 @@
+{
+  "template": "airport-connections",
+  "fps": 12,
+  "width": 900,
+  "tipDelay": 5,
+  "steps": [
+    {"pointer": [640, 650]},
+    {"hold": 8},
+    {"visit": {"mark": "circle", "key": "origin", "by": "flights",
+               "ranks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 18, 25, 35, 50, 70, 95, 130]},
+     "glide": 11, "hold": 13},
+    {"glide": [640, 650], "frames": 12},
+    {"hold": 6}
+  ],
+  "outputs": [
+    {"out": "docs/screenshots/animations/airport-connections.gif", "target": "svg"},
+    {"out": "docs/screenshots/animations/airport-connections-text.gif", "target": "text",
+     "size": {"cols": 128, "rows": 42}}
+  ]
+}

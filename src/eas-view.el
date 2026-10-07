@@ -21,6 +21,7 @@
 (require 'eas-resolve)
 (require 'eas-compile)
 (require 'eas-compile-patch)
+(require 'eas-scene-dirty)
 (require 'eas-compile-rows)
 (require 'eas-event)
 (require 'eas-reduce)
@@ -56,7 +57,9 @@ eas-stream sets it to coalesce live data.")
 
 (cl-defstruct (eas-view (:constructor eas-view--make) (:copier nil))
   id template subject spec spec-hash bindings data size target cell
-  state log (seq 0) scene plan buffer (interactive t) fallback warnings)
+  state log (seq 0) scene plan buffer (interactive t) fallback warnings
+  ;; What the last compile changed: `eas-scene-dirty' of the scenes.
+  (dirty t))
 
 (defun eas-view--unique-id (base)
   "BASE, or BASE<N> when BASE is taken."
@@ -96,7 +99,9 @@ for the new rows (`eas-compile-rows-patch')."
                                           :size (eas-view-size view) :target (eas-view-target view)
                                           :cell (eas-view-cell view) :state state))))
         (setf (eas-view-plan view) plan)
-        (eas-compile-scene plan state)))))
+        (let ((scene (eas-compile-scene plan state)))
+          (setf (eas-view-dirty view) (eas-scene-dirty (eas-view-scene view) scene))
+          scene)))))
 
 (defun eas-view--root-rows (spec)
   "Inline root rows of resolved SPEC, or nil."

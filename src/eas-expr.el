@@ -326,7 +326,88 @@ goldens and replays reproduce exactly."
   ;; The per-evaluation call counts are made on random()'s first call:
   ;; a filter evaluates once per row.
   (let ((eas-expr--random-calls 'fresh))
-    (eas-expr-eval (eas-expr-parse string) datum env)))
+    (funcall (eas-expr-function string) datum env)))
+
+;;; Compiled expressions (eas-b2s.3)
+
+;; `eas-expr-eval' walks the AST for every row; a 5000-row filter or
+;; calculate walked it 5000 times.  `eas-expr-function' turns the AST
+;; into nested closures once per expression string, with names,
+;; operators and functions resolved ahead.  The closures do exactly
+;; what `eas-expr-eval' does (eas-expr-test checks both agree).
+
+(defvar eas-expr--functions (make-hash-table :test 'equal)
+  "Compiled expressions keyed by source string.")
+
+(defun eas-expr-function (string)
+  "A function of (DATUM ENV) evaluating expression STRING (cached).
+The caller binds `eas-expr--random-calls', as `eas-expr-evaluate' does."
+  (or (gethash string eas-expr--functions)
+      (puthash string (eas-expr-compile (eas-expr-parse string)) eas-expr--functions)))
+
+(defun eas-expr--compile-var (name)
+  "A function of (DATUM ENV) returning the value of name NAME."
+  (if (equal name "datum") (lambda (datum _env) datum)
+    (let ((key (eas-key name))
+          (fallback (cond ((equal name "PI") (lambda () float-pi)) ((equal name "E") (lambda () float-e))
+                          (t (lambda ()
+                               (eas-signal "INVALID_INPUT"
+                                           (format "Unknown name %s in expression; fields are datum.%s, params by name"
+                                                   name name)
+                                           :name name))))))
+      (lambda (_datum env)
+        (let ((cell (plist-member env key))) (if cell (cadr cell) (funcall fallback)))))))
+
+(defun eas-expr--compile-binary (op fa fb)
+  "A function of (DATUM ENV) applying binary OP to compiled FA and FB."
+  (pcase op
+    ("&&" (lambda (d e) (let ((x (funcall fa d e))) (if (eas-expr-truthy x) (funcall fb d e) x))))
+    ("||" (lambda (d e) (let ((x (funcall fa d e))) (if (eas-expr-truthy x) x (funcall fb d e)))))
+    ((or "==" "===") (lambda (d e) (let* ((x (funcall fa d e)) (y (funcall fb d e)))
+                                     (if (eas-expr--equal x y) t :false))))
+    ((or "!=" "!==") (lambda (d e) (let* ((x (funcall fa d e)) (y (funcall fb d e)))
+                                     (if (eas-expr--equal x y) :false t))))
+    ((or "<" "<=" ">" ">=")
+     (lambda (d e) (let* ((x (funcall fa d e)) (y (funcall fb d e))) (eas-expr--compare op x y))))
+    (_ (lambda (d e) (let* ((x (funcall fa d e)) (y (funcall fb d e))) (eas-expr--arith op x y))))))
+
+(defun eas-expr-compile (ast)
+  "Compile AST into a function of (DATUM ENV) agreeing with `eas-expr-eval'."
+  (pcase ast
+    (`(:lit ,v) (lambda (_d _e) v))
+    (`(:array ,items)
+     (let ((fs (mapcar #'eas-expr-compile items)))
+       (lambda (d e) (vconcat (mapcar (lambda (f) (funcall f d e)) fs)))))
+    (`(:object ,pairs)
+     (let ((fs (mapcar (lambda (p) (cons (eas-key (car p)) (eas-expr-compile (cdr p)))) pairs)))
+       (lambda (d e) (cl-loop for (k . f) in fs append (list k (funcall f d e))))))
+    (`(:var ,name) (eas-expr--compile-var name))
+    (`(:member ,object (:lit ,(and key (pred stringp) (guard (not (equal key "length"))))))
+     ;; datum.field: only a row plist has it.
+     (let ((fo (eas-expr-compile object)) (k (eas-key key)))
+       (lambda (d e) (let ((o (funcall fo d e)))
+                       (if (eas-object-p o) (let ((cell (plist-member o k))) (if cell (cadr cell) :null))
+                         :null)))))
+    (`(:member ,object ,key)
+     (let ((fo (eas-expr-compile object)) (fk (eas-expr-compile key)))
+       (lambda (d e) (let ((o (funcall fo d e))) (eas-expr--member o (funcall fk d e))))))
+    (`(:unary ,op ,a)
+     (let ((fa (eas-expr-compile a)))
+       (pcase op
+         ("!" (lambda (d e) (if (eas-expr-truthy (funcall fa d e)) :false t)))
+         ("-" (lambda (d e) (- (eas-expr--number (funcall fa d e)))))
+         ("+" (lambda (d e) (eas-expr--number (funcall fa d e))))
+         (_ (lambda (d e) (funcall fa d e) nil)))))
+    (`(:cond ,test ,then ,else)
+     (let ((ft (eas-expr-compile test)) (f1 (eas-expr-compile then)) (f2 (eas-expr-compile else)))
+       (lambda (d e) (if (eas-expr-truthy (funcall ft d e)) (funcall f1 d e) (funcall f2 d e)))))
+    (`(:binary ,op ,a ,b) (eas-expr--compile-binary op (eas-expr-compile a) (eas-expr-compile b)))
+    (`(:call "random" ,_) (lambda (d _e) (eas-expr--random d)))
+    (`(:call ,name ,args)
+     (let ((fs (mapcar #'eas-expr-compile args)))
+       (lambda (d e) (apply (cdr (assoc name eas-expr-functions))
+                            (mapcar (lambda (f) (funcall f d e)) fs)))))
+    (_ (lambda (_d _e) nil))))
 
 (defun eas-expr--date-part (key &optional offset)
   "Return a function extracting date field KEY (plus OFFSET) from a date."

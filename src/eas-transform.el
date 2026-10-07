@@ -28,6 +28,7 @@
 (require 'eas-transform-pivot)
 (require 'eas-transform-calc)
 (require 'eas-transform-lookup)
+(require 'eas-transform-index)
 
 (defvar eas-transform-param-predicate
   (lambda (_param _row _env empty) empty)
@@ -51,6 +52,7 @@ selections here (eas-params-index.el, fc-qx1.9).")
            (null (eas--plist-without (eas--plist-without pred :param) :empty))
            (funcall eas-transform-param-filter-function (plist-get pred :param) rows
                     (not (eq (plist-get pred :empty) :false))))
+      (and (stringp pred) (eas-transform-index-filter pred rows env))
       (seq-filter (lambda (row) (eas-transform-predicate pred row env)) rows)))
 
 (defun eas-transform--field-value (pred row)
@@ -250,10 +252,11 @@ The extent is the selection's first interval, or dropped when empty."
 
 ;;; dispatch
 
-(defun eas-transform-run (transforms rows &optional env path)
+(defun eas-transform-run (transforms rows &optional env path start)
   "Apply the Vega-Lite TRANSFORMS array to ROWS and return new rows.
-ENV is a plist of param values; PATH the array's JSON pointer."
-  (let ((i -1) (rows (if (vectorp rows) rows (vconcat rows))))
+ENV is a plist of param values; PATH the array's JSON pointer.  START
+\(default 0) is the index of the first of TRANSFORMS in that array."
+  (let ((i (1- (or start 0))) (rows (if (vectorp rows) rows (vconcat rows))))
     (seq-doseq (tr transforms)
       (setq i (1+ i))
       (let ((tpath (format "%s/%d" (or path "/transform") i)))

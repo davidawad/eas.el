@@ -32,6 +32,7 @@
 (require 'eas-data)
 (require 'eas-compile)
 (require 'eas-compile-memo)
+(require 'eas-compile-patch)
 (require 'eas-compile-place)
 (require 'eas-text-snap)
 (require 'eas-container)
@@ -90,28 +91,33 @@ layout's."
   "Return OLD group with NEW group's units if NEW has OLD's scales.
 Return nil otherwise.
 NEW comes from collecting the new rows; its scales are built under
-STATE and METRICS and mapped onto OLD's placed plot."
-  (when (eas-compile-rows--same-units (plist-get old :units) (plist-get new :units))
-    (eas-compile--scales new state metrics)
-    (dolist (k eas-compile-rows--geometry)
-      (when (plist-member old k) (plist-put new k (plist-get old k))))
-    (eas-compile--ranges new)
-    (when (eas-layout-text-p metrics) (eas-text-snap-bands new metrics))
-    (when (and (equal (plist-get new :scales) (plist-get old :scales))
-               (equal (plist-get new :axis-defs) (plist-get old :axis-defs))
-               (equal (plist-get new :legend-specs) (plist-get old :legend-specs)))
-      (let ((group (copy-sequence old)))
-        (plist-put group :units
-                   (cl-mapcar
-                    (lambda (o n)
-                      (eas-compile-rows--count :units)
-                      (if (equal (plist-get o :rows) (plist-get n :rows))
-                          (progn (eas-compile-rows--count :reused) o)
-                        (let ((unit (copy-sequence o)))
-                          (cl-loop for (k v) on n by #'cddr do (setq unit (plist-put unit k v)))
-                          (plist-put unit :items (eas-compile-rows--items group o unit metrics))
-                          (plist-put unit :index nil))))
-                    (plist-get old :units) (plist-get new :units)))))))
+STATE and METRICS and mapped onto OLD's placed plot, unless every
+domain is literal (`eas-patch--fixed-scales-p')."
+  (when (and (eas-compile-rows--same-units (plist-get old :units) (plist-get new :units))
+             ;; A stream whose every scale has a literal domain keeps its
+             ;; scales without building them again (eas-b2s.3).
+             (or (cl-every #'eas-patch--fixed-scales-p (plist-get old :units) (plist-get new :units))
+                 (progn
+                   (eas-compile--scales new state metrics)
+                   (dolist (k eas-compile-rows--geometry)
+                     (when (plist-member old k) (plist-put new k (plist-get old k))))
+                   (eas-compile--ranges new)
+                   (when (eas-layout-text-p metrics) (eas-text-snap-bands new metrics))
+                   (and (equal (plist-get new :scales) (plist-get old :scales))
+                        (equal (plist-get new :axis-defs) (plist-get old :axis-defs))
+                        (equal (plist-get new :legend-specs) (plist-get old :legend-specs))))))
+    (let ((group (copy-sequence old)))
+      (plist-put group :units
+                 (cl-mapcar
+                  (lambda (o n)
+                    (eas-compile-rows--count :units)
+                    (if (equal (plist-get o :rows) (plist-get n :rows))
+                        (progn (eas-compile-rows--count :reused) o)
+                      (let ((unit (copy-sequence o)))
+                        (cl-loop for (k v) on n by #'cddr do (setq unit (plist-put unit k v)))
+                        (plist-put unit :items (eas-compile-rows--items group o unit metrics))
+                        (plist-put unit :index nil))))
+                  (plist-get old :units) (plist-get new :units))))))
 
 (cl-defun eas-compile-rows-patch (plan rows &key size state)
   "PLAN recompiled for new root ROWS, reusing its layout; or nil.
@@ -121,6 +127,8 @@ the scene made from it are not changed."
   (let* ((metrics (plist-get plan :metrics))
          (spec (plist-get plan :spec))
          (old (plist-get plan :groups))
+         ;; The params now: a patched selection or param left PLAN's :env behind.
+         (env (eas-compile--env spec state))
          (result
           (and size (= (length old) 1) (not (plist-get (car old) :header))
                (not (plist-get plan :cut))
@@ -133,12 +141,12 @@ the scene made from it are not changed."
                       (tree (eas-compile-memo
                              (eas-compile--collect spec (list :path "" :rows [] :transforms nil :encoding nil
                                                               :config (plist-get metrics :config))
-                                                   (plist-get plan :env) rows nil)))
+                                                   env rows nil)))
                       (new (eas-place--groups tree))
                       (group (and (= (length new) 1) (plist-get tree :group)
                                   (equal (plist-get (car new) :id) (plist-get (car old) :id))
                                   (eas-compile-rows--group (car old) (car new) state metrics))))
-                 (and group (eas-plist-put plan :groups (list group)))))))
+                 (and group (eas-plist-put (eas-plist-put plan :groups (list group)) :env env))))))
     (eas-compile-rows--count (if result :patched :full))
     result))
 

@@ -82,12 +82,15 @@ A primitive value becomes the row {\"data\": VALUE}, as in Vega-Lite."
 OVERRIDE, when non-nil, stands in for the root data."
   (let ((data (plist-get node :data)))
     (cond
-     ((and override (string-empty-p (plist-get ctx :path))) (eas-compile--tag override))
+     ((and override (string-empty-p (plist-get ctx :path)))
+      (eas-compile-memo-source (eas-compile--tag override) override))
      ((null data) (plist-get ctx :rows))
      ((vectorp (plist-get data :values))
       ;; Vega wraps primitive values as {"data": value}.
-      (eas-compile--tag (seq-map (lambda (v) (if (and (consp v) (keywordp (car v))) v (list :data v)))
-                                 (plist-get data :values))))
+      (eas-compile-memo-source
+       (eas-compile--tag (seq-map (lambda (v) (if (and (consp v) (keywordp (car v))) v (list :data v)))
+                                  (plist-get data :values)))
+       (plist-get data :values)))
      ((plist-get data :name)
       (eas-signal "INVALID_INPUT"
                     (format "Data %s is a template slot; resolve the template first" (plist-get data :name))
@@ -378,14 +381,30 @@ objects, so a patched plan (eas-compile-rows.el) places them once."
                      (setq unit (plist-put unit :items (eas-marks-items unit (eas-independent-unit-scales group unit)
                                                                           bounds metrics)))
                      (setq unit (plist-put unit :index nil)))
-                   (let ((mark (list :id (or (plist-get unit :name) (format "%s/%d" (plist-get group :id) k))
-                                     :mark (plist-get (plist-get unit :mark) :type)
-                                     :path (plist-get unit :path)
-                                     :rows (plist-get unit :rows)
-                                     :items (plist-get unit :items))))
+                   (let* ((mark (list :id (or (plist-get unit :name) (format "%s/%d" (plist-get group :id) k))
+                                      :mark (plist-get (plist-get unit :mark) :type)
+                                      :path (plist-get unit :path)
+                                      :rows (plist-get unit :rows)
+                                      :items (plist-get unit :items)))
+                          (meta (eas-geoshape-mark-meta unit))
+                          (kept (plist-get unit :scene-mark)))
                      (unless (plist-get unit :index)
                        (plist-put unit :index (eas-hit-index mark)))
-                     (append mark (list :index (plist-get unit :index)) (eas-geoshape-mark-meta unit))))
+                     ;; Retained scene (eas-b2s.3): a unit whose items,
+                     ;; rows and index did not change hands back the very
+                     ;; mark it made last frame, so `eas-scene-dirty' (and
+                     ;; a renderer) can tell drawn marks by identity.
+                     (if (and kept (eq (plist-get kept :items) (plist-get unit :items))
+                              (eq (plist-get kept :rows) (plist-get unit :rows))
+                              (eq (plist-get kept :index) (plist-get unit :index))
+                              (equal (plist-get kept :id) (plist-get mark :id))
+                              (equal (plist-get kept :mark) (plist-get mark :mark))
+                              (equal (plist-get kept :path) (plist-get mark :path))
+                              (equal (nthcdr 12 kept) meta))
+                         kept
+                       (let ((made (append mark (list :index (plist-get unit :index)) meta)))
+                         (plist-put unit :scene-mark made)
+                         made))))
                  (plist-get group :units)))
          (legend-y (plist-get group :y0)))
     (append
@@ -486,6 +505,8 @@ runtime keeps the plan so that a selection change can patch it
 \(`eas-compile-patch') instead of compiling again."
 
   (let* ((gc-cons-threshold (max gc-cons-threshold eas-compile-gc-threshold))
+         ;; The spec as given: the same object across a view's compiles.
+         (source spec)
          (spec (eas-projection-expand (eas-composite-expand (eas-facet-expand (eas-overlay-expand (eas-spec-validate spec))))))
          (unsupported (car (eas-spec-unsupported spec)))
          ;; Axis and legend titles are made here, some without a config at hand.
@@ -549,8 +570,8 @@ runtime keeps the plan so that a selection change can patch it
           (dolist (g groups) (eas-compile--ranges g))
           (eas-compile--measure-marks groups metrics state))
         (unless size (setq total (eas-compile--title-width total groups metrics spec title)))
-        (list :spec spec :metrics metrics :groups groups :total total :title title :env env
-              :cut (plist-get tree :cut))))))
+        (list :spec spec :metrics metrics :groups groups :total total :title title :env env :size size
+              :cut (plist-get tree :cut) :source source)))))
 
 (defun eas-compile--clipped-p (group state)
   "Return non-nil when GROUP is clipped to its plot.

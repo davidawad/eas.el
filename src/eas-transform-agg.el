@@ -203,6 +203,29 @@ bucket count (default 1)."
       ("cume_dist" (/ (float (1+ last)) n))
       ("ntile" (1+ (floor (* (or param 1) index) n))))))
 
+(defun eas-agg--window-prefixes (specs sorted)
+  "Per window op of SPECS, its value over SORTED[0..E] for each E, or nil.
+Only count, valid, missing, sum and mean, whose running value equals
+`eas-agg-apply' over the prefix (the same additions in the same order):
+a cumulative window costs one pass instead of one per row."
+  (let ((n (length sorted)))
+    (vconcat
+     (mapcar
+      (lambda (spec)
+        (let ((op (plist-get spec :op))
+              (field (and (plist-get spec :field) (eas-key (plist-get spec :field)))))
+          (when (member op '("count" "valid" "missing" "sum" "mean"))
+            (let ((out (make-vector n nil)) (sum 0) (nums 0) (valid 0))
+              (dotimes (e n)
+                (let ((v (and field (plist-get (aref sorted e) field))))
+                  (when (numberp v) (setq sum (+ sum v) nums (1+ nums)))
+                  (unless (memq v '(nil :null)) (setq valid (1+ valid)))
+                  (aset out e (pcase op
+                                ("count" (1+ e)) ("valid" valid) ("missing" (- (1+ e) valid))
+                                ("sum" sum) (_ (if (> nums 0) (/ (float sum) nums) :null))))))
+              out))))
+      specs))))
+
 (defun eas-transform-window (tr rows path)
   "Apply window transform TR to ROWS, keeping the input order.
 PATH is TR's JSON path, for errors."
@@ -223,7 +246,9 @@ PATH is TR's JSON path, for errors."
              (key-fn (if (> (length sort) 0) key-fn
                        (let ((pos (make-hash-table :test 'eq)))
                          (dotimes (i n) (puthash (aref sorted i) i pos))
-                         (lambda (row) (gethash row pos))))))
+                         (lambda (row) (gethash row pos)))))
+             ;; A frame from the first row: each frame extends the last.
+             (prefixes (and (not (numberp lo)) (eas-agg--window-prefixes (plist-get tr :window) sorted))))
         (dotimes (i n)
           (let* ((row (aref sorted i))
                  (start (if (numberp lo) (max 0 (+ i lo)) 0))
@@ -243,6 +268,8 @@ PATH is TR's JSON path, for errors."
                  (additions
                   (cl-loop
                    for spec across (plist-get tr :window)
+                   for k from 0
+                   for prefix = (and prefixes (aref prefixes k))
                    for op = (plist-get spec :op)
                    for field = (and (plist-get spec :field) (eas-key (plist-get spec :field)))
                    for param = (plist-get spec :param)
@@ -258,6 +285,7 @@ PATH is TR's JSON path, for errors."
                            ("last_value" (plist-get (aref sorted end) field))
                            ("nth_value" (let ((j (+ start (1- (or param 1)))))
                                           (if (<= j end) (plist-get (aref sorted j) field) :null)))
+                           ((guard prefix) (aref prefix end))
                            (_ (eas-agg-apply
                                op (cl-loop for j from start to end
                                            collect (and field (plist-get (aref sorted j) field)))

@@ -48,18 +48,25 @@ eas-text-check.el uses it to prove every item lands in a cell.")
 (cl-defstruct (eas-text--grid (:constructor eas-text--grid-make))
   cols rows cw ch chars props prio dots dot-props dot-prio cover bands brush)
 
-(defun eas-text--new (scene)
-  "An empty grid sized for SCENE."
+(defun eas-text--new (scene &optional shape-only)
+  "An empty grid sized for SCENE.
+With SHAPE-ONLY, only its size: `eas-text--fill' allocates the cells."
   (let* ((size (plist-get scene :size)) (cell (plist-get size :cell))
          (cw (aref cell 0)) (ch (aref cell 1))
          (cols (max 1 (round (/ (float (plist-get size :w)) cw))))
          (rows (max 1 (round (/ (float (plist-get size :h)) ch))))
-         (n (* cols rows)))
-    (eas-text--grid-make :cols cols :rows rows :cw cw :ch ch
-                           :chars (make-vector n ?\s) :props (make-vector n nil)
-                           :prio (make-vector n -1) :dots (make-vector n 0) :dot-props (make-vector n nil)
-                           :dot-prio (make-vector n -1) :cover (make-vector n 0.0)
-                           :bands (make-hash-table :test 'eql) :brush (make-vector n nil))))
+         (g (eas-text--grid-make :cols cols :rows rows :cw cw :ch ch)))
+    (if shape-only g (eas-text--fill g))))
+
+(defun eas-text--fill (g)
+  "Give grid G empty cells; return it."
+  (let ((n (* (eas-text--grid-cols g) (eas-text--grid-rows g))))
+    (setf (eas-text--grid-chars g) (make-vector n ?\s) (eas-text--grid-props g) (make-vector n nil)
+          (eas-text--grid-prio g) (make-vector n -1) (eas-text--grid-dots g) (make-vector n 0)
+          (eas-text--grid-dot-props g) (make-vector n nil) (eas-text--grid-dot-prio g) (make-vector n -1)
+          (eas-text--grid-cover g) (make-vector n 0.0) (eas-text--grid-bands g) (make-hash-table :test 'eql)
+          (eas-text--grid-brush g) (make-vector n nil))
+    g))
 
 (defvar eas-text--dot-prio 2
   "Priority of the braille dots being drawn.
@@ -200,12 +207,12 @@ XS is POINTS' `eas-text--xs', when computed once for many X."
   (let* ((points (plist-get item :points))
          (anchors (eas-hit--anchors item))
          (axs (vconcat (mapcar (lambda (p) (aref p 0)) anchors)))
-         ;; Dots in one braille column share x: look its props up once.
-         (memo (make-hash-table :test 'eql))
-         (props-fn (lambda (x) (or (gethash x memo)
-                                   (puthash x (eas-text--item-props
-                                               view mark item (aref (plist-get item :datum) (eas-hit--bisect axs x)))
-                                            memo))))
+         ;; Cells of one datum share props: look them up once per datum
+         ;; (eas-b2s.1: once per braille column allocated a plist each).
+         (memo (make-vector (max 1 (length axs)) nil))
+         (props-fn (lambda (x) (let ((k (eas-hit--bisect axs x)))
+                                 (or (aref memo k)
+                                     (aset memo k (eas-text--item-props view mark item (aref (plist-get item :datum) k)))))))
          (ch (eas-text--grid-ch g)))
     (if-let* ((base (plist-get item :base)))
         (cl-loop with pxs = (eas-text--xs points) with bxs = (eas-text--xs base)
@@ -258,6 +265,15 @@ See `eas-text-band-resolve'.  Then forget the slices."
                ;; A slice can be recorded past the grid's edge; it draws nothing.
                (when (and (< -1 i (length (eas-text--grid-prio g)))
                           (= (aref (eas-text--grid-prio g) i) prio))
+                 (let* ((y0 (* (/ i cols) ch)) (own (car segs)))
+                  (if (and (<= (car own) y0) (>= (cadr own) (+ y0 ch)))
+                     ;; The newest slice covers the cell: `eas-text-band-resolve'
+                     ;; gives its full block, given a second slice to tile with.
+                     (when (or (cdr segs)
+                               (cl-some (lambda (s) (>= (cadr s) (- y0 slack))) (gethash (- i cols) bands))
+                               (cl-some (lambda (s) (<= (car s) (+ y0 ch slack))) (gethash (+ i cols) bands)))
+                       (aset (eas-text--grid-chars g) i ?█)
+                       (aset (eas-text--grid-props g) i (nth 2 own)))
                  (pcase (let ((y0 (* (/ i cols) ch)))
                           ;; A slice ending just past the cell's edge meets this one.
                           (eas-text-band-resolve
@@ -272,7 +288,7 @@ See `eas-text-band-resolve'.  Then forget the slices."
                             (let ((bg (plist-get (plist-get under 'face) :foreground)))
                               (if (not bg) props
                                 (plist-put (copy-sequence props) 'face
-                                           (append (list :background bg) (plist-get props 'face)))))))))))
+                                           (append (list :background bg) (plist-get props 'face)))))))))))))
              bands)
     (clrhash bands)))
 
@@ -426,10 +442,21 @@ rect less than opaque shades its full cells (`eas-text--translucent')."
     ;; empty interval (a click, no drag) no brush.
     (unless (or (and vertical (< h 0.01)) (and horizontal (< w 0.01))
                 (and brush (or (< w 0.5) (< h 0.5))))
-     (cl-loop for row from (max r0 (aref clip 1)) below (min r1 (aref clip 3))
+     (cl-loop with x2 = (+ x w) with y2 = (+ y h)
+             with gcols = (eas-text--grid-cols g) with grows = (eas-text--grid-rows g)
+             with vchars = (eas-text--grid-chars g) with vprops = (eas-text--grid-props g)
+             with vprio = (eas-text--grid-prio g) with vcover = (eas-text--grid-cover g)
+             for row from (max r0 (aref clip 1)) below (min r1 (aref clip 3))
              do (cl-loop for col from (max c0 (aref clip 0)) below (min c1 (aref clip 2))
                          for char = (cond
                                      (brush nil)
+                                     ;; A cell the bar covers whole is a full
+                                     ;; block, whatever the end rules below say;
+                                     ;; this skips their float arithmetic.
+                                     ((and vertical (not (plist-get item :rise))
+                                           (<= y (* row ch)) (<= (* (1+ row) ch) y2))
+                                      ?█)
+                                     ((and horizontal (<= x (* col cw)) (<= (* (1+ col) cw) x2)) ?█)
                                      ;; A ranged bar (a candle body) taller than a cell
                                      ;; snaps to whole cells: an end cell it fills at
                                      ;; least half of is full, a lesser one is left to
@@ -447,7 +474,13 @@ rect less than opaque shades its full cells (`eas-text--translucent')."
                          for glyph = (cond ((and char falling) (eas-text--falling char))
                                            (char (eas-text--translucent char alpha)))
                          do (cond
-                             (glyph (eas-text--put g col row glyph props prio (eas-text--coverage glyph)))
+                             ((and glyph eas-text-trace) (eas-text--put g col row glyph props prio (eas-text--coverage glyph)))
+                             ;; `eas-text--put', inline: a long bar puts thousands of cells.
+                             (glyph
+                              (when (and (< -1 col gcols) (< -1 row grows))
+                                (let* ((i (+ col (* row gcols))) (old (aref vprio i)) (cover (eas-text--coverage glyph)))
+                                  (when (and (>= prio old) (or (> prio old) (> cover (aref vcover i))))
+                                    (aset vchars i glyph) (aset vprops i props) (aset vprio i prio) (aset vcover i cover)))))
                              ;; The brush shades its cells whatever they hold
                              ;; when the grid is composed: one solid region.
                              (brush
@@ -640,11 +673,20 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
       (seq-doseq (tk (plist-get axis :ticks))
         (when-let* ((grid (plist-get tk :grid)))
           (eas-text--segment g grid (list 'face 'eas-axis) all 0)
-          ;; Grid lines are dotted so marks stay legible.
-          (let ((vertical (< (abs (- (aref grid 0) (aref grid 2))) 0.5)))
-            (cl-loop for i across (eas-text--grid-prio g) for k from 0
-                     when (and (= i 0) (memq (aref (eas-text--grid-chars g) k) '(?│ ?─)))
-                     do (aset (eas-text--grid-chars g) k (if vertical ?┊ ?┈)))))))
+          ;; Grid lines are dotted so marks stay legible.  Earlier grid
+          ;; lines are dotted already, so only this one's cells can
+          ;; hold a solid line at priority 0 (eas-b2s.1: the whole grid
+          ;; was scanned per tick).
+          (let ((vertical (< (abs (- (aref grid 0) (aref grid 2))) 0.5))
+                (cols (eas-text--grid-cols g)) (rows (eas-text--grid-rows g)))
+            (cl-loop for row from (max 0 (1- (eas-text--row g (min (aref grid 1) (aref grid 3)))))
+                     to (min (1- rows) (1+ (eas-text--row g (max (aref grid 1) (aref grid 3)))))
+                     do (cl-loop for col from (max 0 (1- (eas-text--col g (min (aref grid 0) (aref grid 2)))))
+                                 to (min (1- cols) (1+ (eas-text--col g (max (aref grid 0) (aref grid 2)))))
+                                 for k = (+ col (* row cols))
+                                 when (and (= (aref (eas-text--grid-prio g) k) 0)
+                                           (memq (aref (eas-text--grid-chars g) k) '(?│ ?─)))
+                                 do (aset (eas-text--grid-chars g) k (if vertical ?┊ ?┈))))))))
     (seq-doseq (axis (plist-get view :axes))
       (let* ((seg (plist-get axis :domain-line)) (orient (plist-get axis :orient))
              (is-bottom (member orient '("bottom" "top"))))
@@ -700,18 +742,40 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
 (defun eas-text--compose (g &optional env)
   "Return grid G as a propertized string, braille dots merged, lines trimmed.
 ENV, when non-nil, lets `eas-render-cache-rows' reuse unchanged rows."
-  (let* ((cols (eas-text--grid-cols g)) (shade (eas-text-ink-shade))
-         (row-key (lambda (row)
-                    (let ((a (* row cols)) (b (* (1+ row) cols)))
-                      (cons shade (mapcar (lambda (v) (substring v a b))
-                                          (list (eas-text--grid-chars g) (eas-text--grid-props g)
-                                                (eas-text--grid-prio g) (eas-text--grid-dots g)
-                                                (eas-text--grid-dot-props g) (eas-text--grid-dot-prio g)
-                                                (eas-text--grid-brush g))))))))
-    (mapconcat #'identity
-               (eas-render-cache-rows env (eas-text--grid-rows g) row-key
-                                      (lambda (row) (eas-text--compose-row g row shade)))
-               "\n")))
+  (mapconcat #'identity (eas-text--compose-lines g env) "\n"))
+
+(defun eas-text--compose-lines (g &optional env)
+  "Return grid G's rows as a list of propertized strings, as `eas-text--compose'.
+A row reused from the last render on ENV is the same string object."
+  (let ((shade (eas-text-ink-shade)))
+    (eas-render-cache-grid-rows (and env (cons shade env)) g (eas-text--grid-rows g) #'eas-text--same-row-p
+                                (lambda (row) (eas-text--compose-row g row shade)))))
+
+(defun eas-text--same-row-p (old g row)
+  "Non-nil when ROW of grid G composes as it did in grid OLD.
+Chars, dots, props and brush must be `equal' cell for cell; where a
+cell has dots, so must its dot props and whether its dots show
+\(`eas-text--compose-row' reads priorities nowhere else)."
+  (let* ((cols (eas-text--grid-cols g)) (i (* row cols)) (b (+ i cols)))
+    (and (= cols (eas-text--grid-cols old))
+         (let ((c0 (eas-text--grid-chars old)) (c1 (eas-text--grid-chars g))
+               (d0 (eas-text--grid-dots old)) (d1 (eas-text--grid-dots g))
+               (p0 (eas-text--grid-props old)) (p1 (eas-text--grid-props g))
+               (b0 (eas-text--grid-brush old)) (b1 (eas-text--grid-brush g)))
+           (while (and (< i b)
+                       (eq (aref c0 i) (aref c1 i))
+                       (let ((d (aref d1 i)))
+                         (and (eq (aref d0 i) d)
+                              (let ((x (aref p0 i)) (y (aref p1 i))) (or (eq x y) (equal x y)))
+                              (let ((x (aref b0 i)) (y (aref b1 i))) (or (eq x y) (equal x y)))
+                              (or (eq d 0)
+                                  (and (let ((x (aref (eas-text--grid-dot-props old) i))
+                                             (y (aref (eas-text--grid-dot-props g) i)))
+                                         (or (eq x y) (equal x y)))
+                                       (eq (<= (aref (eas-text--grid-prio old) i) (aref (eas-text--grid-dot-prio old) i))
+                                           (<= (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))))))
+             (setq i (1+ i)))
+           (= i b)))))
 
 (defun eas-text--compose-row (g row shade)
   "Return ROW of grid G as a propertized string; SHADE colors a brush."
@@ -725,32 +789,54 @@ ENV, when non-nil, lets `eas-render-cache-rows' reuse unchanged rows."
                                           (> (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
                           return (1+ col)
                           finally return 0)))
-        (dotimes (col end)
-          (let* ((i (+ col (* row cols)))
-                 (dots (aref (eas-text--grid-dots g) i))
-                 (use-dots (and (> dots 0) (<= (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
-                 (char (if use-dots (+ #x2800 dots) (aref (eas-text--grid-chars g) i)))
-                 (p (if use-dots (aref (eas-text--grid-dot-props g) i) (aref (eas-text--grid-props g) i)))
-                 (p (if-let* ((brush (aref (eas-text--grid-brush g) i))) (eas-text--brush-props p brush shade) p)))
-            (unless (equal p props)
-              (when chars (push (apply #'propertize (apply #'string (nreverse chars)) (unless (eq props :unset) props)) runs))
-              (setq chars nil props p))
-            (unless (eq char 0) (push char chars))))
-        (when chars (push (apply #'propertize (apply #'string (nreverse chars)) (unless (eq props :unset) props)) runs))
-        (apply #'concat (nreverse runs)))))
+        ;; One string per row; each run of equal props is set on it
+        ;; (eas-b2s.1: a string per run cost 20 KB a row on a map).
+        (let ((start 0) (n 0))
+          (dotimes (col end)
+            (let* ((i (+ col (* row cols)))
+                   (dots (aref (eas-text--grid-dots g) i))
+                   (use-dots (and (> dots 0) (<= (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))
+                   (char (if use-dots (+ #x2800 dots) (aref (eas-text--grid-chars g) i)))
+                   (p (if use-dots (aref (eas-text--grid-dot-props g) i) (aref (eas-text--grid-props g) i)))
+                   (p (if-let* ((brush (aref (eas-text--grid-brush g) i))) (eas-text--brush-props p brush shade) p)))
+              (unless (or (eq p props) (equal p props))
+                (when (> n start) (push (list start n props) runs))
+                (setq start n props p))
+              (unless (eq char 0) (push char chars) (setq n (1+ n)))))
+          (when (> n start) (push (list start n props) runs)))
+        (let ((string (concat (nreverse chars))))
+          (pcase-dolist (`(,s ,e ,p) runs)
+            (unless (or (null p) (eq p :unset))
+              ;; In the order `concat' leaves a propertized run's plist.
+              (set-text-properties s e (eas-text--plist-reverse p) string)))
+          string))))
+
+(defun eas-text--plist-reverse (plist)
+  "PLIST with its property-value pairs in reverse order."
+  (let (out)
+    (while plist
+      (setq out (cons (car plist) (cons (cadr plist) out)) plist (cddr plist)))
+    out))
 
 (defun eas-text-render (scene)
   "Return SCENE drawn as a propertized string (rows joined by newlines)."
+  (mapconcat #'identity (eas-text-render-lines scene) "\n"))
+
+(defun eas-text-render-lines (scene)
+  "Return SCENE drawn as a list of propertized rows, as `eas-text-render'.
+A row equal to the last render's on the same canvas is the same string,
+so `eas-mode-patch-lines' skips it with `eq'."
   (eas-text-ink-with
-   (let* ((g (eas-text--new scene))
+   (let* ((g (eas-text--new scene t))
           ;; What every step depends on besides its key; nil caches nothing.
           (env (and eas-render-cache-enabled (not eas-text-trace)
                     (list (eas-text--grid-cols g) (eas-text--grid-rows g) (eas-text--grid-cw g)
                           (eas-text--grid-ch g) eas-text-ink--colors
                           eas-image-base-directory)))
-          (state (eas-render-cache-paint env (cons g (make-hash-table :test 'equal))
+          ;; A render restarting from a snapshot never fills G.
+          (state (eas-render-cache-paint env (lambda () (cons (eas-text--fill g) (make-hash-table :test 'equal)))
                                          (eas-text--steps g scene) #'eas-text--run-step)))
-     (eas-text--compose (car state) env))))
+     (eas-text--compose-lines (car state) env))))
 
 (defun eas-text--run-step (fn state)
   "Call FN on the grid of STATE (GRID . LABEL-CELLS)."

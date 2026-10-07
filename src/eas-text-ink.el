@@ -96,7 +96,7 @@ round them to a batch terminal's palette."
     (/ (+ (max la lb) 0.05) (+ (min la lb) 0.05))))
 
 (defvar eas-text-ink--memo (make-hash-table :test 'equal)
-  "(COLOR BACKGROUND INK) -> legible color.")
+  "(BACKGROUND . INK) -> a table of COLOR -> legible color.")
 
 (defun eas-text-ink--adjust (color bg ink)
   "COLOR made legible on BG; neutral colors become INK."
@@ -124,15 +124,20 @@ round them to a batch terminal's palette."
   "COLOR as the text renderer draws it for MODE (default `eas-text-ink-mode').
 Nil for \"transparent\" (the cell keeps the default face); other unknown
 color names are returned as they are."
-  (if (not (eas-text-ink--rgb color)) (unless (equal color "transparent") color)
-    (let* ((colors (if (and eas-text-ink--colors (null mode)) eas-text-ink--colors
-                     (cons (eas-text-ink-background mode) (eas-text-ink-foreground mode))))
-           (bg (car colors)) (ink (cdr colors))
-           (key (list color bg ink)))
-      (or (gethash key eas-text-ink--memo)
-          (puthash key (if (>= (eas-text-ink-contrast color bg) eas-text-ink-min-contrast) color
-                         (eas-text-ink--adjust color bg ink))
-                   eas-text-ink--memo)))))
+  (let* ((colors (if (and eas-text-ink--colors (null mode)) eas-text-ink--colors
+                   (cons (eas-text-ink-background mode) (eas-text-ink-foreground mode))))
+         ;; One table per (BACKGROUND . INK): a hit parses nothing (eas-b2s.1).
+         (table (or (gethash colors eas-text-ink--memo)
+                    (puthash (cons (car colors) (cdr colors)) (make-hash-table :test 'equal)
+                             eas-text-ink--memo)))
+         (hit (gethash color table 'eas-text-ink--none)))
+    (if (not (eq hit 'eas-text-ink--none)) hit
+      (puthash color
+               (if (not (eas-text-ink--rgb color)) (unless (equal color "transparent") color)
+                 (let ((bg (car colors)) (ink (cdr colors)))
+                   (if (>= (eas-text-ink-contrast color bg) eas-text-ink-min-contrast) color
+                     (eas-text-ink--adjust color bg ink))))
+               table))))
 
 (defun eas-text-ink-shade (&optional mode)
   "Return the background of brushed cells for MODE.

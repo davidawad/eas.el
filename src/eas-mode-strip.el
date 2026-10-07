@@ -17,6 +17,7 @@
 (require 'eas-view)
 (require 'eas-strip)
 (require 'eas-readout)
+(require 'eas-mode-patch)
 
 (defface eas-strip '((t :inherit shadow))
   "Face of the values strip under a live chart."
@@ -56,15 +57,16 @@ are drawn as one SVG image of fixed size."
 
 (defun eas-mode-strip-update (view)
   "Rewrite the strip line of the current buffer (showing VIEW) when it changed."
-  (when-let* ((beg (text-property-any (point-min) (point-max) 'eas-strip t)))
-    (let ((end (or (text-property-not-all beg (point-max) 'eas-strip t) (point-max)))
-          (new (eas-mode-strip-string view)))
-      (unless (equal-including-properties (buffer-substring beg end) new)
-        (let ((inhibit-read-only t))
-          (save-excursion
-            (goto-char beg)
-            (delete-region beg end)
-            (insert new)))))))
+  (let ((new (eas-mode-strip-string view)) (inhibit-read-only t))
+    ;; A text chart's strip is the last line `eas-mode-patch-lines' wrote.
+    (unless (eas-mode-patch-last-line new)
+      (when-let* ((beg (text-property-any (point-min) (point-max) 'eas-strip t)))
+        (let ((end (or (text-property-not-all beg (point-max) 'eas-strip t) (point-max))))
+          (unless (equal-including-properties (buffer-substring beg end) new)
+            (save-excursion
+              (goto-char beg)
+              (delete-region beg end)
+              (insert new))))))))
 
 (defun eas-mode-strip-leave (_event)
   "The pointer moved onto the strip: it left the chart."

@@ -166,7 +166,7 @@ share one cache entry: flushing it would rasterize the same SVG again
             (eas-mode--hot-spot-keys image)))
          ;; Terminal hover moves one column: rewrite only changed cells (fc-qx1.14).
          (t (eas-mode--flush-replaced old nil)
-            (eas-mode-patch-text (concat (eas-text-render scene) "\n" (eas-mode-strip-string view))))))
+            (eas-mode-patch-lines (nconc (eas-text-render-lines scene) (list (eas-mode-strip-string view)))))))
       (if (eas-mode--gui-p) (goto-char (min pos (point-max)))
         (goto-char (point-min))
         (forward-line (1- line))

@@ -17,18 +17,18 @@
       "latitude": {"type": "field", "of": "airports", "default": "latitude"},
       "projection": {"type": "string", "default": "albersUsa", "doc": "albersUsa, albers or conicEqualArea"},
       "scale": {"type": "number", "default": 1200, "doc": "the projection's scale"},
-      "translate": {"type": "array", "default": [450, 260], "doc": "the projection's translate, in pixels"},
+      "translate": {"type": "array", "default": [450, 285], "doc": "the projection's translate, in pixels (the gallery's [450, 260] below its 25 px title band)"},
+      "states": {"shape": "geojson", "default": null, "doc": "the shapes drawn behind the airports: GeoJSON features, or TopoJSON {\"url\" or \"topology\", \"feature\"}"},
       "cells": {"type": "boolean", "default": false, "doc": "outline every airport's Voronoi cell"},
-      "title": {"type": "string", "default": "U.S. Airports, 2008"},
+      "title": {"type": "string", "default": "U.S. Airports, 2008", "doc": "written right-aligned above the map, its baseline 25 px down"},
       "width": {"type": "number", "default": 900},
-      "height": {"type": "number", "default": 560},
+      "height": {"type": "number", "default": 585, "doc": "the canvas height, the title's band included"},
       "description": {"type": "string", "default": "Interactive map of U.S. airport connections in 2008."}
     },
     "example": "../examples/vega/airport-connections.data.json",
-    "vega": {"status": "partial", "ratio": 0.4578, "offset": [-16, -14], "note": "Airports, their sizes, the fixed albersUsa projection (scale 1200), the Voronoi cells (cells slot) and the routes of the hovered airport match Vega; the state shapes behind them are TopoJSON geopaths, which eas does not draw, hence 46% of pixels differ. The title does not follow the hovered airport. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.4578 (was 0.458 against vg2svg)."}
+    "vega": {"status": "pass", "ratio": 0.002, "offset": [0, 0], "note": "Airports, their sizes, the fixed albersUsa projection (scale 1200), the Voronoi cells (cells slot) and the routes of the hovered airport match Vega. The state shapes are a geoshape layer under the same projection (states slot, TopoJSON). Vega's 25 px top padding is folded into the canvas: height 585 and translate [450, 285], with the title a right-aligned text mark on y 25, so the canvas is the reference's 900x585 at offset [0, 0]. Engine causes fixed in eas-7r1.12f: a layer with its own data no longer runs its parents' transforms, and autosize none no longer grows the canvas for marks that overhang it (Alaska's Aleutians grew it 59 px). Not ported: the title does not follow the hovered airport, and the line/curve route shape has no input. Against the vg2png (node-canvas) reference: ratio 0.0020 (was 0.4578 without the states and with the grown canvas), measured with resvg 0.48 and Liberation Sans (Arimo's metrics) in eas-7r1.12f; librsvg could not be installed in that box, and resvg reads about 0.003 above rsvg-convert on these label-heavy charts."}
   },
   "description": {"x-eas:slot": "description"},
-  "title": {"text": {"x-eas:slot": "title"}, "anchor": "end", "fontSize": 20, "fontWeight": "normal"},
   "width": {"x-eas:slot": "width"},
   "height": {"x-eas:slot": "height"},
   "padding": 0,
@@ -72,6 +72,15 @@
           "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}}
   },
   "layer": [
+    {
+      "x-eas:when": "states",
+      "spec": {
+        "data": {"name": "states"},
+        "projection": {"type": {"x-eas:slot": "projection"}, "scale": {"x-eas:slot": "scale"}, "translate": {"x-eas:slot": "translate"}},
+        "mark": {"type": "geoshape", "fill": "#dedede", "stroke": "white", "strokeWidth": 1},
+        "encoding": {"x": null, "y": null}
+      }
+    },
     {
       "transform": [
         {"window": [{"op": "row_number", "as": "eas_nth"}], "groupby": [{"x-eas:slot": "origin"}]},
@@ -118,6 +127,12 @@
                     {"filter": "isValid(datum.x2) && (datum.x2 !== 0 || datum.y2 !== 0)"}],
       "mark": {"type": "rule", "stroke": "black", "opacity": 0.35, "strokeWidth": 1},
       "encoding": {"x2": {"field": "x2"}, "y2": {"field": "y2"}}
+    },
+    {
+      "data": {"values": [{}]},
+      "mark": {"type": "text", "x": {"x-eas:slot": "width"}, "dx": -5, "y": 25, "align": "right", "baseline": "alphabetic",
+               "fontSize": 20, "fill": "black"},
+      "encoding": {"x": null, "y": null, "text": {"value": {"x-eas:slot": "title"}}}
     }
   ]
 }

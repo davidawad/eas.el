@@ -65,12 +65,12 @@
     "example": "../examples/vega/arc-diagram.data.json",
     "vega": {
       "status": "pass",
-      "ratio": 0.0534,
+      "ratio": 0.0409,
       "offset": [
-        10,
+        0,
         0
       ],
-      "note": "Arcs are 32-segment line marks, one per link; the graph transform supplies node order and degree. The reference pads its canvas 10px further left. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0534 (was 0.0448 against vg2svg); the example's height is 387 (was 436, room for vg2svg's estimated label lengths), so the canvas is Vega's 800x397 less the 10 px the reference pads left; the ratio rises only because the empty band no longer pads the denominator."
+      "note": "Arcs are 33-point line marks, one per link, with natural interpolation (a 32-segment polyline sagged up to 0.45 px under the circle); the graph transform supplies node order and degree. The arc baseline is ceiled as Vega ceils autosize overhang, so nodes sit on whole pixels. Arcs join miter like Vega's paths, and vega-scenegraph 5 widens a mitered path's bounds by miterLimit / 2 = 2 stroke widths, so the canvas grows 20 px left, as the reference's does (engine: eas-marks-bounds miter lines, eas-7r1.12f). The canvas is the reference's 800 wide at offset [0, 0], and 2 px taller from Arimo's longer rotated labels. What remains is the font-raster floor: the arcs match pixel for pixel, the label glyphs (Helvetica in the reference, Arimo here) do not. Against the vg2png (node-canvas) reference: ratio 0.0409 (was 0.0534), measured with resvg 0.48 and Liberation Sans (Arimo's metrics) in eas-7r1.12f; librsvg could not be installed in that box, and resvg reads about 0.003 above rsvg-convert on these label-heavy charts."
     }
   },
   "title": {
@@ -86,7 +86,6 @@
     "x-eas:slot": "height"
   },
   "padding": 5,
-  "autosize": "none",
   "background": "white",
   "config": {
     "view": {
@@ -135,6 +134,10 @@
           "as": "eas_baseline"
         }
       ]
+    },
+    {
+      "calculate": "ceil(datum.eas_baseline)",
+      "as": "eas_baseline"
     }
   ],
   "encoding": {
@@ -210,7 +213,8 @@
         "stroke": "#000",
         "strokeOpacity": 0.2,
         "strokeCap": "butt",
-        "interpolate": "linear"
+        "strokeJoin": "miter",
+        "interpolate": "natural"
       },
       "encoding": {
         "detail": {

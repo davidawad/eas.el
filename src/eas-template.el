@@ -303,10 +303,11 @@ SHAPE_INVALID, FIELD_MISSING or INVALID_INPUT naming the slot."
                                           (if (plist-get def :doc)
                                               (concat ": " (plist-get def :doc)) ""))
                                   :slot (eas-key-name slot))))
+                 ;; Null fits any slot, a data slot too: the property it
+                 ;; fills is left out, and a layer {"x-eas:when"} it names.
+                 ((eq value :null) (push (cons slot :null) bound))
                  ((plist-get def :shape)
                   (push (cons slot (eas-template--data-value slot def value)) bound))
-                 ;; Null fits any slot: the property it fills is left out.
-                 ((eq value :null) (push (cons slot :null) bound))
                  (t (push (cons slot (eas-template--check-value
                                       slot def (if (and (listp value) (equal (plist-get def :type) "array"))
                                                    (vconcat value) value)))

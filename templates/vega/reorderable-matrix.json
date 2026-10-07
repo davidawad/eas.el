@@ -78,7 +78,7 @@
         0,
         0
       ],
-      "note": "The canvases agree; label glyphs differ. The graph transform orders nodes by group and supplies the node pairs (cross) and links. Dragging a row or column label moves that node (eas-force-drag.el). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0457 (was 0.0321 against vg2svg); the recorded offset [55, 55] was the vg2svg canvas's; the canvases now agree at [0, 0], and the font-raster floor: the references' sans-serif is Helvetica (node-canvas on macOS), native SVG here is drawn in Arimo (Arial metrics), so glyph edges differ while positions match."
+      "note": "The canvases agree; label glyphs differ. The graph transform orders nodes by group and supplies the node pairs (cross) and links. Dragging a row or column label moves that node (eas-force-drag.el). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0457 (was 0.0321 against vg2svg); the recorded offset [55, 55] was the vg2svg canvas's; the canvases now agree at [0, 0], and the font-raster floor: the references' sans-serif is Helvetica (node-canvas on macOS), native SVG here is drawn in Arimo (Arial metrics), so glyph edges differ while positions match. Re-checked in eas-7r1.12f: the template drops a stray autosize none (Vega's spec pads, and eas now honours none). Row and column labels sit at the reference's extents pixel for pixel, so the ratio is the font-raster floor (0.0488 measured with resvg 0.48 and Liberation Sans (Arimo's metrics) in eas-7r1.12f; librsvg could not be installed in that box, and resvg reads about 0.003 above rsvg-convert on these label-heavy charts)."
     }
   },
   "title": {
@@ -94,7 +94,6 @@
     "x-eas:slot": "size"
   },
   "padding": 2,
-  "autosize": "none",
   "background": "white",
   "config": {
     "view": {

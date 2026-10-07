@@ -20,6 +20,7 @@
 (require 'eas-theme)
 (require 'eas-layout)
 (require 'eas-arc)
+(require 'eas-vega-bounds)
 
 (defun eas-marks-resolve-mark (mark config)
   "MARK (a string or definition) with CONFIG's mark defaults filled in."
@@ -130,7 +131,7 @@ Transparent items count too, so hover and selection never move layout."
                  item)))
       ("arc" (eas-marks--grow (eas-arc-bounds item) item))
       ("geoshape" (eas-geoshape-item-box item))
-      ("line" (eas-marks--grow (eas-marks--points-box (plist-get item :points)) item))
+      ("line" (eas-vega-bounds-line (eas-marks--points-box (plist-get item :points)) item))
       ("trail" (let ((b (eas-marks--points-box (plist-get item :points)))
                      (r (/ (apply #'max 0 (append (plist-get item :widths) nil)) 2.0)))
                  (and b (vector (- (aref b 0) r) (- (aref b 1) r) (+ (aref b 2) r) (+ (aref b 3) r)))))

@@ -174,6 +174,9 @@ ENV gives the param values expressions see; OVERRIDE, when non-nil,
 stands in for the root data."
   (let* ((rows (eas-compile--node-data node ctx override))
          (ctx (plist-put (copy-sequence ctx) :rows rows))
+         ;; A view's own data is not its ancestors' source: their
+         ;; transforms do not apply to it (Vega-Lite's data flow).
+         (ctx (if (and (plist-get node :data) (not override)) (plist-put ctx :transforms nil) ctx))
          (own (eas-compile--merge-encoding (plist-get ctx :encoding) (plist-get node :encoding))))
     (cond
      ((or (plist-get node :vconcat) (plist-get node :hconcat))
@@ -512,8 +515,10 @@ runtime keeps the plan so that a selection change can patch it
         ;; them, lay out again around them and move the items along.
         ;; Charts fitted to a size (Emacs windows) skip this; their
         ;; overhang mostly falls in the padding, and measuring would
-        ;; compute every item twice.
+        ;; compute every item twice.  Autosize "none" keeps the canvas
+        ;; at the spec's size, as Vega does: the overhang is cut.
         (when (and (null size) (not (eas-layout-text-p metrics))
+                   (not (eas-vega-bounds-autosize-none-p spec))
                    (eas-compile--measure-marks groups metrics state))
           (let ((origins (mapcar (lambda (g) (cons (plist-get g :x0) (plist-get g :y0))) groups)))
             (setq total (eas-place-layout tree metrics title-h nil t))

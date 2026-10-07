@@ -41,9 +41,20 @@ Nil leaves the mode alone; the keyboard still drives every interaction.")
   "\\`\\(xterm\\|screen\\|tmux\\|rxvt\\|kitty\\|alacritty\\|foot\\|wezterm\\|vte\\|gnome\\|konsole\\|st-\\)"
   "TERM prefixes whose terminals report mouse events in the xterm protocol.")
 
+(defun eas-tty--frame-term ()
+  "The selected frame's terminal type.
+`tty-type' is what the terminal was initialised with.  $TERM is not
+reliable: the emacs-plus 30.2 NS build run with -nw under tmux
+reported \"dumb\" there although `tty-type' said xterm-256color
+\(fc-qx1.24), so it is only the fallback."
+  (let ((type (and (not (display-graphic-p)) (ignore-errors (tty-type)))))
+    (if (and (stringp type) (not (equal type "dumb")))
+        type
+      (getenv "TERM" (selected-frame)))))
+
 (defun eas-tty-mouse-capable-p (&optional term)
   "Non-nil when TERM (default: the selected frame's) speaks xterm mouse."
-  (let ((term (or term (getenv "TERM" (selected-frame)))))
+  (let ((term (or term (eas-tty--frame-term))))
     (and (stringp term) (string-match-p eas-tty-mouse-terms term))))
 
 (defun eas-tty--enable-mouse ()

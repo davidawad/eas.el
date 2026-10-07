@@ -218,6 +218,19 @@
     (should (eas-tty-mouse-capable-p term)))
   (dolist (term '("dumb" "linux" "vt100"))
     (should-not (eas-tty-mouse-capable-p term)))
+  ;; fc-qx1.24: emacs-plus NS -nw under tmux reports $TERM "dumb".
+  (cl-letf (((symbol-function 'display-graphic-p) (lambda (&rest _) nil))
+            ((symbol-function 'tty-type) (lambda (&rest _) "xterm-256color"))
+            ((symbol-function 'getenv) (lambda (&rest _) "dumb")))
+    (should (eas-tty-mouse-capable-p)))
+  (cl-letf (((symbol-function 'display-graphic-p) (lambda (&rest _) nil))
+            ((symbol-function 'tty-type) (lambda (&rest _) "dumb"))
+            ((symbol-function 'getenv) (lambda (&rest _) "xterm-256color")))
+    (should (eas-tty-mouse-capable-p)))
+  (cl-letf (((symbol-function 'display-graphic-p) (lambda (&rest _) nil))
+            ((symbol-function 'tty-type) (lambda (&rest _) "linux"))
+            ((symbol-function 'getenv) (lambda (&rest _) "xterm-256color")))
+    (should-not (eas-tty-mouse-capable-p)))
   ;; Batch never turns the global mode on.
   (let ((eas-tty-xterm-mouse t))
     (with-temp-buffer

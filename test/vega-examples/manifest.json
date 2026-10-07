@@ -8,8 +8,8 @@
    "spec": "specs/bar-chart.vg.json",
    "ref": "ref/bar-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/bar-chart",
+   "status": "pass"
   },
   {
    "name": "stacked-bar-chart",
@@ -17,8 +17,8 @@
    "spec": "specs/stacked-bar-chart.vg.json",
    "ref": "ref/stacked-bar-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/stacked-bar-chart",
+   "status": "pass"
   },
   {
    "name": "grouped-bar-chart",
@@ -26,8 +26,8 @@
    "spec": "specs/grouped-bar-chart.vg.json",
    "ref": "ref/grouped-bar-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/grouped-bar-chart",
+   "status": "pass"
   },
   {
    "name": "nested-bar-chart",
@@ -35,8 +35,8 @@
    "spec": "specs/nested-bar-chart.vg.json",
    "ref": "ref/nested-bar-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/nested-bar-chart",
+   "status": "pass"
   },
   {
    "name": "population-pyramid",
@@ -44,8 +44,8 @@
    "spec": "specs/population-pyramid.vg.json",
    "ref": "ref/population-pyramid.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/population-pyramid",
+   "status": "pass"
   },
   {
    "name": "line-chart",
@@ -53,8 +53,8 @@
    "spec": "specs/line-chart.vg.json",
    "ref": "ref/line-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/line-chart",
+   "status": "pass"
   },
   {
    "name": "area-chart",
@@ -62,8 +62,8 @@
    "spec": "specs/area-chart.vg.json",
    "ref": "ref/area-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/area-chart",
+   "status": "pass"
   },
   {
    "name": "stacked-area-chart",
@@ -71,8 +71,8 @@
    "spec": "specs/stacked-area-chart.vg.json",
    "ref": "ref/stacked-area-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/stacked-area-chart",
+   "status": "pass"
   },
   {
    "name": "horizon-graph",
@@ -80,8 +80,8 @@
    "spec": "specs/horizon-graph.vg.json",
    "ref": "ref/horizon-graph.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/horizon-graph",
+   "status": "pass"
   },
   {
    "name": "job-voyager",
@@ -89,8 +89,9 @@
    "spec": "specs/job-voyager.vg.json",
    "ref": "ref/job-voyager.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/job-voyager",
+   "status": "partial",
+   "reason": "Stacked areas, per-series opacity, peak labels (sized, faded by quantile, aligned by year) and the sex and search filters match; clicking an area to search for its job is not reproduced, and area seams and label fonts differ slightly."
   },
   {
    "name": "pie-chart",
@@ -98,8 +99,8 @@
    "spec": "specs/pie-chart.vg.json",
    "ref": "ref/pie-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/pie-chart",
+   "status": "pass"
   },
   {
    "name": "donut-chart",
@@ -107,8 +108,8 @@
    "spec": "specs/donut-chart.vg.json",
    "ref": "ref/donut-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/donut-chart",
+   "status": "pass"
   },
   {
    "name": "donut-chart-labelled",
@@ -116,8 +117,8 @@
    "spec": "specs/donut-chart-labelled.vg.json",
    "ref": "ref/donut-chart-labelled.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/donut-chart-labelled",
+   "status": "pass"
   },
   {
    "name": "radial-plot",
@@ -125,8 +126,8 @@
    "spec": "specs/radial-plot.vg.json",
    "ref": "ref/radial-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/radial-plot",
+   "status": "pass"
   },
   {
    "name": "radar-chart",
@@ -134,8 +135,8 @@
    "spec": "specs/radar-chart.vg.json",
    "ref": "ref/radar-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/radar-chart",
+   "status": "pass"
   },
   {
    "name": "scatter-plot",
@@ -143,8 +144,8 @@
    "spec": "specs/scatter-plot.vg.json",
    "ref": "ref/scatter-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/scatter-plot",
+   "status": "pass"
   },
   {
    "name": "scatter-plot-null-values",
@@ -152,8 +153,8 @@
    "spec": "specs/scatter-plot-null-values.vg.json",
    "ref": "ref/scatter-plot-null-values.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/scatter-plot-null-values",
+   "status": "pass"
   },
   {
    "name": "connected-scatter-plot",
@@ -161,8 +162,8 @@
    "spec": "specs/connected-scatter-plot.vg.json",
    "ref": "ref/connected-scatter-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/connected-scatter-plot",
+   "status": "pass"
   },
   {
    "name": "error-bars",
@@ -170,8 +171,8 @@
    "spec": "specs/error-bars.vg.json",
    "ref": "ref/error-bars.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/error-bars",
+   "status": "pass"
   },
   {
    "name": "barley-trellis-plot",
@@ -179,8 +180,9 @@
    "spec": "specs/barley-trellis-plot.vg.json",
    "ref": "ref/barley-trellis-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/barley-trellis-plot",
+   "status": "partial",
+   "reason": "Every panel, point, dashed grid, both side axes and the legend are drawn, but rows drift a pixel from Vega's (scale round: true is not reproduced), which the thin dashed grid magnifies."
   },
   {
    "name": "regression",
@@ -188,8 +190,8 @@
    "spec": "specs/regression.vg.json",
    "ref": "ref/regression.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/regression",
+   "status": "pass"
   },
   {
    "name": "loess-regression",
@@ -197,8 +199,8 @@
    "spec": "specs/loess-regression.vg.json",
    "ref": "ref/loess-regression.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/loess-regression",
+   "status": "pass"
   },
   {
    "name": "labeled-scatter-plot",
@@ -206,8 +208,9 @@
    "spec": "specs/labeled-scatter-plot.vg.json",
    "ref": "ref/labeled-scatter-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/labeled-scatter-plot",
+   "status": "partial",
+   "reason": "The reference is defective: vg2svg could not run Vega's label transform without canvas, so every label sits at the origin and the axes are misplaced. Points, trend and axes match the live example; the label transform places labels clear of points, trend and each other, but not label for label as Vega's bitmap does."
   },
   {
    "name": "top-k-plot",
@@ -215,8 +218,8 @@
    "spec": "specs/top-k-plot.vg.json",
    "ref": "ref/top-k-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/top-k-plot",
+   "status": "pass"
   },
   {
    "name": "top-k-plot-with-others",
@@ -224,8 +227,8 @@
    "spec": "specs/top-k-plot-with-others.vg.json",
    "ref": "ref/top-k-plot-with-others.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/top-k-plot-with-others",
+   "status": "pass"
   },
   {
    "name": "histogram",
@@ -233,8 +236,8 @@
    "spec": "specs/histogram.vg.json",
    "ref": "ref/histogram.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/histogram",
+   "status": "pass"
   },
   {
    "name": "histogram-null-values",
@@ -242,8 +245,8 @@
    "spec": "specs/histogram-null-values.vg.json",
    "ref": "ref/histogram-null-values.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/histogram-null-values",
+   "status": "pass"
   },
   {
    "name": "dot-plot",
@@ -251,8 +254,8 @@
    "spec": "specs/dot-plot.vg.json",
    "ref": "ref/dot-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/dot-plot",
+   "status": "pass"
   },
   {
    "name": "probability-density",
@@ -260,8 +263,8 @@
    "spec": "specs/probability-density.vg.json",
    "ref": "ref/probability-density.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/probability-density",
+   "status": "pass"
   },
   {
    "name": "box-plot",
@@ -269,8 +272,8 @@
    "spec": "specs/box-plot.vg.json",
    "ref": "ref/box-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/box-plot",
+   "status": "pass"
   },
   {
    "name": "violin-plot",
@@ -278,8 +281,8 @@
    "spec": "specs/violin-plot.vg.json",
    "ref": "ref/violin-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/violin-plot",
+   "status": "pass"
   },
   {
    "name": "binned-scatter-plot",
@@ -287,8 +290,8 @@
    "spec": "specs/binned-scatter-plot.vg.json",
    "ref": "ref/binned-scatter-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/binned-scatter-plot",
+   "status": "pass"
   },
   {
    "name": "contour-plot",
@@ -296,8 +299,8 @@
    "spec": "specs/contour-plot.vg.json",
    "ref": "ref/contour-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/contour-plot",
+   "status": "pass"
   },
   {
    "name": "wheat-plot",
@@ -305,8 +308,8 @@
    "spec": "specs/wheat-plot.vg.json",
    "ref": "ref/wheat-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/wheat-plot",
+   "status": "pass"
   },
   {
    "name": "quantile-quantile-plot",
@@ -314,8 +317,8 @@
    "spec": "specs/quantile-quantile-plot.vg.json",
    "ref": "ref/quantile-quantile-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/quantile-quantile-plot",
+   "status": "pass"
   },
   {
    "name": "quantile-dot-plot",
@@ -323,8 +326,8 @@
    "spec": "specs/quantile-dot-plot.vg.json",
    "ref": "ref/quantile-dot-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/quantile-dot-plot",
+   "status": "pass"
   },
   {
    "name": "hypothetical-outcome-plots",
@@ -332,8 +335,8 @@
    "spec": "specs/hypothetical-outcome-plots.vg.json",
    "ref": "ref/hypothetical-outcome-plots.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/hypothetical-outcome-plots",
+   "status": "pass"
   },
   {
    "name": "time-units",
@@ -341,8 +344,9 @@
    "spec": "specs/time-units.vg.json",
    "ref": "ref/time-units.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/time-units",
+   "status": "partial",
+   "reason": "Weekday bars, axis, title and italic subtitle match and hover fills a bar firebrick, but the band scale is not rounded (scale.round is not drawn natively), so bar edges sit up to a pixel off. The time unit and measure selects are slots (unit, format, op). Ratio 0.0355 at best alignment with resvg here."
   },
   {
    "name": "county-unemployment",
@@ -350,8 +354,8 @@
    "spec": "specs/county-unemployment.vg.json",
    "ref": "ref/county-unemployment.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/county-unemployment",
+   "status": "pass"
   },
   {
    "name": "dorling-cartogram",
@@ -359,8 +363,9 @@
    "spec": "specs/dorling-cartogram.vg.json",
    "ref": "ref/dorling-cartogram.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/dorling-cartogram",
+   "status": "partial",
+   "reason": "Circles, labels and colors match Vega (2.4% of pixels differ); the binding carries each state's d3 geoCentroid (eas reads no TopoJSON; scripts/eas-vega-network-data.mjs) and the force transform projects it with albersUsa at scale 1100. The legend is a color gradient: Vega's merged size-and-fill symbol legend is not drawn."
   },
   {
    "name": "world-map",
@@ -368,8 +373,8 @@
    "spec": "specs/world-map.vg.json",
    "ref": "ref/world-map.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/world-map",
+   "status": "pass"
   },
   {
    "name": "earthquakes",
@@ -377,8 +382,8 @@
    "spec": "specs/earthquakes.vg.json",
    "ref": "ref/earthquakes.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/earthquakes",
+   "status": "pass"
   },
   {
    "name": "projections",
@@ -386,8 +391,9 @@
    "spec": "specs/projections.vg.json",
    "ref": "ref/projections.png",
    "ref_kind": "site-thumbnail",
-   "template": null,
-   "status": "todo"
+   "template": "vega/projections",
+   "status": "partial",
+   "reason": "all 24 gallery projections draw natively and their country and sphere paths equal d3-geo-projection's to 1e-9 (peirceQuincuncial's graticule meridians resample differently near its poles); against ref/projections.png, the Vega site's 360 px thumbnail, the 940x1740 render scaled to it differs by ratio 0.0747 (resvg); Vega clips the graticule and countries to each projection's sphere outline, which Vega-Lite cannot express, so the interrupted projections draw the parts of countries their cuts split across the gaps"
   },
   {
    "name": "zoomable-world-map",
@@ -395,8 +401,8 @@
    "spec": "specs/zoomable-world-map.vg.json",
    "ref": "ref/zoomable-world-map.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/zoomable-world-map",
+   "status": "pass"
   },
   {
    "name": "distortion-comparison",
@@ -404,8 +410,8 @@
    "spec": "specs/distortion-comparison.vg.json",
    "ref": "ref/distortion-comparison.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/distortion-comparison",
+   "status": "pass"
   },
   {
    "name": "volcano-contours",
@@ -413,8 +419,8 @@
    "spec": "specs/volcano-contours.vg.json",
    "ref": "ref/volcano-contours.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/volcano-contours",
+   "status": "pass"
   },
   {
    "name": "wind-vectors",
@@ -422,8 +428,8 @@
    "spec": "specs/wind-vectors.vg.json",
    "ref": "ref/wind-vectors.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/wind-vectors",
+   "status": "pass"
   },
   {
    "name": "annual-precipitation",
@@ -431,8 +437,9 @@
    "spec": "specs/annual-precipitation.vg.json",
    "ref": "ref/annual-precipitation.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/annual-precipitation",
+   "status": "partial",
+   "reason": "Countries from TopoJSON and isocontours of the lon/lat grid (500..2500 mm) through geopath under naturalEarth1 (scale 110, translate [300 150]), quantized bluepurple legend labelled 500..2,500 with its title on the left: the map is pixel-identical to ref/annual-precipitation.png with the legend masked (ratio 0.0), 0.032 overall because Vega centres the legend (config.legend.layout, which Vega-Lite cannot express) and truncates its title at titleLimit; legend titleAnchor is reported unsupported."
   },
   {
    "name": "tree-layout",
@@ -440,8 +447,8 @@
    "spec": "specs/tree-layout.vg.json",
    "ref": "ref/tree-layout.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/tree-layout",
+   "status": "pass"
   },
   {
    "name": "radial-tree-layout",
@@ -449,8 +456,8 @@
    "spec": "specs/radial-tree-layout.vg.json",
    "ref": "ref/radial-tree-layout.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/radial-tree-layout",
+   "status": "pass"
   },
   {
    "name": "treemap",
@@ -458,8 +465,8 @@
    "spec": "specs/treemap.vg.json",
    "ref": "ref/treemap.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/treemap",
+   "status": "pass"
   },
   {
    "name": "circle-packing",
@@ -467,8 +474,8 @@
    "spec": "specs/circle-packing.vg.json",
    "ref": "ref/circle-packing.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/circle-packing",
+   "status": "pass"
   },
   {
    "name": "sunburst",
@@ -476,8 +483,8 @@
    "spec": "specs/sunburst.vg.json",
    "ref": "ref/sunburst.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/sunburst",
+   "status": "pass"
   },
   {
    "name": "edge-bundling",
@@ -485,8 +492,9 @@
    "spec": "specs/edge-bundling.vg.json",
    "ref": "ref/edge-bundling.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/edge-bundling",
+   "status": "partial",
+   "reason": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0148 (Vega's own SVG through the same rasterizer: 0.0128). Bundled links and leaf labels match Vega. Hovering a label draws its links in colorOut/colorIn as Vega does, but the linked labels are not bolded or recolored (Vega's indata tests), and the tension, radius, extent, rotate, text and layout widgets are slots."
   },
   {
    "name": "force-directed-layout",
@@ -494,8 +502,8 @@
    "spec": "specs/force-directed-layout.vg.json",
    "ref": "ref/force-directed-layout.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/force-directed-layout",
+   "status": "pass"
   },
   {
    "name": "reorderable-matrix",
@@ -503,8 +511,8 @@
    "spec": "specs/reorderable-matrix.vg.json",
    "ref": "ref/reorderable-matrix.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/reorderable-matrix",
+   "status": "pass"
   },
   {
    "name": "arc-diagram",
@@ -512,8 +520,8 @@
    "spec": "specs/arc-diagram.vg.json",
    "ref": "ref/arc-diagram.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/arc-diagram",
+   "status": "pass"
   },
   {
    "name": "airport-connections",
@@ -521,8 +529,9 @@
    "spec": "specs/airport-connections.vg.json",
    "ref": "ref/airport-connections.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/airport-connections",
+   "status": "partial",
+   "reason": "Airports, their sizes, the fixed albersUsa projection (scale 1200), the Voronoi cells (cells slot) and the routes of the hovered airport match Vega; the state shapes behind them are TopoJSON geopaths, which eas does not draw, hence 46% of pixels differ. The title does not follow the hovered airport."
   },
   {
    "name": "heatmap",
@@ -530,8 +539,8 @@
    "spec": "specs/heatmap.vg.json",
    "ref": "ref/heatmap.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/heatmap",
+   "status": "pass"
   },
   {
    "name": "density-heatmaps",
@@ -539,8 +548,9 @@
    "spec": "specs/density-heatmaps.vg.json",
    "ref": "ref/density-heatmaps.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/density-heatmaps",
+   "status": "partial",
+   "reason": "Faceted kde2d heatmaps (viridis of value/max per Origin, smoothed images), bold headers, axes and the 0..1 gradient legend match; the legend title is one line (Vega-Lite's array titles are not drawn natively), so the chart is about 60 px wider than Vega's: ratio 0.095 against the site thumbnail at its height, 0.031 at the scale that aligns the plots with the legend masked."
   },
   {
    "name": "parallel-coordinates",
@@ -548,8 +558,8 @@
    "spec": "specs/parallel-coordinates.vg.json",
    "ref": "ref/parallel-coordinates.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/parallel-coordinates",
+   "status": "pass"
   },
   {
    "name": "parallel-coordinates-interactive",
@@ -557,8 +567,9 @@
    "spec": "specs/parallel-coordinates-interactive.vg.json",
    "ref": "ref/parallel-coordinates-interactive.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/parallel-coordinates-interactive",
+   "status": "partial",
+   "reason": "Every dimension gets its own nice axis, computed in transforms (fold, normalize, ticks flattened per axis), coloured by Horsepower on Vega's turbo extent. Clicking a line highlights it; Vega's per-axis brushes and draggable axes are not expressible in Vega-Lite and are not ported. Pixel ratio against ref/parallel-coordinates-interactive.png: 0.062."
   },
   {
    "name": "word-cloud",
@@ -566,8 +577,9 @@
    "spec": "specs/word-cloud.vg.json",
    "ref": "ref/word-cloud.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/word-cloud",
+   "status": "partial",
+   "reason": "Reproduces the example's pipeline natively: countpattern with Vega's pattern and stopwords, sqrt font sizes 12-56px, angles picked from -45/0/45, VEGA in weight 600, the three-color ordinal range in data order, and hover fading the word by half (a white copy at opacity 0.5 over it, as fillOpacity 0.5 looks on white). Vega places words with Math.random, so pixels cannot match the reference: the layout is checked structurally (no two padded word boxes overlap, all inside 800x400) and its ink against the reference's (within a factor of two). Placement is seeded and collides measured text boxes rather than glyph sprites, so it is looser: 135 of 194 words fit. The canvas is 805x400, Vega-style text bounds overhanging the 800px plot."
   },
   {
    "name": "beeswarm-plot",
@@ -575,8 +587,8 @@
    "spec": "specs/beeswarm-plot.vg.json",
    "ref": "ref/beeswarm-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/beeswarm-plot",
+   "status": "pass"
   },
   {
    "name": "calendar-view",
@@ -584,8 +596,8 @@
    "spec": "specs/calendar-view.vg.json",
    "ref": "ref/calendar-view.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/calendar-view",
+   "status": "pass"
   },
   {
    "name": "packed-bubble-chart",
@@ -593,8 +605,8 @@
    "spec": "specs/packed-bubble-chart.vg.json",
    "ref": "ref/packed-bubble-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/packed-bubble-chart",
+   "status": "pass"
   },
   {
    "name": "budget-forecasts",
@@ -602,8 +614,8 @@
    "spec": "specs/budget-forecasts.vg.json",
    "ref": "ref/budget-forecasts.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/budget-forecasts",
+   "status": "pass"
   },
   {
    "name": "wheat-and-wages",
@@ -611,8 +623,8 @@
    "spec": "specs/wheat-and-wages.vg.json",
    "ref": "ref/wheat-and-wages.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/wheat-and-wages",
+   "status": "pass"
   },
   {
    "name": "falkensee-population",
@@ -620,8 +632,8 @@
    "spec": "specs/falkensee-population.vg.json",
    "ref": "ref/falkensee-population.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/falkensee-population",
+   "status": "pass"
   },
   {
    "name": "annual-temperature",
@@ -629,8 +641,8 @@
    "spec": "specs/annual-temperature.vg.json",
    "ref": "ref/annual-temperature.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/annual-temperature",
+   "status": "pass"
   },
   {
    "name": "weekly-temperature",
@@ -638,8 +650,8 @@
    "spec": "specs/weekly-temperature.vg.json",
    "ref": "ref/weekly-temperature.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/weekly-temperature",
+   "status": "pass"
   },
   {
    "name": "flight-passengers",
@@ -647,8 +659,9 @@
    "spec": "specs/flight-passengers.vg.json",
    "ref": "ref/flight-passengers.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/flight-passengers",
+   "status": "partial",
+   "reason": "line, points, signed percent axis and dashed zero rule match; the reference's autosize fit shrinks the plot to about 170 px to make room for its title as vg2svg over-estimates it (0.8 em a character), which eas's container fit does not reproduce"
   },
   {
    "name": "timelines",
@@ -656,8 +669,8 @@
    "spec": "specs/timelines.vg.json",
    "ref": "ref/timelines.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/timelines",
+   "status": "pass"
   },
   {
    "name": "u-district-cuisine",
@@ -665,8 +678,8 @@
    "spec": "specs/u-district-cuisine.vg.json",
    "ref": "ref/u-district-cuisine.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/u-district-cuisine",
+   "status": "pass"
   },
   {
    "name": "clock",
@@ -674,8 +687,8 @@
    "spec": "specs/clock.vg.json",
    "ref": "ref/clock.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/clock",
+   "status": "pass"
   },
   {
    "name": "watch",
@@ -683,8 +696,8 @@
    "spec": "specs/watch.vg.json",
    "ref": "ref/watch.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/watch",
+   "status": "pass"
   },
   {
    "name": "warming-stripes",
@@ -692,8 +705,8 @@
    "spec": "specs/warming-stripes.vg.json",
    "ref": "ref/warming-stripes.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/warming-stripes",
+   "status": "pass"
   },
   {
    "name": "earthquakes-globe",
@@ -701,8 +714,9 @@
    "spec": "specs/earthquakes-globe.vg.json",
    "ref": "ref/earthquakes-globe.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/earthquakes-globe",
+   "status": "partial",
+   "reason": "the globe (orthographic, #000022 sphere, translucent white countries), the magnitude rings (stroke colored on Vega's 8-color linear scale, radius circle_size * sqrt(exp(mag) / 100), width 1 + 0.15 r, far side filtered as the circle clip hides it), the title and subtitle, and the one symbol legend of magnitudes 1-9 sized and colored as the rings (a size and a color of one field merge, as in Vega-Lite) match ref/earthquakes-globe.png (ratio 0.0232, resvg; canvas 626x658 against 625x658); not reproduced: the stars' positions (random in Vega; x random and y a hash of it here, as eas's random() repeats within a row), the sphere's gradient stroke (its midpoint color), the legend's row spacing by symbol size, the Tahoma font, and the timer rotation and click-to-pause (the angle is a range input)"
   },
   {
    "name": "serpentine-timeline",
@@ -710,8 +724,8 @@
    "spec": "specs/serpentine-timeline.vg.json",
    "ref": "ref/serpentine-timeline.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/serpentine-timeline",
+   "status": "pass"
   },
   {
    "name": "crossfilter-flights",
@@ -719,8 +733,8 @@
    "spec": "specs/crossfilter-flights.vg.json",
    "ref": "ref/crossfilter-flights.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/crossfilter-flights",
+   "status": "pass"
   },
   {
    "name": "overview-plus-detail",
@@ -728,8 +742,8 @@
    "spec": "specs/overview-plus-detail.vg.json",
    "ref": "ref/overview-plus-detail.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/overview-plus-detail",
+   "status": "pass"
   },
   {
    "name": "brushing-scatter-plots",
@@ -737,8 +751,8 @@
    "spec": "specs/brushing-scatter-plots.vg.json",
    "ref": "ref/brushing-scatter-plots.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/brushing-scatter-plots",
+   "status": "pass"
   },
   {
    "name": "zoomable-scatter-plot",
@@ -746,8 +760,8 @@
    "spec": "specs/zoomable-scatter-plot.vg.json",
    "ref": "ref/zoomable-scatter-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/zoomable-scatter-plot",
+   "status": "pass"
   },
   {
    "name": "zoomable-binned-plot",
@@ -755,8 +769,9 @@
    "spec": "specs/zoomable-binned-plot.vg.json",
    "ref": "ref/zoomable-binned-plot.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/zoomable-binned-plot",
+   "status": "partial",
+   "reason": "The density heatmap and the points pan and zoom together (a param bound to scales), but the bins stay those of the full extent: Vega re-bins the visible domain while zooming, which Vega-Lite cannot express. Pixel ratio against ref/zoomable-binned-plot.png: 0.032."
   },
   {
    "name": "global-development",
@@ -764,8 +779,8 @@
    "spec": "specs/global-development.vg.json",
    "ref": "ref/global-development.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/global-development",
+   "status": "pass"
   },
   {
    "name": "interactive-legend",
@@ -773,8 +788,8 @@
    "spec": "specs/interactive-legend.vg.json",
    "ref": "ref/interactive-legend.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/interactive-legend",
+   "status": "pass"
   },
   {
    "name": "stock-index-chart",
@@ -782,8 +797,8 @@
    "spec": "specs/stock-index-chart.vg.json",
    "ref": "ref/stock-index-chart.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/stock-index-chart",
+   "status": "pass"
   },
   {
    "name": "pi-monte-carlo",
@@ -791,8 +806,8 @@
    "spec": "specs/pi-monte-carlo.vg.json",
    "ref": "ref/pi-monte-carlo.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/pi-monte-carlo",
+   "status": "pass"
   },
   {
    "name": "zoomable-circle-packing",
@@ -800,8 +815,9 @@
    "spec": "specs/zoomable-circle-packing.vg.json",
    "ref": "ref/zoomable-circle-packing.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/zoomable-circle-packing",
+   "status": "partial",
+   "reason": "Native SVG vs test/vega-examples/ref at plot origin: differing-pixel ratio 0.0090 (Vega's own SVG through the same rasterizer: n/a (timer)). The initial view matches. Clicking a circle opens a zoomed view (the zoom-subtree action re-lays its subtree out, which is d3's zoom geometry) and clicking the focused circle zooms out, but without Vega's animated transition, the shift-click details panel or the slow-motion modifier; the help text describes eas's clicks."
   },
   {
    "name": "table-scrollbar",
@@ -809,8 +825,8 @@
    "spec": "specs/table-scrollbar.vg.json",
    "ref": "ref/table-scrollbar.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/table-scrollbar",
+   "status": "pass"
   },
   {
    "name": "bar-line-toggle",
@@ -818,8 +834,8 @@
    "spec": "specs/bar-line-toggle.vg.json",
    "ref": "ref/bar-line-toggle.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/bar-line-toggle",
+   "status": "pass"
   },
   {
    "name": "map-with-tooltip",
@@ -827,8 +843,9 @@
    "spec": "specs/map-with-tooltip.vg.json",
    "ref": "ref/map-with-tooltip.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/map-with-tooltip",
+   "status": "partial",
+   "reason": "the map and its legend match ref/map-with-tooltip.png: ratio 0.0156 at 960x530 (resvg), mercator at scale 900 centred on [-95, 38]; Vega's 30 px top padding is a 530 px view with the map 30 px lower; the tooltip is Vega-Lite's own (the county's key and rate): Vega's custom tooltip, a rounded group following the pointer that redraws the hovered county under a second projection centred on its inverted centroid, has no Vega-Lite form"
   },
   {
    "name": "pacman",
@@ -836,8 +853,9 @@
    "spec": "specs/pacman.vg.json",
    "ref": "ref/pacman.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/pacman",
+   "status": "partial",
+   "reason": "The first frame matches. The arrows steer the eater on a 500 ms timer (x-eas.timer, x-eas.on); gums score 10 and power gums 50; ghosts chase along the longer axis and wander when blocked; a ghost on the eater restarts the game. Not ported: power mode (fleeing, edible ghosts), Vega's ghost decision tables and ghost shapes (drawn as discs). Pixel ratio against ref/pacman.png: 0.011."
   },
   {
    "name": "platformer",
@@ -845,8 +863,9 @@
    "spec": "specs/platformer.vg.json",
    "ref": "ref/platformer.png",
    "ref_kind": "vg2png",
-   "template": null,
-   "status": "todo"
+   "template": "vega/platformer",
+   "status": "partial",
+   "reason": "The first frame matches (the binding precomputes Vega's hsl terrain colours and a solid-cell grid). Gravity, landing, running (left, right), jumping (up) and dashing (z) run on a 50 ms timer; Emacs reports no key release, so a press runs for 6 frames. Not ported: the background image, the dash trail, Vega's exact collision response and its 17 ms frames. Pixel ratio against ref/platformer.png: 0.000."
   }
  ]
 }

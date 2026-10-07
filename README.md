@@ -18,6 +18,13 @@ official Vega-Lite gallery, 188 render natively within a pixel threshold
 of Vega's own PNGs. The other 12 are topojson maps, which are out of
 scope. The same 188 also pass on the text backend.
 
+Every one of the 94 examples in the [Vega gallery](https://vega.github.io/vega/examples/)
+is also a template you can bind your own data to: trees, treemaps,
+sunbursts, force-directed graphs, word clouds, contours, maps and
+projections, and interactive ones down to pacman. `(eas-resolve
+"vega/treemap" BINDINGS)`; see `docs/design/vega-gallery-coverage.md`
+for what each covers.
+
 ## Screenshots
 
 Live views in a terminal Emacs, a 3×3 grid of official Vega-Lite gallery

@@ -44,7 +44,8 @@
 (defconst eas-legend-style-keys
   (append (mapcar #'car eas-legend-style-metric-keys)
           '(:labelColor :titleColor :symbolFillColor :symbolStrokeColor :symbolOpacity :symbolDash
-            :values :format :labelExpr))
+            :values :format :labelExpr
+            :titleFont :titleFontStyle :labelFont :labelFontStyle))
   "Legend properties honored per legend.")
 
 (defun eas-legend-style-overrides (def)

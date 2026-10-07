@@ -112,10 +112,10 @@
     },
     "example": "../examples/vega/annual-precipitation.data.json",
     "vega": {
-      "status": "partial",
-      "ratio": 0.0292,
-      "threshold": 0.05,
-      "note": "Countries from TopoJSON and isocontours of the lon/lat grid (500..2500 mm) through geopath under naturalEarth1 (scale 110, translate [300 150]), quantized bluepurple legend labelled 500..2,500 with its title on the left: the map is pixel-identical to ref/annual-precipitation.png with the legend masked (ratio 0.0), 0.032 overall because Vega centres the legend (config.legend.layout, which Vega-Lite cannot express) and truncates its title at titleLimit; legend titleAnchor is reported unsupported. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0292 (was 0.0323 against vg2svg).",
+      "status": "pass",
+      "ratio": 0.0075,
+      "threshold": 0.02,
+      "note": "Countries from TopoJSON and isocontours of the lon/lat grid (500..2500 mm) through geopath under naturalEarth1 (scale 110, translate [300 150]), quantized bluepurple legend labelled 500..2,500 with its bold title on the left, the legend centred under the map as Vega's config.legend.layout {anchor: 'middle'} (Vega-Lite 6.4.1 passes config.legend.layout through as an ExprRef; eas-legend-layout.el reads its anchor). The map is pixel-identical to ref/annual-precipitation.png. Against the vg2png (node-canvas) reference with rsvg-convert and Arimo: ratio 0.0075 (0.0323 against vg2svg, 0.0292 at the start of eas-7r1.12a, which lacked the centring and Vega's bold black legend text). What remains is the legend title's width, Helvetica Bold about 1 px wider than Arimo Bold, which moves the centred row by half a pixel, and glyph rasterization; legend titleAnchor is reported unsupported.",
       "rasterizer": "rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica"
     }
   },
@@ -292,6 +292,8 @@
   "config": {
     "view": {
       "stroke": null
-    }
+    },
+    "font": "sans-serif",
+    "legend": {"layout": {"expr": "{anchor: 'middle'}"}, "labelColor": "#000", "labelFontSize": 10, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"}
   }
 }

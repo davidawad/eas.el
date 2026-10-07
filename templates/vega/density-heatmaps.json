@@ -70,8 +70,13 @@
         "doc": "continuous color scheme of normalized density"
       },
       "legendTitle": {
-        "type": "string",
-        "default": "Local Density (Normalized)"
+        "type": "array",
+        "items": "string",
+        "default": [
+          "Local Density",
+          "(Normalized)"
+        ],
+        "doc": "legend title, one string per line"
       },
       "size": {
         "type": "integer",
@@ -95,10 +100,10 @@
     },
     "example": "../examples/vega/density-heatmaps.data.json",
     "vega": {
-      "status": "partial",
-      "ratio": 0.0344,
-      "threshold": 0.12,
-      "note": "Faceted kde2d heatmaps (viridis of value/max per Origin, smoothed images), bold headers, axes and the 0..1 gradient legend match; the legend title is one line (Vega-Lite's array titles are not drawn natively). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0344 (was 0.0946 against vg2svg); it was measured against the site thumbnail; the reference is now full size, and the template carries Vega's axis defaults, 13 px headers and Vega's 10 y ticks. Still partial: the legend title is one line where Vega draws two, so the canvas is 75 px wider.",
+      "status": "pass",
+      "ratio": 0.0120,
+      "threshold": 0.03,
+      "note": "Faceted kde2d heatmaps (viridis of value/max per Origin, smoothed images), bold headers, axes and the 0..1 gradient legend match. Against the vg2png (node-canvas) reference with rsvg-convert and Arimo: ratio 0.0120 (0.0946 against vg2svg, 0.0344 at the start of eas-7r1.12a), same 907x309 canvas. eas-7r1.12a fixed three causes: the legend title is Vega's two lines (Vega-Lite array titles now draw one line each, eas-legend-title.el); the cells are 10 px apart, not 12 (the invisible opacity-0 extent rect has strokeWidth 0, so the theme's rect stroke no longer widens each cell's bounds; eas keeps counting transparent strokes so hover never moves layout); and the template carries Vega's group-title offset 4 (header labelPadding) and the y axis titlePadding 5. What remains is glyph rasterization, Helvetica in the reference against Arimo here.",
       "rasterizer": "rsvg-convert 2.60 (librsvg) with Arimo for Arial/Helvetica"
     }
   },
@@ -172,7 +177,8 @@
       "header": {
         "labelFontWeight": "bold",
         "labelFontSize": 13,
-        "labelColor": "#000"
+        "labelColor": "#000",
+        "labelPadding": 4
       }
     }
   },
@@ -189,7 +195,8 @@
         "name": "extent",
         "mark": {
           "type": "rect",
-          "opacity": 0
+          "opacity": 0,
+          "strokeWidth": 0
         },
         "encoding": {
           "x": {
@@ -216,6 +223,7 @@
             "axis": {
               "domain": false,
               "offset": 2,
+              "titlePadding": 5,
               "tickCount": 10
             }
           },

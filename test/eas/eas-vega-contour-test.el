@@ -309,6 +309,45 @@
     ;; Centred on the bar to within the title's baseline rounding.
     (should (<= (abs (- (+ (plist-get title :y) 5) (+ (aref bar 1) (/ (aref bar 3) 2.0)))) 3))))
 
+;; eas-7r1.12a: what density-heatmaps and annual-precipitation needed.
+
+(ert-deftest eas-vega-contour-legend-array-title-is-multi-line ()
+  "A Vega-Lite array title draws one line each and pushes the gradient down."
+  (let* ((legend (lambda (title target)
+                   (let ((spec `(:data (:values [(:x 1 :d 0) (:x 2 :d 10)]) :mark "point"
+                                 :encoding (:x (:field "x" :type "quantitative")
+                                            :color (:field "d" :type "quantitative" :title ,title)))))
+                     (aref (plist-get (aref (plist-get (eas-compile spec :target target) :views) 0) :legends) 0))))
+         (one (funcall legend "Local Density" 'svg))
+         (two (funcall legend ["Local Density" "(Normalized)"] 'svg)))
+    (should (equal (plist-get two :title) "Local Density\n(Normalized)"))
+    ;; Vega's line height: font size + 2.
+    (should (= (- (aref (plist-get two :bar) 1) (aref (plist-get one :bar) 1)) 13))
+    (should (string-match-p "<tspan[^>]*>(Normalized)</tspan>"
+                            (eas-svg-render (eas-compile '(:data (:values [(:x 1 :d 0)]) :mark "point"
+                                                           :encoding (:x (:field "x" :type "quantitative")
+                                                                      :color (:field "d" :type "quantitative"
+                                                                              :title ["A" "(Normalized)"])))))))
+    ;; One line on the character grid.
+    (should (equal (plist-get (funcall legend ["A" "B"] 'text) :title) "A B"))))
+
+(ert-deftest eas-vega-contour-legend-layout-anchor ()
+  "config.legend.layout's anchor centres or ends a bottom legend under the view."
+  (let* ((x (lambda (layout)
+              (let* ((spec `(:width 400 :data (:values [(:x 1 :d 0) (:x 2 :d 10)]) :mark "point"
+                             :encoding (:x (:field "x" :type "quantitative")
+                                        :color (:field "d" :type "quantitative" :legend (:orient "bottom")))
+                             :config (:legend (:layout ,layout))))
+                     (view (aref (plist-get (eas-compile spec) :views) 0))
+                     (l (aref (plist-get view :legends) 0)))
+                (list (- (aref (plist-get l :box) 0) (aref (plist-get view :bounds) 0))
+                      (- (aref (plist-get l :box) 2) (aref (plist-get l :box) 0))))))
+         (start (funcall x :null)) (w (cadr start)))
+    (should (= (car start) 0))
+    (should (= (car (funcall x '(:expr "{anchor: 'middle'}"))) (/ (- 400 w) 2.0)))
+    (should (= (car (funcall x '(:bottom (:anchor "end")))) (- 400 w)))
+    (should (equal (eas-legend-layout-anchor "top" '(:legend (:layout (:bottom (:anchor "end"))))) "start"))))
+
 ;;; The templates
 
 (ert-deftest eas-vega-contour-templates-load-with-examples ()

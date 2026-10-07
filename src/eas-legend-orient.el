@@ -29,6 +29,7 @@
 
 (require 'eas-core)
 (require 'eas-layout)
+(require 'eas-legend-layout)
 (declare-function eas-legend-symbol-type "eas-legend")
 
 (declare-function eas-legend--symbol "eas-legend")
@@ -147,7 +148,11 @@ the default offset."
              (sizes (mapcar (lambda (l) (let ((b (plist-get (eas-legend-place l 0 0 metrics) :box)))
                                           (cons (aref b 2) (aref b 3))))
                             group))
-             (cursor 0))
+             ;; config.legend.layout's anchor along the view (eas-legend-layout.el).
+             (cursor (eas-legend-layout-shift
+                      side (+ (apply #'+ (mapcar (if (equal side "left") #'cdr #'car) sizes))
+                              (* (max 0 (1- (length sizes))) (plist-get metrics :legend-margin)))
+                      (if (equal side "left") h w) (plist-get metrics :config))))
         (when group
           (if (equal side "left")
               (let ((x (- (floor (aref xb 0)) offset (apply #'max (mapcar #'car sizes)))))

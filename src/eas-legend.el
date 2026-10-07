@@ -25,6 +25,7 @@
 (require 'eas-legend-style)
 (require 'eas-legend-orient)
 (require 'eas-legend-merge)
+(require 'eas-legend-title)
 
 (declare-function eas-expr--string "eas-expr")
 (declare-function eas-legend-row-p "eas-legend-row")
@@ -53,8 +54,9 @@ METRICS are the layout's."
     (unless (or (memq legend '(:null :false)) (null scale))
       (let ((base (list :channel (eas-key-name channel)
                         :title (if (plist-member legend :title)
-                                   (let ((tt (plist-get legend :title))) (and (stringp tt) tt))
-                                 (eas-encode-title def (plist-get metrics :config)))
+                                   (eas-legend-title-text (plist-get legend :title) metrics)
+                                 (or (eas-legend-title-text (plist-get def :title) metrics)
+                                     (eas-encode-title def (plist-get metrics :config))))
                         :shape (plist-get spec :shape) :style style
                         :orient (or (and (eas-object-p legend) (plist-get legend :orient))
                                     (let ((o (eas-theme-get config :legend :orient))) (and (stringp o) o))))))
@@ -296,7 +298,8 @@ config.legend's (METRICS)."
 METRICS are the layout's."
   (if-let* ((title (plist-get legend :title)))
       (cons (list :text title :x x :y y :align "left" :baseline "top")
-            (+ y (plist-get metrics :legend-title-size) (plist-get metrics :legend-title-pad)))
+            (+ y (plist-get metrics :legend-title-size) (plist-get metrics :legend-title-pad)
+               (eas-legend-title-extra legend metrics)))
     (cons nil y)))
 
 (defun eas-legend--place-symbols (legend x y metrics)

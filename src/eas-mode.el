@@ -145,6 +145,14 @@ share one cache entry: flushing it would rasterize the same SVG again
                        (equal (plist-get (cdr old) :data) (plist-get (cdr new) :data)))))
     (image-flush old t)))
 
+(defun eas-mode--same-image-p (old new)
+  "Non-nil when image NEW draws as OLD, the image already in the buffer.
+Both must have the same SVG data and the same :map hot spots."
+  (and (eq (car-safe old) 'image) (eq (car-safe new) 'image)
+       (equal (plist-get (cdr old) :data) (plist-get (cdr new) :data))
+       (equal (plist-get (cdr old) :map) (plist-get (cdr new) :map))
+       (save-excursion (goto-char (point-min)) (forward-line 1) (bolp))))
+
 (defun eas-mode-redraw (&optional buffer)
   "Redraw BUFFER (default current) from its view's scene."
   (with-current-buffer (or buffer (current-buffer))
@@ -159,10 +167,15 @@ share one cache entry: flushing it would rasterize the same SVG again
           (eas-mode--flush-replaced old nil) (erase-buffer) (eas-mode--insert-static view))
          ((eas-mode--gui-p)
           (let ((image (eas-svg-image scene :scale 1)))
-            (eas-mode--flush-replaced old image)
-            (erase-buffer)
-            (insert-image image "[chart]")
-            (insert "\n" (eas-mode-strip-string view))
+            (if (eas-mode--same-image-p old image)
+                ;; The same picture and hot spots: leave the image be.
+                (progn (goto-char (point-min)) (forward-line 1)
+                       (delete-region (point) (point-max))
+                       (insert (eas-mode-strip-string view)))
+              (eas-mode--flush-replaced old image)
+              (erase-buffer)
+              (insert-image image "[chart]")
+              (insert "\n" (eas-mode-strip-string view)))
             (eas-mode--hot-spot-keys image)))
          ;; Terminal hover moves one column: rewrite only changed cells (fc-qx1.14).
          (t (eas-mode--flush-replaced old nil)
@@ -186,14 +199,27 @@ There is an image only when `eas-static-fallback' is non-nil."
     (when-let* ((err (plist-get fallback :error)))
       (insert (format "No static image (%s): %s\n" (plist-get err :code) (plist-get err :message))))))
 
+(defvar eas-view-mode-map)
+
+(defvar-local eas-mode--hot-spot-map nil
+  "The local map binding hot-spot ids: (KEYMAP . IDS), IDS a hash table.")
+
 (defun eas-mode--hot-spot-keys (image)
-  "Bind IMAGE's :map area ids so clicks on hot spots reach the reducer."
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map eas-view-mode-map)
+  "Bind IMAGE's :map area ids so clicks on hot spots reach the reducer.
+The buffer keeps one map: a redraw binds only ids no earlier frame
+bound (eas-b2s.2: rebinding 1000 points took 60 ms a frame)."
+  (unless (and eas-mode--hot-spot-map (eq (current-local-map) (car eas-mode--hot-spot-map)))
+    (let ((map (make-sparse-keymap)))
+      (set-keymap-parent map eas-view-mode-map)
+      (use-local-map map)
+      (setq eas-mode--hot-spot-map (cons map (make-hash-table :test 'eq)))))
+  (pcase-let ((`(,map . ,ids) eas-mode--hot-spot-map))
     (dolist (area (plist-get (cdr image) :map))
-      (dolist (key '(mouse-1 down-mouse-1 mouse-movement))
-        (define-key map (vector (nth 1 area) key) (lookup-key eas-view-mode-map (vector key)))))
-    (use-local-map map)))
+      (let ((id (nth 1 area)))
+        (unless (gethash id ids)
+          (puthash id t ids)
+          (dolist (key '(mouse-1 down-mouse-1 mouse-movement))
+            (define-key map (vector id key) (lookup-key eas-view-mode-map (vector key)))))))))
 
 (defun eas-mode--readout ()
   "Show the hovered datum's readout (or the view id) in the header line.

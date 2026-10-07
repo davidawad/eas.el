@@ -29,6 +29,7 @@
 (require 'svg)
 (require 'eas-core)
 (require 'eas-render-cache)
+(require 'eas-svg-retain)
 (require 'eas-theme)
 (require 'eas-paint)
 (require 'eas-arc)
@@ -50,6 +51,9 @@ draws a registered family only when it is also installed."
                  (const :tag "Inline the font file" data)
                  (const :tag "No @font-face" nil))
   :group 'eas-font)
+
+(defvar eas-svg--fragments nil
+  "Non-nil while `eas-svg-render' may draw a mark as cached SVG text.")
 
 (defun eas-svg--face-color (face attribute)
   "FACE's ATTRIBUTE color as a string, or nil when unspecified."
@@ -100,14 +104,21 @@ to Courier New, each with its metric-compatible Liberation font."
 
 (defun eas-svg--escape (text)
   "Escape TEXT for XML."
-  (replace-regexp-in-string
-   "[&<>\"]" (lambda (m) (pcase m ("&" "&amp;") ("<" "&lt;") (">" "&gt;") ("\"" "&quot;")))
-   (format "%s" text) t t))
+  (let ((s (if (stringp text) text (format "%s" text))))
+    (if (not (string-match-p "[&<>\"]" s)) s
+      (replace-regexp-in-string
+       "[&<>\"]" (lambda (m) (pcase m ("&" "&amp;") ("<" "&lt;") (">" "&gt;") ("\"" "&quot;")))
+       s t t))))
+
+(defvar eas-svg--attr-names (make-hash-table :test 'eq)
+  "Attribute symbols by keyword: :fill to fill.")
 
 (defun eas-svg--node (tag &rest attrs)
   "DOM node TAG with ATTRS (a plist, nil values dropped) and no children."
   (dom-node tag (cl-loop for (k v) on attrs by #'cddr
-                         when v collect (cons (intern (substring (symbol-name k) 1))
+                         when v collect (cons (or (gethash k eas-svg--attr-names)
+                                                  (puthash k (intern (substring (symbol-name k) 1))
+                                                           eas-svg--attr-names))
                                               (if (numberp v) (eas-svg--n v) (eas-svg--escape v))))))
 
 (defun eas-svg--anchor (align)
@@ -358,22 +369,38 @@ Half a pixel for a stroke about 1 px wide, so it lands on whole pixels."
             out))
     (nreverse out)))
 
-(defun eas-svg--axes (axes theme)
+(defun eas-svg--axis-parts (axis theme &optional slot)
+  "AXIS's nodes under THEME as (GRID . REST), grid lines first.
+While `eas-svg--fragments' is set each part is its printed SVG text,
+retained between frames in SLOT (`eas-svg-retain-part')."
+  (cl-flet ((split ()
+              (let ((n (seq-count (lambda (tk) (plist-get tk :grid)) (plist-get axis :ticks)))
+                    (nodes (eas-svg--axis axis theme)))
+                (cons (seq-take nodes n) (seq-drop nodes n)))))
+    (if (not eas-svg--fragments) (split)
+      (eas-svg-retain-part slot (cons axis theme)
+                           (lambda ()
+                             (pcase-let ((`(,grid . ,rest) (split)))
+                               (cons (and grid (list (eas-svg-retain-string grid)))
+                                     (and rest (list (eas-svg-retain-string rest))))))))))
+
+(defun eas-svg--axes (axes theme &optional view-id)
   "Return the SVG nodes of AXES under THEME as (BEHIND . FRONT).
 BEHIND goes under the marks, FRONT over them.  Every grid lies beneath
 every axis, as Vega-Lite puts the grids in axes of their own ahead of
 the others.  An axis's zindex above 0 draws it in front; its grid
-follows :grid-zindex when it has one."
+follows :grid-zindex when it has one.  VIEW-ID names the slots their
+printed text is retained in."
   (let ((z (lambda (a key) (> (or (plist-get a key) 0) 0)))
         grids-back grids-front back front)
-    (seq-doseq (axis axes)
-      (let* ((n (seq-count (lambda (tk) (plist-get tk :grid)) (plist-get axis :ticks)))
-             (nodes (eas-svg--axis axis theme))
-             (grid (seq-take nodes n)) (rest (seq-drop nodes n)))
-        (if (funcall z axis (if (plist-member axis :grid-zindex) :grid-zindex :zindex))
-            (push grid grids-front)
-          (push grid grids-back))
-        (if (funcall z axis :zindex) (push rest front) (push rest back))))
+    (seq-do-indexed
+     (lambda (axis i)
+       (pcase-let ((`(,grid . ,rest) (eas-svg--axis-parts axis theme (list 'axis view-id i))))
+         (if (funcall z axis (if (plist-member axis :grid-zindex) :grid-zindex :zindex))
+             (push grid grids-front)
+           (push grid grids-back))
+         (if (funcall z axis :zindex) (push rest front) (push rest back))))
+     axes)
     (cl-flet ((join (parts) (apply #'append (nreverse parts))))
       (cons (append (join grids-back) (join back)) (append (join grids-front) (join front))))))
 
@@ -430,24 +457,35 @@ follows :grid-zindex when it has one."
             out))
     (nreverse out)))
 
+(defun eas-svg--legend-nodes (legend theme view-id)
+  "LEGEND's nodes under THEME, a legend of view VIEW-ID.
+While `eas-svg--fragments' is set they are its printed SVG text,
+retained between frames (`eas-svg-retain-part')."
+  (if (not eas-svg--fragments) (eas-svg--legend legend theme)
+    (eas-svg-retain-part (list 'legend view-id (plist-get legend :channel)) (cons legend theme)
+                         (lambda () (list (eas-svg-retain-string (eas-svg--legend legend theme)))))))
+
 (defun eas-svg--mark-nodes (mark)
-  "SVG nodes of MARK's items."
-  (delq nil (mapcar (lambda (item)
-                      ;; Fully transparent items draw nothing.
-                      (unless (equal (plist-get item :opacity) 0)
-                        (eas-svg--item mark item)))
-                    (plist-get mark :items))))
+  "SVG nodes of MARK's items.
+While `eas-svg--fragments' is set each is its printed SVG text,
+retained per item (`eas-svg-retain-item')."
+  (let ((kind (plist-get mark :mark)))
+    (delq nil (mapcar (lambda (item)
+                        ;; Fully transparent items draw nothing.
+                        (unless (equal (plist-get item :opacity) 0)
+                          (if (and eas-svg--fragments (not (equal kind "image")))
+                              (eas-svg-retain-item kind item (lambda () (eas-svg--item mark item)))
+                            (eas-svg--item mark item))))
+                      (plist-get mark :items)))))
 
-(defvar eas-svg--fragments nil
-  "Non-nil while `eas-svg-render' may draw a mark as cached SVG text.")
-
-(defun eas-svg--mark-children (mark)
+(defun eas-svg--mark-children (mark &optional view-id)
   "MARK's children of its view's group: its nodes, or their SVG text.
-The text comes from `eas-render-cache-svg-fragment' while
-`eas-svg--fragments' is set; svg-print inserts it as it is."
+While `eas-svg--fragments' is set the text is retained in a slot of
+view VIEW-ID (`eas-svg-retain-mark'); svg-print inserts it as it is."
   (if (and eas-svg--fragments eas-render-cache-enabled
            (not (equal (plist-get mark :mark) "image")))
-      (list (eas-render-cache-svg-fragment mark (lambda () (eas-svg--mark-nodes mark))))
+      (list (eas-svg-retain-mark (list 'mark view-id (plist-get mark :id)) mark
+                                 (lambda () (eas-svg--mark-nodes mark))))
     (eas-svg--mark-nodes mark)))
 
 (defun eas-svg-dom (scene &optional theme)
@@ -463,7 +501,7 @@ The text comes from `eas-render-cache-svg-fragment' while
       (let* ((b (plist-get view :bounds))
              (clip (concat "clip-" (replace-regexp-in-string "[^A-Za-z0-9_-]" "_" (plist-get view :id))))
              ;; (BEHIND . FRONT): axes draw on either side of the marks.
-             (axes (eas-svg--axes (plist-get view :axes) theme)))
+             (axes (eas-svg--axes (plist-get view :axes) theme (plist-get view :id))))
         (push (append (eas-svg--node 'clipPath :id clip)
                       (list (eas-svg--node 'rect :x (aref b 0) :y (aref b 1) :width (aref b 2) :height (aref b 3))))
               defs)
@@ -487,12 +525,13 @@ The text comes from `eas-render-cache-svg-fragment' while
                 children))
         (push (apply #'dom-node 'g (when (eq (plist-get view :clip) t)
                                      (list (cons 'clip-path (format "url(#%s)" clip))))
-                     (apply #'append (mapcar #'eas-svg--mark-children (plist-get view :marks))))
+                     (apply #'append (mapcar (lambda (mark) (eas-svg--mark-children mark (plist-get view :id)))
+                                             (plist-get view :marks))))
               children)
         (setq children (append (reverse (cdr axes)) children))
         (seq-doseq (legend (plist-get view :legends))
           (when (plist-get legend :bar) (push (eas-svg--gradient-def legend) defs))
-          (setq children (append (reverse (eas-svg--legend legend theme)) children)))))
+          (setq children (append (reverse (eas-svg--legend-nodes legend theme (plist-get view :id))) children)))))
     (dolist (title (let ((tt (plist-get scene :title))) (and tt (list tt (plist-get tt :subtitle)))))
       (seq-do-indexed
        (lambda (line i)
@@ -519,7 +558,7 @@ The text comes from `eas-render-cache-svg-fragment' while
 (defun eas-svg-render (scene &optional theme)
   "Return SCENE drawn as an SVG string under THEME."
   (with-temp-buffer
-    (svg-print (let ((eas-svg--fragments t)) (eas-svg-dom scene theme)))
+    (eas-svg-retain-print (let ((eas-svg--fragments t)) (eas-svg-dom scene theme)))
     (buffer-string)))
 
 ;;; Hot spots
@@ -531,6 +570,41 @@ The text comes from `eas-render-cache-svg-fragment' while
 (defvar eas-svg-hot-spot-functions nil
   "Functions (SCENE) giving more :map areas, after the items and legends.")
 
+(defvar eas-svg--area-ids (make-hash-table :test 'equal)
+  "Hot-spot id symbols per \"VIEW|MARK\" prefix, a vector by item index.")
+
+(defun eas-svg--area-id (view mark i)
+  "The hot-spot id eas:VIEW|MARK|I of item I of MARK in VIEW."
+  (let* ((prefix (format "%s|%s" (plist-get view :id) (plist-get mark :id)))
+         (ids (gethash prefix eas-svg--area-ids)))
+    (when (<= (length ids) i)
+      (setq ids (vconcat ids (make-vector (max (1+ i) (length ids)) nil)))
+      (puthash prefix ids eas-svg--area-ids))
+    (or (aref ids i) (aset ids i (intern (format "eas:%s|%d" prefix i))))))
+
+(defun eas-svg--item-area (item)
+  "ITEM's hot spot as (SHAPE . PROPS), its :map shape and properties."
+  (cons (cond
+         ((plist-member item :startAngle) (cons 'poly (eas-arc-polygon item)))
+         ((plist-member item :w)
+          (cons 'rect (cons (cons (round (plist-get item :x)) (round (plist-get item :y)))
+                            (cons (round (+ (plist-get item :x) (max 1 (plist-get item :w))))
+                                  (round (+ (plist-get item :y) (max 1 (plist-get item :h))))))))
+         (t (cons 'circle (cons (cons (round (plist-get item :x)) (round (plist-get item :y)))
+                                (max 3 (round (/ (sqrt (or (plist-get item :size) 30)) 2)))))))
+        (list 'help-echo (and (plist-get item :tooltip) (eas-svg--tooltip-text (plist-get item :tooltip)))
+              'pointer (if (plist-get item :href) 'hand 'arrow))))
+
+(defun eas-svg--mark-areas (view mark)
+  "Image :map areas for the items of MARK in VIEW, in item order."
+  (let ((areas nil))
+    (seq-do-indexed
+     (lambda (item i)
+       (let ((area (eas-svg--item-area item)))
+         (push (list (car area) (eas-svg--area-id view mark i) (cdr area)) areas)))
+     (plist-get mark :items))
+    (nreverse areas)))
+
 (defun eas-svg-hot-spots (scene)
   "Image :map areas for SCENE's discrete items and legend entries.
 Each area id is a symbol eas:VIEW|MARK|ITEM (or eas-legend:VIEW|CHANNEL|I).
@@ -539,22 +613,11 @@ Each area id is a symbol eas:VIEW|MARK|ITEM (or eas-legend:VIEW|CHANNEL|I).
     (seq-doseq (view (plist-get scene :views))
       (seq-doseq (mark (plist-get view :marks))
         (when (member (plist-get mark :mark) '("bar" "rect" "point" "circle" "square" "text" "arc"))
-          (seq-do-indexed
-           (lambda (item i)
-             (let ((id (intern (format "eas:%s|%s|%d" (plist-get view :id) (plist-get mark :id) i)))
-                   (props (list 'help-echo (and (plist-get item :tooltip) (eas-svg--tooltip-text (plist-get item :tooltip)))
-                                'pointer (if (plist-get item :href) 'hand 'arrow))))
-               (push (list (cond
-                            ((plist-member item :startAngle) (cons 'poly (eas-arc-polygon item)))
-                            ((plist-member item :w)
-                               (cons 'rect (cons (cons (round (plist-get item :x)) (round (plist-get item :y)))
-                                                 (cons (round (+ (plist-get item :x) (max 1 (plist-get item :w))))
-                                                       (round (+ (plist-get item :y) (max 1 (plist-get item :h))))))))
-                            (t (cons 'circle (cons (cons (round (plist-get item :x)) (round (plist-get item :y)))
-                                                   (max 3 (round (/ (sqrt (or (plist-get item :size) 30)) 2)))))))
-                           id props)
-                     areas)))
-           (plist-get mark :items))))
+          ;; Retained per mark: a frame that changed other marks reuses them.
+          (setq areas (append (reverse (eas-svg-retain-part
+                                        (list 'areas (plist-get view :id) (plist-get mark :id)) mark
+                                        (lambda () (eas-svg--mark-areas view mark))))
+                              areas))))
       (seq-doseq (legend (plist-get view :legends))
         (seq-do-indexed
          (lambda (e i)

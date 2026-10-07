@@ -44,8 +44,11 @@ Each becomes :gradient (fill) and a solid fallback color."
   "Gradient definitions emitted while rendering one SVG document.")
 
 (defun eas-paint--id (gradient)
-  "Stable element id of GRADIENT."
-  (format "paint-%x" (abs (sxhash-equal gradient))))
+  "Stable element id of GRADIENT, the same in every Emacs session.
+It hashes GRADIENT's printed form: `sxhash-equal' of the plist itself
+hashes its keywords by address, which differs from one session to the
+next (eas-b2s.2)."
+  (format "paint-%x" (abs (sxhash-equal (prin1-to-string gradient)))))
 
 (defun eas-paint--svg-def (gradient id)
   "The SVG gradient element ID for GRADIENT."

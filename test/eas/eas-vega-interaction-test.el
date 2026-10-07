@@ -353,6 +353,22 @@ Vega reference (needs rsvg-convert)."
       (should (= (eas-vega-interaction-param view "score") 0))
       (should (= (eas-vega-interaction-param view "hi") 10)))))
 
+(ert-deftest eas-vega-interaction-pacman-ghosts-are-path-symbols ()
+  "Ghosts are Vega's ghost path at its own size: scale null keeps the size."
+  (eas-vega-interaction-with
+    (let* ((view (eas-vega-interaction-open "pacman"))
+           (items (mapcan (lambda (m) (append (plist-get m :items) nil))
+                          (plist-get (aref (plist-get (eas-view-scene view) :views) 0) :marks)))
+           (ghost (seq-find (lambda (i) (string-prefix-p "M" (or (plist-get i :shape) ""))) items)))
+      (should (string-prefix-p "M13.95" (plist-get ghost :shape)))
+      (should (= (plist-get ghost :size) 4))
+      (should (string-match-p "translate(5,4.44) scale(1)" (eas-svg-render (eas-view-scene view)))))
+    (let* ((spec '(:data (:values [(:v 1 :s 50) (:v 2 :s 200)]) :mark "point"
+                   :encoding (:x (:field "v" :type "quantitative")
+                              :size (:field "s" :type "quantitative" :scale :null))))
+           (marks (plist-get (aref (plist-get (eas-compile spec) :views) 0) :marks)))
+      (should (equal (mapcar (lambda (i) (plist-get i :size)) (plist-get (aref marks 0) :items)) '(50 200))))))
+
 (ert-deftest eas-vega-interaction-platformer-falls-lands-and-jumps ()
   "Gravity pulls the player onto the terrain; up jumps off it."
   (eas-vega-interaction-with

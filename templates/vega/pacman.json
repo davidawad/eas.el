@@ -150,10 +150,10 @@
       }
     ],
     "vega": {
-      "status": "partial",
-      "note": "The first frame matches. The arrows steer the eater on a 500 ms timer (x-eas.timer, x-eas.on); gums score 10 and power gums 50; ghosts chase along the longer axis and wander when blocked; a ghost on the eater restarts the game. Not ported: power mode (fleeing, edible ghosts), Vega's ghost decision tables and ghost shapes (drawn as discs). Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0115 (was 0.0114 against vg2svg).",
-      "ratio": 0.0115,
-      "threshold": 0.03
+      "status": "pass",
+      "note": "The first frame matches. The arrows steer the eater on a 500 ms timer (x-eas.timer, x-eas.on); gums score 10 and power gums 50; ghosts chase along the longer axis and wander when blocked; a ghost on the eater restarts the game. Ghosts are Vega's own SVG path symbol (size scale null, so sqrt(size)/2 is Vega's unit), the outer walls overhang the 600px view by 2px as in Vega (the canvas grows to 602px) and the black is the view fill, so the padding stays transparent. Not ported: power mode (fleeing, edible ghosts) and Vega's ghost decision tables. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12d with rsvg-convert and Liberation Sans: ratio 0.0003 (was 0.0115); the rest is the score text's antialiasing.",
+      "ratio": 0.0003,
+      "threshold": 0.005
     }
   },
   "title": {
@@ -250,9 +250,10 @@
     }
   ],
   "config": {
-    "background": "black",
+    "background": "transparent",
     "font": "sans-serif",
     "view": {
+      "fill": "black",
       "stroke": null
     },
     "arc": {
@@ -320,7 +321,7 @@
             },
             {
               "calculate": {
-                "x-eas:expr": "datum.x * {{size}} / 15 + (datum.x == 0 ? 0 : datum.x == 15 ? -4 : -1)"
+                "x-eas:expr": "datum.x * {{size}} / 15 + (datum.x == 0 ? 0 : datum.x == 15 ? -2 : -1)"
               },
               "as": "x0"
             },
@@ -397,7 +398,7 @@
             },
             {
               "calculate": {
-                "x-eas:expr": "datum.y * {{size}} / 15 + (datum.y == 0 ? 0 : datum.y == 15 ? -4 : -1)"
+                "x-eas:expr": "datum.y * {{size}} / 15 + (datum.y == 0 ? 0 : datum.y == 15 ? -2 : -1)"
               },
               "as": "y0"
             },
@@ -1180,20 +1181,37 @@
             "x-eas:expr": "(ghosts[datum.i].y + 0.5) * {{size}} / 15"
           },
           "as": "cy"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "datum.cx - 3 * {{size}} / 120"
+          },
+          "as": "gx"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "datum.cy - 7 * {{size}} / 270"
+          },
+          "as": "gy"
+        },
+        {
+          "calculate": {
+            "x-eas:expr": "pow({{size}} / 300, 2)"
+          },
+          "as": "gsize"
         }
       ],
       "layer": [
         {
           "mark": {
             "type": "point",
-            "shape": "circle",
+            "shape": "M13.952596,15.068143C13.767538,15.066144 13.583578,15.095151 13.403586,15.157148 12.252587,15.553147 11.725549,17.163162 12.224572,18.753189 12.725547,20.342192 14.062582,21.309212 15.211566,20.914204 16.362564,20.518204 16.889541,18.908188 16.390579,17.318163 15.968584,15.977162 14.95058,15.077146 13.952596,15.068143z M7.7945876,6.1100698C7.2026091,6.0760732 6.4365583,6.7850791 5.9736071,7.8550807 5.4445558,9.0761004 5.5105953,10.302109 6.1215563,10.590106 6.7316013,10.881108 7.65555,10.126112 8.1855779,8.9070922 8.7145686,7.6860881 8.6485896,6.4610711 8.036592,6.1710754 7.9606028,6.1350642 7.8795486,6.1150752 7.7945876,6.1100698z M15.404559,5.9590679C15.383563,5.9580608 15.362566,5.9580608 15.34157,5.960075 14.674579,6.0020671 14.194539,7.1220723 14.275593,8.4590903 14.354573,9.7981063 14.962543,10.848119 15.631547,10.802114 16.300554,10.759113 16.778579,9.6401005 16.700576,8.3020907 16.622573,7.006074 16.049577,5.980064 15.404559,5.9590679z M12.317589,1.4699259E-05C15.527545,0.0050196948 18.757579,1.2870288 21.236579,3.8010436 24.038576,6.6430793 25.533567,12.005127 25.825559,15.861164 26.09155,19.371191 27.844537,19.518194 30.765552,22.228211 31.592515,22.995216 33.904521,25.825243 28.733512,26.053242 26.619564,26.146244 25.60156,25.739243 21.732549,22.850226 21.235542,22.545214 20.664558,22.733219 20.373542,22.885214 20.017526,23.07122 19.741586,23.925232 19.851572,24.215227 20.16456,25.583237 22.25855,25.135235 23.427553,26.313253 24.41156,27.305252 22.795536,29.807287 18.926586,29.29027 18.926586,29.29027 16.343582,28.587277 13.853597,25.258236 11.910547,25.242245 9.6305823,25.258236 9.6305823,25.258236 9.6305823,25.258236 9.6025672,26.705256 9.6425452,27.10626 10.271573,27.256254 10.777553,27.021252 13.298544,27.736271 14.150593,27.978262 16.663589,31.170292 8.7236018,30.424282 7.0135832,30.263287 7.1875944,30.721283 5.2576051,26.025242 4.2626119,23.604229 2.0076115,22.396212 0.6345674,17.082169 -0.27241354,14.207143 -0.21040192,11.068107 0.84159805,8.2280856 0.97556992,7.8450862 1.1235799,7.5130826 1.2786091,7.1980773 1.8406196,6.0020671 2.5815849,4.8720523 3.5156043,3.863056 5.9166007,1.2680314 9.107573,-0.0049901602 12.317589,1.4699259E-05z",
             "filled": true,
-            "size": 500,
             "opacity": 1
           },
           "encoding": {
             "x": {
-              "field": "cx",
+              "field": "gx",
               "type": "quantitative",
               "scale": {
                 "domain": [
@@ -1208,7 +1226,7 @@
               "axis": null
             },
             "y": {
-              "field": "cy",
+              "field": "gy",
               "type": "quantitative",
               "scale": {
                 "domain": [
@@ -1228,96 +1246,12 @@
               "type": "nominal",
               "scale": null,
               "legend": null
-            }
-          }
-        },
-        {
-          "mark": {
-            "type": "point",
-            "shape": "circle",
-            "filled": true,
-            "size": 30,
-            "color": "white",
-            "xOffset": -5,
-            "yOffset": -3,
-            "opacity": 1
-          },
-          "encoding": {
-            "x": {
-              "field": "cx",
-              "type": "quantitative",
-              "scale": {
-                "domain": [
-                  0,
-                  {
-                    "x-eas:slot": "size"
-                  }
-                ],
-                "nice": false,
-                "zero": false
-              },
-              "axis": null
             },
-            "y": {
-              "field": "cy",
+            "size": {
+              "field": "gsize",
               "type": "quantitative",
-              "scale": {
-                "domain": [
-                  0,
-                  {
-                    "x-eas:slot": "size"
-                  }
-                ],
-                "nice": false,
-                "zero": false,
-                "reverse": true
-              },
-              "axis": null
-            }
-          }
-        },
-        {
-          "mark": {
-            "type": "point",
-            "shape": "circle",
-            "filled": true,
-            "size": 30,
-            "color": "white",
-            "xOffset": 5,
-            "yOffset": -3,
-            "opacity": 1
-          },
-          "encoding": {
-            "x": {
-              "field": "cx",
-              "type": "quantitative",
-              "scale": {
-                "domain": [
-                  0,
-                  {
-                    "x-eas:slot": "size"
-                  }
-                ],
-                "nice": false,
-                "zero": false
-              },
-              "axis": null
-            },
-            "y": {
-              "field": "cy",
-              "type": "quantitative",
-              "scale": {
-                "domain": [
-                  0,
-                  {
-                    "x-eas:slot": "size"
-                  }
-                ],
-                "nice": false,
-                "zero": false,
-                "reverse": true
-              },
-              "axis": null
+              "scale": null,
+              "legend": null
             }
           }
         }

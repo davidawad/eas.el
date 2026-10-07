@@ -359,7 +359,10 @@ gives its ramp stops."
   "Linear scale for CHANNEL (size or opacity) of UNITS onto RANGE, or nil.
 The scale's own range wins; a trail's size is its width, onto
 Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
-  (when-let* ((pairs (seq-filter (lambda (p) (plist-get (cdr p) :field)) (eas-compile--defs units channel))))
+  (when-let* ((pairs (seq-filter (lambda (p) (and (plist-get (cdr p) :field)
+                                                  ;; scale: null draws the field's values as they are.
+                                                  (not (eq (plist-get (cdr p) :scale) :null))))
+                                 (eas-compile--defs units channel))))
     (or
      (eas-scale-discretize-make (cdar pairs) (eas-compile--values pairs channel) channel
                                 (plist-get (plist-get (caar pairs) :ctx) :config)

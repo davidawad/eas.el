@@ -21,6 +21,7 @@
 (require 'eas-resolve)
 (require 'eas-compile)
 (require 'eas-compile-patch)
+(require 'eas-compile-rows)
 (require 'eas-event)
 (require 'eas-reduce)
 (require 'eas-params)
@@ -76,10 +77,19 @@ eas-stream sets it to coalesce live data.")
 (defun eas-view--compile (view &optional patch old-state)
   "Compile VIEW's scene from its spec, data and state.
 With PATCH (data and size unchanged since OLD-STATE), try patching the
-cached plan for a selection-only change before compiling from scratch."
+cached plan for a selection-only change before compiling from scratch.
+PATCH `rows' (a push left state and size alone) tries patching the plan
+for the new rows (`eas-compile-rows-patch')."
   (let ((state (eas-view-state view)))
     (eas-params-with-state state
-      (let ((plan (or (and patch (eas-view-plan view)
+      (let ((plan (or (and (eq patch 'rows) (eas-view-plan view)
+                           ;; A push only moves the stream cursor.
+                           (equal (eas--plist-without old-state :stream-cursor)
+                                  (eas--plist-without state :stream-cursor))
+                           (eas-compile-rows-patch (eas-view-plan view)
+                                                   (plist-get (eas-view-data view) :rows)
+                                                   :size (eas-view-size view) :state state))
+                      (and patch (not (eq patch 'rows)) (eas-view-plan view)
                            (eas-compile-patch (eas-view-plan view) old-state state))
                       (eas-compile-plan (eas-view-spec view)
                                           :rows (plist-get (eas-view-data view) :rows)
@@ -198,7 +208,7 @@ or data changed."
     ;; A windowed push can keep the row count while changing the rows.
     (unless (and (equal before (eas-view--visible view))
                  (not (and push (> (length (plist-get event :rows)) 0))))
-      (setf (eas-view-scene view) (eas-view--compile view (not push) old-state))
+      (setf (eas-view-scene view) (eas-view--compile view (if push 'rows t) old-state))
       (run-hook-with-args 'eas-view-changed-functions view))
     (run-hook-with-args 'eas-view-dispatch-functions view event old-state old-scene)
     (eas-inspect view)))

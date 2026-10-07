@@ -175,13 +175,19 @@ Double-quoted cells may contain SEPARATOR, newlines and \"\" escapes."
 Each new row must be a flat object using only schema columns with
 values of the column's type; failures are SHAPE_INVALID whose :index
 counts within ROWS."
-  (let ((schema (plist-get data :schema)) (index 0))
+  (let ((schema (plist-get data :schema)) (index 0)
+        ;; KEY -> (NAME . TYPE), looked up once per batch.
+        (types nil))
     (seq-doseq (row rows)
       (unless (and row (eas-object-p row))
         (eas-shape-invalid (format "Pushed row %d is not an object" index) index))
       (cl-loop for (key value) on row by #'cddr
-               for name = (eas-key-name key)
-               for type = (eas-data-field-type data name)
+               for known = (or (assq key types)
+                               (car (push (let ((name (eas-key-name key)))
+                                            (cons key (cons name (eas-data-field-type data name))))
+                                          types)))
+               for name = (cadr known)
+               for type = (cddr known)
                do (cond
                    ((null type)
                     (eas-shape-invalid

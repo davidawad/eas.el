@@ -28,6 +28,7 @@
 (require 'dom)
 (require 'svg)
 (require 'eas-core)
+(require 'eas-render-cache)
 (require 'eas-theme)
 (require 'eas-paint)
 (require 'eas-arc)
@@ -429,6 +430,26 @@ follows :grid-zindex when it has one."
             out))
     (nreverse out)))
 
+(defun eas-svg--mark-nodes (mark)
+  "SVG nodes of MARK's items."
+  (delq nil (mapcar (lambda (item)
+                      ;; Fully transparent items draw nothing.
+                      (unless (equal (plist-get item :opacity) 0)
+                        (eas-svg--item mark item)))
+                    (plist-get mark :items))))
+
+(defvar eas-svg--fragments nil
+  "Non-nil while `eas-svg-render' may draw a mark as cached SVG text.")
+
+(defun eas-svg--mark-children (mark)
+  "MARK's children of its view's group: its nodes, or their SVG text.
+The text comes from `eas-render-cache-svg-fragment' while
+`eas-svg--fragments' is set; svg-print inserts it as it is."
+  (if (and eas-svg--fragments eas-render-cache-enabled
+           (not (equal (plist-get mark :mark) "image")))
+      (list (eas-render-cache-svg-fragment mark (lambda () (eas-svg--mark-nodes mark))))
+    (eas-svg--mark-nodes mark)))
+
 (defun eas-svg-dom (scene &optional theme)
   "Return the SVG DOM for SCENE under THEME (a Vega config plist)."
   (let* ((theme (eas-svg--theme theme scene))
@@ -466,14 +487,7 @@ follows :grid-zindex when it has one."
                 children))
         (push (apply #'dom-node 'g (when (eq (plist-get view :clip) t)
                                      (list (cons 'clip-path (format "url(#%s)" clip))))
-                     (apply #'append
-                            (mapcar (lambda (mark)
-                                      (delq nil (mapcar (lambda (item)
-                                                          ;; Fully transparent items draw nothing.
-                                                          (unless (equal (plist-get item :opacity) 0)
-                                                            (eas-svg--item mark item)))
-                                                        (plist-get mark :items))))
-                                    (plist-get view :marks))))
+                     (apply #'append (mapcar #'eas-svg--mark-children (plist-get view :marks))))
               children)
         (setq children (append (reverse (cdr axes)) children))
         (seq-doseq (legend (plist-get view :legends))
@@ -505,7 +519,7 @@ follows :grid-zindex when it has one."
 (defun eas-svg-render (scene &optional theme)
   "Return SCENE drawn as an SVG string under THEME."
   (with-temp-buffer
-    (svg-print (eas-svg-dom scene theme))
+    (svg-print (let ((eas-svg--fragments t)) (eas-svg-dom scene theme)))
     (buffer-string)))
 
 ;;; Hot spots

@@ -51,6 +51,7 @@
 (require 'eas-compile)
 (require 'eas-view)
 (require 'eas-describe)
+(require 'eas-live)
 
 (defvar eas-play-min-interval 50
   "Shortest timer interval accepted, in milliseconds.
@@ -286,8 +287,16 @@ Return the new inspect, or nil when no handler listens to KEY."
   (let ((play (gethash id eas-plays)))
     (cond ((null play))
           ((not (gethash id eas-views)) (eas-play-detach id))
-          ((not (funcall eas-play-visible-function id)) (cl-incf (eas-play-skipped play)))
-          (t (condition-case err (eas-play-tick id)
+          ;; Hidden: pause the timer until a window shows the view (eas-live).
+          ((not (funcall eas-play-visible-function id))
+           (cl-incf (eas-play-skipped play))
+           (when (eas-play-timer play)
+             (eas-play--cancel play)
+             (eas-live-defer id)))
+          ;; The last tick took longer than the interval: skip, never queue.
+          ((not (eas-live-due-p id (/ (or (eas-play-interval play) 0) 1000.0) (funcall eas-play-clock)))
+           (cl-incf (eas-play-skipped play)))
+          (t (condition-case err (eas-live-timed id (eas-play-tick id))
                (eas-error (eas-play--cancel play)
                           (message "eas: %s stopped: %s" id (plist-get (eas-error-plist err) :message))))))))
 
@@ -301,6 +310,14 @@ declares no timer."
       (setf (eas-play-timer play)
             (run-at-time 0 (/ (eas-play-interval play) 1000.0) #'eas-play--timer-fire (eas-play-view play)))
       play)))
+
+(defun eas-play--wake (view)
+  "Restart the timer VIEW's play paused while VIEW was hidden."
+  (when-let* ((play (eas-play-get view)))
+    (when (and (eas-play-interval play) (not (eas-play-timer play)))
+      (eas-play-start view))))
+
+(add-hook 'eas-live-wake-functions #'eas-play--wake)
 
 (defun eas-play-stop (view)
   "Stop VIEW's timer; its handlers still answer keys."

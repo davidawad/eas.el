@@ -38,6 +38,7 @@
 (require 'eas-view)
 (require 'eas-keyed)
 (require 'eas-describe)
+(require 'eas-live)
 
 (defvar eas-stream-default-max-fps 5
   "Frame cap for streams that do not set max-fps.
@@ -74,6 +75,17 @@ first); a KEY column merges rows into TABLE, keys in ORDER newest first."
       (setf (eas-stream--batch-order batch)
             (eas-keyed-merge (eas-stream--batch-table batch) (eas-stream--batch-order batch) rows key))
     (push rows (eas-stream--batch-parts batch))))
+
+(defun eas-stream--compact (batch window)
+  "Trim an append BATCH to its last WINDOW rows.
+A frame draws no more, so a long pause (a hidden view) keeps a bounded
+queue."
+  (when (and window (not (eas-stream--batch-key batch))
+             (cdr (eas-stream--batch-parts batch))
+             (> (eas-stream--batch-count batch) window))
+    (let ((rows (eas-stream--batch-rows batch)))
+      (setf (eas-stream--batch-parts batch)
+            (list (seq-subseq rows (max 0 (- (length rows) window))))))))
 
 (defun eas-stream--batch-rows (batch)
   "BATCH's queued rows as a vector, oldest first."
@@ -183,9 +195,11 @@ STREAM overrides the config SOURCE declares; one of them must exist."
          "pointer")))
 
 (defun eas-stream--next-frame (stream)
-  "Earliest time STREAM may take its next frame."
+  "Earliest time STREAM may take its next frame.
+A frame slower than the cap delays the next (`eas-live-interval')."
   (if (eas-stream-last-frame stream)
-      (+ (eas-stream-last-frame stream) (/ 1.0 (eas-stream-max-fps stream)))
+      (+ (eas-stream-last-frame stream)
+         (eas-live-interval (eas-stream-view stream) (/ 1.0 (eas-stream-max-fps stream))))
     0))
 
 (defun eas-stream--flush (stream now)
@@ -201,9 +215,10 @@ STREAM overrides the config SOURCE declares; one of them must exist."
              (rows (if (and window (not key) (> (length rows) window))
                        (seq-subseq rows (- (length rows) window))
                      rows)))
-        (eas-dispatch (eas-stream-view stream)
-                      (append (list :type "push" :rows rows) (and key (list :key key))
-                              (and window (list :window window))))))))
+        (eas-live-timed (eas-stream-view stream)
+          (eas-dispatch (eas-stream-view stream)
+                        (append (list :type "push" :rows rows) (and key (list :key key))
+                                (and window (list :window window)))))))))
 
 (defun eas-stream--cancel (stream)
   "Cancel STREAM's pending timer."
@@ -229,7 +244,10 @@ A frame is taken when rows are queued, 1/max-fps seconds have passed
 since the last one and no interaction holds it; otherwise the next try
 is scheduled.  Returns non-nil when a frame was taken."
   (let* ((stream (eas-stream-get view)) (now (or now (funcall eas-stream-clock))))
-    (when (and stream (eas-stream-pending stream))
+    (when (and stream (eas-stream-pending stream)
+               ;; Nobody sees the view: keep the queue for when someone does.
+               (or (eas-live-visible-p view)
+                   (progn (eas-stream--cancel stream) (eas-live-defer view) nil)))
       (let ((held (eas-stream--held stream (eas-view-get view) now))
             (next (eas-stream--next-frame stream)))
         (cond ((and (equal held "pointer") eas-stream-hover-hold)
@@ -262,7 +280,8 @@ on first push; any other view gets the rows at once.  Returns
               (setq batch (eas-stream--batch-make
                            :key key :table (and key (make-hash-table :test 'equal))))
               (push batch (eas-stream-pending stream)))
-            (eas-stream--batch-add batch rows))
+            (eas-stream--batch-add batch rows)
+            (eas-stream--compact batch (eas-stream-window stream)))
           (setf (eas-stream-queued stream)
                 (apply #'+ (mapcar #'eas-stream--batch-count (eas-stream-pending stream))))
           (cl-incf (eas-stream-pushes stream))
@@ -293,6 +312,12 @@ The hook's OLD-STATE and OLD-SCENE arguments are ignored."
         (eas-stream-tick view)))))
 
 (add-hook 'eas-view-dispatch-functions #'eas-stream--observe)
+
+(defun eas-stream--wake (view)
+  "Draw the queue VIEW's stream kept while VIEW was hidden."
+  (when (eas-stream-get view) (eas-stream-tick view)))
+
+(add-hook 'eas-live-wake-functions #'eas-stream--wake)
 (setq eas-push-function #'eas-stream-push)
 
 ;;; Inspect

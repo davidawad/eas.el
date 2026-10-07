@@ -352,6 +352,22 @@ legend (OWN t).  CONFIG gives the ranges."
                     out))))))
     (nreverse out)))
 
+(defun eas-compile--axes (group scales bounds metrics)
+  "GROUP's axes placed on SCALES and BOUNDS under METRICS.
+Kept on GROUP while its scales, axis model and bounds stay the same
+objects, so a patched plan (eas-compile-rows.el) places them once."
+  (let ((cached (plist-get group :axes-cache))
+        (model (plist-get group :axes-model)))
+    (if (and cached (eq (nth 0 cached) scales) (eq (nth 1 cached) model)
+             (equal (nth 2 cached) bounds) (eq (nth 3 cached) metrics))
+        (nth 4 cached)
+      (let ((axes (vconcat (mapcar (lambda (axis)
+                                     (eas-layout-axis-place
+                                      axis (plist-get scales (eas-key (plist-get axis :channel))) bounds metrics))
+                                   model))))
+        (plist-put group :axes-cache (list scales model bounds metrics axes))
+        axes))))
+
 (defun eas-compile--view (group metrics state)
   "Assemble GROUP into a scene view under METRICS and STATE."
   (let* ((bounds (vector (plist-get group :x0) (plist-get group :y0) (plist-get group :w) (plist-get group :h)))
@@ -389,10 +405,7 @@ legend (OWN t).  CONFIG gives the ranges."
                                       for v = (plist-get view k)
                                       when (or (numberp v) (vectorp v)) append (list k v)))))
           :scales scales
-          :axes (vconcat (mapcar (lambda (axis)
-                                   (eas-layout-axis-place
-                                    axis (plist-get scales (eas-key (plist-get axis :channel))) bounds metrics))
-                                 (plist-get group :axes-model)))
+          :axes (eas-compile--axes group scales bounds metrics)
           :legends (vconcat
                     (if (and (eas-layout-text-p metrics) (null (plist-get group :legend-offsets)))
                         (mapcar (lambda (legend)

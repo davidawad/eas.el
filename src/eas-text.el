@@ -28,6 +28,7 @@
 (require 'eas-text-ink)
 (require 'eas-text-band)
 (require 'eas-text-ramp)
+(require 'eas-render-cache)
 
 (defface eas-axis '((t :inherit shadow)) "Face for eas axis lines and grid." :group 'faces)
 (defface eas-label '((t :inherit default)) "Face for eas tick labels." :group 'faces)
@@ -513,15 +514,24 @@ sits under strokes.  Later marks win ties."
 
 (declare-function eas-geoshape-text "eas-geoshape-render")
 
+(defun eas-text--clip (g view)
+  "The cells [COL0 ROW0 COL1 ROW1) of VIEW's plot in grid G."
+  (let* ((b (plist-get view :bounds))
+         (clip (vector (eas-text--col g (aref b 0)) (eas-text--row g (aref b 1))
+                       (eas-text--col g (+ (aref b 0) (aref b 2) -0.01)) (eas-text--row g (+ (aref b 1) (aref b 3) -0.01)))))
+    (vector (aref clip 0) (aref clip 1) (1+ (aref clip 2)) (1+ (aref clip 3)))))
+
 (defun eas-text--marks (g view)
   "Draw every mark of VIEW into grid G, clipped to its plot."
-  (let* ((b (plist-get view :bounds))
-         (prios (mapcar (lambda (p) (/ p 100.0)) (eas-text--mark-prios view)))
-         (clip (vector (eas-text--col g (aref b 0)) (eas-text--row g (aref b 1))
-                       (eas-text--col g (+ (aref b 0) (aref b 2) -0.01)) (eas-text--row g (+ (aref b 1) (aref b 3) -0.01))))
-         (clip (vector (aref clip 0) (aref clip 1) (1+ (aref clip 2)) (1+ (aref clip 3)))))
+  (let ((prios (mapcar (lambda (p) (/ p 100.0)) (eas-text--mark-prios view)))
+        (clip (eas-text--clip g view)))
     (seq-doseq (mark (plist-get view :marks))
-     (let ((prio (pop prios)) (arcs (and (equal (plist-get mark :mark) "arc") (make-hash-table :test 'eql))))
+      (eas-text--mark g view mark (pop prios) clip))))
+
+(defun eas-text--mark (g view mark prio clip)
+  "Draw MARK of VIEW into grid G at PRIO, clipped to CLIP cells."
+  (let ((b (plist-get view :bounds)))
+     (let ((arcs (and (equal (plist-get mark :mark) "arc") (make-hash-table :test 'eql))))
       (seq-do-indexed
        (lambda (item i)
          (unless (equal (plist-get item :opacity) 0)
@@ -585,7 +595,7 @@ sits under strokes.  Later marks win ties."
                                      (eas-text--item-props view mark item (plist-get item :datum)) prio)))))))))
        (plist-get mark :items))
       (when arcs (eas-text--resolve-arcs g arcs prio clip))
-      (eas-text--resolve-bands g prio)))))
+      (eas-text--resolve-bands g prio))))
 
 (defvar eas-text--label-cells nil
   "Hash of (COL . ROW) cells holding a tick label, while a scene renders.")
@@ -674,10 +684,25 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
         (eas-text--string g (plist-get e :lx) (plist-get e :ly) (plist-get e :label) "left"
                             (append props (list 'face 'eas-label)) 5)))))
 
-(defun eas-text--compose (g)
-  "Return grid G as a propertized string, braille dots merged, lines trimmed."
-  (let ((cols (eas-text--grid-cols g)) (shade (eas-text-ink-shade)) lines)
-    (dotimes (row (eas-text--grid-rows g))
+(defun eas-text--compose (g &optional env)
+  "Return grid G as a propertized string, braille dots merged, lines trimmed.
+ENV, when non-nil, lets `eas-render-cache-rows' reuse unchanged rows."
+  (let* ((cols (eas-text--grid-cols g)) (shade (eas-text-ink-shade))
+         (row-key (lambda (row)
+                    (let ((a (* row cols)) (b (* (1+ row) cols)))
+                      (cons shade (mapcar (lambda (v) (substring v a b))
+                                          (list (eas-text--grid-chars g) (eas-text--grid-props g)
+                                                (eas-text--grid-prio g) (eas-text--grid-dots g)
+                                                (eas-text--grid-dot-props g) (eas-text--grid-dot-prio g)
+                                                (eas-text--grid-brush g))))))))
+    (mapconcat #'identity
+               (eas-render-cache-rows env (eas-text--grid-rows g) row-key
+                                      (lambda (row) (eas-text--compose-row g row shade)))
+               "\n")))
+
+(defun eas-text--compose-row (g row shade)
+  "Return ROW of grid G as a propertized string; SHADE colors a brush."
+  (let ((cols (eas-text--grid-cols g)))
       (let ((runs nil) (chars nil) (props :unset)
             ;; Blank cells past the last glyph are trimmed, unless brushed.
             (end (cl-loop for col downfrom (1- cols) to 0
@@ -699,23 +724,57 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
               (setq chars nil props p))
             (unless (eq char 0) (push char chars))))
         (when chars (push (apply #'propertize (apply #'string (nreverse chars)) (unless (eq props :unset) props)) runs))
-        (push (apply #'concat (nreverse runs)) lines)))
-    (mapconcat #'identity (nreverse lines) "\n")))
+        (apply #'concat (nreverse runs)))))
 
 (defun eas-text-render (scene)
   "Return SCENE drawn as a propertized string (rows joined by newlines)."
   (eas-text-ink-with
-   (let ((g (eas-text--new scene)) (eas-text--label-cells (make-hash-table :test 'equal)))
+   (let* ((g (eas-text--new scene))
+          ;; What every step depends on besides its key; nil caches nothing.
+          (env (and eas-render-cache-enabled (not eas-text-trace)
+                    (list (eas-text--grid-cols g) (eas-text--grid-rows g) (eas-text--grid-cw g)
+                          (eas-text--grid-ch g) eas-text-ink--colors
+                          eas-image-base-directory)))
+          (state (eas-render-cache-paint env (cons g (make-hash-table :test 'equal))
+                                         (eas-text--steps g scene) #'eas-text--run-step)))
+     (eas-text--compose (car state) env))))
+
+(defun eas-text--run-step (fn state)
+  "Call FN on the grid of STATE (GRID . LABEL-CELLS)."
+  (let ((eas-text--label-cells (cdr state))) (funcall fn (car state))))
+
+(defun eas-text--steps (g scene)
+  "Return how SCENE paints on a grid like G: a list of (KEY . FN).
+The list is in paint order.  FN paints into the grid it is given;
+KEY holds every input it reads besides the grid, for
+`eas-render-cache-paint'."
+  (let (steps)
     (seq-doseq (view (plist-get scene :views))
-      (eas-text--axes g view)
+      (push (cons (list :axes (plist-get view :axes)) (lambda (g) (eas-text--axes g view))) steps)
       (when-let* ((h (plist-get view :header)))
-        (eas-text--string g (plist-get h :x) (plist-get h :y) (plist-get h :text) "left" (list 'face 'eas-title) 5))
-      (eas-text--marks g view)
-      (eas-text--legends g view))
+        (push (cons (list :header h)
+                    (lambda (g) (eas-text--string g (plist-get h :x) (plist-get h :y) (plist-get h :text) "left"
+                                                  (list 'face 'eas-title) 5)))
+              steps))
+      (let ((prios (mapcar (lambda (p) (/ p 100.0)) (eas-text--mark-prios view)))
+            (clip (eas-text--clip g view))
+            (where (list (plist-get view :id) (plist-get view :bounds) (plist-get view :scales))))
+        (seq-doseq (mark (plist-get view :marks))
+          (let ((prio (pop prios)))
+            (push (cons (list :mark where prio
+                              ;; An image may read a file: never reuse it.
+                              (if (equal (plist-get mark :mark) "image") (make-symbol "image") mark))
+                        (lambda (g) (eas-text--mark g view mark prio clip)))
+                  steps))))
+      (push (cons (list :legends (plist-get view :id) (plist-get view :legends))
+                  (lambda (g) (eas-text--legends g view)))
+            steps))
     (dolist (title (let ((tt (plist-get scene :title))) (and tt (delq nil (list tt (plist-get tt :subtitle))))))
-      (eas-text--string g (plist-get title :x) (plist-get title :y) (plist-get title :text) "center"
-                          (list 'face 'eas-title) 5))
-    (eas-text--compose g))))
+      (push (cons (list :title title)
+                  (lambda (g) (eas-text--string g (plist-get title :x) (plist-get title :y) (plist-get title :text)
+                                                "center" (list 'face 'eas-title) 5)))
+            steps))
+    (nreverse steps)))
 
 (provide 'eas-text)
 ;;; eas-text.el ends here

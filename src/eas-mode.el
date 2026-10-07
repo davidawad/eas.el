@@ -35,12 +35,14 @@
 (require 'eas-mode-patch)
 (require 'eas-mode-strip)
 (require 'eas-gc)
+(require 'eas-live)
 
 (defvar-local eas-mode--view nil "The view this buffer shows.")
 (defvar-local eas-mode--timer nil "Pending idle redraw.")
 (defvar-local eas-mode--last-px nil "Last pointer position sent.")
 (defvar-local eas-mode--last-cell nil "Point's (LINE . COLUMN) when it last hovered.")
 (defvar-local eas-mode--pinch nil "Last pinch scale of the current gesture.")
+(defvar-local eas-mode--stale nil "Non-nil when the view changed while hidden.")
 
 (defun eas-mode--gui-p ()
   "Non-nil when this buffer draws an image."
@@ -125,7 +127,7 @@ line numbers and, in a terminal, the column the truncation glyph takes
 (defun eas-mode-redraw (&optional buffer)
   "Redraw BUFFER (default current) from its view's scene."
   (with-current-buffer (or buffer (current-buffer))
-    (setq eas-mode--timer nil)
+    (setq eas-mode--timer nil eas-mode--stale nil)
     (let* ((view eas-mode--view) (scene (eas-view-scene view))
            (inhibit-read-only t) (pos (point))
            ;; Text lines change length as labels change: keep point's cell.
@@ -187,16 +189,28 @@ The values strip under the chart follows the pointer's column."
     (eas-mode-strip-update view)))
 
 (defun eas-mode--schedule (view)
-  "Coalesce a redraw of every buffer showing VIEW."
+  "Coalesce a redraw of every buffer showing VIEW.
+A hidden buffer is only marked stale; it redraws when shown (eas-live)."
   (when-let* ((buffer (eas-view-buffer view)))
     (when (buffer-live-p buffer)
       (with-current-buffer buffer
-        (unless eas-mode--timer
+        (cond
+         ((not (eas-live-visible-p view)) (setq eas-mode--stale t) (eas-live-defer view))
+         (eas-mode--timer)
+         (t
           (setq eas-mode--timer
                 (if noninteractive (progn (eas-mode-redraw buffer) nil)
-                  (run-with-idle-timer 0 nil #'eas-mode-redraw buffer))))))))
+                  (run-with-idle-timer 0 nil #'eas-mode-redraw buffer)))))))))
 
 (add-hook 'eas-view-changed-functions #'eas-mode--schedule)
+
+(defun eas-mode--wake (view)
+  "Redraw VIEW's buffer when it changed while hidden."
+  (when-let* ((buffer (eas-view-buffer view)))
+    (when (and (buffer-live-p buffer) (buffer-local-value 'eas-mode--stale buffer))
+      (eas-mode-redraw buffer))))
+
+(add-hook 'eas-live-wake-functions #'eas-mode--wake)
 
 ;;; Commands
 

@@ -18,18 +18,14 @@
 ;; working set and drop the rest.
 ;;
 ;; Text: the text renderer paints a list of steps (axes, each mark,
-;; legends, titles) onto one cell grid, each step a function of the
-;; grid painted so far and of its own inputs, its KEY.  A render whose
-;; first K keys equal the last render's (on the same canvas, ink and
-;; cell size, its ENV) restarts from a copy of the grid as it was before
-;; step K.  Grid snapshots are taken before the first step that changed
-;; and before the steps that changed since the previous frame, so the
-;; frame after the first change already skips the static prefix.  The
-;; copy is written over the state returned two renders ago, in place
-;; (`eas-render-cache--restore'), so a frame allocates no grid.
-;; Composed rows are reused when their cells are `equal'
-;; (`eas-render-cache-grid-rows' compares them with the last composed
-;; grid in place, allocating nothing; eas-b2s.1).
+;; legends, titles) onto one cell grid.  `eas-render-cache-paint'
+;; restarts such a paint from a grid snapshot taken before the first
+;; step whose KEY changed.  The text renderer now keeps its own last
+;; frame per canvas (`eas-render-cache--frames', eas-b2s.7): the grid,
+;; the rows each step and item tried, and a snapshot; a frame whose
+;; marks changed repaints only the rows of the changed items
+;; (`eas-text--frame').  `eas-render-cache-dirty' carries the update
+;; path's dirty marks to both renderers as a hint.
 ;;
 ;; Scenes are values: a render never mutates one, so a scene object
 ;; that is `equal' to a cached key draws the same.  Set
@@ -64,9 +60,22 @@ reused and :restored snapshots written over an old state in place.
 (defvar eas-render-cache--svg-old nil "SVG fragments of the last generation.")
 (defvar eas-render-cache--svg-bytes 0 "Bytes held by `eas-render-cache--svg-new'.")
 (defvar eas-render-cache--text nil "Remembered text renders, the latest first.")
-(defvar eas-render-cache--rows nil "Composed text rows per canvas, an alist.")
-(defvar eas-render-cache--grids nil
-  "The last composed grid per canvas: (ENV GRID . ROWS), ROWS a vector.")
+
+(defvar eas-render-cache--frames nil
+  "The last text frame per canvas, an alist: ENV -> [GRID STEPS ROWS LABELS ...].
+See `eas-text--frame' (eas-b2s.7).")
+
+(defvar eas-render-cache-dirty nil
+  "What the scene being rendered changed since its view's last frame.
+Nil (no hint), t or ((VIEW-ID MARK-ID ...) ...) as `eas-scene-dirty'
+returns it, bound by the glue around a redraw.  A renderer treats a
+listed mark as changed without comparing it; any other mark is still
+compared (by `eq' first), so a wrong hint costs time, never output.")
+
+(defun eas-render-cache-dirty-p (view-id mark)
+  "Non-nil when `eas-render-cache-dirty' lists MARK of VIEW-ID as changed."
+  (and (consp eas-render-cache-dirty) (consp mark)
+       (member (plist-get mark :id) (cdr (assoc view-id eas-render-cache-dirty)))))
 
 (defun eas-render-cache-clear ()
   "Forget every cached render and reset `eas-render-cache-stats'."
@@ -75,8 +84,7 @@ reused and :restored snapshots written over an old state in place.
         eas-render-cache--svg-old (make-hash-table :test 'equal)
         eas-render-cache--svg-bytes 0
         eas-render-cache--text nil
-        eas-render-cache--rows nil
-        eas-render-cache--grids nil
+        eas-render-cache--frames nil
         eas-render-cache-stats (list :svg-hits 0 :svg-misses 0 :text-hits 0
                                      :text-skipped 0 :row-hits 0)))
 
@@ -170,12 +178,10 @@ a copy is made.  DST must share no structure with SRC."
 (defun eas-render-cache--reuse (spare snapshot)
   "A state equal to a copy of SNAPSHOT, written over SPARE when non-nil.
 SPARE is the state a render returned two renders ago: nobody draws
-from it any more, and a grid composed from it is forgotten here.
+from it any more.
 Restoring in place spares a copy of the whole grid per frame
 \(eas-b2s.1: about 290 KB of allocation on a 100x40 canvas)."
   (if (null spare) (eas-render-cache--copy snapshot)
-    (setq eas-render-cache--grids
-          (seq-remove (lambda (e) (or (eq (cadr e) spare) (eq (cadr e) (car-safe spare)))) eas-render-cache--grids))
     (eas-render-cache--count :restored)
     (eas-render-cache--restore spare snapshot)))
 
@@ -236,52 +242,6 @@ no snapshot is reused."
                     (seq-take (delq entry eas-render-cache--text)
                               (max 0 (1- eas-render-cache-text-entries)))))
         state))))
-
-(defun eas-render-cache-grid-rows (env grid n same-fn row-fn)
-  "Return the N composed rows of GRID, on a canvas with ENV, as a list.
-ROW-FN gives row I's string.  SAME-FN, called as (SAME-FN OLD GRID I),
-says row I of GRID holds what it held in OLD, the grid composed last on
-ENV; that row is then reused, the same string object.  GRID must not
-change after this call.  Nil ENV caches nothing."
-  (if (or (null env) (not eas-render-cache-enabled))
-      (cl-loop for i below n collect (funcall row-fn i))
-    (let* ((entry (assoc env eas-render-cache--grids))
-           (old (cadr entry)) (old-rows (cddr entry))
-           (new (make-vector n nil))
-           (rows (cl-loop for i below n
-                          for row = (if (and old (< i (length old-rows)) (funcall same-fn old grid i))
-                                        (progn (eas-render-cache--count :row-hits) (aref old-rows i))
-                                      (funcall row-fn i))
-                          do (aset new i row)
-                          collect row)))
-      (setq eas-render-cache--grids
-            (cons (cons env (cons grid new))
-                  (seq-take (delq entry eas-render-cache--grids)
-                            (max 0 (1- eas-render-cache-text-entries)))))
-      rows)))
-
-(defun eas-render-cache-rows (env n key-fn row-fn)
-  "Return the N composed rows of a canvas with ENV, as a list.
-KEY-FN gives row I's inputs, ROW-FN its string.  A row whose inputs
-equal those of row I last time on ENV is reused.  Nil ENV caches
-nothing."
-  (if (or (null env) (not eas-render-cache-enabled))
-      (cl-loop for i below n collect (funcall row-fn i))
-    (let* ((old (cdr (assoc env eas-render-cache--rows)))
-           (new (make-vector n nil))
-           (rows (cl-loop for i below n
-                          for key = (funcall key-fn i)
-                          for prev = (and old (< i (length old)) (aref old i))
-                          for row = (if (and prev (equal (car prev) key))
-                                        (progn (eas-render-cache--count :row-hits) (cdr prev))
-                                      (funcall row-fn i))
-                          do (aset new i (cons key row))
-                          collect row)))
-      (setq eas-render-cache--rows
-            (cons (cons env new)
-                  (seq-take (seq-remove (lambda (e) (equal (car e) env)) eas-render-cache--rows)
-                            (max 0 (1- eas-render-cache-text-entries)))))
-      rows)))
 
 (provide 'eas-render-cache)
 ;;; eas-render-cache.el ends here

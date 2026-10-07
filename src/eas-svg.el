@@ -651,7 +651,8 @@ view VIEW-ID (`eas-svg-retain-mark'); svg-print inserts it as it is."
   (if (and eas-svg--fragments eas-render-cache-enabled
            (not (equal (plist-get mark :mark) "image")))
       (list (eas-svg-retain-mark (list 'mark view-id (plist-get mark :id)) mark
-                                 (lambda (items strings) (eas-svg--mark-strings mark items strings))))
+                                 (lambda (items strings) (eas-svg--mark-strings mark items strings))
+                                 (eas-render-cache-dirty-p view-id mark)))
     (eas-svg--mark-nodes mark)))
 
 (defun eas-svg-dom (scene &optional theme)
@@ -780,7 +781,8 @@ Each area id is a symbol eas:VIEW|MARK|ITEM (or eas-legend:VIEW|CHANNEL|I).
           ;; Retained per mark: a frame that changed other marks reuses them.
           (setq areas (append (reverse (eas-svg-retain-part
                                         (list 'areas (plist-get view :id) (plist-get mark :id)) mark
-                                        (lambda () (eas-svg--mark-areas view mark))))
+                                        (lambda () (eas-svg--mark-areas view mark))
+                                        (eas-render-cache-dirty-p (plist-get view :id) mark)))
                               areas))))
       (seq-doseq (legend (plist-get view :legends))
         (seq-do-indexed

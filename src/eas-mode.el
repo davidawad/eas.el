@@ -158,6 +158,9 @@ Both must have the same SVG data and the same :map hot spots."
   (with-current-buffer (or buffer (current-buffer))
     (setq eas-mode--timer nil eas-mode--stale nil)
     (let* ((view eas-mode--view) (scene (eas-view-scene view))
+           ;; The marks the last update changed: renderers skip comparing
+           ;; them, and compare the rest by `eq' (eas-b2s.7).
+           (eas-render-cache-dirty (eas-view-dirty view))
            (inhibit-read-only t) (pos (point))
            ;; Text lines change length as labels change: keep point's cell.
            (line (line-number-at-pos)) (col (current-column)))

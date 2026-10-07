@@ -97,11 +97,13 @@
 
 (defvar bench-frame-text--render-time 0.0 "Seconds spent in `eas-text-render' this frame.")
 (defvar bench-frame-text--render-gc 0.0 "Seconds of it spent collecting garbage.")
+(defvar bench-frame-text--render-bytes 0 "Bytes allocated by `eas-text-render' this frame.")
 
 (defun bench-frame-text--time-render (orig &rest args)
   "Time ORIG (`eas-text-render') called with ARGS."
-  (let ((t0 (float-time)) (g0 gc-elapsed))
+  (let ((t0 (float-time)) (g0 gc-elapsed) (b0 (bench-frame-text--bytes)))
     (prog1 (apply orig args)
+      (cl-incf bench-frame-text--render-bytes (- (bench-frame-text--bytes) b0))
       (cl-incf bench-frame-text--render-gc (- gc-elapsed g0))
       (cl-incf bench-frame-text--render-time (- (float-time) t0)))))
 
@@ -110,15 +112,16 @@
   (cl-loop for n in (memory-use-counts) for w in '(16 16 8 48 1 56 32) sum (* n w)))
 
 (defun bench-frame-text--frames (view step)
-  "Mean (UPDATE RENDER PATCH TOTAL KB GCS GC) of STEP then a redraw of VIEW.
+  "Mean (UPDATE RENDER PATCH TOTAL KB GCS GC UKB RKB PKB) of STEP, a redraw of VIEW.
 UPDATE, RENDER, PATCH, GC and TOTAL are ms; the stages exclude the time
 spent collecting garbage, which is GC.  KB is allocated per frame and
-GCS counts collections.  The
+GCS counts collections; UKB, RKB and PKB split KB into update, render
+and patch.  The
 mean runs over 3 rounds of `bench-frame-text-frames' frames, garbage
 collections included, after a warm-up frame."
   (let ((buffer (generate-new-buffer " *bench-frame-text*")) (frame 0)
         (up 0.0) (render 0.0) (draw 0.0) (up-gc 0.0) (render-gc 0.0) (draw-gc 0.0)
-        (bytes 0) (gcs gcs-done) (gc-time gc-elapsed)
+        (bytes 0) (ubytes 0) (rbytes 0) (gcs gcs-done) (gc-time gc-elapsed)
         (gc-cons-percentage 0.1))
     (advice-add bench-frame-text--render :around #'bench-frame-text--time-render)
     (unwind-protect
@@ -130,22 +133,26 @@ collections included, after a warm-up frame."
           (dotimes (_round 3)
             (let ((b0 (bench-frame-text--bytes)))
               (dotimes (_ bench-frame-text-frames)
-                (let ((t0 (float-time)) (g0 gc-elapsed))
+                (let ((t0 (float-time)) (g0 gc-elapsed) (u0 (bench-frame-text--bytes)))
                   (funcall step (cl-incf frame))
                   (let ((t1 (float-time)) (g1 gc-elapsed))
-                    (setq bench-frame-text--render-time 0.0 bench-frame-text--render-gc 0.0)
+                    (cl-incf ubytes (- (bench-frame-text--bytes) u0))
+                    (setq bench-frame-text--render-time 0.0 bench-frame-text--render-gc 0.0
+                          bench-frame-text--render-bytes 0)
                     (eas-mode-redraw buffer)
                     (cl-incf up (- t1 t0)) (cl-incf up-gc (- g1 g0))
                     (cl-incf draw (- (float-time) t1)) (cl-incf draw-gc (- gc-elapsed g1))
                     (cl-incf render bench-frame-text--render-time)
-                    (cl-incf render-gc bench-frame-text--render-gc))))
+                    (cl-incf render-gc bench-frame-text--render-gc)
+                    (cl-incf rbytes bench-frame-text--render-bytes))))
               (cl-incf bytes (- (bench-frame-text--bytes) b0)))))
       (advice-remove bench-frame-text--render #'bench-frame-text--time-render)
       (kill-buffer buffer))
     (let ((n (* 3.0 bench-frame-text-frames)))
       (append (mapcar (lambda (s) (/ (* 1000 s) n))
                       (list (- up up-gc) (- render render-gc) (- draw render (- draw-gc render-gc)) (+ up draw)))
-              (list (/ bytes n 1024.0) (- gcs-done gcs) (/ (* 1000 (- gc-elapsed gc-time)) n))))))
+              (list (/ bytes n 1024.0) (- gcs-done gcs) (/ (* 1000 (- gc-elapsed gc-time)) n)
+                    (/ ubytes n 1024.0) (/ rbytes n 1024.0) (/ (- bytes ubytes rbytes) n 1024.0))))))
 
 (defconst bench-frame-text--size '(:cols 100 :rows 40) "The terminal size benched.")
 
@@ -263,14 +270,16 @@ collections included, after a warm-up frame."
                          ((byte-code-function-p f) "byte-compiled")
                          (t "interpreted")))
                  bench-frame-text-root bench-frame-text-frames eas-render-cache-enabled))
-  (princ (concat "| workload | update | render | patch | GC | total ms/frame | KB alloc/frame |\n"
-                 "|---|---|---|---|---|---|---|\n"))
+  (princ (concat "| workload | update | render | patch | GC | total ms/frame | KB alloc/frame"
+                 " | KB update | KB render | KB patch |\n"
+                 "|---|---|---|---|---|---|---|---|---|---|\n"))
   (pcase-dolist (`(,name ,fn . ,args) bench-frame-text-workloads)
    (when (or (null bench-frame-text-only) (string-match-p bench-frame-text-only name))
     (let ((row (condition-case err (apply fn args)
                  (error (message "%s: %S" name err) nil))))
-      (princ (if row (format "| %s | %.2f | %.2f | %.2f | %.2f (%d) | %.2f | %.0f |\n"
-                               name (nth 0 row) (nth 1 row) (nth 2 row) (nth 6 row) (nth 5 row) (nth 3 row) (nth 4 row))
+      (princ (if row (format "| %s | %.2f | %.2f | %.2f | %.2f (%d) | %.2f | %.0f | %.0f | %.0f | %.0f |\n"
+                               name (nth 0 row) (nth 1 row) (nth 2 row) (nth 6 row) (nth 5 row) (nth 3 row) (nth 4 row)
+                               (nth 7 row) (nth 8 row) (nth 9 row))
                (format "| %s | n/a | | | | | |\n" name)))))))
 
 (defvar bench-frame-text-no-report nil "Non-nil to load without printing the table.")

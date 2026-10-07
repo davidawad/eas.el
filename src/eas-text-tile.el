@@ -47,6 +47,7 @@
 (declare-function eas-text--cells "eas-text")
 (declare-function eas-text--translucent "eas-text")
 (declare-function eas-text--item-props "eas-text")
+(declare-function eas-text--touch "eas-text")
 
 (defvar eas-text-tile--cells nil
   "Cell index -> tile record while a view's marks draw.
@@ -137,6 +138,7 @@ Inside CLIP, in COLOR at PRIO; PROPS go to cells nothing holds."
              for col = (if across k c0) for row = (if across r0 k)
              when (and (<= (max 0 (aref clip 0)) col) (< col (min cols (aref clip 2)))
                        (<= (max 0 (aref clip 1)) row) (< row (min rows (aref clip 3))))
+             when (eas-text--touch row)
              do (let ((rec (eas-text-tile--record (+ col (* row cols))))
                       (bits (logior (if (> k (if across c0 r0)) (if across 4 1) 0)
                                     (if (< k (if across c1 r1)) (if across 8 2) 0))))
@@ -163,7 +165,7 @@ Inside CLIP, in COLOR at PRIO; PROPS go to cells nothing holds."
                do (cl-loop for col from (max c0 (aref clip 0) 0) below (min c1 (aref clip 2) cols)
                            for i = (+ col (* row cols))
                            when (and eas-text-trace eas-text-trace-item) do (funcall eas-text-trace col row)
-                           when (>= prio (aref (eas-text--grid-prio g) i))
+                           when (and (eas-text--touch row) (>= prio (aref (eas-text--grid-prio g) i)))
                            do (if clear
                                   ;; See-through: what lies under stays, with this rect's hover.
                                   (aset (eas-text--grid-props g) i

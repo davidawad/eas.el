@@ -333,3 +333,130 @@ views do not draw (eas-live). Nothing was added.
 - **Strip**: pacman's strip reads values that change every tick;
   eas-strip.el and the component formatter (not in this scope) are
   most of what remains of its patch stage.
+
+## Phase 3 (eas-b2s.7): renderers consume dirty marks
+
+The update path now keeps every unchanged mark (and, in a changed
+mark, every unchanged item) `eq` to the last frame's, and lists the
+marks it changed (`eas-view-dirty`, docs/design/update-path.md). This
+phase makes both renderers use that.
+
+### Text: row-granular repaint
+
+Before, a frame restarted from a grid snapshot taken before the first
+changed step and repainted *every* row from there, then compared every
+row with the last grid to find which to compose again. A ladder push
+that moved 10 bars repainted all 50 bars and their labels.
+
+Now (`eas-text--frame`, `src/eas-text.el`):
+
+1. **Every write site records the rows it tries** (`eas-text--touch`):
+   `eas-text--put`, `eas-text--dot`, the inline bar loop, the brush,
+   area slices (`eas-text--under`, `eas-text--resolve-bands`), arc dots,
+   tile fills and edges (`eas-text-tile.el`) and the axis grid dotting.
+   A row is recorded whether or not the write wins its cell, so a later
+   frame knows every step that has a say in it. Per step that is a
+   bool-vector; per mark item a packed row range.
+2. **The last frame is retained per canvas**: the grid itself (no copy
+   per frame), the steps' rows, each mark's items and their ranges, the
+   composed row strings and a grid snapshot before the first step that
+   changes (moved there after two frames in a row change from a later
+   step).
+3. **A frame whose steps differ only in mark items** (axes, legends,
+   titles, the step list and each mark's other keys unchanged; the
+   hit-test's `:rows` and `:index` are ignored, text never reads them)
+   computes the dirty rows: the rows each changed item (not `eq` to
+   last frame's at its index) held, plus the rows it will hold, guessed
+   from its geometry (`eas-text--item-rows`: bars and tiles by the same
+   cell rounding the painter uses, rules, text, series points, symbols).
+   Area marks widen by a row each way (a cell's slices read their
+   neighbours). Those rows are restored from the snapshot (or cleared)
+   and the steps from the snapshot on that try them run with writes
+   limited to them (`eas-text--mask`); within a step, an item `eq` to
+   last frame's whose rows miss the mask is not drawn at all.
+4. **Exactness does not depend on the guess.** After the pass, rows the
+   changed items actually tried that were not repainted (the guess was
+   short, or unknown) are repainted by a second pass. Labels whose
+   overlap a full paint decided replay that decision
+   (`eas-text--label-replay`), since a partial repaint sees none of the
+   claims of labels outside its rows.
+5. **Compose skips comparison**: only repainted rows are composed; the
+   others are the last frame's strings (`eq`, which the buffer patch
+   skips). Nothing compares grids any more (`eas-text--same-row-p`,
+   `eas-render-cache-grid-rows` and the row-key cache are gone).
+6. **Braille lines with constant props** (rules, ticks, diagonals) no
+   longer compute a float per dot for a props function that ignores it.
+
+`eas-render-cache-dirty`, bound by `eas-mode-redraw` to the view's
+dirty marks, is a hint: a listed mark is taken as changed without the
+`equal` walk; any other is compared, `eq` first. A wrong or stale hint
+(coalesced frames) costs time, never output.
+
+### SVG: no comparison for listed marks
+
+`eas-svg-retain-mark` and the retained hot-spot areas take the same
+hint: a mark the update path listed is reprinted from its items
+(unchanged items still reuse their text by position, one `eq` each)
+without first walking it against the slot's mark; any other mark hits
+on `eq`. Phase 2 measured that this walk was the only comparison left,
+so this saves little time but removes the last per-mark `equal`.
+
+### Tests
+
+`src/eas-text-frames-test.el` checks every frame against a render from
+scratch with the true hint, every mark listed and no hint; adds a run
+with the row guess disabled and one with a wrong guess (the second pass
+must carry exactness), and a test that a one-level push composes at
+most 4 rows. `eas-svg-retain-random-frames-equal-fresh-renders` renders
+with the three hints too.
+
+### Before and after
+
+Same box and run, base 6d49ffe in a git worktree,
+`emacs -Q --batch -l scripts/bench-frame-text.el -- MODE ROOT 30`, 3
+rounds of 30 frames, interactive GC policy. The bench now splits the
+KB allocated per frame into update, render and patch. Render is
+`eas-text-render-lines`; "text KB" is render plus patch (the glue:
+strip, buffer patch, readout).
+
+| workload | mode | render ms before | after | total ms before | after | render KB before | after | text KB before | after |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| order-book ladder push | byte | 3.15 | **1.07** | 10.62 | 7.21 | 65 | 33 | 94 | **62** |
+| depth-live push | byte | 5.66 | 4.25 | 21.86 | 17.58 | 314 | 308 | 399 | 393 |
+| clock tick | byte | 2.43 | **1.21** | 7.80 | 5.96 | 40 | 46 | 85 | **91** |
+| pacman tick | byte | 4.40 | **1.64** | 18.75 | 14.57 | 87 | 71 | 315 | 299 |
+| airport-connections hover | byte | 4.21 | **2.79** | 13.03 | 10.65 | 241 | 180 | 390 | 329 |
+| order-book ladder push | native | 1.51 | **0.63** | 7.50 | 6.56 | 65 | 33 | 94 | 62 |
+| depth-live push | native | 3.13 | 2.86 | 16.74 | 16.38 | 314 | 308 | 399 | 393 |
+| clock tick | native | 1.07 | **0.69** | 5.63 | 5.17 | 40 | 46 | 85 | 91 |
+| pacman tick | native | 2.56 | **1.08** | 15.14 | 12.90 | 87 | 71 | 315 | 299 |
+| airport-connections hover | native | 2.39 | **1.75** | 11.49 | 9.03 | 241 | 180 | 390 | 329 |
+
+Render falls 2-3x on the ladder (10 rows of 40 repainted and composed)
+and pacman (6-7 rows), 2x on the clock, a third on the airport hover.
+Under 100 KB of text-side allocation per frame holds for the ladder
+and the clock. It does not for two workloads, and neither is in this
+render path:
+
+- **Pacman, 299 KB**: 228 KB is the patch stage, and most of that is
+  the values strip, which changes every tick: `eas-readout-context`
+  (~49 KB), then `eas-component-render`/`eas-component-fit` and
+  `eas-strip` (eas-component.el and eas-strip.el). Two more
+  `eas-strip` calls per tick come from `eas-inspect` in the update.
+  The strip is memoized per frame already; making it cheaper means
+  changing the component formatter and eas-strip, out of this box.
+- **Depth, 393 KB**: every push moves both cumulative areas over all
+  their rows, so all 20 plot rows are dirty and repainted. Row
+  granularity cannot help; the cost is the area paint's floats (cell
+  coverage per column and row) and composing 20 changed rows. An
+  integer coverage pass in `eas-text--series` is the next step there.
+
+SVG (`scripts/bench-frame-svg.el -- byte SRC 20`, same run): draw is
+unchanged within noise (ladder 0.46/0.47 ms, clock 0.39/0.37, pacman
+1.38/1.41, airport 0.42/0.46, county 3.80/3.58); the bench calls
+`eas-svg-image` without the glue's hint, and Phase 2 had already shown
+the per-mark `equal` walk to be the only comparison left.
+
+`make bench-check` passes byte and native (228 of 228 each; the text
+`render/*` workloads, which render an unchanged scene repeatedly, now
+reuse the retained frame and allocate 7-70% less).

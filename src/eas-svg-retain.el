@@ -142,14 +142,15 @@ are found by content, so a state seen again (a hover going back) hits."
         (eas-svg-retain--count :item-misses)
         (eas-svg-retain--put key (funcall fn))))))
 
-(defun eas-svg-retain-part (slot key fn)
+(defun eas-svg-retain-part (slot key fn &optional changed)
   "The value of FN (no arguments) for KEY, retained in SLOT.
 SLOT names a part of a scene (an axis of a view, say); it keeps the
 value of its last KEY only, so a hit is one `equal' against it.  FN's
-value must depend only on what KEY holds."
+value must depend only on what KEY holds.  CHANGED non-nil says KEY is
+known to be new (`eas-render-cache-dirty'): only an `eq' key hits."
   (if (not eas-render-cache-enabled) (funcall fn)
     (let ((entry (gethash slot eas-svg-retain--parts)))
-      (if (and entry (equal (car entry) key))
+      (if (and entry (or (eq (car entry) key) (and (not changed) (equal (car entry) key))))
           (progn (eas-svg-retain--count :part-hits) (cdr entry))
         (eas-svg-retain--count :part-misses)
         (when (>= (hash-table-count eas-svg-retain--parts) eas-svg-retain-max-parts)
@@ -219,7 +220,7 @@ This is the order and dedup `eas-paint' records gradients in."
     (setq eas-svg-retain-stats (plist-put eas-svg-retain-stats :item-reused
                                           (+ n (or (plist-get eas-svg-retain-stats :item-reused) 0))))))
 
-(defun eas-svg-retain-mark (slot mark strings-fn)
+(defun eas-svg-retain-mark (slot mark strings-fn &optional changed)
   "Return the SVG text of MARK's items, from STRINGS-FN, retained in SLOT.
 STRINGS-FN is called with the items and per-item texts of the slot's
 last version of the mark (nil, nil when there is none) and returns
@@ -228,10 +229,14 @@ definitions it records in `eas-paint--svg-defs' are recorded again on
 a hit.  Hits and misses count in `eas-render-cache-stats' as :svg-hits
 and :svg-misses.  A slot keeps the last version of its mark only:
 `eas-render-cache-svg-fragment', keyed on the mark, kept every version
-of a pushed mark in one bucket."
+of a pushed mark in one bucket.
+CHANGED non-nil says MARK is new since the slot's last frame (the
+update path listed it, `eas-render-cache-dirty'): it is not compared
+with the slot's mark, whose items still serve by position.  Any other
+mark costs one `eq' when the compile path kept it (eas-b2s.7)."
   ;; An entry is (MARK TEXT DEFS ITEMS PER-ITEM).
   (let* ((entry (gethash slot eas-svg-retain--parts))
-         (hit (and entry (equal (car entry) mark) entry))
+         (hit (and entry (or (eq (car entry) mark) (and (not changed) (equal (car entry) mark))) entry))
          (value (or hit
                     (let* ((eas-paint--svg-defs nil)
                            (printed (funcall strings-fn (plist-get (car entry) :items) (nth 4 entry))))

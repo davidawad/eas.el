@@ -72,6 +72,32 @@ With SHAPE-ONLY, only its size: `eas-text--fill' allocates the cells."
   "Priority of the braille dots being drawn.
 A cell shows its dots unless a glyph of higher priority holds it.")
 
+(defvar eas-text--mask nil
+  "Nil, or a `bool-vector' of the grid rows a frame may write (eas-b2s.7).
+An incremental frame repaints only the rows its changed items touch:
+every write site asks `eas-text--touch' first, and a row outside the
+mask keeps what the last frame left in it.")
+
+(defvar eas-text--step-rows nil
+  "Nil, or a `bool-vector' collecting the rows the running step tries.")
+
+(defvar eas-text--lo 0 "Lowest row the item being drawn has tried.")
+(defvar eas-text--hi -1 "Highest row the item being drawn has tried.")
+
+(defsubst eas-text--touch (row)
+  "Record that the step and item being drawn try ROW; non-nil if writable.
+ROW must be on the grid.  It is recorded whether or not the write wins
+its cell, so a later frame knows which steps a changed row needs."
+  (when eas-text--step-rows
+    (aset eas-text--step-rows row t)
+    (when (< row eas-text--lo) (setq eas-text--lo row))
+    (when (> row eas-text--hi) (setq eas-text--hi row)))
+  (or (null eas-text--mask) (aref eas-text--mask row)))
+
+(defsubst eas-text--writable-p (row)
+  "Non-nil when this frame may write ROW (see `eas-text--mask')."
+  (or (null eas-text--mask) (aref eas-text--mask row)))
+
 (defun eas-text--put (g col row char props prio &optional cover)
   "Put CHAR with PROPS at COL ROW of grid G when PRIO wins.
 COVER ranks a bar's glyph (`eas-text--coverage'): within one priority
@@ -81,7 +107,7 @@ cannot replace its neighbour's full block."
     (let* ((i (+ col (* row (eas-text--grid-cols g))))
            (old (aref (eas-text--grid-prio g) i)))
       (when (and eas-text-trace eas-text-trace-item) (funcall eas-text-trace col row))
-      (when (and (>= prio old)
+      (when (and (eas-text--touch row) (>= prio old)
                  (or (null cover) (> prio old) (> cover (aref (eas-text--grid-cover g) i))))
         (aset (eas-text--grid-chars g) i char)
         (aset (eas-text--grid-props g) i props)
@@ -118,7 +144,7 @@ cover the labels it sits by.")
 (defun eas-text--string-1 (g x y text align props prio)
   "Put one-line TEXT anchored at pixel X Y with ALIGN into grid G.
 A double-width character takes two cells; the second holds 0, which
-`eas-text--compose' leaves out."
+`eas-text--compose-row' leaves out."
   (let* ((span (eas-text-string-span (eas-text--grid-cols g) (eas-text--grid-cw g) (eas-text--grid-ch g)
                                      x y text align (and eas-text--clamp-rows (eas-text--grid-rows g))))
          (row (car span)) (col (cadr span)))
@@ -138,11 +164,12 @@ A double-width character takes two cells; the second holds 0, which
                (< -1 col (eas-text--grid-cols g)) (< -1 row (eas-text--grid-rows g)))
       (let ((i (+ col (* row (eas-text--grid-cols g)))))
         (when (and eas-text-trace eas-text-trace-item) (funcall eas-text-trace col row))
+        (when (eas-text--touch row)
         (aset (eas-text--grid-dots g) i
               (logior (aref (eas-text--grid-dots g) i)
                       (aref (aref eas-glyph-braille-dots (mod dy 4)) (mod dx 2))))
         (aset (eas-text--grid-dot-props g) i props)
-        (aset (eas-text--grid-dot-prio g) i (max eas-text--dot-prio (aref (eas-text--grid-dot-prio g) i)))))))
+        (aset (eas-text--grid-dot-prio g) i (max eas-text--dot-prio (aref (eas-text--grid-dot-prio g) i))))))))
 
 (defun eas-text--dasher (dash)
   "Return a function telling whether the next dot of a DASH stroke is drawn.
@@ -157,9 +184,10 @@ Each dash and gap length counts in dots, so a pattern stays readable."
           (while (>= n (+ acc (aref runs k))) (setq acc (+ acc (aref runs k)) k (1+ k)))
           (cl-evenp k))))))
 
-(defun eas-text--dot-line (g x1 y1 x2 y2 props-fn clip &optional show-p)
+(defun eas-text--dot-line (g x1 y1 x2 y2 props-fn clip &optional show-p props)
   "Draw a braille line in G from pixel X1 Y1 to X2 Y2 inside CLIP cells.
-PROPS-FN maps a pixel x to props.  SHOW-P, when non-nil, is called per
+PROPS-FN maps a pixel x to props; with PROPS non-nil every dot takes
+PROPS and PROPS-FN is not called.  SHOW-P, when non-nil, is called per
 dot and skips the dot when it says nil."
   (let* ((sx (/ 2.0 (eas-text--grid-cw g))) (sy (/ 4.0 (eas-text--grid-ch g)))
          (a (floor (* x1 sx))) (b (floor (* y1 sy))) (c (floor (* x2 sx))) (d (floor (* y2 sy)))
@@ -167,7 +195,7 @@ dot and skips the dot when it says nil."
          (err (+ dx dy)) (done nil))
     (while (not done)
       (when (or (null show-p) (funcall show-p))
-        (eas-text--dot g a b (funcall props-fn (/ (+ a 0.5) sx)) clip))
+        (eas-text--dot g a b (or props (funcall props-fn (/ (+ a 0.5) sx))) clip))
       (if (and (= a c) (= b d)) (setq done t)
         (let ((e2 (* 2 err)))
           (when (>= e2 dy) (setq err (+ err dy) a (+ a stepx)))
@@ -332,6 +360,7 @@ See `eas-text-band-resolve'.  Then forget the slices."
     (maphash (lambda (i segs)
                ;; A slice can be recorded past the grid's edge; it draws nothing.
                (when (and (< -1 i (length (eas-text--grid-prio g)))
+                          (eas-text--writable-p (/ i cols))
                           (= (aref (eas-text--grid-prio g) i) prio))
                  (let* ((y0 (* (/ i cols) ch)) (own (car segs)))
                   (if (and (<= (car own) y0) (>= (cadr own) (+ y0 ch)))
@@ -372,6 +401,7 @@ ARCS maps a cell to (BITS . ((I COUNT . PROPS) ...)); see
     (when (and (<= (aref clip 0) col) (< col (aref clip 2)) (<= (aref clip 1) row) (< row (aref clip 3))
                (< -1 col (eas-text--grid-cols g)) (< -1 row (eas-text--grid-rows g)))
       (when (and eas-text-trace eas-text-trace-item) (funcall eas-text-trace col row))
+      (eas-text--touch row)
       (let* ((k (+ col (* row (eas-text--grid-cols g))))
              (cell (or (gethash k arcs) (puthash k (list 0) arcs)))
              (own (or (assq i (cdr cell)) (car (setcdr cell (cons (cons i (cons 0 props)) (cdr cell)))))))
@@ -407,7 +437,7 @@ cell holds anything else."
          (old (aref (eas-text--grid-props g) i))
          (face (plist-get old 'face))
          (color (plist-get (plist-get props 'face) :foreground)))
-    (when (and color (= (aref (eas-text--grid-prio g) i) prio)
+    (when (and color (eas-text--touch row) (= (aref (eas-text--grid-prio g) i) prio)
                (memq (aref (eas-text--grid-chars g) i) (cdr (butlast (append eas-glyph-blocks nil)))))
       (when (and eas-text-trace eas-text-trace-item) (funcall eas-text-trace col row))
       (aset (eas-text--grid-props g) i
@@ -549,14 +579,15 @@ rect less than opaque shades its full cells (`eas-text--translucent')."
                              ((and glyph eas-text-trace) (eas-text--put g col row glyph props prio (eas-text--coverage glyph)))
                              ;; `eas-text--put', inline: a long bar puts thousands of cells.
                              (glyph
-                              (when (and (< -1 col gcols) (< -1 row grows))
+                              (when (and (< -1 col gcols) (< -1 row grows) (eas-text--touch row))
                                 (let* ((i (+ col (* row gcols))) (old (aref vprio i)) (cover (eas-text--coverage glyph)))
                                   (when (and (>= prio old) (or (> prio old) (> cover (aref vcover i))))
                                     (aset vchars i glyph) (aset vprops i props) (aset vprio i prio) (aset vcover i cover)))))
                              ;; The brush shades its cells whatever they hold
                              ;; when the grid is composed: one solid region.
                              (brush
-                              (when (and (< -1 col (eas-text--grid-cols g)) (< -1 row (eas-text--grid-rows g)))
+                              (when (and (< -1 col (eas-text--grid-cols g)) (< -1 row (eas-text--grid-rows g))
+                                         (eas-text--touch row))
                                 (aset (eas-text--grid-brush g) (+ col (* row (eas-text--grid-cols g))) props)))))))))
 
 (defun eas-text--brush-props (props brush shade)
@@ -583,7 +614,7 @@ Braille draws it when diagonal.  PROPS, CLIP and PRIO apply to its cells."
         (cl-loop for col from (eas-text--col g (min x1 x2)) to (eas-text--col g (- (max x1 x2) 0.01))
                  when (and (<= (aref clip 0) col) (< col (aref clip 2)) (<= (aref clip 1) row) (< row (aref clip 3)))
                  do (eas-text--put g col row ?─ props prio))))
-     (t (let ((eas-text--dot-prio prio)) (eas-text--dot-line g x1 y1 x2 y2 (lambda (_) props) clip))))))
+     (t (let ((eas-text--dot-prio prio)) (eas-text--dot-line g x1 y1 x2 y2 nil clip nil props))))))
 
 (defun eas-text--inside (bounds x)
   "X, nudged inside the plot when it lies on BOUNDS' right edge."
@@ -646,12 +677,46 @@ last of them, so such a view paints its marks as one step."
                    (seq-some (lambda (item) (eas-text-tile-p mark item)) (plist-get mark :items))))
             (plist-get view :marks)))
 
+(defvar eas-text--infos nil
+  "Per mark of the step being painted, in order: [ITEMS RANGES SPARE].
+ITEMS are the mark's items when RANGES, a vector, were recorded: item
+by item the rows it tried, packed by `eas-text--range', or nil.  SPARE
+is a vector to record into.  `eas-text--mark' pops one per mark.")
+
+(defsubst eas-text--range ()
+  "The rows the item just drawn tried, packed in a fixnum, or nil."
+  (and (>= eas-text--hi 0) (+ (* eas-text--lo 65536) eas-text--hi)))
+
+(defun eas-text--meets-p (range mask wide)
+  "Non-nil when packed RANGE, a row more each way when WIDE, meets MASK."
+  (and range
+       (let* ((n (length mask))
+              (lo (max 0 (- (/ range 65536) (if wide 1 0))))
+              (hi (min (1- n) (+ (% range 65536) (if wide 1 0)))))
+         (while (and (<= lo hi) (not (aref mask lo))) (setq lo (1+ lo)))
+         (<= lo hi))))
+
+(defun eas-text--wide-p (mark)
+  "Non-nil when an item of MARK depends on its neighbour rows (area slices)."
+  (member (plist-get mark :mark) '("line" "area" "trail")))
+
 (defun eas-text--mark (g view mark prio clip)
-  "Draw MARK of VIEW into grid G at PRIO, clipped to CLIP cells."
-  (let ((b (plist-get view :bounds)))
+  "Draw MARK of VIEW into grid G at PRIO, clipped to CLIP cells.
+In an incremental frame (`eas-text--mask') an item the last frame drew
+the same, whose rows miss the mask, is not drawn again."
+  (let* ((b (plist-get view :bounds))
+         (info (pop eas-text--infos))
+         (items (plist-get mark :items)) (n (length items))
+         (old-items (and info eas-text--mask (aref info 0))) (old-ranges (and info (aref info 1)))
+         (ranges (and info (let ((v (aref info 2))) (if (and v (= (length v) n)) v (make-vector n nil)))))
+         (wide (eas-text--wide-p mark)))
      (let ((arcs (and (equal (plist-get mark :mark) "arc") (make-hash-table :test 'eql))))
       (seq-do-indexed
        (lambda (item i)
+        (if (and old-items (< i (length old-items)) (eq item (aref old-items i))
+                 (not (eas-text--meets-p (aref old-ranges i) eas-text--mask wide)))
+            (aset ranges i (aref old-ranges i))
+         (setq eas-text--lo most-positive-fixnum eas-text--hi -1)
          (unless (equal (plist-get item :opacity) 0)
           (let ((eas-text-trace-item (and eas-text-trace (list (plist-get view :id) (plist-get mark :id) i))))
            (pcase (plist-get mark :mark)
@@ -711,18 +776,41 @@ last of them, so such a view paints its marks as one step."
                   (when (and (<= (aref clip 0) col) (<= (aref clip 1) row))
                     (eas-text--put g col row
                                      (eas-symbols-glyph (plist-get item :shape) filled (plist-get item :angle))
-                                     (eas-text--item-props view mark item (plist-get item :datum)) prio)))))))))
-       (plist-get mark :items))
+                                     (eas-text--item-props view mark item (plist-get item :datum)) prio))))))))
+         (when ranges (aset ranges i (eas-text--range)))))
+       items)
       (when arcs (eas-text--resolve-arcs g arcs prio clip))
-      (eas-text--resolve-bands g prio))))
+      (eas-text--resolve-bands g prio))
+     (when info
+       ;; What this frame drew becomes the last frame; the old ranges are spare.
+       (aset info 2 (and (not (eq old-ranges ranges)) old-ranges))
+       (aset info 1 ranges) (aset info 0 items))))
 
 (defvar eas-text--label-cells nil
   "Hash of (COL . ROW) cells holding a tick label, while a scene renders.")
+
+(defvar eas-text--label-log :off
+  "While a step paints in full: its label decisions so far, latest first.
+It is :off when nobody keeps them.")
+
+(defvar eas-text--label-replay nil
+  "While a step repaints some rows: (DECISIONS . NEXT), its logged decisions.
+A step repainting a few rows sees none of the claims of the labels
+before it, so it replays what it decided when it painted in full.")
 
 (defun eas-text--label-room-p (g tk)
   "Non-nil when tick TK's label fits beside the labels already placed in G.
 It then claims its cells.  A label that would overwrite another one is
 left out, as Vega's labelOverlap drops it, so no label is garbled."
+  (if eas-text--label-replay
+      (let ((r eas-text--label-replay))
+        (prog1 (aref (car r) (cdr r)) (setcdr r (1+ (cdr r)))))
+    (let ((room (eas-text--label-room-1 g tk)))
+      (unless (eq eas-text--label-log :off) (push room eas-text--label-log))
+      room)))
+
+(defun eas-text--label-room-1 (g tk)
+  "Non-nil when tick TK's label fits in G, claiming its cells; see above."
   (let ((label (plist-get tk :label)))
     (or (not (stringp label)) (string-empty-p label) (null eas-text--label-cells)
         (let* ((lines (split-string label "\n"))
@@ -757,7 +845,7 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
                      do (cl-loop for col from (max 0 (1- (eas-text--col g (min (aref grid 0) (aref grid 2)))))
                                  to (min (1- cols) (1+ (eas-text--col g (max (aref grid 0) (aref grid 2)))))
                                  for k = (+ col (* row cols))
-                                 when (and (= (aref (eas-text--grid-prio g) k) 0)
+                                 when (and (eas-text--touch row) (= (aref (eas-text--grid-prio g) k) 0)
                                            (memq (aref (eas-text--grid-chars g) k) '(?│ ?─)))
                                  do (aset (eas-text--grid-chars g) k (if vertical ?┊ ?┈))))))))
     (seq-doseq (axis (plist-get view :axes))
@@ -811,44 +899,6 @@ left out, as Vega's labelOverlap drops it, so no label is garbled."
                            (append props (list 'face (list :foreground (eas-text-ink-legible (plist-get e :color))))) 5))
         (eas-text--string g (plist-get e :lx) (plist-get e :ly) (plist-get e :label) "left"
                             (append props (list 'face 'eas-label)) 5)))))
-
-(defun eas-text--compose (g &optional env)
-  "Return grid G as a propertized string, braille dots merged, lines trimmed.
-ENV, when non-nil, lets `eas-render-cache-rows' reuse unchanged rows."
-  (mapconcat #'identity (eas-text--compose-lines g env) "\n"))
-
-(defun eas-text--compose-lines (g &optional env)
-  "Return grid G's rows as a list of propertized strings, as `eas-text--compose'.
-A row reused from the last render on ENV is the same string object."
-  (let ((shade (eas-text-ink-shade)))
-    (eas-render-cache-grid-rows (and env (cons shade env)) g (eas-text--grid-rows g) #'eas-text--same-row-p
-                                (lambda (row) (eas-text--compose-row g row shade)))))
-
-(defun eas-text--same-row-p (old g row)
-  "Non-nil when ROW of grid G composes as it did in grid OLD.
-Chars, dots, props and brush must be `equal' cell for cell; where a
-cell has dots, so must its dot props and whether its dots show
-\(`eas-text--compose-row' reads priorities nowhere else)."
-  (let* ((cols (eas-text--grid-cols g)) (i (* row cols)) (b (+ i cols)))
-    (and (= cols (eas-text--grid-cols old))
-         (let ((c0 (eas-text--grid-chars old)) (c1 (eas-text--grid-chars g))
-               (d0 (eas-text--grid-dots old)) (d1 (eas-text--grid-dots g))
-               (p0 (eas-text--grid-props old)) (p1 (eas-text--grid-props g))
-               (b0 (eas-text--grid-brush old)) (b1 (eas-text--grid-brush g)))
-           (while (and (< i b)
-                       (eq (aref c0 i) (aref c1 i))
-                       (let ((d (aref d1 i)))
-                         (and (eq (aref d0 i) d)
-                              (let ((x (aref p0 i)) (y (aref p1 i))) (or (eq x y) (equal x y)))
-                              (let ((x (aref b0 i)) (y (aref b1 i))) (or (eq x y) (equal x y)))
-                              (or (eq d 0)
-                                  (and (let ((x (aref (eas-text--grid-dot-props old) i))
-                                             (y (aref (eas-text--grid-dot-props g) i)))
-                                         (or (eq x y) (equal x y)))
-                                       (eq (<= (aref (eas-text--grid-prio old) i) (aref (eas-text--grid-dot-prio old) i))
-                                           (<= (aref (eas-text--grid-prio g) i) (aref (eas-text--grid-dot-prio g) i))))))))
-             (setq i (1+ i)))
-           (= i b)))))
 
 (defvar eas-text--row-scratch (make-vector 0 nil)
   "Chars of the row being composed, reused (eas-b2s.5).")
@@ -939,16 +989,318 @@ so `eas-mode-patch-lines' skips it with `eq'."
           ;; What every step depends on besides its key; nil caches nothing.
           (env (and eas-render-cache-enabled (not eas-text-trace)
                     (list (eas-text--grid-cols g) (eas-text--grid-rows g) (eas-text--grid-cw g)
-                          (eas-text--grid-ch g) eas-text-ink--colors
-                          eas-image-base-directory)))
-          ;; A render restarting from a snapshot never fills G.
-          (state (eas-render-cache-paint env (lambda () (cons (eas-text--fill g) (make-hash-table :test 'equal)))
-                                         (eas-text--steps g scene) #'eas-text--run-step)))
-     (eas-text--compose-lines (car state) env))))
+                          (eas-text--grid-ch g) eas-text-ink--colors eas-image-base-directory
+                          ;; The ink and band functions (a test may rebind them).
+                          (symbol-function 'eas-text-ink-legible) eas-text-ink-min-contrast
+                          (symbol-function 'eas-text-band-resolve)
+                          (eas-text-ink-shade)))))
+     (if env (eas-text--frame g env (eas-text--steps g scene))
+       (eas-text--fill g)
+       (let ((eas-text--label-cells (make-hash-table :test 'equal)))
+         (dolist (step (eas-text--steps g scene)) (funcall (cdr step) g)))
+       (let ((shade (eas-text-ink-shade)))
+         (cl-loop for row below (eas-text--grid-rows g) collect (eas-text--compose-row g row shade)))))))
 
-(defun eas-text--run-step (fn state)
-  "Call FN on the grid of STATE (GRID . LABEL-CELLS)."
-  (let ((eas-text--label-cells (cdr state))) (funcall fn (car state))))
+;;; Incremental frames (eas-b2s.7)
+;;
+;; A live view's frame changes a few items of a few marks.  The grid of
+;; the last frame on a canvas is kept, with what each paint step tried:
+;; the rows a step wrote (a bool-vector) and, for a mark step, the rows
+;; each item wrote (a packed range).  A frame whose steps differ from
+;; the last only in mark items repaints just the rows those items held
+;; or hold now: it clears them and runs, in paint order and writing
+;; only there, the steps that try them, and in those steps only the
+;; items that try them (`eas-text--mark').  Every write site records
+;; the rows it tries (`eas-text--touch'), so layering, priorities, area
+;; slices and tiles resolve as in a full paint.  Labels whose overlap
+;; was decided in the full paint replay that decision.  Only the rows
+;; repainted are composed again; the rest are last frame's strings,
+;; with no comparison.  Anything else (another canvas, axes, legends,
+;; titles, the step list) paints in full.
+
+(defun eas-text--step-marks (key)
+  "Return the list of what a mark step with KEY paints, else nil."
+  (pcase (car key)
+    (:mark (list (nth 3 key)))
+    (:tiled-marks (append (nth 2 key) nil))))
+
+(defconst eas-text--item-keys '(:items :rows :index)
+  "Mark keys that change with its items; text draws only from :items.
+:rows and :index are the hit test's.")
+
+(defun eas-text--same-shape-p (a b)
+  "Return non-nil when mark A and mark B differ at most in their items."
+  (and (consp a) (consp b) (= (length a) (length b))
+       (cl-loop for (k v) on b by #'cddr
+                always (or (memq k eas-text--item-keys) (let ((w (plist-get a k))) (or (eq v w) (equal v w)))))))
+
+(defun eas-text--classify (old new)
+  "How step key NEW differs from OLD: same, items, all, or nil (incomparable).
+Items when only the items of its marks changed: then the changed rows
+are those the changed items held (`eas-text--changed-rows')."
+  (let ((m0 (eas-text--step-marks old)) (m1 (eas-text--step-marks new)))
+    (cond ((and (null m1) (null m0)) (and (equal old new) 'same))
+          ((not (and m0 m1 (eq (car old) (car new)) (equal (nth 1 old) (nth 1 new))
+                     (or (not (eq (car new) :mark)) (equal (nth 2 old) (nth 2 new)))))
+           nil)
+          ;; Marks the update path listed as changed skip the comparison.
+          ((and (not (seq-some (lambda (m) (eas-render-cache-dirty-p (car (nth 1 new)) m)) m1)) (equal old new)) 'same)
+          ((and (= (length m0) (length m1)) (cl-every #'eas-text--same-shape-p m0 m1)) 'items)
+          (t 'all))))
+
+(defun eas-text--or-range (rows range wide)
+  "Set in `bool-vector' ROWS the rows of packed RANGE, one more each way if WIDE."
+  (when range
+    (let ((lo (max 0 (- (/ range 65536) (if wide 1 0))))
+          (hi (min (1- (length rows)) (+ (% range 65536) (if wide 1 0)))))
+      (while (<= lo hi) (aset rows lo t) (setq lo (1+ lo))))))
+
+(defun eas-text--item-rows (g mark item)
+  "Rows of grid G that ITEM of MARK may draw in, packed, or nil if unknown.
+A guess from its geometry: an incremental frame
+repaints these rows with the ones the item held, so that it seldom
+needs a second pass (`eas-text--repaint' checks what was drawn)."
+  (let* ((ch (float (eas-text--grid-ch g)))
+         (span (pcase (plist-get mark :mark)
+                 ((or "rule" "tick") (let ((a (plist-get item :y1)) (b (plist-get item :y2)))
+                                       (and (numberp a) (numberp b) (cons (min a b) (max a b)))))
+                 ((or "bar" "rect" "brush")
+                  ;; Cells as `eas-text--rect' and `eas-text-tile-draw' take them.
+                  (let ((y (plist-get item :y)) (h (plist-get item :h)))
+                    (and (numberp y) (numberp h) (>= h 0)
+                         (let ((rows (if (equal (plist-get item :orient) "vertical")
+                                         (cons (floor y ch) (ceiling (- (+ y h) 0.001) ch))
+                                       (eas-text--cells y h ch))))
+                           (cons (* ch (car rows)) (* ch (1- (max (1+ (car rows)) (cdr rows)))))))))
+                 ("text" (let ((y (plist-get item :y)) (text (plist-get item :text)))
+                           (and (numberp y) (stringp text)
+                                (cons y (+ y (* ch (cl-count ?\n text)))))))
+                 ((or "line" "area" "trail")
+                  (let ((lo nil) (hi nil))
+                    (dolist (k '(:points :base))
+                      (let ((pts (plist-get item k)))
+                        (when (vectorp pts)
+                          (dotimes (i (length pts))
+                            (let ((y (aref (aref pts i) 1)))
+                              (when (or (null lo) (< y lo)) (setq lo y))
+                              (when (or (null hi) (> y hi)) (setq hi y)))))))
+                    (and lo (cons lo hi))))
+                 ((or "point" "circle" "square" "symbol")
+                  (let ((y (plist-get item :y)) (r (sqrt (or (plist-get item :size) 30))))
+                    (and (numberp y) (cons (- y r) (+ y r))))))))
+    (when span
+      (let ((lo (max 0 (floor (car span) ch)))
+            (hi (min (1- (eas-text--grid-rows g)) (floor (cdr span) ch))))
+        (and (<= lo hi) (+ (* lo 65536) hi))))))
+
+(defun eas-text--changed-rows (g rows marks infos)
+  "Set in ROWS the rows that changed items held.
+Those are the items of MARKS not `eq' to the ones INFOS recorded.  The
+rows they may hold now on grid G are set too (`eas-text--item-rows')."
+  (cl-loop for mark in marks for info in infos
+           for items = (plist-get mark :items) for wide = (eas-text--wide-p mark)
+           for old = (aref info 0) for ranges = (aref info 1)
+           do (dotimes (i (max (length items) (length old)))
+                (unless (and (< i (length items)) (< i (length old)) (eq (aref items i) (aref old i)))
+                  (when (< i (length ranges)) (eas-text--or-range rows (aref ranges i) wide))
+                  (when (< i (length items))
+                    (eas-text--or-range rows (eas-text--item-rows g mark (aref items i)) wide))))))
+
+(defun eas-text--clear-rows (g mask)
+  "Empty the cells of grid G in the rows set in MASK."
+  (let ((cols (eas-text--grid-cols g)))
+    (dotimes (row (length mask))
+      (when (aref mask row)
+        (let ((i (* row cols)) (end (* (1+ row) cols)))
+          (while (< i end)
+            (aset (eas-text--grid-chars g) i ?\s) (aset (eas-text--grid-props g) i nil)
+            (aset (eas-text--grid-prio g) i -1) (aset (eas-text--grid-dots g) i 0)
+            (aset (eas-text--grid-dot-props g) i nil) (aset (eas-text--grid-dot-prio g) i -1)
+            (aset (eas-text--grid-cover g) i 0.0) (aset (eas-text--grid-brush g) i nil)
+            (setq i (1+ i))))))))
+
+(defun eas-text--meets-rows-p (a b)
+  "Non-nil when bool-vectors A and B set a row in common."
+  (let ((i 0) (n (length a)))
+    (while (and (< i n) (not (and (aref a i) (aref b i)))) (setq i (1+ i)))
+    (< i n)))
+
+(defun eas-text--run (g step data mask full)
+  "Paint STEP (KEY . FN) into grid G, recording into its DATA.
+DATA is [KEY ROWS INFOS LOG].  MASK limits the rows written; FULL
+records afresh, else rows add to what the step tried before."
+  (let ((rows (aref data 1)))
+    (when full (fillarray rows nil))
+    (let ((eas-text--mask mask) (eas-text--step-rows rows)
+          (eas-text--lo most-positive-fixnum) (eas-text--hi -1)
+          (eas-text--infos (aref data 2))
+          (eas-text--label-replay (and (not full) (aref data 3) (cons (aref data 3) 0)))
+          (eas-text--label-log (if full nil :off)))
+      (funcall (cdr step) g)
+      (when (and full (eq (car (car step)) :axes))
+        (aset data 3 (vconcat (nreverse eas-text--label-log)))))))
+
+(defun eas-text--frame (g env steps)
+  "Paint a canvas with ENV, reusing its last frame; return the rows.
+STEPS are the paint steps.
+G gives the canvas's shape.  See the commentary above."
+  (let* ((entry (assoc env eas-render-cache--frames))
+         (old (cdr entry))
+         (n (length steps)) (nrows (eas-text--grid-rows g))
+         (classes (and old (= n (length (aref old 1)))
+                       (catch 'no
+                         (cl-loop for step in steps for data across (aref old 1)
+                                  collect (or (eas-text--classify (aref data 0) (car step)) (throw 'no nil))))))
+         ;; The first step that changed, and where the snapshot is.
+         (k (and classes (cl-position-if (lambda (c) (not (eq c 'same))) classes)))
+         (j (and old (aref old 5))))
+    (cond
+     ((null classes) (eas-text--full-frame g env steps entry nil))
+     ((null k)
+      (cl-loop for step in steps for data across (aref old 1) do (eas-text--adopt data (car step)))
+      (eas-render-cache--count :text-hits)
+      (eas-render-cache--count :row-hits nrows)
+      (append (aref old 2) nil))
+     ;; The changes moved off the snapshot twice in a row: paint in
+     ;; full once, with the snapshot before the step that changes now.
+     ((and (/= k j) (>= (aset old 6 (1+ (aref old 6))) 2))
+      (eas-text--full-frame g env steps entry k))
+     (t
+      (when (= k j) (aset old 6 0))
+      (eas-render-cache--count :text-hits)
+      (eas-text--repaint old steps classes (if (>= k j) j 0) nrows)
+      (eas-text--compose-changed (aref old 0) old (aref old 7) (car (last env)))))))
+
+(defun eas-text--repaint (old steps classes start nrows)
+  "Repaint the rows of frame OLD that changed.
+STEPS are this frame's paint steps, CLASSES how they changed.
+The first pass starts at step START (0, or the snapshot's step).  The
+grid has NROWS rows; those repainted are left in OLD's slot 7, a
+`bool-vector'."
+  (let* ((g (aref old 0)) (datas (aref old 1)) (snap (aref old 4)) (j (aref old 5))
+         (total (make-bool-vector nrows nil)))
+    ;; The rows changed items held, and every row of a step that changed whole.
+    (cl-loop for class in classes for data across datas for step in steps
+             do (pcase class
+                  ('items (eas-text--changed-rows g total (eas-text--step-marks (car step)) (aref data 2)))
+                  ('all (bool-vector-union total (aref data 1) total))))
+    (let ((mask (copy-sequence total)) (first t))
+      (while mask
+        (if (> start 0) (eas-text--copy-rows snap g mask) (eas-text--clear-rows g mask))
+        (let ((eas-text--label-cells (aref old 3)))
+          (cl-loop for step in steps for data across datas for class in classes for i from 0
+                   do (when (and (= i j) (= start 0) (> j 0)) (eas-text--copy-rows g snap mask))
+                   do (cond
+                       ((< i start) (eas-render-cache--count :text-skipped))
+                       ((or (and first (not (eq class 'same))) (eas-text--meets-rows-p (aref data 1) mask))
+                        (when (and first (eq class 'all))
+                          ;; No item of a mark that changed whole is kept.
+                          (dolist (info (aref data 2)) (aset info 0 nil)))
+                        (eas-text--run g step data mask (and first (eq class 'all))))
+                       (t (eas-render-cache--count :text-skipped)))
+                   do (eas-text--adopt data (car step)))
+          (when (and (= start 0) (>= j (length steps))) (eas-text--copy-rows g snap mask)))
+        ;; Rows the changed items hold now that were not repainted: a
+        ;; second pass, from the first step, paints them.
+        (let ((more (make-bool-vector nrows nil)))
+          (when first
+            (cl-loop for class in classes for data across datas
+                     do (pcase class
+                          ('items (eas-text--changed-rows-now more data))
+                          ('all (bool-vector-union more (aref data 1) more)))))
+          (bool-vector-set-difference more total more)
+          ;; Steps before the snapshot changed nothing: it holds for every row.
+          (setq first nil mask nil start (if (> start 0) start 0))
+          (unless (zerop (bool-vector-count-population more))
+            (bool-vector-union total more total)
+            (setq mask more)))))
+    (aset old 7 total)))
+
+(defun eas-text--copy-rows (from to mask)
+  "Copy the cells of grid FROM in the rows set in MASK into grid TO."
+  (let ((cols (eas-text--grid-cols from)))
+    (dotimes (row (length mask))
+      (when (aref mask row)
+        (let ((i (* row cols)) (end (* (1+ row) cols))
+              (c0 (eas-text--grid-chars from)) (c1 (eas-text--grid-chars to))
+              (p0 (eas-text--grid-props from)) (p1 (eas-text--grid-props to))
+              (r0 (eas-text--grid-prio from)) (r1 (eas-text--grid-prio to))
+              (d0 (eas-text--grid-dots from)) (d1 (eas-text--grid-dots to))
+              (q0 (eas-text--grid-dot-props from)) (q1 (eas-text--grid-dot-props to))
+              (s0 (eas-text--grid-dot-prio from)) (s1 (eas-text--grid-dot-prio to))
+              (v0 (eas-text--grid-cover from)) (v1 (eas-text--grid-cover to))
+              (b0 (eas-text--grid-brush from)) (b1 (eas-text--grid-brush to)))
+          (while (< i end)
+            (aset c1 i (aref c0 i)) (aset p1 i (aref p0 i)) (aset r1 i (aref r0 i)) (aset d1 i (aref d0 i))
+            (aset q1 i (aref q0 i)) (aset s1 i (aref s0 i)) (aset v1 i (aref v0 i)) (aset b1 i (aref b0 i))
+            (setq i (1+ i))))))))
+
+(defun eas-text--adopt (data key)
+  "Make step DATA's last key KEY, `equal' to it, and its items too."
+  (unless (eq (aref data 0) key)
+    (cl-loop for mark in (eas-text--step-marks key) for info in (aref data 2)
+             do (when (and (consp mark) (equal (plist-get mark :items) (aref info 0)))
+                  (aset info 0 (plist-get mark :items))))
+    (aset data 0 key)))
+
+(defun eas-text--changed-rows-now (rows data)
+  "Set in ROWS the rows of the items of step DATA whose rows moved.
+Run after the step painted: its infos' ranges are this frame's and
+their spare ranges the last frame's, which the changed rows hold."
+  (cl-loop for mark in (eas-text--step-marks (aref data 0)) for info in (aref data 2)
+           for ranges = (aref info 1) for spare = (aref info 2) for wide = (eas-text--wide-p mark)
+           do (dotimes (i (length ranges))
+                (unless (and spare (< i (length spare)) (eql (aref spare i) (aref ranges i)))
+                  (eas-text--or-range rows (aref ranges i) wide)))))
+
+(defun eas-text--compose-changed (g old rows shade)
+  "Compose the rows of grid G set in `bool-vector' ROWS; reuse OLD's others.
+SHADE colors a brush."
+  (let ((strings (aref old 2)))
+    (dotimes (row (length rows))
+      (if (aref rows row)
+          (aset strings row (eas-text--compose-row g row shade))
+        (eas-render-cache--count :row-hits)))
+    (append strings nil)))
+
+(defun eas-text--full-frame (g env steps entry snap-at)
+  "Paint a fresh grid G with ENV, recording for the next frame.
+STEPS are the paint steps.
+ENTRY is the canvas's last frame, whose grid is reused when it has one.
+The grid is kept as it is before step SNAP-AT (default: the first mark
+step, or the last frame's) for later frames to restart from."
+  (let* ((old (cdr entry))
+         (g (if old (let ((og (aref old 0))) (eas-text--clear-all og) og) (eas-text--fill g)))
+         (labels (if old (let ((h (aref old 3))) (clrhash h) h) (make-hash-table :test 'equal)))
+         (snap (if old (aref old 4) (eas-text--fill (copy-eas-text--grid g))))
+         (j (or snap-at (and old (aref old 5))
+                (or (cl-position-if (lambda (step) (eas-text--step-marks (car step))) steps) 0)))
+         (nrows (eas-text--grid-rows g))
+         (all (make-bool-vector nrows t))
+         (datas (vconcat (mapcar (lambda (step)
+                                   (vector (car step) (make-bool-vector nrows nil)
+                                           (mapcar (lambda (_) (vector nil nil nil)) (eas-text--step-marks (car step)))
+                                           nil))
+                                 steps))))
+    (let ((eas-text--label-cells labels))
+      (cl-loop for step in steps for data across datas for i from 0
+               do (when (= i j) (eas-text--copy-rows g snap all))
+               do (eas-text--run g step data nil t)))
+    (when (>= j (length steps)) (eas-text--copy-rows g snap all))
+    (let* ((shade (car (last env)))
+           (strings (vconcat (cl-loop for row below nrows collect (eas-text--compose-row g row shade)))))
+      (setq eas-render-cache--frames
+            (cons (cons env (vector g datas strings labels snap j 0 nil))
+                  (seq-take (delq entry eas-render-cache--frames) (max 0 (1- eas-render-cache-text-entries)))))
+      (append strings nil))))
+
+(defun eas-text--clear-all (g)
+  "Empty every cell of grid G."
+  (fillarray (eas-text--grid-chars g) ?\s) (fillarray (eas-text--grid-props g) nil)
+  (fillarray (eas-text--grid-prio g) -1) (fillarray (eas-text--grid-dots g) 0)
+  (fillarray (eas-text--grid-dot-props g) nil) (fillarray (eas-text--grid-dot-prio g) -1)
+  (fillarray (eas-text--grid-cover g) 0.0) (fillarray (eas-text--grid-brush g) nil)
+  (clrhash (eas-text--grid-bands g)))
 
 (defun eas-text--steps (g scene)
   "Return how SCENE paints on a grid like G: a list of (KEY . FN).

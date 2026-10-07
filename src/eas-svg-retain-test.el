@@ -205,7 +205,16 @@ in or left out, nil when the item has no printer."
                     (eas-dispatch view (list :type "pointermove"
                                              :px (vector (* (% seed 97) 0.01 (plist-get size :w))
                                                          (* (% (/ seed 97) 89) 0.0112 (plist-get size :h))))))))
-              (eas-svg-retain-test--check (eas-view-scene view))))
+              ;; The update path's dirty marks are a hint: true, every
+              ;; mark listed, or none, the output is the same.
+              (let ((eas-render-cache-dirty
+                     (pcase (% seed 3)
+                       (0 (eas-view-dirty view))
+                       (1 (cl-loop for v across (plist-get (eas-view-scene view) :views)
+                                   collect (cons (plist-get v :id)
+                                                 (cl-loop for m across (plist-get v :marks) collect (plist-get m :id)))))
+                       (_ nil))))
+                (eas-svg-retain-test--check (eas-view-scene view)))))
         (dolist (v (list ticker pacman)) (eas-play-detach v))
         (mapc #'eas-view-close views)))
     (should (> (plist-get eas-svg-retain-stats :item-reused) 0))

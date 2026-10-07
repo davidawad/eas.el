@@ -5,11 +5,13 @@
 
 ;;; Commentary:
 
-;; eas-b2s.1.  A live text frame reuses the last one four ways: grid
-;; snapshots, restored in place over the grid of two frames ago
-;; (eas-render-cache.el), rows compared in place with the last grid
-;; (`eas-text--same-row-p'), and the buffer patched against the lines it
-;; was last given (`eas-mode-patch-lines').
+;; eas-b2s.1, eas-b2s.7.  A live text frame reuses the last one: it
+;; repaints only the rows its changed items touch, from a snapshot of
+;; the grid before the first changed step, composes only those rows
+;; (`eas-text--frame'), and the buffer is patched against the lines it
+;; was last given (`eas-mode-patch-lines').  The update path's dirty
+;; marks are a hint (`eas-render-cache-dirty'); frames are checked with
+;; the true hint, with every mark listed, and with none.
 ;; Over random sequences of keyed pushes, timer ticks and pointer moves,
 ;; every frame must equal a render from scratch, text properties
 ;; included, both as the rendered lines and as the patched buffer.
@@ -56,6 +58,14 @@
         (eas-text-tile--pool (make-vector 1 nil)) (eas-text-tile--free 0))
     (eas-text-render scene)))
 
+(defun eas-text-frames-test--hint (view i)
+  "A dirty-marks hint for frame I of VIEW: true, every mark, or none."
+  (pcase (% i 3)
+    (0 (eas-view-dirty view))
+    (1 (cl-loop for v across (plist-get (eas-view-scene view) :views)
+                collect (cons (plist-get v :id) (cl-loop for m across (plist-get v :marks) collect (plist-get m :id)))))
+    (_ nil)))
+
 (defun eas-text-frames-test--check (view steps)
   "Check each frame of VIEW, driven by STEPS (functions of the frame number).
 The cached lines equal an uncached render, and a buffer patched with
@@ -66,7 +76,8 @@ The cached lines equal an uncached render, and a buffer patched with
       (dolist (step steps)
         (funcall step (cl-incf i))
         (let* ((scene (eas-view-scene view))
-               (lines (eas-text-render-lines scene))
+               (lines (let ((eas-render-cache-dirty (eas-text-frames-test--hint view i)))
+                        (eas-text-render-lines scene)))
                (full (eas-text-frames-test--fresh scene))
                (strip (propertize (format " frame %d" (% i 3)) 'face 'shadow)))
           (should (equal-including-properties (list i (mapconcat #'identity lines "\n")) (list i full)))
@@ -81,7 +92,7 @@ The cached lines equal an uncached render, and a buffer patched with
             (should (equal-including-properties (list i (buffer-string))
                                                 (list i (with-current-buffer patched (buffer-string))))))))
       (should (> (plist-get eas-render-cache-stats :row-hits) 0))
-      (should (> (or (plist-get eas-render-cache-stats :restored) 0) 0)))))
+      (should (> (or (plist-get eas-render-cache-stats :text-hits) 0) 0)))))
 
 (ert-deftest eas-text-frames-random-pushes-equal-full-renders ()
   "Random keyed pushes to a ladder: each frame equals a full render."
@@ -255,6 +266,49 @@ The cached lines equal an uncached render, and a buffer patched with
         (clrhash eas-text-ink--memo)
         (should (equal (list color mode first) (list color mode (eas-text-ink-legible color mode))))
         (should (equal (eas-text-ink-legible color mode) first))))))
+
+(ert-deftest eas-text-frames-second-pass-repaints-unguessed-rows ()
+  "Frames stay exact when the guess of a changed item's rows fails.
+With no guess, or one row only, rows the items move into are found
+after the first pass and painted by the second."
+  (dolist (guess (list (lambda (&rest _) nil) (lambda (&rest _) 0)))
+    (cl-letf (((symbol-function 'eas-text--item-rows) guess))
+      (dolist (test '(eas-text-frames-random-pushes-equal-full-renders
+                      eas-text-frames-random-ticks-and-hovers-equal-full-renders
+                      eas-text-frames-random-pacman-ticks-equal-full-renders))
+        (funcall (ert-test-body (ert-get-test test)))))))
+
+(ert-deftest eas-text-frames-repaint-only-changed-rows ()
+  "A push that changes one level composes a few rows, not the canvas."
+  (let* ((eas-views (make-hash-table :test 'equal))
+         (book (eas-text-frames-test--book))
+         (spec (eas-text-frames-test--ladder))
+         (view (progn
+                 ;; A fixed size domain: a push moves its own bar only.
+                 (setf (plist-get spec :encoding)
+                       (plist-put (copy-sequence (plist-get spec :encoding)) :x
+                                  '(:field "size" :type "quantitative" :scale (:domain [0 100]))))
+                 (setf (plist-get spec :data) (list :values book))
+                 (eas-view-open spec :target 'text :size '(:cols 60 :rows 24)))))
+    (unwind-protect
+        (progn
+          (eas-render-cache-clear)
+          (eas-text-render-lines (eas-view-scene view))
+          (let ((composed 0))
+            (cl-letf* ((compose (symbol-function 'eas-text--compose-row))
+                       ((symbol-function 'eas-text--compose-row)
+                        (lambda (&rest args) (cl-incf composed) (apply compose args))))
+              (dotimes (k 3)
+                (let ((row (copy-sequence (aref book (* 7 k)))))
+                  (eas-dispatch view (list :type "push" :key "price"
+                                           :rows (vector (plist-put row :size (- 100 (plist-get row :size))))))
+                  (setq composed 0)
+                  (let ((lines (eas-text-render-lines (eas-view-scene view))))
+                    (should (<= 1 composed 4))
+                    (should (equal-including-properties (mapconcat #'identity lines "\n")
+                                                        (eas-text-frames-test--fresh (eas-view-scene view)))))))))
+          (should (> (plist-get eas-render-cache-stats :text-skipped) 0)))
+      (eas-view-close view))))
 
 (provide 'eas-text-frames-test)
 ;;; eas-text-frames-test.el ends here

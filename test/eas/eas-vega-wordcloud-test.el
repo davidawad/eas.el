@@ -248,8 +248,9 @@
                                           (<= 0 (plist-get r :y) 150)))
                          rows))
     (should (= (plist-get resolved :width) 300))
-    (should (equal (plist-get (plist-get (plist-get (plist-get resolved :encoding) :color) :scale) :range)
-                   ["#111111"])))
+    (let ((items (plist-get (eas-scene-mark (eas-compile resolved) "main/0") :items)))
+      (should (= (length items) 3))
+      (should (seq-every-p (lambda (it) (equal (plist-get it :fill) "#111111")) items))))
   (eas-test-should-code "FIELD_MISSING"
     (eas-resolve "word-cloud" '(:data [(:body "words here")] :text "abstract"))))
 
@@ -281,12 +282,27 @@
     ;; The canvas is the Vega spec's, within Vega's overhang padding.
     (let ((size (plist-get scene :size)))
       (should (<= 800 (plist-get size :w) 808))
-      (should (<= 400 (plist-get size :h) 440)))
+      (should (<= 400 (plist-get size :h) 404)))
     (let ((text (eas-text-render (eas-compile (eas-resolve "word-cloud" (eas-template-example "word-cloud"))
                                               :target 'text :size '(:cols 100 :rows 30)))))
       (should (string-search "VEGA" text))
       (should (null (eas-text-check (eas-compile (eas-resolve "word-cloud" (eas-template-example "word-cloud"))
                                                  :target 'text :size '(:cols 100 :rows 30))))))))
+
+;; Vega's ordinal color domain is every counted word in countpattern
+;; order, the unplaced ones and VEGA (drawn in its own layer) included.
+(ert-deftest eas-vega-wordcloud-colors-cycle-in-counted-order ()
+  (let* ((scene (eas-vega-wordcloud-scene))
+         (words (mapcar (lambda (r) (plist-get r :text)) (eas-vega-wordcloud-counted)))
+         (colors ["#d5a928" "#652c90" "#939597"])
+         (items (append (plist-get (eas-scene-mark scene "main/0") :items)
+                        (plist-get (eas-scene-mark scene "main/2") :items) nil)))
+    (should (> (length items) 120))
+    (dolist (item items)
+      (should (equal (list (plist-get item :text) (plist-get item :fill))
+                     (list (plist-get item :text)
+                           (aref colors (% (seq-position words (plist-get item :text)) 3))))))
+    (should (equal (plist-get (aref (plist-get (eas-scene-mark scene "main/2") :items) 0) :fill) "#652c90"))))
 
 (ert-deftest eas-vega-wordcloud-hover-fades-the-word ()
   ;; Vega fades a hovered word to fillOpacity 0.5; the template draws it
@@ -339,9 +355,9 @@
                                       (eas-png-read (eas-test-file "test/vega-examples/ref/word-cloud.png")))))
             ;; Both place words at random along the spiral, so pixels
             ;; cannot match; the canvases and the amount of ink can.
-            ;; Width matches; height adds the title band the reference lacks.
+            ;; The canvas is the reference's, within Vega's text overhang.
             (should (<= (abs (aref (plist-get cmp :size-delta) 0)) 8))
-            (should (<= 0 (aref (plist-get cmp :size-delta) 1) 40))
+            (should (<= (abs (aref (plist-get cmp :size-delta) 1)) 4))
             (should (> (plist-get cmp :ratio) 0))
             (let ((native (eas-vega-wordcloud-ink (eas-png-read png)))
                   (ref (eas-vega-wordcloud-ink

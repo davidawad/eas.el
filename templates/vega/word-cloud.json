@@ -25,7 +25,8 @@
     "example": "../examples/vega/word-cloud.data.json",
     "vega": {
       "status": "partial",
-      "note": "Reproduces the example's pipeline natively: countpattern with Vega's pattern and stopwords, sqrt font sizes 12-56px, angles picked from -45/0/45, VEGA in weight 600, the three-color ordinal range in data order, and hover fading the word by half (a white copy at opacity 0.5 over it, as fillOpacity 0.5 looks on white). Vega places words with Math.random, so pixels cannot match the reference: the layout is checked structurally (no two padded word boxes overlap, all inside 800x400) and its ink against the reference's (within a factor of two). Placement is seeded and collides measured text boxes rather than glyph sprites, so it is looser: 135 of 194 words fit. The canvas is 805x400, Vega-style text bounds overhanging the 800px plot. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.2919; Vega places words with Math.random, so the ratio measures a different layout; the structural checks stand."
+      "note": "Reproduces the example's pipeline natively: countpattern with Vega's pattern and stopwords, sqrt font sizes 12-56px, angles picked from -45/0/45, VEGA in weight 600, colors cycling through the three-color range in counted order (Vega's ordinal domain is every counted word, unplaced ones included; the template numbers the words after the layout, so VEGA's own layer and unplaced words keep their place), and hover fading the word by half (a white copy at opacity 0.5 over it, as fillOpacity 0.5 looks on white). Vega places words with Math.random, so pixels cannot match the reference: the layout is checked structurally (no two padded word boxes overlap, all inside 800x400), every placed word's color against Vega's domain, and its ink against the reference's (within a factor of two). Placement is seeded and collides measured text boxes rather than glyph sprites, so it is looser: 135 of 194 words fit. The canvas is 805x400 (the example binds no title, as the Vega spec has none), Vega-style text bounds overhanging the 800px plot. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12c with rsvg-convert and Arimo: ratio 0.3031 (0.2919 before, with a 28px title band the reference lacks); the ratio measures a different random layout. Ink is 0.173 against the reference's 0.116: the reference drew weight 300 in Helvetica Neue Light, and Arimo has no light face, so its strokes are heavier.",
+      "ratio": 0.3031
     }
   },
   "title": {"x-eas:slot": "title"},
@@ -37,7 +38,9 @@
   "data": {"name": "data"},
   "transform": [
     {"x-eas:transform": "countpattern", "field": {"x-eas:slot": "text"}, "case": {"x-eas:slot": "case"}, "pattern": {"x-eas:slot": "pattern"}, "stopwords": {"x-eas:slot": "stopwords"}, "as": ["text", "count"]},
-    {"x-eas:transform": "wordcloud", "size": [{"x-eas:slot": "width"}, {"x-eas:slot": "height"}], "text": "text", "font": {"x-eas:slot": "font"}, "fontSize": {"field": "count"}, "fontSizeRange": {"x-eas:slot": "fontSizeRange"}, "fontWeight": {"expr": {"x-eas:expr": "if(datum.text == {{emphasis}}, 600, 300)"}}, "rotate": {"x-eas:slot": "angles"}, "padding": {"x-eas:slot": "padding"}, "seed": {"x-eas:slot": "seed"}}
+    {"x-eas:transform": "wordcloud", "size": [{"x-eas:slot": "width"}, {"x-eas:slot": "height"}], "text": "text", "font": {"x-eas:slot": "font"}, "fontSize": {"field": "count"}, "fontSizeRange": {"x-eas:slot": "fontSizeRange"}, "fontWeight": {"expr": {"x-eas:expr": "if(datum.text == {{emphasis}}, 600, 300)"}}, "rotate": {"x-eas:slot": "angles"}, "padding": {"x-eas:slot": "padding"}, "seed": {"x-eas:slot": "seed"}},
+    {"window": [{"op": "row_number", "as": "order"}]},
+    {"calculate": {"x-eas:expr": "{{colors}}[(datum.order - 1) % length({{colors}})]"}, "as": "fill"}
   ],
   "encoding": {
     "x": {"field": "x", "type": "quantitative", "axis": null, "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
@@ -45,7 +48,7 @@
     "text": {"field": "text", "type": "nominal"},
     "size": {"field": "fontSize", "type": "quantitative", "legend": null, "scale": {"domain": [0, 1000], "range": [0, 1000], "zero": false, "nice": false}},
     "angle": {"field": "angle", "type": "quantitative", "scale": {"domain": [0, 360], "range": [0, 360]}},
-    "color": {"field": "text", "type": "nominal", "sort": null, "legend": null, "scale": {"range": {"x-eas:slot": "colors"}}},
+    "color": {"field": "fill", "type": "nominal", "legend": null, "scale": null},
     "tooltip": [{"field": "text", "type": "nominal", "title": "word"}, {"field": "count", "type": "quantitative"}]
   },
   "layer": [

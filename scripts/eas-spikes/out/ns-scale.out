@@ -1,0 +1,89 @@
+emacs 30.2 window-system=ns frame-scale-factor=2.0 image-scaling-factor=auto display-pixel-width=1512 frame-pixel=1020x704 char=7x14
+== airport-connections scene (:w 1000 :h 640 :cell [7 14]) window-body (1000 . 658)
+-- unpinned create-image (pre-fc-qx1.23 behaviour): image :scale=default image-size(px)=(1000 . 640) origin=(0 . 14) frame-scale-factor=2.0
+   item (867.9 228.5) -> display (868 243) -> object-x-y (868 . 229) -> scene (868.0 229.0) err 0.50
+   item (486.5 475.4) -> display (487 489) -> object-x-y (487 . 475) -> scene (487.0 475.0) err 0.49
+   item (579.1 480.9) -> display (579 495) -> object-x-y (579 . 481) -> scene (579.0 481.0) err 0.14
+   item (403.3 389.2) -> display (403 403) -> object-x-y (403 . 389) -> scene (403.0 389.0) err 0.32
+   item (477.3 507.8) -> display (477 522) -> object-x-y (477 . 508) -> scene (477.0 508.0) err 0.26
+   item (68.2 555.6) -> display (68 570) -> object-x-y (68 . 556) -> scene (68.0 556.0) err 0.35
+   item (307.7 134.8) -> display (308 149) -> object-x-y (308 . 135) -> scene (308.0 135.0) err 0.26
+   item (684.1 363.0) -> display (684 377) -> object-x-y (684 . 363) -> scene (684.0 363.0) err 0.11
+   max |error| in scene px: 0.50   (a datum is hit when error is below the mark radius)
+-- eas-svg-image :scale 1: image :scale=1 image-size(px)=(1000 . 640) origin=(0 . 14) frame-scale-factor=2.0
+   item (867.9 228.5) -> display (868 243) -> object-x-y (868 . 229) -> scene (868.0 229.0) err 0.50
+   item (486.5 475.4) -> display (487 489) -> object-x-y (487 . 475) -> scene (487.0 475.0) err 0.49
+   item (579.1 480.9) -> display (579 495) -> object-x-y (579 . 481) -> scene (579.0 481.0) err 0.14
+   item (403.3 389.2) -> display (403 403) -> object-x-y (403 . 389) -> scene (403.0 389.0) err 0.32
+   item (477.3 507.8) -> display (477 522) -> object-x-y (477 . 508) -> scene (477.0 508.0) err 0.26
+   item (68.2 555.6) -> display (68 570) -> object-x-y (68 . 556) -> scene (68.0 556.0) err 0.35
+   item (307.7 134.8) -> display (308 149) -> object-x-y (308 . 135) -> scene (308.0 135.0) err 0.26
+   item (684.1 363.0) -> display (684 377) -> object-x-y (684 . 363) -> scene (684.0 363.0) err 0.11
+   max |error| in scene px: 0.50   (a datum is hit when error is below the mark radius)
+-- eas-svg-image :scale 0.5: image :scale=0.5 image-size(px)=(500 . 320) origin=(0 . 14) frame-scale-factor=2.0
+   item (867.9 228.5) -> display (434 128) -> object-x-y (434 . 114) -> scene (868.0 228.0) err 0.50
+   item (486.5 475.4) -> display (243 252) -> object-x-y (243 . 238) -> scene (486.0 476.0) err 0.59
+   item (579.1 480.9) -> display (290 254) -> object-x-y (290 . 240) -> scene (580.0 480.0) err 0.88
+   item (403.3 389.2) -> display (202 209) -> object-x-y (202 . 195) -> scene (404.0 390.0) err 0.84
+   item (477.3 507.8) -> display (239 268) -> object-x-y (239 . 254) -> scene (478.0 508.0) err 0.74
+   item (68.2 555.6) -> display (34 292) -> object-x-y (34 . 278) -> scene (68.0 556.0) err 0.35
+   item (307.7 134.8) -> display (154 81) -> object-x-y (154 . 67) -> scene (308.0 134.0) err 0.78
+   item (684.1 363.0) -> display (342 196) -> object-x-y (342 . 182) -> scene (684.0 364.0) err 0.96
+   max |error| in scene px: 0.96   (a datum is hit when error is below the mark radius)
+end-to-end pointermove at 8 item positions (:scale 1): 8 of 8 produced a hover
+map (:scale 1, 300 areas): 39 of the first 39 area centres report their own id; others e.g. nil
+-- eas-svg-image :scale 2, scene compiled at 450x290: image :scale=2 image-size(px)=(900 . 580) origin=(0 . 14) frame-scale-factor=2.0
+   item (390.5 103.5) -> display (781 221) -> object-x-y (781 . 207) -> scene (390.5 103.5) err 0.04
+   item (218.9 215.4) -> display (438 445) -> object-x-y (438 . 431) -> scene (219.0 215.5) err 0.08
+   item (260.6 217.9) -> display (521 450) -> object-x-y (521 . 436) -> scene (260.5 218.0) err 0.11
+   item (181.5 176.3) -> display (363 367) -> object-x-y (363 . 353) -> scene (181.5 176.5) err 0.16
+   item (214.8 230.1) -> display (430 474) -> object-x-y (430 . 460) -> scene (215.0 230.0) err 0.23
+   item (30.7 251.8) -> display (61 518) -> object-x-y (61 . 504) -> scene (30.5 252.0) err 0.22
+   item (138.5 61.1) -> display (277 136) -> object-x-y (277 . 122) -> scene (138.5 61.0) err 0.07
+   item (307.9 164.5) -> display (616 343) -> object-x-y (616 . 329) -> scene (308.0 164.5) err 0.15
+   max |error| in scene px: 0.23   (a datum is hit when error is below the mark radius)
+map (:scale 2, 300 areas): 39 of the first 39 area centres report their own id; others e.g. nil
+== scatter-plot scene (:w 1000 :h 640 :cell [7 14]) window-body (1000 . 658)
+-- unpinned create-image (pre-fc-qx1.23 behaviour): image :scale=default image-size(px)=(1000 . 640) origin=(0 . 14) frame-scale-factor=2.0
+   item (511.2 389.5) -> display (511 404) -> object-x-y (511 . 390) -> scene (511.0 390.0) err 0.48
+   item (757.8 425.1) -> display (758 439) -> object-x-y (758 . 425) -> scene (758.0 425.0) err 0.25
+   item (656.2 425.1) -> display (656 439) -> object-x-y (656 . 425) -> scene (656.0 425.0) err 0.25
+   item (384.4 342.1) -> display (384 356) -> object-x-y (384 . 342) -> scene (384.0 342.0) err 0.38
+   item (355.4 306.5) -> display (355 320) -> object-x-y (355 . 306) -> scene (355.0 306.0) err 0.50
+   item (819.4 484.4) -> display (819 498) -> object-x-y (819 . 484) -> scene (819.0 484.0) err 0.40
+   item (366.2 270.9) -> display (366 285) -> object-x-y (366 . 271) -> scene (366.0 271.0) err 0.25
+   item (359.0 377.7) -> display (359 392) -> object-x-y (359 . 378) -> scene (359.0 378.0) err 0.34
+   max |error| in scene px: 0.50   (a datum is hit when error is below the mark radius)
+-- eas-svg-image :scale 1: image :scale=1 image-size(px)=(1000 . 640) origin=(0 . 14) frame-scale-factor=2.0
+   item (511.2 389.5) -> display (511 404) -> object-x-y (511 . 390) -> scene (511.0 390.0) err 0.48
+   item (757.8 425.1) -> display (758 439) -> object-x-y (758 . 425) -> scene (758.0 425.0) err 0.25
+   item (656.2 425.1) -> display (656 439) -> object-x-y (656 . 425) -> scene (656.0 425.0) err 0.25
+   item (384.4 342.1) -> display (384 356) -> object-x-y (384 . 342) -> scene (384.0 342.0) err 0.38
+   item (355.4 306.5) -> display (355 320) -> object-x-y (355 . 306) -> scene (355.0 306.0) err 0.50
+   item (819.4 484.4) -> display (819 498) -> object-x-y (819 . 484) -> scene (819.0 484.0) err 0.40
+   item (366.2 270.9) -> display (366 285) -> object-x-y (366 . 271) -> scene (366.0 271.0) err 0.25
+   item (359.0 377.7) -> display (359 392) -> object-x-y (359 . 378) -> scene (359.0 378.0) err 0.34
+   max |error| in scene px: 0.50   (a datum is hit when error is below the mark radius)
+-- eas-svg-image :scale 0.5: image :scale=0.5 image-size(px)=(500 . 320) origin=(0 . 14) frame-scale-factor=2.0
+   item (511.2 389.5) -> display (256 209) -> object-x-y (256 . 195) -> scene (512.0 390.0) err 0.75
+   item (757.8 425.1) -> display (379 227) -> object-x-y (379 . 213) -> scene (758.0 426.0) err 0.90
+   item (656.2 425.1) -> display (328 227) -> object-x-y (328 . 213) -> scene (656.0 426.0) err 0.90
+   item (384.4 342.1) -> display (192 185) -> object-x-y (192 . 171) -> scene (384.0 342.0) err 0.38
+   item (355.4 306.5) -> display (178 167) -> object-x-y (178 . 153) -> scene (356.0 306.0) err 0.62
+   item (819.4 484.4) -> display (410 256) -> object-x-y (410 . 242) -> scene (820.0 484.0) err 0.62
+   item (366.2 270.9) -> display (183 149) -> object-x-y (183 . 135) -> scene (366.0 270.0) err 0.92
+   item (359.0 377.7) -> display (180 203) -> object-x-y (180 . 189) -> scene (360.0 378.0) err 1.00
+   max |error| in scene px: 1.00   (a datum is hit when error is below the mark radius)
+end-to-end pointermove at 8 item positions (:scale 1): 8 of 8 produced a hover
+map (:scale 1, 416 areas): 37 of the first 40 area centres report their own id; others e.g. ((eas:main|main/0|13 -> eas:main|main/0|8) (eas:main|main/0|29 -> eas:main|main/0|18) (eas:main|main/0|31 -> eas:main|main/0|22))
+-- eas-svg-image :scale 2, scene compiled at 450x290: image :scale=2 image-size(px)=(900 . 580) origin=(0 . 14) frame-scale-factor=2.0
+   item (213.3 165.5) -> display (427 345) -> object-x-y (427 . 331) -> scene (213.5 165.5) err 0.17
+   item (304.0 180.1) -> display (608 374) -> object-x-y (608 . 360) -> scene (304.0 180.0) err 0.10
+   item (266.7 180.1) -> display (533 374) -> object-x-y (533 . 360) -> scene (266.5 180.0) err 0.17
+   item (166.7 146.1) -> display (333 306) -> object-x-y (333 . 292) -> scene (166.5 146.0) err 0.17
+   item (156.0 131.5) -> display (312 277) -> object-x-y (312 . 263) -> scene (156.0 131.5) err 0.00
+   item (326.7 204.4) -> display (653 423) -> object-x-y (653 . 409) -> scene (326.5 204.5) err 0.17
+   item (160.0 116.9) -> display (320 248) -> object-x-y (320 . 234) -> scene (160.0 117.0) err 0.08
+   item (157.3 160.7) -> display (315 335) -> object-x-y (315 . 321) -> scene (157.5 160.5) err 0.17
+   max |error| in scene px: 0.17   (a datum is hit when error is below the mark radius)
+map (:scale 2, 416 areas): 26 of the first 40 area centres report their own id; others e.g. ((eas:main|main/0|7 -> eas:main|main/0|6) (eas:main|main/0|10 -> eas:main|main/0|1) (eas:main|main/0|12 -> eas:main|main/0|3))

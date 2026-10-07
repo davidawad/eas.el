@@ -438,7 +438,7 @@ pane asks for. Drags again arrived as down/motion/up with no
   with `:original-map`, `image-flush` of the replaced image) are in
   `eas-svg.el` and `eas-mode.el`.
 
-### 8.9 Still open (needs macOS/NS or real terminals)
+### 8.9 Still open (needs macOS/NS or real terminals; the macOS items are answered in 8.10-8.13)
 
 - NS (macOS) Emacs: raster and redisplay cost through the NS port,
   coordinates under a Retina backing scale, and whether the NS port also
@@ -448,6 +448,169 @@ pane asks for. Drags again arrived as down/motion/up with no
   report rate and SGR-pixel (1016) support, and tmux forwarding from
   them. Here tmux forwarding was checked only with injected input.
 - A recorded human hover session for the perceived update rate.
+
+## 8. GUI frame on macOS/NS and through real terminals (fc-qx1.24)
+
+Leftovers of section 8.9. **macOS**: GNU Emacs 30.2 emacs-plus (NS
+build, appkit 2685, librsvg), Apple M5 Max, macOS 26.5.1, a 1000x640
+chart window (a 1020x704 frame), `frame-scale-factor` **2.0**,
+`image-scaling-factor` `auto`. The laptop was in use: its load average
+was 17-20 during every run, so read the milliseconds as upper bounds.
+Scripts (all byte-compile eas first and run niced with a timeout):
+`scripts/eas-spikes/gui/run-ns.sh ns-raster.el|ns-scale.el OUT` (GUI)
+and `scripts/eas-spikes/tty-marks.sh` (terminal, private tmux server
+`-L eas-spike`). Raw outputs of this run are in
+`scripts/eas-spikes/out/`: `ns-raster.out`, `ns-scale.out`,
+`tty-marks.out`, `tty-marks-iterm.out`.
+
+### 8.10 NS re-raster and the image cache (`ns-raster.el`)
+
+Each frame is the real pipeline: change (resize, push or pointermove),
+`eas-mode-redraw` (SVG + `create-image` + insert), `(redisplay t)`. A
+forced redisplay of an image already in the cache is **1.4-1.7 ms**
+(`hit-redisplay`), so the rest is librsvg plus the NS draw. Image size
+is 1000x640 pixels, equal to the window in points, whatever the backing
+scale (8.11). Mean ms per frame (12-20 frames after 2 warm-up frames;
+the frames are all distinct unless the row says otherwise). "Old code"
+flushes the replaced image every frame, as before this section; "no
+flush" never flushes:
+
+| view, change | shipped now: total (raster) | render cache off: total | old code: total | no flush: total |
+|---|---|---|---|---|
+| line, resize | 110.9 (92.6) | 93.7 | 100.0 | 85.3 |
+| treemap, resize | 143.7 (111.4) | 176.6 | 175.4 | 179.5 |
+| airport-connections, resize | 335.8 (140.8; compile ~156) | 324.5 | 321.5 | 279.1 |
+| order-book (2x25), resize | 81.8 (59.6) | 111.2 | 78.3 | 79.9 |
+| order-book (2x25), keyed push | 125.4 (103.6) | 110.4 | 120.2 | 110.6 |
+| airport-connections, hover (15 distinct frames) | 128.6 (118.6) | 197.2 | 147.7 | 136.7 |
+| scatter-plot, hover (hover changes nothing: 1 distinct SVG) | **17.0 (2.9)** | 32.9 | **634.1 (622)** | 25.0 |
+| airport-connections, pointer parked (1 distinct SVG) | **8.3 (1.8)** | 50.8 | **98.5 (91)** | 7.8 |
+
+What this shows:
+
+- **A new SVG costs 60-140 ms to rasterize and draw on NS** at 1000x640
+  (60-104 ms for the 50-bar ladder, 93 for the line, 111-141 for the
+  treemap and the airport map). That is the same order as Linux
+  (section 8.1: 75 ms for 1k rects at 800x400), not better. A frame
+  whose SVG is new cannot meet a 50 ms budget at any of these sizes,
+  with or without a cache, so section 8.8 stands: **the redraw default
+  stays idle-coalesced**.
+- **The Emacs image cache must be flushed**, as 8.2 found. Without
+  `image-flush` it held **115.5 MB after 14 frames** (resize), 146 MB
+  after 17 (hover) and 195 MB after 22 (pushes): about 8 MB per frame,
+  with RSS +207 to +362 MB. With it the cache is a constant **9.75 MB**
+  (two images) and RSS does not move. The cache earns nothing for a
+  changing chart: the no-flush totals equal the flushed ones within noise.
+- **Bug, fixed:** `eas-mode-redraw` flushed the image it replaced even
+  when the new image had the same `:data`. The two share one cache
+  entry, so every unchanged frame rasterized again: a hover that
+  changes nothing cost **634 ms** on scatter-plot (622 ms of it in
+  `redisplay`) and a parked pointer **98.5 ms** on the airport map.
+  `eas-mode--flush-replaced` now flushes only when the data differs:
+  **17.0 and 8.3 ms**, and the cache stays flat (9.75 MB, RSS +0).
+- The eas render cache (`eas-render-cache-enabled`) is worth keeping
+  on: hover on the airport map 128.6 vs 197.2 ms, parked 8.3 vs
+  50.8 ms, treemap resize 143.7 vs 176.6 ms. Where the whole scene
+  changes (line resize, pushes) it is neutral within noise.
+
+### 8.11 Retina: pointer coordinates and `:scale` (`ns-scale.el`)
+
+No real pointer was moved. Events come from `posn-at-x-y` on the live
+window, which is the geometry the NS port reports for a real click. For
+each image `:scale` S a scene item (x, y) is placed at display pixel
+S*(x, y), the event goes through `eas-mode-event-px`, and the result is
+compared with (x, y). On `frame-scale-factor` 2.0, 8 items per row, two
+charts (airport-connections, scatter-plot):
+
+| image | image-size (px) | max error, scene px |
+|---|---|---|
+| no `:scale` given (`:scale default`) | 1000x640 | 0.50 |
+| `eas-svg-image` `:scale 1` (shipped) | 1000x640 | 0.50 |
+| `:scale 0.5` | 500x320 | 0.96 / 1.00 |
+| `:scale 2`, scene compiled at 450x290 | 900x580 | 0.24 |
+
+- **NS pixels are points.** `posn-object-x-y`, `window-body-width` and
+  the `:map` hit test all count points, `image-size` in pixels equals
+  the display size, and `:scale default` resolves to 1 (`auto` is 1.0
+  here). There is no device-pixel factor to apply: **the pinned
+  `:scale 1` and the divide-by-numeric-`:scale` in `eas-mode-event-px`
+  are correct under backing scale factor 2, and no `:scale` code
+  changed.** The error is rounding to integer pixels (under 1 px), far
+  inside any mark's hit radius.
+- End to end, `pointermove` at the 8 item positions hovered a datum 8
+  of 8 times on both charts.
+- `:map` hit test in points: the airport map reports its own area id at
+  39 of 39 area centres at `:scale 1` and 39 of 39 at `:scale 2`; the
+  scatter plot 37 of 40 and 26 of 40, the misses being points that
+  overlap a neighbour (the later area wins). One run reported 0 of 39 for
+  the first probe right after launch, before the frame had drawn; the
+  repeat gave 39.
+- `posn-at-x-y` counts the header line in y and `posn-at-point` does
+  not (a harness detail: the spike adds `window-header-line-height`).
+- **Raster density is 1x.** librsvg rasterizes at the display size: a
+  600x200 SVG at `:scale 0.5` and a 300x100 SVG at `:scale 1` both give
+  `image-size` 300x100, so Emacs cannot be asked for a 2x raster of an
+  SVG, and the NS backing store upscales the 1x bitmap. I could not
+  look at the pixels: the one screenshot attempt captured another
+  application's window and was deleted, and I did not retry. Whether it
+  looks soft on Retina is for a person to judge.
+- **Not tested:** GTK `GDK_SCALE` (no GTK or pgtk Emacs here) and a
+  non-Retina external display. By the same logic a pgtk build counts
+  logical pixels and an X build with a scaled Xft.dpi counts device
+  pixels; compiling at window pixels with `:scale 1` fits both.
+- **Not tested:** whether the NS port drops `mouse-movement` until the
+  first click (8.3's Xvfb finding): it needs a real pointer.
+
+### 8.12 xterm-mouse through tmux and iTerm2 (`tty-marks.sh`)
+
+`emacs -nw -Q` in `tmux -L eas-spike` (120x40, TERM xterm-256color)
+showed the `bars` template as text. For each of the 5 bars the driver
+sent SGR (1006) reports at the bar's centre cell: motion with no
+button (hover), press, release (click); then one motion over the empty
+margin. Emacs logged every event, the view's hovered datum and
+`eas-mode-event-px`.
+
+- **Result, both runs: 5 of 5 bars hovered and clicked on the right
+  datum (0-4), and the margin hovered nothing.** Per cell Emacs decoded
+  `mouse-movement`, `down-mouse-1`, `mouse-1`, in the expected cell.
+- Run 1: reports written into Emacs's own pane (`tmux send-keys -l`).
+  Run 2: the same session attached to a real **iTerm2** window
+  (`create window ... command "tmux -L eas-spike attach"`, 120x40),
+  with the reports typed into that window's session by AppleScript
+  `write text`, so they travel iTerm2, tmux client, tmux server, Emacs.
+  Identical output.
+- **Bug, fixed:** `xterm-mouse-mode` was **not** turned on when the
+  chart opened. `eas-tty-mouse-capable-p` read `$TERM`, which this NS
+  build reports as `"dumb"` inside `emacs -nw` under tmux while
+  `tty-type` says `xterm-256color`; the capability test failed and the
+  mouse stayed dead until it was enabled by hand. It now asks
+  `tty-type` first (`eas-tty--frame-term`) and `$TERM` second;
+  `eas-tty-keymap-and-mouse-capability` covers both.
+- **kitty is not installed** (/Applications has iTerm, Ghostty, WezTerm
+  and Alacritty); nothing was run in the others.
+- **Needs a person:** real clicks and a physical mouse in iTerm2 (the
+  AppleScript path types the report bytes; it does not exercise iTerm2's
+  own mouse encoding, report rate or SGR-pixel 1016), a real mouse in
+  kitty, and a recorded hover session for the perceived rate.
+- Setup notes: the login `~/.tmux.conf` hangs a fresh private server, so
+  the script runs `tmux -f /dev/null`, and Emacs is the pane's command
+  because the login shell takes tens of seconds to start. iTerm2 did not
+  quit on request after its window closed, so a run that has to launch
+  it leaves it open with no windows.
+
+### 8.13 Decisions
+
+- **The redraw default stays idle-coalesced** (confirmed): a changed
+  frame costs 60-140 ms on NS even on an M5 Max, 128.6 ms for an airport
+  hover.
+- **`:scale` handling is right** under backing scale factor 2; GTK
+  `GDK_SCALE` is untested.
+- Changed: `eas-mode--flush-replaced` (flush a replaced image, not a
+  repeated one) and `eas-tty--frame-term` (mouse detection), each with a
+  test (`eas-glue-test.el`, `eas-tty-test.el`).
+- Still open: a real pointer on NS (motion before the first click,
+  report rate, how soft the 1x raster looks on Retina), real iTerm2 and
+  kitty clicks, GTK `GDK_SCALE`, a human hover session.
 
 ## 9. Terminal parity through a real terminal (fc-qx1.8)
 

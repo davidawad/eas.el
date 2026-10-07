@@ -1,0 +1,165 @@
+emacs 30.2 window-system=ns frame-scale-factor=2.0 image-scaling-factor=auto rsvg=t frame=1020x704 compiled=t load-avg=(17.8251953125 18.0673828125 16.560546875)
+line                 image-size=(1000 . 640) (pixels) scene-size=(:w 1000 :h 640 :cell [7 14]) hit-redisplay mean=   1.43 p50=   1.33 p95=   2.53 max=   2.53
+treemap              image-size=(1000 . 640) (pixels) scene-size=(:w 1000 :h 640 :cell [7 14]) hit-redisplay mean=   1.40 p50=   1.33 p95=   1.83 max=   1.83
+airport-connections  image-size=(1000 . 640) (pixels) scene-size=(:w 1000 :h 640 :cell [7 14]) hit-redisplay mean=   1.68 p50=   1.63 p95=   2.08 max=   2.08
+order-book           image-size=(1000 . 640) (pixels) scene-size=(:w 1000 :h 640 :cell [7 14]) hit-redisplay mean=   1.53 p50=   1.46 p95=   2.00 max=   2.00
+line shipped resize                :compile mean=  16.54 p50=  29.35 p95=  30.34 max=  30.34
+line shipped resize                :redraw  mean=   1.70 p50=   1.65 p95=   2.20 max=   2.20
+line shipped resize                :raster  mean=  92.64 p50=  97.73 p95= 115.34 max= 115.34
+line shipped resize                :total   mean= 110.89 p50= 129.25 p95= 147.67 max= 147.67
+  line shipped                     12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS +147664 KB
+line always-flush(old) resize      :compile mean=   7.24 p50=   2.98 p95=  29.25 max=  29.25
+line always-flush(old) resize      :redraw  mean=   7.24 p50=   1.50 p95=  24.71 max=  24.71
+line always-flush(old) resize      :raster  mean=  85.50 p50=  89.64 p95= 111.34 max= 111.34
+line always-flush(old) resize      :total   mean=  99.98 p50= 112.97 p95= 142.18 max= 142.18
+  line always-flush(old)           12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS +117216 KB
+line no-flush resize               :compile mean=   6.88 p50=   3.19 p95=  26.56 max=  26.56
+line no-flush resize               :redraw  mean=   9.01 p50=   1.24 p95=  25.05 max=  25.05
+line no-flush resize               :raster  mean=  69.38 p50=  82.57 p95= 106.57 max= 106.57
+line no-flush resize               :total   mean=  85.27 p50=  91.95 p95= 134.98 max= 134.98
+  line no-flush                    12 distinct SVGs of 12 frames; image-cache-size=115509120 bytes, RSS +206928 KB
+line shipped,no-rcache resize      :compile mean=   8.46 p50=   3.10 p95=  26.41 max=  26.41
+line shipped,no-rcache resize      :redraw  mean=   7.13 p50=   1.60 p95=  25.61 max=  25.61
+line shipped,no-rcache resize      :raster  mean=  78.14 p50=  81.79 p95= 101.59 max= 101.59
+line shipped,no-rcache resize      :total   mean=  93.73 p50=  98.53 p95= 130.51 max= 130.51
+  line shipped,no-rcache           12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS -7392 KB
+treemap shipped resize             :compile mean=  22.61 p50=  28.15 p95=  29.89 max=  29.89
+treemap shipped resize             :redraw  mean=   9.62 p50=   4.55 p95=  26.83 max=  26.83
+treemap shipped resize             :raster  mean= 111.41 p50= 118.19 p95= 132.51 max= 132.51
+treemap shipped resize             :total   mean= 143.65 p50= 150.36 p95= 165.01 max= 165.01
+  treemap shipped                  12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS -7984 KB
+treemap always-flush(old) resize   :compile mean=  27.73 p50=  34.84 p95=  36.48 max=  36.48
+treemap always-flush(old) resize   :redraw  mean=   9.40 p50=   5.66 p95=  33.46 max=  33.46
+treemap always-flush(old) resize   :raster  mean= 138.23 p50= 141.03 p95= 169.73 max= 169.73
+treemap always-flush(old) resize   :total   mean= 175.36 p50= 182.48 p95= 211.54 max= 211.54
+  treemap always-flush(old)        12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS +9600 KB
+treemap no-flush resize            :compile mean=  37.74 p50=  40.36 p95=  42.55 max=  42.55
+treemap no-flush resize            :redraw  mean=   5.45 p50=   5.98 p95=   6.32 max=   6.32
+treemap no-flush resize            :raster  mean= 136.34 p50= 160.53 p95= 191.40 max= 191.40
+treemap no-flush resize            :total   mean= 179.53 p50= 207.99 p95= 238.23 max= 238.23
+  treemap no-flush                 12 distinct SVGs of 12 frames; image-cache-size=115509120 bytes, RSS +207712 KB
+treemap shipped,no-rcache resize   :compile mean=  34.46 p50=  34.42 p95=  41.58 max=  41.58
+treemap shipped,no-rcache resize   :redraw  mean=   4.99 p50=   5.06 p95=   5.42 max=   5.42
+treemap shipped,no-rcache resize   :raster  mean= 137.14 p50= 138.70 p95= 167.63 max= 167.63
+treemap shipped,no-rcache resize   :total   mean= 176.59 p50= 178.41 p95= 207.21 max= 207.21
+  treemap shipped,no-rcache        12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS -7424 KB
+airport-connections shipped resize :compile mean= 183.19 p50= 183.40 p95= 199.91 max= 199.91
+airport-connections shipped resize :redraw  mean=  11.88 p50=  12.65 p95=  18.62 max=  18.62
+airport-connections shipped resize :raster  mean= 140.77 p50= 136.92 p95= 185.58 max= 185.58
+airport-connections shipped resize :total   mean= 335.84 p50= 333.09 p95= 396.50 max= 396.50
+  airport-connections shipped      12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS +3520 KB
+airport-connections always-flush(old) resize :compile mean= 175.57 p50= 178.87 p95= 183.39 max= 183.39
+airport-connections always-flush(old) resize :redraw  mean=  10.79 p50=  11.98 p95=  13.92 max=  13.92
+airport-connections always-flush(old) resize :raster  mean= 135.17 p50= 135.96 p95= 188.08 max= 188.08
+airport-connections always-flush(old) resize :total   mean= 321.53 p50= 326.85 p95= 380.84 max= 380.84
+  airport-connections always-flush(old) 12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS +11408 KB
+airport-connections no-flush resize :compile mean= 163.13 p50= 160.23 p95= 185.91 max= 185.91
+airport-connections no-flush resize :redraw  mean=   9.61 p50=  10.80 p95=  12.27 max=  12.27
+airport-connections no-flush resize :raster  mean= 106.40 p50= 124.92 p95= 151.33 max= 151.33
+airport-connections no-flush resize :total   mean= 279.14 p50= 289.53 p95= 332.34 max= 332.34
+  airport-connections no-flush     12 distinct SVGs of 12 frames; image-cache-size=115509120 bytes, RSS +226960 KB
+airport-connections shipped,no-rcache resize :compile mean= 160.81 p50= 156.51 p95= 178.13 max= 178.13
+airport-connections shipped,no-rcache resize :redraw  mean=  14.52 p50=  11.36 p95=  47.82 max=  47.82
+airport-connections shipped,no-rcache resize :raster  mean= 149.20 p50= 153.02 p95= 175.21 max= 175.21
+airport-connections shipped,no-rcache resize :total   mean= 324.53 p50= 323.44 p95= 361.27 max= 361.27
+  airport-connections shipped,no-rcache 12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS -7440 KB
+airport-connections shipped hover  :compile mean=   0.65 p50=   0.62 p95=   0.95 max=   0.95
+airport-connections shipped hover  :redraw  mean=   9.37 p50=   2.74 p95=  36.12 max=  36.12
+airport-connections shipped hover  :raster  mean= 118.60 p50= 114.38 p95= 150.80 max= 150.80
+airport-connections shipped hover  :total   mean= 128.62 p50= 118.28 p95= 154.01 max= 154.01
+  airport-connections shipped      15 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS -9296 KB
+airport-connections always-flush(old) hover :compile mean=   0.76 p50=   0.74 p95=   1.05 max=   1.05
+airport-connections always-flush(old) hover :redraw  mean=  11.10 p50=   3.27 p95=  44.55 max=  44.55
+airport-connections always-flush(old) hover :raster  mean= 135.80 p50= 131.51 p95= 170.93 max= 170.93
+airport-connections always-flush(old) hover :total   mean= 147.67 p50= 135.85 p95= 178.64 max= 178.64
+  airport-connections always-flush(old) 15 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS -11312 KB
+airport-connections no-flush hover :compile mean=   3.24 p50=   0.70 p95=  37.81 max=  37.81
+airport-connections no-flush hover :redraw  mean=   5.66 p50=   2.70 p95=  45.84 max=  45.84
+airport-connections no-flush hover :raster  mean= 127.84 p50= 134.40 p95= 181.34 max= 181.34
+airport-connections no-flush hover :total   mean= 136.74 p50= 139.29 p95= 192.77 max= 192.77
+  airport-connections no-flush     15 distinct SVGs of 15 frames; image-cache-size=146270400 bytes, RSS +267200 KB
+airport-connections shipped,no-rcache hover :compile mean=   5.10 p50=   0.63 p95=  34.27 max=  34.27
+airport-connections shipped,no-rcache hover :redraw  mean=  35.37 p50=  44.27 p95=  46.90 max=  46.90
+airport-connections shipped,no-rcache hover :raster  mean= 156.75 p50= 153.95 p95= 190.00 max= 190.00
+airport-connections shipped,no-rcache hover :total   mean= 197.22 p50= 198.81 p95= 222.37 max= 222.37
+  airport-connections shipped,no-rcache 15 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +256 KB
+scatter-plot shipped hover         :compile mean=   0.41 p50=   0.42 p95=   0.45 max=   0.45
+scatter-plot shipped hover         :redraw  mean=  13.74 p50=   5.46 p95=  36.94 max=  36.94
+scatter-plot shipped hover         :raster  mean=   2.89 p50=   2.83 p95=   3.56 max=   3.56
+scatter-plot shipped hover         :total   mean=  17.04 p50=   8.78 p95=  40.53 max=  40.53
+  scatter-plot shipped             1 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +0 KB
+scatter-plot always-flush(old) hover :compile mean=   0.39 p50=   0.38 p95=   0.61 max=   0.61
+scatter-plot always-flush(old) hover :redraw  mean=  11.72 p50=   4.74 p95=  39.39 max=  39.39
+scatter-plot always-flush(old) hover :raster  mean= 622.02 p50= 652.32 p95= 865.64 max= 865.64
+scatter-plot always-flush(old) hover :total   mean= 634.13 p50= 660.69 p95= 872.78 max= 872.78
+  scatter-plot always-flush(old)   1 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +19104 KB
+scatter-plot no-flush hover        :compile mean=   1.07 p50=   1.02 p95=   1.57 max=   1.57
+scatter-plot no-flush hover        :redraw  mean=  19.68 p50=   8.23 p95=  58.23 max=  58.23
+scatter-plot no-flush hover        :raster  mean=   4.28 p50=   4.18 p95=   5.73 max=   5.73
+scatter-plot no-flush hover        :total   mean=  25.03 p50=  14.11 p95=  64.96 max=  64.96
+  scatter-plot no-flush            1 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +19104 KB
+scatter-plot shipped,no-rcache hover :compile mean=   0.38 p50=   0.36 p95=   0.43 max=   0.43
+scatter-plot shipped,no-rcache hover :redraw  mean=  30.10 p50=  35.53 p95=  36.19 max=  36.19
+scatter-plot shipped,no-rcache hover :raster  mean=   2.47 p50=   2.45 p95=   2.64 max=   2.64
+scatter-plot shipped,no-rcache hover :total   mean=  32.94 p50=  38.29 p95=  39.14 max=  39.14
+  scatter-plot shipped,no-rcache   1 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +16 KB
+airport-connections shipped still  :compile mean=   0.25 p50=   0.26 p95=   0.28 max=   0.28
+airport-connections shipped still  :redraw  mean=   6.25 p50=   2.15 p95=  33.15 max=  33.15
+airport-connections shipped still  :raster  mean=   1.76 p50=   1.82 p95=   2.08 max=   2.08
+airport-connections shipped still  :total   mean=   8.26 p50=   4.24 p95=  35.49 max=  35.49
+  airport-connections shipped      1 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +0 KB
+airport-connections always-flush(old) still :compile mean=   0.25 p50=   0.25 p95=   0.32 max=   0.32
+airport-connections always-flush(old) still :redraw  mean=   7.12 p50=   2.08 p95=  36.74 max=  36.74
+airport-connections always-flush(old) still :raster  mean=  91.08 p50=  92.62 p95= 126.12 max= 126.12
+airport-connections always-flush(old) still :total   mean=  98.45 p50=  99.64 p95= 147.04 max= 147.04
+  airport-connections always-flush(old) 1 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +48 KB
+airport-connections no-flush still :compile mean=   0.23 p50=   0.23 p95=   0.26 max=   0.26
+airport-connections no-flush still :redraw  mean=   5.99 p50=   1.97 p95=  32.50 max=  32.50
+airport-connections no-flush still :raster  mean=   1.54 p50=   1.54 p95=   2.02 max=   2.02
+airport-connections no-flush still :total   mean=   7.77 p50=   3.69 p95=  34.75 max=  34.75
+  airport-connections no-flush     1 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +0 KB
+airport-connections shipped,no-rcache still :compile mean=   0.30 p50=   0.30 p95=   0.36 max=   0.36
+airport-connections shipped,no-rcache still :redraw  mean=  48.17 p50=  48.12 p95=  49.40 max=  49.40
+airport-connections shipped,no-rcache still :raster  mean=   2.33 p50=   2.34 p95=   2.49 max=   2.49
+airport-connections shipped,no-rcache still :total   mean=  50.80 p50=  50.74 p95=  51.98 max=  51.98
+  airport-connections shipped,no-rcache 1 distinct SVGs of 15 frames; image-cache-size=9751360 bytes, RSS +16 KB
+order-book shipped push            :compile mean=   6.37 p50=   1.53 p95=  27.96 max=  27.96
+order-book shipped push            :redraw  mean=  15.41 p50=   4.15 p95=  31.50 max=  31.50
+order-book shipped push            :raster  mean= 103.61 p50= 103.79 p95= 120.55 max= 120.55
+order-book shipped push            :total   mean= 125.39 p50= 125.39 p95= 138.35 max= 138.35
+  order-book shipped               20 distinct SVGs of 20 frames; image-cache-size=9751360 bytes, RSS +1024 KB
+order-book always-flush(old) push  :compile mean=   6.28 p50=   1.37 p95=  27.72 max=  27.72
+order-book always-flush(old) push  :redraw  mean=  14.67 p50=   3.83 p95=  29.69 max=  29.69
+order-book always-flush(old) push  :raster  mean=  99.29 p50=  94.09 p95= 120.66 max= 120.66
+order-book always-flush(old) push  :total   mean= 120.23 p50= 121.54 p95= 134.44 max= 134.44
+  order-book always-flush(old)     20 distinct SVGs of 20 frames; image-cache-size=9751360 bytes, RSS +80 KB
+order-book no-flush push           :compile mean=   5.02 p50=   1.41 p95=  26.52 max=  26.52
+order-book no-flush push           :redraw  mean=  12.94 p50=   3.53 p95=  29.56 max=  29.56
+order-book no-flush push           :raster  mean=  92.61 p50=  94.86 p95= 121.10 max= 121.10
+order-book no-flush push           :total   mean= 110.57 p50= 119.77 p95= 126.78 max= 126.78
+  order-book no-flush              20 distinct SVGs of 20 frames; image-cache-size=195027200 bytes, RSS +362432 KB
+order-book shipped,no-rcache push  :compile mean=   8.28 p50=   1.43 p95=  24.49 max=  24.49
+order-book shipped,no-rcache push  :redraw  mean=  14.53 p50=  17.23 p95=  28.97 max=  28.97
+order-book shipped,no-rcache push  :raster  mean=  87.53 p50=  91.36 p95= 118.64 max= 118.64
+order-book shipped,no-rcache push  :total   mean= 110.35 p50= 119.23 p95= 128.34 max= 128.34
+  order-book shipped,no-rcache     20 distinct SVGs of 20 frames; image-cache-size=9751360 bytes, RSS +48 KB
+order-book shipped resize          :compile mean=  15.48 p50=  18.89 p95=  20.76 max=  20.76
+order-book shipped resize          :redraw  mean=   6.76 p50=   2.50 p95=  19.98 max=  19.98
+order-book shipped resize          :raster  mean=  59.59 p50=  60.77 p95=  78.94 max=  78.94
+order-book shipped resize          :total   mean=  81.84 p50=  81.97 p95= 103.27 max= 103.27
+  order-book shipped               12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS +2384 KB
+order-book always-flush(old) resize :compile mean=  14.81 p50=  18.24 p95=  18.86 max=  18.86
+order-book always-flush(old) resize :redraw  mean=   6.38 p50=   2.35 p95=  20.14 max=  20.14
+order-book always-flush(old) resize :raster  mean=  57.07 p50=  60.17 p95=  72.50 max=  72.50
+order-book always-flush(old) resize :total   mean=  78.26 p50=  80.50 p95=  94.66 max=  94.66
+  order-book always-flush(old)     12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS +2400 KB
+order-book no-flush resize         :compile mean=  17.62 p50=  21.51 p95=  25.24 max=  25.24
+order-book no-flush resize         :redraw  mean=   6.18 p50=   2.39 p95=  18.57 max=  18.57
+order-book no-flush resize         :raster  mean=  56.13 p50=  66.69 p95=  79.26 max=  79.26
+order-book no-flush resize         :total   mean=  79.93 p50=  89.21 p95= 104.30 max= 104.30
+  order-book no-flush              12 distinct SVGs of 12 frames; image-cache-size=115509120 bytes, RSS +226704 KB
+order-book shipped,no-rcache resize :compile mean=  24.65 p50=  26.80 p95=  29.82 max=  29.82
+order-book shipped,no-rcache resize :redraw  mean=   4.56 p50=   3.31 p95=  19.47 max=  19.47
+order-book shipped,no-rcache resize :raster  mean=  82.02 p50=  84.38 p95= 111.25 max= 111.25
+order-book shipped,no-rcache resize :total   mean= 111.24 p50= 113.51 p95= 144.69 max= 144.69
+  order-book shipped,no-rcache     12 distinct SVGs of 12 frames; image-cache-size=9751360 bytes, RSS +11616 KB

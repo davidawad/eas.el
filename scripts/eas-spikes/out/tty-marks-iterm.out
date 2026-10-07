@@ -1,0 +1,25 @@
+TERM(frame)="dumb" TERM(process)="dumb" capable=0
+xterm-mouse-mode=t tty-type=xterm-256color window=(0 1 120 39) inside-edges=(0 2 120 38) cell=[7 14]
+iterm window 13735: reports are typed into iTerm's session, not clicked
+plan datum=0 col=19 row=24
+event=mouse-movement col-row=(18 . 21) hover=(:view "main" :mark "main/0" :item 0 :datum 0 :distance 0.0 :x 127.39999999999992 :y 305.95384615384614 :row (:category "Mon" :value 8200 :_eas_row 0)) px=[127.39999999999992 296.36923076923074]
+event=down-mouse-1 col-row=(18 . 21) hover=(:view "main" :mark "main/0" :item 0 :datum 0 :distance 0.0 :x 127.39999999999992 :y 305.95384615384614 :row (:category "Mon" :value 8200 :_eas_row 0)) px=[127.39999999999992 305.95384615384614]
+event=mouse-1 col-row=(18 . 21) hover=(:view "main" :mark "main/0" :item 0 :datum 0 :distance 0.0 :x 127.39999999999992 :y 305.95384615384614 :row (:category "Mon" :value 8200 :_eas_row 0)) px=[127.39999999999992 305.95384615384614]
+plan datum=1 col=41 row=22
+event=mouse-movement col-row=(40 . 19) hover=(:view "main" :mark "main/0" :item 1 :datum 1 :distance 0.0 :x 284.19999999999993 :y 271.6 :row (:category "Tue" :value 10400 :_eas_row 1)) px=[284.19999999999993 263.20000000000005]
+event=down-mouse-1 col-row=(40 . 19) hover=(:view "main" :mark "main/0" :item 1 :datum 1 :distance 0.0 :x 284.19999999999993 :y 271.6 :row (:category "Tue" :value 10400 :_eas_row 1)) px=[284.19999999999993 271.6]
+event=mouse-1 col-row=(40 . 19) hover=(:view "main" :mark "main/0" :item 1 :datum 1 :distance 0.0 :x 284.19999999999993 :y 271.6 :row (:category "Tue" :value 10400 :_eas_row 1)) px=[284.19999999999993 271.6]
+plan datum=2 col=63 row=27
+event=mouse-movement col-row=(62 . 24) hover=(:view "main" :mark "main/0" :item 2 :datum 2 :distance 0.0 :x 440.99999999999994 :y 338.74615384615385 :row (:category "Wed" :value 6100 :_eas_row 2)) px=[440.99999999999994 328.03076923076924]
+event=down-mouse-1 col-row=(62 . 24) hover=(:view "main" :mark "main/0" :item 2 :datum 2 :distance 0.0 :x 440.99999999999994 :y 338.74615384615385 :row (:category "Wed" :value 6100 :_eas_row 2)) px=[440.99999999999994 338.74615384615385]
+event=mouse-1 col-row=(62 . 24) hover=(:view "main" :mark "main/0" :item 2 :datum 2 :distance 0.0 :x 440.99999999999994 :y 338.74615384615385 :row (:category "Wed" :value 6100 :_eas_row 2)) px=[440.99999999999994 338.74615384615385]
+plan datum=3 col=86 row=23
+event=mouse-movement col-row=(85 . 20) hover=(:view "main" :mark "main/0" :item 3 :datum 3 :distance 0.0 :x 597.8 :y 288.7769230769231 :row (:category "Thu" :value 9300 :_eas_row 3)) px=[597.8 279.7846153846154]
+event=down-mouse-1 col-row=(85 . 20) hover=(:view "main" :mark "main/0" :item 3 :datum 3 :distance 0.0 :x 597.8 :y 288.7769230769231 :row (:category "Thu" :value 9300 :_eas_row 3)) px=[597.8 288.7769230769231]
+event=mouse-1 col-row=(85 . 20) hover=(:view "main" :mark "main/0" :item 3 :datum 3 :distance 0.0 :x 597.8 :y 288.7769230769231 :row (:category "Thu" :value 9300 :_eas_row 3)) px=[597.8 288.7769230769231]
+plan datum=4 col=108 row=20
+event=mouse-movement col-row=(107 . 17) hover=(:view "main" :mark "main/0" :item 4 :datum 4 :distance 0.0 :x 754.5999999999999 :y 245.83461538461538 :row (:category "Fri" :value 12050 :_eas_row 4)) px=[754.5999999999999 238.32307692307694]
+event=down-mouse-1 col-row=(107 . 17) hover=(:view "main" :mark "main/0" :item 4 :datum 4 :distance 0.0 :x 754.5999999999999 :y 245.83461538461538 :row (:category "Fri" :value 12050 :_eas_row 4)) px=[754.5999999999999 245.83461538461538]
+event=mouse-1 col-row=(107 . 17) hover=(:view "main" :mark "main/0" :item 4 :datum 4 :distance 0.0 :x 754.5999999999999 :y 245.83461538461538 :row (:category "Fri" :value 12050 :_eas_row 4)) px=[754.5999999999999 245.83461538461538]
+plan datum=none col=1 row=3
+event=mouse-movement col-row=(0 . 0) hover=nil px=[3.5 7.0]

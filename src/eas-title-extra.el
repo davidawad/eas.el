@@ -14,7 +14,10 @@
 ;; subtitle shares the title's anchor and sits the title's bounds height
 ;; plus subtitlePadding (default 3) below its top, so the title group,
 ;; and the room `eas-title-height' reserves, grows by subtitlePadding and
-;; the subtitle's own bounds.  dx and dy shift both lines in pixels.
+;; the subtitle's own bounds.  dx shifts both lines in pixels.  dy
+;; shifts them too, and Vega's autosize grows the canvas by the title
+;; group's bounds, so dy moves the plots by -dy instead: the lines keep
+;; the canvas top until dy would push them below the plots' top.
 ;; The text target gives the subtitle the row under the title.
 
 ;;; Code:
@@ -26,6 +29,7 @@
 (declare-function eas-title--object "eas-title")
 (declare-function eas-title--line-height "eas-title")
 (declare-function eas-title--get "eas-title")
+(declare-function eas-title--height "eas-title")
 (declare-function eas-title-lines "eas-title")
 (declare-function eas-title-style "eas-title")
 
@@ -72,6 +76,17 @@ METRICS measures the subtitle."
   "SPEC's subtitlePadding under METRICS (config.title), default 3."
   (eas-title-extra--get spec metrics :subtitlePadding eas-title-extra-subtitle-padding))
 
+(defun eas-title-extra--dy (spec metrics)
+  "SPEC's title dy in pixels under METRICS (config.title), 0 on text."
+  (let ((v (unless (eas-layout-text-p metrics) (eas-title-extra--get spec metrics :dy 0))))
+    (if (numberp v) v 0)))
+
+(defun eas-title-extra-dy-room (spec metrics height)
+  "Return the room that SPEC's title dy gives a title of HEIGHT, under METRICS.
+Vega's title group sits HEIGHT above the plots and its lines dy below
+the group, so the room is HEIGHT - dy, never less than 0."
+  (if (zerop height) 0 (max (- height) (- (eas-title-extra--dy spec metrics)))))
+
 (defun eas-title-extra--bounds-top (size)
   "Top of Vega's bounds of top-baseline text of font SIZE, from its y."
   (- (eas-layout--round (* 0.79 size)) (eas-layout--round (* 0.8 size))))
@@ -87,7 +102,10 @@ METRICS gives the config; under text METRICS dx/dy do not apply."
   (if (null title) title
     (let* ((text (eas-layout-text-p metrics))
            (dx (if text 0 (let ((v (eas-title-extra--get spec metrics :dx 0))) (if (numberp v) v 0))))
-           (dy (if text 0 (let ((v (eas-title-extra--get spec metrics :dy 0))) (if (numberp v) v 0))))
+           ;; dy already moved the plots (`eas-title-extra-dy-room'); the
+           ;; lines move only by what of it the room could not absorb.
+           (dy (let ((h (eas-title--height spec metrics)))
+                 (+ (eas-title-extra--dy spec metrics) (eas-title-extra-dy-room spec metrics h))))
            (x (+ (plist-get title :x) dx)) (y (+ (plist-get title :y) dy))
            (lines (eas-title-extra-subtitle-lines spec))
            (n (length (or (plist-get title :lines) [t])))

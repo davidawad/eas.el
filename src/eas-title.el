@@ -47,11 +47,17 @@ size) above it."
 
 (defun eas-title-height (spec metrics)
   "Height the title of SPEC takes above the plots, its offset included.
-METRICS gives the target."
+METRICS gives the target.  A title dy grows or shrinks it, as Vega's
+bounds of the title group hold the lines shifted by dy."
+  (let ((h (eas-title--height spec metrics)))
+    (+ h (eas-title-extra-dy-room spec metrics h))))
+
+(defun eas-title--height (spec metrics)
+  "Height the title of SPEC takes above the plots under METRICS, without dy."
   (let ((lines (eas-title-lines spec)))
     (cond ((null lines) 0)
           ((eas-title-extra-subtitle-lines spec)
-           (+ (eas-title-height (eas-plist-put spec :title (eas-plist-put (eas-title--object spec) :subtitle :null)) metrics)
+           (+ (eas-title--height (eas-plist-put spec :title (eas-plist-put (eas-title--object spec) :subtitle :null)) metrics)
               (eas-title-extra-height spec metrics)))
           ((eas-layout-text-p metrics) (* (length lines) (plist-get metrics :chart-title-size)))
           (t (let ((size (eas-title--get spec metrics :fontSize :chart-title-size)))

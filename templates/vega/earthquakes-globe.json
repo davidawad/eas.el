@@ -31,7 +31,7 @@
     }
   },
   "title": {"text": {"x-eas:slot": "title"}, "subtitle": {"x-eas:slot": "subtitle"}, "anchor": "start", "font": "Tahoma, sans-serif", "subtitleFont": "Tahoma, sans-serif",
-            "color": "#dddddd", "fontSize": 18, "fontWeight": "normal", "subtitleColor": "#888888", "subtitlePadding": 5},
+            "color": "#dddddd", "fontSize": 18, "fontWeight": "normal", "subtitleColor": "#888888", "subtitlePadding": 5, "offset": 4, "dy": -10},
   "description": {"x-eas:slot": "description"},
   "width": {"x-eas:slot": "size"},
   "height": {"x-eas:slot": "size"},

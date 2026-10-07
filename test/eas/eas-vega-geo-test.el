@@ -402,11 +402,10 @@ Twelve countries; for the choropleths, the shapes of a few counties."
 
 (defconst eas-vega-geo-ratios
   '(("world-map" . 0.03) ("county-unemployment" . 0.03) ("earthquakes" . 0.03) ("zoomable-world-map" . 0.03)
-    ("distortion-comparison" . 0.03) ("map-with-tooltip" . 0.01) ("earthquakes-globe" . 0.055) ("projections" . 0.09))
+    ("distortion-comparison" . 0.03) ("map-with-tooltip" . 0.01) ("earthquakes-globe" . 0.03) ("projections" . 0.09))
   "Pixel ratio each template's render stays within against its reference.
-earthquakes-globe is 0.0178 under the old subtitle room and 0.0504 under
-Vega's titleLayout union (8e45417), which leaves its 18 px title 2 px
-short of the reference; eas-7r1.13 reconciles the two.
+earthquakes-globe's title room is Vega's titleLayout union plus its
+offset 4 and -dy 10 (eas-7r1.13): 658 px tall as the reference.
 Measured against the vg2png (node-canvas) references with rsvg-convert
 and Arimo (eas-7r1.12): world-map 0.0000, county-unemployment 0.0078,
 earthquakes 0.0067, zoomable-world-map 0.0000, distortion-comparison

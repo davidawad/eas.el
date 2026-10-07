@@ -35,6 +35,10 @@
 ;; reference machine's.  Targets (hover under 50 ms at 10k, fc-qx1.14's
 ;; hypothesis) are reported, not enforced.  Interpreted code is 4-10x
 ;; slower than byte-compiled, so the check only compares like with like.
+;;
+;; This ladder runs as make bench-ladder.  The standing suite, gated on
+;; hardware-independent allocation and call counts per frame, is
+;; eas-perf.el (make bench, make bench-check).
 
 ;;; Code:
 

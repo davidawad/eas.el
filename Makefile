@@ -7,7 +7,11 @@
 #   make test-gallery-GROUP           one official Vega-Lite gallery group
 #   make test-gallery-conformance     the bin/chart conformance oracle
 #   make test-gallery-vega            templates/vega against test/vega-examples/ref
-#   make bench            the 1k/10k/100k ladder against bench-budget.json
+#   make bench            the perf suite (byte and native) against bench/baseline.json
+#   make bench-check      the same, failing on an alloc or call-count regression
+#   make bench-record     re-record bench/baseline.json, history and docs/perf.md
+#   make bench-report     regenerate docs/perf.md from the committed baseline
+#   make bench-ladder     the 1k/10k/100k latency ladder against bench-budget.json
 #   make bench-budget     re-measure the budget's references (review the diff)
 #   make tty-check        real-terminal check in tmux (private server -L eas)
 #   make melpa-check      recipes/eas installed flat: compile, doctor, package-lint
@@ -33,7 +37,8 @@ $(BATCH) --eval '(dolist (f (append (directory-files "src" t "-test\\.el\\'"'"'"
 endef
 
 .PHONY: all test compile checkdoc test-gallery $(GALLERY_TARGETS) \
-        test-gallery-conformance test-gallery-vega bench bench-budget tty-check melpa-check clean
+        test-gallery-conformance test-gallery-vega bench bench-check bench-record bench-report \
+        bench-ladder bench-budget tty-check melpa-check clean
 
 all: compile test
 
@@ -65,7 +70,21 @@ test-gallery-vega:
 test-gallery-vega:
 	$(call run-tests,(and (tag :gallery) "^eas-vega-"))
 
+# The perf suite (src/eas-perf.el); PERF_MODES="byte native" by default,
+# PERF_ONLY=REGEX picks workloads.  See docs/perf.md.
 bench:
+	scripts/eas-perf.sh report $(PERF_ONLY)
+
+bench-check:
+	scripts/eas-perf.sh check $(PERF_ONLY)
+
+bench-record:
+	scripts/eas-perf.sh record
+
+bench-report:
+	scripts/eas-perf.sh doc
+
+bench-ladder:
 	scripts/eas-bench.sh
 
 bench-budget:

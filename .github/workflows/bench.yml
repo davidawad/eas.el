@@ -1,0 +1,30 @@
+name: Bench
+
+# The performance regression gate (docs/perf.md): bytes allocated and
+# compile/render call counts per frame against bench/baseline.json.
+# Both are hardware independent; wall-clock times are printed, not gated.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bench-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: '30.1'
+      - name: Bench check (byte-compiled)
+        run: make bench-check PERF_MODES=byte PERF_OUT=$RUNNER_TEMP/perf
+      - name: Keep the run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-run
+          path: ${{ runner.temp }}/perf
+          if-no-files-found: ignore

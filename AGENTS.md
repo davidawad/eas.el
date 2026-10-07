@@ -14,7 +14,8 @@ contract of each layer.
 | `src/eas-*.el` | the engine, one concern per file, prefix `eas-` (never `chart-`: built-in chart.el owns it) |
 | `src/*-test.el` | ERT tests, next to the code they test |
 | `src/supported.json` | generated from the conformance gallery; what the engine can draw |
-| `src/bench-budget.json` | latency references for `make bench` |
+| `src/bench-budget.json` | latency references for `make bench-ladder` |
+| `bench/` | `baseline.json` (gated alloc and call counts per workload, target and mode) and `history.json` (per release), from `make bench-record` |
 | `test/eas/` | `eas-test-support.el` (shared helpers) and `golden/` (exact text, JSON and SVG goldens) |
 | `test/conformance/` | conformance specs, text goldens, bin/chart reference PNGs (`ref/`) |
 | `test/vl-examples/` | the official Vega-Lite gallery by group: specs, `status.json`, reference PNGs, `custom/` specs |
@@ -35,7 +36,11 @@ make compile                      # checkdoc + byte-compile, warnings are errors
 make test-gallery-GROUP           # one gallery group: area-circular bar calculations
                                   # distributions interactive layered line multiview scatter-table
 make test-gallery-conformance     # conformance oracle + template text gallery
-make bench                        # latency ladder vs src/bench-budget.json
+make bench                        # perf suite (byte + native) vs bench/baseline.json, report only
+make bench-check                  # the same, fails on an alloc/call-count regression (CI)
+make bench-record                 # re-record bench/baseline.json, bench/history.json, docs/perf.md
+make bench-report                 # regenerate docs/perf.md from the committed baseline
+make bench-ladder                 # latency ladder vs src/bench-budget.json
 make tty-check                    # real emacs -nw inside tmux -L eas
 make melpa-check                  # recipe installed flat: compile, doctor, package-lint (network)
 ```

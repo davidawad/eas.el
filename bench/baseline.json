@@ -1,0 +1,6176 @@
+{
+  "contract": "eas-perf-baseline/v1",
+  "modes": {
+    "byte": {
+      "frames": {"heavy": 8, "live": 20, "render": 2, "warmup": 3},
+      "recorded": {"date": "2026-10-07", "emacs": "30.1", "system": "gnu/linux", "version": "0.2.3"},
+      "workloads": [
+        {
+          "name": "ladder-25",
+          "svg": {
+            "alloc-bytes": 678342,
+            "compiles": 0.0,
+            "conses": 19856,
+            "frames": 20,
+            "ms-median": 4.823,
+            "ms-p95": 5.319,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1399462,
+            "compiles": 0.0,
+            "conses": 16538,
+            "frames": 20,
+            "ms-median": 9.406,
+            "ms-p95": 10.803,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "ladder-100",
+          "svg": {
+            "alloc-bytes": 2030535,
+            "compiles": 0.0,
+            "conses": 56260,
+            "frames": 20,
+            "ms-median": 14.844,
+            "ms-p95": 17.51,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2702049,
+            "compiles": 0.0,
+            "conses": 44773,
+            "frames": 20,
+            "ms-median": 22.876,
+            "ms-p95": 24.016,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "depth-25",
+          "svg": {
+            "alloc-bytes": 689680,
+            "compiles": 0.6,
+            "conses": 22584,
+            "frames": 20,
+            "ms-median": 5.95,
+            "ms-p95": 7.074,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1029935,
+            "compiles": 0.6,
+            "conses": 16223,
+            "frames": 20,
+            "ms-median": 8.452,
+            "ms-p95": 9.274,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "depth-100",
+          "svg": {
+            "alloc-bytes": 1156931,
+            "compiles": 0.5,
+            "conses": 39111,
+            "frames": 20,
+            "ms-median": 6.863,
+            "ms-p95": 10.723,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1519378,
+            "compiles": 0.5,
+            "conses": 37262,
+            "frames": 20,
+            "ms-median": 9.968,
+            "ms-p95": 14.276,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "candles",
+          "svg": {
+            "alloc-bytes": 2532534,
+            "compiles": 0.25,
+            "conses": 68324,
+            "frames": 20,
+            "ms-median": 15.194,
+            "ms-p95": 24.389,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3880521,
+            "compiles": 0.25,
+            "conses": 104242,
+            "frames": 20,
+            "ms-median": 21.834,
+            "ms-p95": 38.945,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "clock",
+          "svg": {
+            "alloc-bytes": 140031,
+            "compiles": 0.0,
+            "conses": 3982,
+            "frames": 20,
+            "ms-median": 1.312,
+            "ms-p95": 1.69,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1181977,
+            "compiles": 0.0,
+            "conses": 16658,
+            "frames": 20,
+            "ms-median": 6.098,
+            "ms-p95": 6.576,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "pacman",
+          "svg": {
+            "alloc-bytes": 357952,
+            "compiles": 0.0,
+            "conses": 8274,
+            "frames": 20,
+            "ms-median": 3.243,
+            "ms-p95": 3.597,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1904663,
+            "compiles": 0.0,
+            "conses": 38322,
+            "frames": 20,
+            "ms-median": 13.612,
+            "ms-p95": 14.52,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "pi-monte-carlo",
+          "svg": {
+            "alloc-bytes": 192059874,
+            "compiles": 1.0,
+            "conses": 10965156,
+            "frames": 8,
+            "ms-median": 1413.886,
+            "ms-p95": 1693.926,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 188625672,
+            "compiles": 1.0,
+            "conses": 10882925,
+            "frames": 8,
+            "ms-median": 1261.839,
+            "ms-p95": 1637.048,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "hover-airports",
+          "svg": {
+            "alloc-bytes": 254412,
+            "compiles": 0.0,
+            "conses": 2246,
+            "frames": 20,
+            "ms-median": 0.741,
+            "ms-p95": 1.669,
+            "patches": 0.95,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 0.95
+          },
+          "text": {
+            "alloc-bytes": 1838988,
+            "compiles": 0.0,
+            "conses": 45028,
+            "frames": 20,
+            "ms-median": 7.411,
+            "ms-p95": 12.841,
+            "patches": 0.85,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 0.85
+          }
+        },
+        {
+          "name": "hover-counties",
+          "svg": {
+            "alloc-bytes": 275464120,
+            "compiles": 0.0,
+            "conses": 1721420,
+            "frames": 8,
+            "ms-median": 1331.484,
+            "ms-p95": 1523.017,
+            "patches": 0.88,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 0.88
+          },
+          "text": {
+            "alloc-bytes": 75670747,
+            "compiles": 0.0,
+            "conses": 532935,
+            "frames": 8,
+            "ms-median": 54.377,
+            "ms-p95": 1304.136,
+            "patches": 0.25,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 0.25
+          }
+        },
+        {
+          "name": "resize",
+          "svg": {
+            "alloc-bytes": 2976770,
+            "compiles": 1.0,
+            "conses": 119900,
+            "frames": 20,
+            "ms-median": 26.863,
+            "ms-p95": 29.702,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3960431,
+            "compiles": 1.0,
+            "conses": 134906,
+            "frames": 20,
+            "ms-median": 25.792,
+            "ms-p95": 40.395,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/air-traffic",
+          "svg": {
+            "alloc-bytes": 30418722,
+            "compiles": 1.0,
+            "conses": 1421678,
+            "frames": 2,
+            "ms-median": 233.703,
+            "ms-p95": 244.785,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 31234147,
+            "compiles": 1.0,
+            "conses": 1424930,
+            "frames": 2,
+            "ms-median": 267.216,
+            "ms-p95": 332.802,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/airport-connections",
+          "svg": {
+            "alloc-bytes": 178677992,
+            "compiles": 1.0,
+            "conses": 4187202,
+            "frames": 2,
+            "ms-median": 1044.977,
+            "ms-p95": 1068.657,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 178894238,
+            "compiles": 1.0,
+            "conses": 4216620,
+            "frames": 2,
+            "ms-median": 956.454,
+            "ms-p95": 1245.095,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/annual-precipitation",
+          "svg": {
+            "alloc-bytes": 205254599,
+            "compiles": 1.0,
+            "conses": 2656386,
+            "frames": 2,
+            "ms-median": 1047.558,
+            "ms-p95": 1293.048,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 204771994,
+            "compiles": 1.0,
+            "conses": 2312247,
+            "frames": 2,
+            "ms-median": 1174.365,
+            "ms-p95": 1458.555,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/annual-temperature",
+          "svg": {
+            "alloc-bytes": 114122118,
+            "compiles": 1.0,
+            "conses": 5833726,
+            "frames": 2,
+            "ms-median": 696.82,
+            "ms-p95": 947.548,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 117786927,
+            "compiles": 1.0,
+            "conses": 5836856,
+            "frames": 2,
+            "ms-median": 731.469,
+            "ms-p95": 851.74,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/arc-diagram",
+          "svg": {
+            "alloc-bytes": 109812637,
+            "compiles": 1.0,
+            "conses": 4339836,
+            "frames": 2,
+            "ms-median": 417.223,
+            "ms-p95": 480.336,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 110372606,
+            "compiles": 1.0,
+            "conses": 4178390,
+            "frames": 2,
+            "ms-median": 401.565,
+            "ms-p95": 681.128,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/area",
+          "svg": {
+            "alloc-bytes": 727539,
+            "compiles": 1.0,
+            "conses": 25113,
+            "frames": 2,
+            "ms-median": 5.46,
+            "ms-p95": 6.382,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2616750,
+            "compiles": 1.0,
+            "conses": 58463,
+            "frames": 2,
+            "ms-median": 8.657,
+            "ms-p95": 27.625,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/area-chart",
+          "svg": {
+            "alloc-bytes": 898883,
+            "compiles": 1.0,
+            "conses": 28116,
+            "frames": 2,
+            "ms-median": 5.987,
+            "ms-p95": 6.959,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2467842,
+            "compiles": 1.0,
+            "conses": 45531,
+            "frames": 2,
+            "ms-median": 7.345,
+            "ms-p95": 19.705,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/bar-chart",
+          "svg": {
+            "alloc-bytes": 460568,
+            "compiles": 1.0,
+            "conses": 16384,
+            "frames": 2,
+            "ms-median": 4.709,
+            "ms-p95": 5.093,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1341082,
+            "compiles": 1.0,
+            "conses": 20418,
+            "frames": 2,
+            "ms-median": 9.957,
+            "ms-p95": 12.035,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/bar-line-toggle",
+          "svg": {
+            "alloc-bytes": 863387,
+            "compiles": 1.0,
+            "conses": 32450,
+            "frames": 2,
+            "ms-median": 7.745,
+            "ms-p95": 8.137,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1825444,
+            "compiles": 1.0,
+            "conses": 41744,
+            "frames": 2,
+            "ms-median": 11.18,
+            "ms-p95": 13.947,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/barley-trellis-plot",
+          "svg": {
+            "alloc-bytes": 3328650,
+            "compiles": 1.0,
+            "conses": 122983,
+            "frames": 2,
+            "ms-median": 32.024,
+            "ms-p95": 34.445,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3620062,
+            "compiles": 1.0,
+            "conses": 120522,
+            "frames": 2,
+            "ms-median": 24.009,
+            "ms-p95": 30.242,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/bars",
+          "svg": {
+            "alloc-bytes": 433221,
+            "compiles": 1.0,
+            "conses": 13720,
+            "frames": 2,
+            "ms-median": 3.185,
+            "ms-p95": 3.834,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1191620,
+            "compiles": 1.0,
+            "conses": 13472,
+            "frames": 2,
+            "ms-median": 7.226,
+            "ms-p95": 14.599,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/beeswarm-plot",
+          "svg": {
+            "alloc-bytes": 128360209,
+            "compiles": 1.0,
+            "conses": 3012636,
+            "frames": 2,
+            "ms-median": 294.843,
+            "ms-p95": 300.257,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 129127854,
+            "compiles": 1.0,
+            "conses": 3014937,
+            "frames": 2,
+            "ms-median": 297.348,
+            "ms-p95": 300.078,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/binned-scatter-plot",
+          "svg": {
+            "alloc-bytes": 1554872,
+            "compiles": 1.0,
+            "conses": 65814,
+            "frames": 2,
+            "ms-median": 10.121,
+            "ms-p95": 11.117,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2273932,
+            "compiles": 1.0,
+            "conses": 65700,
+            "frames": 2,
+            "ms-median": 10.619,
+            "ms-p95": 15.956,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/box-plot",
+          "svg": {
+            "alloc-bytes": 909407,
+            "compiles": 1.0,
+            "conses": 37071,
+            "frames": 2,
+            "ms-median": 6.217,
+            "ms-p95": 6.301,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1636608,
+            "compiles": 1.0,
+            "conses": 36800,
+            "frames": 2,
+            "ms-median": 6.967,
+            "ms-p95": 7.538,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/brushing-scatter-plots",
+          "svg": {
+            "alloc-bytes": 12427808,
+            "compiles": 1.0,
+            "conses": 533551,
+            "frames": 2,
+            "ms-median": 102.667,
+            "ms-p95": 116.116,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 14825424,
+            "compiles": 1.0,
+            "conses": 614761,
+            "frames": 2,
+            "ms-median": 96.508,
+            "ms-p95": 163.466,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/budget-forecasts",
+          "svg": {
+            "alloc-bytes": 2630624,
+            "compiles": 1.0,
+            "conses": 133526,
+            "frames": 2,
+            "ms-median": 15.202,
+            "ms-p95": 16.127,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3924502,
+            "compiles": 1.0,
+            "conses": 154231,
+            "frames": 2,
+            "ms-median": 16.469,
+            "ms-p95": 26.505,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/calendar-view",
+          "svg": {
+            "alloc-bytes": 128616312,
+            "compiles": 1.0,
+            "conses": 6002846,
+            "frames": 2,
+            "ms-median": 801.527,
+            "ms-p95": 1040.458,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 130338964,
+            "compiles": 1.0,
+            "conses": 6001980,
+            "frames": 2,
+            "ms-median": 886.458,
+            "ms-p95": 1040.182,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/circle-packing",
+          "svg": {
+            "alloc-bytes": 3983814,
+            "compiles": 1.0,
+            "conses": 106585,
+            "frames": 2,
+            "ms-median": 23.502,
+            "ms-p95": 25.122,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4758527,
+            "compiles": 1.0,
+            "conses": 109805,
+            "frames": 2,
+            "ms-median": 23.837,
+            "ms-p95": 26.047,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/clock",
+          "svg": {
+            "alloc-bytes": 869288,
+            "compiles": 1.0,
+            "conses": 27480,
+            "frames": 2,
+            "ms-median": 9.459,
+            "ms-p95": 9.534,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4096008,
+            "compiles": 1.0,
+            "conses": 46914,
+            "frames": 2,
+            "ms-median": 11.396,
+            "ms-p95": 37.066,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/connected-scatter-plot",
+          "svg": {
+            "alloc-bytes": 1626164,
+            "compiles": 1.0,
+            "conses": 56810,
+            "frames": 2,
+            "ms-median": 12.713,
+            "ms-p95": 12.756,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2609107,
+            "compiles": 1.0,
+            "conses": 64348,
+            "frames": 2,
+            "ms-median": 13.619,
+            "ms-p95": 20.368,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/contour-plot",
+          "svg": {
+            "alloc-bytes": 47878638,
+            "compiles": 1.0,
+            "conses": 589560,
+            "frames": 2,
+            "ms-median": 281.499,
+            "ms-p95": 288.507,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 50860254,
+            "compiles": 1.0,
+            "conses": 668975,
+            "frames": 2,
+            "ms-median": 281.106,
+            "ms-p95": 286.235,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/county-unemployment",
+          "svg": {
+            "alloc-bytes": 339207375,
+            "compiles": 1.0,
+            "conses": 2983071,
+            "frames": 2,
+            "ms-median": 1511.77,
+            "ms-p95": 1604.318,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 321523562,
+            "compiles": 1.0,
+            "conses": 3021768,
+            "frames": 2,
+            "ms-median": 1359.799,
+            "ms-p95": 1691.159,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/crossfilter-flights",
+          "svg": {
+            "alloc-bytes": 107584093,
+            "compiles": 1.0,
+            "conses": 5242944,
+            "frames": 2,
+            "ms-median": 554.41,
+            "ms-p95": 580.402,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 108133154,
+            "compiles": 1.0,
+            "conses": 5237197,
+            "frames": 2,
+            "ms-median": 538.617,
+            "ms-p95": 569.592,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/density-heatmaps",
+          "svg": {
+            "alloc-bytes": 9428832,
+            "compiles": 1.0,
+            "conses": 114212,
+            "frames": 2,
+            "ms-median": 47.744,
+            "ms-p95": 47.829,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 10628983,
+            "compiles": 1.0,
+            "conses": 145084,
+            "frames": 2,
+            "ms-median": 46.756,
+            "ms-p95": 61.858,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/distortion-comparison",
+          "svg": {
+            "alloc-bytes": 61968787,
+            "compiles": 1.0,
+            "conses": 385662,
+            "frames": 2,
+            "ms-median": 214.749,
+            "ms-p95": 230.561,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 63051240,
+            "compiles": 1.0,
+            "conses": 400782,
+            "frames": 2,
+            "ms-median": 249.03,
+            "ms-p95": 262.796,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/donut-chart",
+          "svg": {
+            "alloc-bytes": 206883,
+            "compiles": 1.0,
+            "conses": 8053,
+            "frames": 2,
+            "ms-median": 1.555,
+            "ms-p95": 3.014,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3632264,
+            "compiles": 1.0,
+            "conses": 20745,
+            "frames": 2,
+            "ms-median": 2.948,
+            "ms-p95": 24.786,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/donut-chart-labelled",
+          "svg": {
+            "alloc-bytes": 600444,
+            "compiles": 1.0,
+            "conses": 21774,
+            "frames": 2,
+            "ms-median": 5.376,
+            "ms-p95": 5.616,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5281352,
+            "compiles": 1.0,
+            "conses": 39874,
+            "frames": 2,
+            "ms-median": 6.523,
+            "ms-p95": 39.378,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/dorling-cartogram",
+          "svg": {
+            "alloc-bytes": 79123146,
+            "compiles": 1.0,
+            "conses": 2039917,
+            "frames": 2,
+            "ms-median": 188.152,
+            "ms-p95": 199.122,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 80090558,
+            "compiles": 1.0,
+            "conses": 2043700,
+            "frames": 2,
+            "ms-median": 190.131,
+            "ms-p95": 190.814,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/dot-plot",
+          "svg": {
+            "alloc-bytes": 1027396,
+            "compiles": 1.0,
+            "conses": 41331,
+            "frames": 2,
+            "ms-median": 8.408,
+            "ms-p95": 9.33,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1813948,
+            "compiles": 1.0,
+            "conses": 45114,
+            "frames": 2,
+            "ms-median": 9.582,
+            "ms-p95": 10.292,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/earthquakes",
+          "svg": {
+            "alloc-bytes": 56184117,
+            "compiles": 1.0,
+            "conses": 1555673,
+            "frames": 2,
+            "ms-median": 274.611,
+            "ms-p95": 287.496,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 54135404,
+            "compiles": 1.0,
+            "conses": 1411385,
+            "frames": 2,
+            "ms-median": 279.512,
+            "ms-p95": 317.68,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/earthquakes-globe",
+          "svg": {
+            "alloc-bytes": 44971978,
+            "compiles": 1.0,
+            "conses": 1070723,
+            "frames": 2,
+            "ms-median": 220.977,
+            "ms-p95": 246.34,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 46569812,
+            "compiles": 1.0,
+            "conses": 1091116,
+            "frames": 2,
+            "ms-median": 234.451,
+            "ms-p95": 270.386,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/edge-bundling",
+          "svg": {
+            "alloc-bytes": 84372068,
+            "compiles": 1.0,
+            "conses": 3868376,
+            "frames": 2,
+            "ms-median": 438.334,
+            "ms-p95": 451.763,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 92730989,
+            "compiles": 1.0,
+            "conses": 4114009,
+            "frames": 2,
+            "ms-median": 424.393,
+            "ms-p95": 680.289,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/error-bars",
+          "svg": {
+            "alloc-bytes": 896327,
+            "compiles": 1.0,
+            "conses": 35668,
+            "frames": 2,
+            "ms-median": 6.809,
+            "ms-p95": 8.571,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1573092,
+            "compiles": 1.0,
+            "conses": 34434,
+            "frames": 2,
+            "ms-median": 7.84,
+            "ms-p95": 8.503,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/falkensee-population",
+          "svg": {
+            "alloc-bytes": 1027812,
+            "compiles": 1.0,
+            "conses": 35216,
+            "frames": 2,
+            "ms-median": 7.474,
+            "ms-p95": 7.745,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1669264,
+            "compiles": 1.0,
+            "conses": 31484,
+            "frames": 2,
+            "ms-median": 7.397,
+            "ms-p95": 12.724,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/flight-passengers",
+          "svg": {
+            "alloc-bytes": 587818,
+            "compiles": 1.0,
+            "conses": 22253,
+            "frames": 2,
+            "ms-median": 4.419,
+            "ms-p95": 6.143,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1292734,
+            "compiles": 1.0,
+            "conses": 21229,
+            "frames": 2,
+            "ms-median": 5.642,
+            "ms-p95": 9.181,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/force-directed-layout",
+          "svg": {
+            "alloc-bytes": 411825890,
+            "compiles": 1.0,
+            "conses": 7693632,
+            "frames": 2,
+            "ms-median": 932.098,
+            "ms-p95": 1140.289,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 413035228,
+            "compiles": 1.0,
+            "conses": 7708197,
+            "frames": 2,
+            "ms-median": 1218.513,
+            "ms-p95": 1223.184,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/global-development",
+          "svg": {
+            "alloc-bytes": 4988721,
+            "compiles": 1.0,
+            "conses": 233522,
+            "frames": 2,
+            "ms-median": 46.646,
+            "ms-p95": 62.108,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5558980,
+            "compiles": 1.0,
+            "conses": 232772,
+            "frames": 2,
+            "ms-median": 43.028,
+            "ms-p95": 52.588,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/grouped-bar-chart",
+          "svg": {
+            "alloc-bytes": 503821,
+            "compiles": 1.0,
+            "conses": 17745,
+            "frames": 2,
+            "ms-median": 4.656,
+            "ms-p95": 4.854,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1309806,
+            "compiles": 1.0,
+            "conses": 19150,
+            "frames": 2,
+            "ms-median": 6.256,
+            "ms-p95": 8.767,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/heatmap",
+          "svg": {
+            "alloc-bytes": 667494,
+            "compiles": 1.0,
+            "conses": 19405,
+            "frames": 2,
+            "ms-median": 4.877,
+            "ms-p95": 5.56,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3113802,
+            "compiles": 1.0,
+            "conses": 56852,
+            "frames": 2,
+            "ms-median": 13.358,
+            "ms-p95": 34.635,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/histogram",
+          "svg": {
+            "alloc-bytes": 934821,
+            "compiles": 1.0,
+            "conses": 31724,
+            "frames": 2,
+            "ms-median": 7.298,
+            "ms-p95": 8.209,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1551531,
+            "compiles": 1.0,
+            "conses": 28850,
+            "frames": 2,
+            "ms-median": 7.691,
+            "ms-p95": 14.619,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/histogram-null-values",
+          "svg": {
+            "alloc-bytes": 3871042,
+            "compiles": 1.0,
+            "conses": 153592,
+            "frames": 2,
+            "ms-median": 34.03,
+            "ms-p95": 35.004,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4694342,
+            "compiles": 1.0,
+            "conses": 156436,
+            "frames": 2,
+            "ms-median": 33.006,
+            "ms-p95": 38.934,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/horizon-graph",
+          "svg": {
+            "alloc-bytes": 860417,
+            "compiles": 1.0,
+            "conses": 24399,
+            "frames": 2,
+            "ms-median": 5.682,
+            "ms-p95": 6.605,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3726966,
+            "compiles": 1.0,
+            "conses": 72923,
+            "frames": 2,
+            "ms-median": 10.831,
+            "ms-p95": 37.848,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/hourly-heatmap",
+          "svg": {
+            "alloc-bytes": 76031136,
+            "compiles": 1.0,
+            "conses": 3175044,
+            "frames": 2,
+            "ms-median": 598.364,
+            "ms-p95": 649.075,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 81776959,
+            "compiles": 1.0,
+            "conses": 3418813,
+            "frames": 2,
+            "ms-median": 685.135,
+            "ms-p95": 975.315,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/hypothetical-outcome-plots",
+          "svg": {
+            "alloc-bytes": 468554,
+            "compiles": 1.0,
+            "conses": 16693,
+            "frames": 2,
+            "ms-median": 4.009,
+            "ms-p95": 5.568,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1306822,
+            "compiles": 1.0,
+            "conses": 19504,
+            "frames": 2,
+            "ms-median": 6.732,
+            "ms-p95": 10.513,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/interactive-legend",
+          "svg": {
+            "alloc-bytes": 2901698,
+            "compiles": 1.0,
+            "conses": 122978,
+            "frames": 2,
+            "ms-median": 25.08,
+            "ms-p95": 25.831,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3680091,
+            "compiles": 1.0,
+            "conses": 131316,
+            "frames": 2,
+            "ms-median": 23.374,
+            "ms-p95": 28.279,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/job-voyager",
+          "svg": {
+            "alloc-bytes": 104475084,
+            "compiles": 1.0,
+            "conses": 5169064,
+            "frames": 2,
+            "ms-median": 620.378,
+            "ms-p95": 713.709,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 141184580,
+            "compiles": 1.0,
+            "conses": 5863687,
+            "frames": 2,
+            "ms-median": 562.142,
+            "ms-p95": 1173.379,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/labeled-scatter-plot",
+          "svg": {
+            "alloc-bytes": 47906491,
+            "compiles": 1.0,
+            "conses": 1815553,
+            "frames": 2,
+            "ms-median": 352.845,
+            "ms-p95": 354.048,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 48074484,
+            "compiles": 1.0,
+            "conses": 1783920,
+            "frames": 2,
+            "ms-median": 335.195,
+            "ms-p95": 382.583,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/line",
+          "svg": {
+            "alloc-bytes": 519914,
+            "compiles": 1.0,
+            "conses": 17704,
+            "frames": 2,
+            "ms-median": 4.129,
+            "ms-p95": 4.581,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1144562,
+            "compiles": 1.0,
+            "conses": 14661,
+            "frames": 2,
+            "ms-median": 3.931,
+            "ms-p95": 8.65,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/line-chart",
+          "svg": {
+            "alloc-bytes": 552992,
+            "compiles": 1.0,
+            "conses": 20005,
+            "frames": 2,
+            "ms-median": 3.954,
+            "ms-p95": 4.454,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1403772,
+            "compiles": 1.0,
+            "conses": 25570,
+            "frames": 2,
+            "ms-median": 5.15,
+            "ms-p95": 8.105,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/loess-regression",
+          "svg": {
+            "alloc-bytes": 89525703,
+            "compiles": 1.0,
+            "conses": 1386100,
+            "frames": 2,
+            "ms-median": 265.595,
+            "ms-p95": 278.257,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 90133872,
+            "compiles": 1.0,
+            "conses": 1389686,
+            "frames": 2,
+            "ms-median": 273.643,
+            "ms-p95": 308.711,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/map-with-tooltip",
+          "svg": {
+            "alloc-bytes": 150340040,
+            "compiles": 1.0,
+            "conses": 1951666,
+            "frames": 2,
+            "ms-median": 741.44,
+            "ms-p95": 949.316,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 148205646,
+            "compiles": 1.0,
+            "conses": 2025410,
+            "frames": 2,
+            "ms-median": 725.962,
+            "ms-p95": 916.182,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/multi",
+          "svg": {
+            "alloc-bytes": 1049270,
+            "compiles": 1.0,
+            "conses": 41610,
+            "frames": 2,
+            "ms-median": 8.11,
+            "ms-p95": 8.373,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1833356,
+            "compiles": 1.0,
+            "conses": 44934,
+            "frames": 2,
+            "ms-median": 8.994,
+            "ms-p95": 19.103,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/nested-bar-chart",
+          "svg": {
+            "alloc-bytes": 802216,
+            "compiles": 1.0,
+            "conses": 27755,
+            "frames": 2,
+            "ms-median": 7.306,
+            "ms-p95": 7.704,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1597308,
+            "compiles": 1.0,
+            "conses": 30338,
+            "frames": 2,
+            "ms-median": 9.993,
+            "ms-p95": 11.814,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/overview-plus-detail",
+          "svg": {
+            "alloc-bytes": 957195,
+            "compiles": 1.0,
+            "conses": 34739,
+            "frames": 2,
+            "ms-median": 6.994,
+            "ms-p95": 7.159,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3964434,
+            "compiles": 1.0,
+            "conses": 111406,
+            "frames": 2,
+            "ms-median": 13.658,
+            "ms-p95": 29.411,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/packed-bubble-chart",
+          "svg": {
+            "alloc-bytes": 520413,
+            "compiles": 1.0,
+            "conses": 16699,
+            "frames": 2,
+            "ms-median": 3.589,
+            "ms-p95": 3.806,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1299340,
+            "compiles": 1.0,
+            "conses": 18284,
+            "frames": 2,
+            "ms-median": 4.059,
+            "ms-p95": 4.731,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/pacman",
+          "svg": {
+            "alloc-bytes": 4651045,
+            "compiles": 1.0,
+            "conses": 192651,
+            "frames": 2,
+            "ms-median": 27.728,
+            "ms-p95": 30.952,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5924414,
+            "compiles": 1.0,
+            "conses": 211130,
+            "frames": 2,
+            "ms-median": 33.029,
+            "ms-p95": 39.253,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/parallel-coordinates",
+          "svg": {
+            "alloc-bytes": 18447879,
+            "compiles": 1.0,
+            "conses": 959763,
+            "frames": 2,
+            "ms-median": 95.73,
+            "ms-p95": 111.869,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 47342252,
+            "compiles": 1.0,
+            "conses": 1965944,
+            "frames": 2,
+            "ms-median": 115.207,
+            "ms-p95": 538.05,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/parallel-coordinates-interactive",
+          "svg": {
+            "alloc-bytes": 78899114,
+            "compiles": 1.0,
+            "conses": 4039583,
+            "frames": 2,
+            "ms-median": 416.705,
+            "ms-p95": 419.083,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 104412472,
+            "compiles": 1.0,
+            "conses": 4927076,
+            "frames": 2,
+            "ms-median": 445.366,
+            "ms-p95": 789.11,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/pi-monte-carlo",
+          "svg": {
+            "alloc-bytes": 54359525,
+            "compiles": 1.0,
+            "conses": 2892212,
+            "frames": 2,
+            "ms-median": 366.622,
+            "ms-p95": 367.296,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 55180374,
+            "compiles": 1.0,
+            "conses": 2919312,
+            "frames": 2,
+            "ms-median": 377.287,
+            "ms-p95": 397.338,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/pie-chart",
+          "svg": {
+            "alloc-bytes": 206711,
+            "compiles": 1.0,
+            "conses": 8053,
+            "frames": 2,
+            "ms-median": 1.752,
+            "ms-p95": 3.591,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3512334,
+            "compiles": 1.0,
+            "conses": 21230,
+            "frames": 2,
+            "ms-median": 3.201,
+            "ms-p95": 28.046,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/platformer",
+          "svg": {
+            "alloc-bytes": 18327733,
+            "compiles": 1.0,
+            "conses": 914713,
+            "frames": 2,
+            "ms-median": 130.396,
+            "ms-p95": 145.044,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 21402458,
+            "compiles": 1.0,
+            "conses": 1008363,
+            "frames": 2,
+            "ms-median": 125.456,
+            "ms-p95": 170.51,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/population-pyramid",
+          "svg": {
+            "alloc-bytes": 2608334,
+            "compiles": 1.0,
+            "conses": 112214,
+            "frames": 2,
+            "ms-median": 16.824,
+            "ms-p95": 17.891,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3303424,
+            "compiles": 1.0,
+            "conses": 111238,
+            "frames": 2,
+            "ms-median": 21.522,
+            "ms-p95": 22.411,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/probability-density",
+          "svg": {
+            "alloc-bytes": 3411856,
+            "compiles": 1.0,
+            "conses": 128725,
+            "frames": 2,
+            "ms-median": 21.671,
+            "ms-p95": 24.141,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4539755,
+            "compiles": 1.0,
+            "conses": 144069,
+            "frames": 2,
+            "ms-median": 22.39,
+            "ms-p95": 22.958,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/projections",
+          "svg": {
+            "alloc-bytes": 852362846,
+            "compiles": 1.0,
+            "conses": 4397980,
+            "frames": 2,
+            "ms-median": 3631.604,
+            "ms-p95": 3969.846,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 832846044,
+            "compiles": 1.0,
+            "conses": 4571474,
+            "frames": 2,
+            "ms-median": 3874.961,
+            "ms-p95": 4632.421,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/quantile-dot-plot",
+          "svg": {
+            "alloc-bytes": 799301,
+            "compiles": 1.0,
+            "conses": 29230,
+            "frames": 2,
+            "ms-median": 6.393,
+            "ms-p95": 7.962,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1357908,
+            "compiles": 1.0,
+            "conses": 23278,
+            "frames": 2,
+            "ms-median": 5.961,
+            "ms-p95": 7.095,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/quantile-quantile-plot",
+          "svg": {
+            "alloc-bytes": 2050265,
+            "compiles": 1.0,
+            "conses": 70351,
+            "frames": 2,
+            "ms-median": 20.026,
+            "ms-p95": 20.385,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2637009,
+            "compiles": 1.0,
+            "conses": 68110,
+            "frames": 2,
+            "ms-median": 16.847,
+            "ms-p95": 33.634,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/radar-chart",
+          "svg": {
+            "alloc-bytes": 1561087,
+            "compiles": 1.0,
+            "conses": 58366,
+            "frames": 2,
+            "ms-median": 11.976,
+            "ms-p95": 12.511,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2672705,
+            "compiles": 1.0,
+            "conses": 71465,
+            "frames": 2,
+            "ms-median": 15.301,
+            "ms-p95": 20.233,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/radial-plot",
+          "svg": {
+            "alloc-bytes": 282287,
+            "compiles": 1.0,
+            "conses": 10663,
+            "frames": 2,
+            "ms-median": 2.304,
+            "ms-p95": 2.38,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2671609,
+            "compiles": 1.0,
+            "conses": 18884,
+            "frames": 2,
+            "ms-median": 3.208,
+            "ms-p95": 16.661,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/radial-tree-layout",
+          "svg": {
+            "alloc-bytes": 12198117,
+            "compiles": 1.0,
+            "conses": 552413,
+            "frames": 2,
+            "ms-median": 79.257,
+            "ms-p95": 89.433,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 14647400,
+            "compiles": 1.0,
+            "conses": 592717,
+            "frames": 2,
+            "ms-median": 87.609,
+            "ms-p95": 122.362,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/regression",
+          "svg": {
+            "alloc-bytes": 31481872,
+            "compiles": 1.0,
+            "conses": 1372180,
+            "frames": 2,
+            "ms-median": 172.244,
+            "ms-p95": 178.138,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 32222063,
+            "compiles": 1.0,
+            "conses": 1376036,
+            "frames": 2,
+            "ms-median": 179.137,
+            "ms-p95": 192.921,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/reorderable-matrix",
+          "svg": {
+            "alloc-bytes": 166513378,
+            "compiles": 1.0,
+            "conses": 9432344,
+            "frames": 2,
+            "ms-median": 766.397,
+            "ms-p95": 776.64,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 168821464,
+            "compiles": 1.0,
+            "conses": 9500851,
+            "frames": 2,
+            "ms-median": 672.461,
+            "ms-p95": 780.879,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/rug-histogram",
+          "svg": {
+            "alloc-bytes": 2040999,
+            "compiles": 1.0,
+            "conses": 71992,
+            "frames": 2,
+            "ms-median": 13.047,
+            "ms-p95": 13.074,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2623766,
+            "compiles": 1.0,
+            "conses": 69153,
+            "frames": 2,
+            "ms-median": 14.313,
+            "ms-p95": 21.601,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/scatter-plot",
+          "svg": {
+            "alloc-bytes": 3113689,
+            "compiles": 1.0,
+            "conses": 134233,
+            "frames": 2,
+            "ms-median": 26.16,
+            "ms-p95": 29.081,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3971700,
+            "compiles": 1.0,
+            "conses": 144922,
+            "frames": 2,
+            "ms-median": 26.276,
+            "ms-p95": 36.937,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/scatter-plot-null-values",
+          "svg": {
+            "alloc-bytes": 35779166,
+            "compiles": 1.0,
+            "conses": 1508367,
+            "frames": 2,
+            "ms-median": 233.954,
+            "ms-p95": 234.922,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 36620372,
+            "compiles": 1.0,
+            "conses": 1538856,
+            "frames": 2,
+            "ms-median": 249.624,
+            "ms-p95": 260.629,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/series-line",
+          "svg": {
+            "alloc-bytes": 639405,
+            "compiles": 1.0,
+            "conses": 21621,
+            "frames": 2,
+            "ms-median": 4.494,
+            "ms-p95": 5.119,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1290500,
+            "compiles": 1.0,
+            "conses": 20156,
+            "frames": 2,
+            "ms-median": 7.071,
+            "ms-p95": 16.884,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/serpentine-timeline",
+          "svg": {
+            "alloc-bytes": 44939908,
+            "compiles": 1.0,
+            "conses": 2472466,
+            "frames": 2,
+            "ms-median": 208.407,
+            "ms-p95": 242.897,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 45889095,
+            "compiles": 1.0,
+            "conses": 2479559,
+            "frames": 2,
+            "ms-median": 198.869,
+            "ms-p95": 202.969,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/sparkline",
+          "svg": {
+            "alloc-bytes": 289606,
+            "compiles": 1.0,
+            "conses": 10091,
+            "frames": 2,
+            "ms-median": 2.335,
+            "ms-p95": 2.695,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1304288,
+            "compiles": 1.0,
+            "conses": 15984,
+            "frames": 2,
+            "ms-median": 3.507,
+            "ms-p95": 5.479,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/stacked-area-chart",
+          "svg": {
+            "alloc-bytes": 734689,
+            "compiles": 1.0,
+            "conses": 23888,
+            "frames": 2,
+            "ms-median": 5.311,
+            "ms-p95": 5.318,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2658060,
+            "compiles": 1.0,
+            "conses": 48968,
+            "frames": 2,
+            "ms-median": 12.268,
+            "ms-p95": 34.875,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/stacked-bar-chart",
+          "svg": {
+            "alloc-bytes": 597905,
+            "compiles": 1.0,
+            "conses": 21499,
+            "frames": 2,
+            "ms-median": 5.988,
+            "ms-p95": 6.553,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1500774,
+            "compiles": 1.0,
+            "conses": 24124,
+            "frames": 2,
+            "ms-median": 9.29,
+            "ms-p95": 12.986,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/stock-index-chart",
+          "svg": {
+            "alloc-bytes": 7039816,
+            "compiles": 2.0,
+            "conses": 288123,
+            "frames": 2,
+            "ms-median": 49.197,
+            "ms-p95": 49.978,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 2.0
+          },
+          "text": {
+            "alloc-bytes": 7868055,
+            "compiles": 2.0,
+            "conses": 301308,
+            "frames": 2,
+            "ms-median": 52.453,
+            "ms-p95": 67.348,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 2.0
+          }
+        },
+        {
+          "name": "render/sunburst",
+          "svg": {
+            "alloc-bytes": 2458387,
+            "compiles": 1.0,
+            "conses": 111909,
+            "frames": 2,
+            "ms-median": 28.885,
+            "ms-p95": 39.541,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 545605407,
+            "compiles": 1.0,
+            "conses": 2238831,
+            "frames": 2,
+            "ms-median": 20.189,
+            "ms-p95": 5779.757,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/table-scrollbar",
+          "svg": {
+            "alloc-bytes": 978334,
+            "compiles": 1.0,
+            "conses": 38757,
+            "frames": 2,
+            "ms-median": 6.684,
+            "ms-p95": 7.392,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1913348,
+            "compiles": 1.0,
+            "conses": 41989,
+            "frames": 2,
+            "ms-median": 14.525,
+            "ms-p95": 16.82,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/time-units",
+          "svg": {
+            "alloc-bytes": 25173692,
+            "compiles": 1.0,
+            "conses": 1260086,
+            "frames": 2,
+            "ms-median": 162.352,
+            "ms-p95": 168.408,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 25936726,
+            "compiles": 1.0,
+            "conses": 1258038,
+            "frames": 2,
+            "ms-median": 185.831,
+            "ms-p95": 247.208,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/timelines",
+          "svg": {
+            "alloc-bytes": 614064,
+            "compiles": 1.0,
+            "conses": 21843,
+            "frames": 2,
+            "ms-median": 4.546,
+            "ms-p95": 5.219,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1398365,
+            "compiles": 1.0,
+            "conses": 22876,
+            "frames": 2,
+            "ms-median": 9.928,
+            "ms-p95": 13.907,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/top-k-plot",
+          "svg": {
+            "alloc-bytes": 4750594,
+            "compiles": 1.0,
+            "conses": 196011,
+            "frames": 2,
+            "ms-median": 46.418,
+            "ms-p95": 50.912,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5285018,
+            "compiles": 1.0,
+            "conses": 188098,
+            "frames": 2,
+            "ms-median": 36.043,
+            "ms-p95": 39.714,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/top-k-plot-with-others",
+          "svg": {
+            "alloc-bytes": 8398844,
+            "compiles": 1.0,
+            "conses": 288139,
+            "frames": 2,
+            "ms-median": 61.426,
+            "ms-p95": 69.064,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 9048952,
+            "compiles": 1.0,
+            "conses": 279840,
+            "frames": 2,
+            "ms-median": 55.507,
+            "ms-p95": 61.428,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/tree-layout",
+          "svg": {
+            "alloc-bytes": 14082089,
+            "compiles": 1.0,
+            "conses": 620280,
+            "frames": 2,
+            "ms-median": 105.851,
+            "ms-p95": 113.13,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 20969812,
+            "compiles": 1.0,
+            "conses": 757624,
+            "frames": 2,
+            "ms-median": 93.225,
+            "ms-p95": 201.183,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/treemap",
+          "svg": {
+            "alloc-bytes": 8091880,
+            "compiles": 1.0,
+            "conses": 395047,
+            "frames": 2,
+            "ms-median": 48.496,
+            "ms-p95": 52.805,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 14665438,
+            "compiles": 1.0,
+            "conses": 526106,
+            "frames": 2,
+            "ms-median": 57.992,
+            "ms-p95": 160.011,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/u-district-cuisine",
+          "svg": {
+            "alloc-bytes": 11756373,
+            "compiles": 1.0,
+            "conses": 521697,
+            "frames": 2,
+            "ms-median": 116.599,
+            "ms-p95": 118.529,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 15335049,
+            "compiles": 1.0,
+            "conses": 571489,
+            "frames": 2,
+            "ms-median": 98.445,
+            "ms-p95": 128.229,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/violin-plot",
+          "svg": {
+            "alloc-bytes": 15626534,
+            "compiles": 1.0,
+            "conses": 308195,
+            "frames": 2,
+            "ms-median": 73.85,
+            "ms-p95": 80.909,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 17108392,
+            "compiles": 1.0,
+            "conses": 328496,
+            "frames": 2,
+            "ms-median": 74.277,
+            "ms-p95": 87.009,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/volcano-contours",
+          "svg": {
+            "alloc-bytes": 9821903,
+            "compiles": 1.0,
+            "conses": 190184,
+            "frames": 2,
+            "ms-median": 135.361,
+            "ms-p95": 140.435,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 13027210,
+            "compiles": 1.0,
+            "conses": 302090,
+            "frames": 2,
+            "ms-median": 127.901,
+            "ms-p95": 192.589,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/warming-stripes",
+          "svg": {
+            "alloc-bytes": 2310476,
+            "compiles": 1.0,
+            "conses": 87901,
+            "frames": 2,
+            "ms-median": 17.834,
+            "ms-p95": 20.217,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5750998,
+            "compiles": 1.0,
+            "conses": 181741,
+            "frames": 2,
+            "ms-median": 26.128,
+            "ms-p95": 37.553,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/watch",
+          "svg": {
+            "alloc-bytes": 917602,
+            "compiles": 1.0,
+            "conses": 28889,
+            "frames": 2,
+            "ms-median": 7.806,
+            "ms-p95": 8.701,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3481013,
+            "compiles": 1.0,
+            "conses": 44800,
+            "frames": 2,
+            "ms-median": 11.026,
+            "ms-p95": 30.87,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/weekly-temperature",
+          "svg": {
+            "alloc-bytes": 581610,
+            "compiles": 1.0,
+            "conses": 20442,
+            "frames": 2,
+            "ms-median": 4.8,
+            "ms-p95": 4.826,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1921394,
+            "compiles": 1.0,
+            "conses": 33782,
+            "frames": 2,
+            "ms-median": 9.472,
+            "ms-p95": 15.247,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/wheat-and-wages",
+          "svg": {
+            "alloc-bytes": 1199386,
+            "compiles": 1.0,
+            "conses": 48148,
+            "frames": 2,
+            "ms-median": 9.429,
+            "ms-p95": 9.939,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2986974,
+            "compiles": 1.0,
+            "conses": 78405,
+            "frames": 2,
+            "ms-median": 12.273,
+            "ms-p95": 23.908,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/wheat-plot",
+          "svg": {
+            "alloc-bytes": 5159323,
+            "compiles": 1.0,
+            "conses": 193996,
+            "frames": 2,
+            "ms-median": 52.12,
+            "ms-p95": 62.674,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 6400069,
+            "compiles": 1.0,
+            "conses": 216952,
+            "frames": 2,
+            "ms-median": 57.364,
+            "ms-p95": 67.493,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/wind-vectors",
+          "svg": {
+            "alloc-bytes": 32465702,
+            "compiles": 1.0,
+            "conses": 1480611,
+            "frames": 2,
+            "ms-median": 318.535,
+            "ms-p95": 470.635,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 34187682,
+            "compiles": 1.0,
+            "conses": 1518961,
+            "frames": 2,
+            "ms-median": 277.263,
+            "ms-p95": 342.739,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/word-cloud",
+          "svg": {
+            "alloc-bytes": 2734260,
+            "compiles": 1.0,
+            "conses": 113958,
+            "frames": 2,
+            "ms-median": 20.031,
+            "ms-p95": 21.059,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3529860,
+            "compiles": 1.0,
+            "conses": 115820,
+            "frames": 2,
+            "ms-median": 19.812,
+            "ms-p95": 21.708,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/world-map",
+          "svg": {
+            "alloc-bytes": 35325185,
+            "compiles": 1.0,
+            "conses": 271441,
+            "frames": 2,
+            "ms-median": 246.922,
+            "ms-p95": 294.662,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 37517078,
+            "compiles": 1.0,
+            "conses": 306184,
+            "frames": 2,
+            "ms-median": 140.666,
+            "ms-p95": 229.066,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/zoomable-binned-plot",
+          "svg": {
+            "alloc-bytes": 2743760,
+            "compiles": 1.0,
+            "conses": 118655,
+            "frames": 2,
+            "ms-median": 15.868,
+            "ms-p95": 16.25,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4935634,
+            "compiles": 1.0,
+            "conses": 163964,
+            "frames": 2,
+            "ms-median": 21.219,
+            "ms-p95": 38.177,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/zoomable-circle-packing",
+          "svg": {
+            "alloc-bytes": 4278877,
+            "compiles": 1.0,
+            "conses": 116074,
+            "frames": 2,
+            "ms-median": 33.481,
+            "ms-p95": 33.526,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5047217,
+            "compiles": 1.0,
+            "conses": 118864,
+            "frames": 2,
+            "ms-median": 26.736,
+            "ms-p95": 29.03,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/zoomable-scatter-plot",
+          "svg": {
+            "alloc-bytes": 1567622,
+            "compiles": 1.0,
+            "conses": 65320,
+            "frames": 2,
+            "ms-median": 12.083,
+            "ms-p95": 12.485,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2611474,
+            "compiles": 1.0,
+            "conses": 80562,
+            "frames": 2,
+            "ms-median": 13.878,
+            "ms-p95": 19.716,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/zoomable-world-map",
+          "svg": {
+            "alloc-bytes": 33442155,
+            "compiles": 1.0,
+            "conses": 262600,
+            "frames": 2,
+            "ms-median": 135.22,
+            "ms-p95": 173.735,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 35205710,
+            "compiles": 1.0,
+            "conses": 291569,
+            "frames": 2,
+            "ms-median": 133.814,
+            "ms-p95": 210.566,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        }
+      ]
+    },
+    "native": {
+      "frames": {"heavy": 8, "live": 20, "render": 2, "warmup": 3},
+      "recorded": {"date": "2026-10-07", "emacs": "30.1", "system": "gnu/linux", "version": "0.2.3"},
+      "workloads": [
+        {
+          "name": "ladder-25",
+          "svg": {
+            "alloc-bytes": 678310,
+            "compiles": 0.0,
+            "conses": 19854,
+            "frames": 20,
+            "ms-median": 6.909,
+            "ms-p95": 8.339,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1399430,
+            "compiles": 0.0,
+            "conses": 16536,
+            "frames": 20,
+            "ms-median": 8.025,
+            "ms-p95": 9.366,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "ladder-100",
+          "svg": {
+            "alloc-bytes": 2030503,
+            "compiles": 0.0,
+            "conses": 56258,
+            "frames": 20,
+            "ms-median": 14.435,
+            "ms-p95": 27.493,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2702017,
+            "compiles": 0.0,
+            "conses": 44771,
+            "frames": 20,
+            "ms-median": 19.613,
+            "ms-p95": 23.99,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "depth-25",
+          "svg": {
+            "alloc-bytes": 689648,
+            "compiles": 0.6,
+            "conses": 22582,
+            "frames": 20,
+            "ms-median": 4.372,
+            "ms-p95": 5.844,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1029903,
+            "compiles": 0.6,
+            "conses": 16221,
+            "frames": 20,
+            "ms-median": 6.628,
+            "ms-p95": 8.003,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "depth-100",
+          "svg": {
+            "alloc-bytes": 1156899,
+            "compiles": 0.5,
+            "conses": 39109,
+            "frames": 20,
+            "ms-median": 4.053,
+            "ms-p95": 6.284,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1519346,
+            "compiles": 0.5,
+            "conses": 37260,
+            "frames": 20,
+            "ms-median": 8.723,
+            "ms-p95": 10.711,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "candles",
+          "svg": {
+            "alloc-bytes": 2532502,
+            "compiles": 0.25,
+            "conses": 68322,
+            "frames": 20,
+            "ms-median": 14.059,
+            "ms-p95": 20.145,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3880489,
+            "compiles": 0.25,
+            "conses": 104240,
+            "frames": 20,
+            "ms-median": 14.127,
+            "ms-p95": 23.467,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "clock",
+          "svg": {
+            "alloc-bytes": 139999,
+            "compiles": 0.0,
+            "conses": 3980,
+            "frames": 20,
+            "ms-median": 0.796,
+            "ms-p95": 1.017,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1181945,
+            "compiles": 0.0,
+            "conses": 16656,
+            "frames": 20,
+            "ms-median": 3.475,
+            "ms-p95": 4.134,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "pacman",
+          "svg": {
+            "alloc-bytes": 357920,
+            "compiles": 0.0,
+            "conses": 8272,
+            "frames": 20,
+            "ms-median": 2.368,
+            "ms-p95": 2.852,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1904599,
+            "compiles": 0.0,
+            "conses": 38320,
+            "frames": 20,
+            "ms-median": 8.557,
+            "ms-p95": 9.268,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "pi-monte-carlo",
+          "svg": {
+            "alloc-bytes": 192059838,
+            "compiles": 1.0,
+            "conses": 10965154,
+            "frames": 8,
+            "ms-median": 904.646,
+            "ms-p95": 1160.343,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 188625640,
+            "compiles": 1.0,
+            "conses": 10882923,
+            "frames": 8,
+            "ms-median": 795.331,
+            "ms-p95": 1098.336,
+            "patches": 1.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "hover-airports",
+          "svg": {
+            "alloc-bytes": 254380,
+            "compiles": 0.0,
+            "conses": 2244,
+            "frames": 20,
+            "ms-median": 0.538,
+            "ms-p95": 1.231,
+            "patches": 0.95,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 0.95
+          },
+          "text": {
+            "alloc-bytes": 1838956,
+            "compiles": 0.0,
+            "conses": 45026,
+            "frames": 20,
+            "ms-median": 4.707,
+            "ms-p95": 7.123,
+            "patches": 0.85,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 0.85
+          }
+        },
+        {
+          "name": "hover-counties",
+          "svg": {
+            "alloc-bytes": 275464088,
+            "compiles": 0.0,
+            "conses": 1721418,
+            "frames": 8,
+            "ms-median": 1171.84,
+            "ms-p95": 1214.717,
+            "patches": 0.88,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 0.88
+          },
+          "text": {
+            "alloc-bytes": 75670711,
+            "compiles": 0.0,
+            "conses": 532933,
+            "frames": 8,
+            "ms-median": 6.09,
+            "ms-p95": 1037.222,
+            "patches": 0.25,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 0.25
+          }
+        },
+        {
+          "name": "resize",
+          "svg": {
+            "alloc-bytes": 2976770,
+            "compiles": 1.0,
+            "conses": 119900,
+            "frames": 20,
+            "ms-median": 18.107,
+            "ms-p95": 19.125,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3960431,
+            "compiles": 1.0,
+            "conses": 134906,
+            "frames": 20,
+            "ms-median": 15.999,
+            "ms-p95": 28.046,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/air-traffic",
+          "svg": {
+            "alloc-bytes": 30418724,
+            "compiles": 1.0,
+            "conses": 1421678,
+            "frames": 2,
+            "ms-median": 154.228,
+            "ms-p95": 163.216,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 31234149,
+            "compiles": 1.0,
+            "conses": 1424930,
+            "frames": 2,
+            "ms-median": 155.591,
+            "ms-p95": 157.608,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/airport-connections",
+          "svg": {
+            "alloc-bytes": 178677994,
+            "compiles": 1.0,
+            "conses": 4187202,
+            "frames": 2,
+            "ms-median": 701.541,
+            "ms-p95": 860.544,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 178894240,
+            "compiles": 1.0,
+            "conses": 4216620,
+            "frames": 2,
+            "ms-median": 734.407,
+            "ms-p95": 964.616,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/annual-precipitation",
+          "svg": {
+            "alloc-bytes": 205254601,
+            "compiles": 1.0,
+            "conses": 2656386,
+            "frames": 2,
+            "ms-median": 777.75,
+            "ms-p95": 887.953,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 204771996,
+            "compiles": 1.0,
+            "conses": 2312247,
+            "frames": 2,
+            "ms-median": 854.537,
+            "ms-p95": 894.364,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/annual-temperature",
+          "svg": {
+            "alloc-bytes": 114122120,
+            "compiles": 1.0,
+            "conses": 5833726,
+            "frames": 2,
+            "ms-median": 483.237,
+            "ms-p95": 693.195,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 117786929,
+            "compiles": 1.0,
+            "conses": 5836856,
+            "frames": 2,
+            "ms-median": 574.551,
+            "ms-p95": 719.867,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/arc-diagram",
+          "svg": {
+            "alloc-bytes": 109812639,
+            "compiles": 1.0,
+            "conses": 4339836,
+            "frames": 2,
+            "ms-median": 253.127,
+            "ms-p95": 291.28,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 110372608,
+            "compiles": 1.0,
+            "conses": 4178390,
+            "frames": 2,
+            "ms-median": 237.716,
+            "ms-p95": 409.747,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/area",
+          "svg": {
+            "alloc-bytes": 727541,
+            "compiles": 1.0,
+            "conses": 25113,
+            "frames": 2,
+            "ms-median": 4.003,
+            "ms-p95": 5.635,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2616752,
+            "compiles": 1.0,
+            "conses": 58463,
+            "frames": 2,
+            "ms-median": 6.49,
+            "ms-p95": 25.989,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/area-chart",
+          "svg": {
+            "alloc-bytes": 898885,
+            "compiles": 1.0,
+            "conses": 28116,
+            "frames": 2,
+            "ms-median": 4.55,
+            "ms-p95": 4.713,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2467844,
+            "compiles": 1.0,
+            "conses": 45531,
+            "frames": 2,
+            "ms-median": 4.386,
+            "ms-p95": 15.223,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/bar-chart",
+          "svg": {
+            "alloc-bytes": 460570,
+            "compiles": 1.0,
+            "conses": 16384,
+            "frames": 2,
+            "ms-median": 3.081,
+            "ms-p95": 3.913,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1341084,
+            "compiles": 1.0,
+            "conses": 20418,
+            "frames": 2,
+            "ms-median": 4.123,
+            "ms-p95": 7.279,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/bar-line-toggle",
+          "svg": {
+            "alloc-bytes": 863389,
+            "compiles": 1.0,
+            "conses": 32450,
+            "frames": 2,
+            "ms-median": 5.22,
+            "ms-p95": 5.859,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1825446,
+            "compiles": 1.0,
+            "conses": 41744,
+            "frames": 2,
+            "ms-median": 7.089,
+            "ms-p95": 9.034,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/barley-trellis-plot",
+          "svg": {
+            "alloc-bytes": 3328652,
+            "compiles": 1.0,
+            "conses": 122983,
+            "frames": 2,
+            "ms-median": 20.701,
+            "ms-p95": 22.202,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3620064,
+            "compiles": 1.0,
+            "conses": 120522,
+            "frames": 2,
+            "ms-median": 15.735,
+            "ms-p95": 21.096,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/bars",
+          "svg": {
+            "alloc-bytes": 433223,
+            "compiles": 1.0,
+            "conses": 13720,
+            "frames": 2,
+            "ms-median": 3.281,
+            "ms-p95": 3.613,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1191622,
+            "compiles": 1.0,
+            "conses": 13472,
+            "frames": 2,
+            "ms-median": 3.846,
+            "ms-p95": 9.036,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/beeswarm-plot",
+          "svg": {
+            "alloc-bytes": 128360211,
+            "compiles": 1.0,
+            "conses": 3012636,
+            "frames": 2,
+            "ms-median": 232.793,
+            "ms-p95": 241.275,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 129127856,
+            "compiles": 1.0,
+            "conses": 3014937,
+            "frames": 2,
+            "ms-median": 221.781,
+            "ms-p95": 250.282,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/binned-scatter-plot",
+          "svg": {
+            "alloc-bytes": 1554874,
+            "compiles": 1.0,
+            "conses": 65814,
+            "frames": 2,
+            "ms-median": 9.711,
+            "ms-p95": 9.864,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2273934,
+            "compiles": 1.0,
+            "conses": 65700,
+            "frames": 2,
+            "ms-median": 7.423,
+            "ms-p95": 11.544,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/box-plot",
+          "svg": {
+            "alloc-bytes": 909409,
+            "compiles": 1.0,
+            "conses": 37071,
+            "frames": 2,
+            "ms-median": 5.728,
+            "ms-p95": 5.75,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1636610,
+            "compiles": 1.0,
+            "conses": 36800,
+            "frames": 2,
+            "ms-median": 5.168,
+            "ms-p95": 5.626,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/brushing-scatter-plots",
+          "svg": {
+            "alloc-bytes": 12427810,
+            "compiles": 1.0,
+            "conses": 533551,
+            "frames": 2,
+            "ms-median": 63.93,
+            "ms-p95": 76.765,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 14825426,
+            "compiles": 1.0,
+            "conses": 614761,
+            "frames": 2,
+            "ms-median": 64.453,
+            "ms-p95": 98.995,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/budget-forecasts",
+          "svg": {
+            "alloc-bytes": 2630626,
+            "compiles": 1.0,
+            "conses": 133526,
+            "frames": 2,
+            "ms-median": 10.801,
+            "ms-p95": 11.846,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3924504,
+            "compiles": 1.0,
+            "conses": 154231,
+            "frames": 2,
+            "ms-median": 11.646,
+            "ms-p95": 21.069,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/calendar-view",
+          "svg": {
+            "alloc-bytes": 128616314,
+            "compiles": 1.0,
+            "conses": 6002846,
+            "frames": 2,
+            "ms-median": 544.345,
+            "ms-p95": 750.117,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 130338630,
+            "compiles": 1.0,
+            "conses": 6001980,
+            "frames": 2,
+            "ms-median": 658.386,
+            "ms-p95": 795.493,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/circle-packing",
+          "svg": {
+            "alloc-bytes": 3983816,
+            "compiles": 1.0,
+            "conses": 106585,
+            "frames": 2,
+            "ms-median": 15.388,
+            "ms-p95": 16.256,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4758529,
+            "compiles": 1.0,
+            "conses": 109805,
+            "frames": 2,
+            "ms-median": 18.159,
+            "ms-p95": 20.07,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/clock",
+          "svg": {
+            "alloc-bytes": 869290,
+            "compiles": 1.0,
+            "conses": 27480,
+            "frames": 2,
+            "ms-median": 6.099,
+            "ms-p95": 7.231,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4096010,
+            "compiles": 1.0,
+            "conses": 46914,
+            "frames": 2,
+            "ms-median": 7.778,
+            "ms-p95": 26.299,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/connected-scatter-plot",
+          "svg": {
+            "alloc-bytes": 1626166,
+            "compiles": 1.0,
+            "conses": 56810,
+            "frames": 2,
+            "ms-median": 8.736,
+            "ms-p95": 9.903,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2609109,
+            "compiles": 1.0,
+            "conses": 64348,
+            "frames": 2,
+            "ms-median": 10.152,
+            "ms-p95": 15.844,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/contour-plot",
+          "svg": {
+            "alloc-bytes": 47878640,
+            "compiles": 1.0,
+            "conses": 589560,
+            "frames": 2,
+            "ms-median": 234.458,
+            "ms-p95": 251.579,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 50860256,
+            "compiles": 1.0,
+            "conses": 668975,
+            "frames": 2,
+            "ms-median": 250.293,
+            "ms-p95": 274.639,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/county-unemployment",
+          "svg": {
+            "alloc-bytes": 339207377,
+            "compiles": 1.0,
+            "conses": 2983071,
+            "frames": 2,
+            "ms-median": 1281.564,
+            "ms-p95": 1429.091,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 321523564,
+            "compiles": 1.0,
+            "conses": 3021768,
+            "frames": 2,
+            "ms-median": 1026.036,
+            "ms-p95": 1414.712,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/crossfilter-flights",
+          "svg": {
+            "alloc-bytes": 107584095,
+            "compiles": 1.0,
+            "conses": 5242944,
+            "frames": 2,
+            "ms-median": 461.366,
+            "ms-p95": 523.212,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 108133156,
+            "compiles": 1.0,
+            "conses": 5237197,
+            "frames": 2,
+            "ms-median": 486.605,
+            "ms-p95": 612.289,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/density-heatmaps",
+          "svg": {
+            "alloc-bytes": 9428834,
+            "compiles": 1.0,
+            "conses": 114212,
+            "frames": 2,
+            "ms-median": 43.442,
+            "ms-p95": 48.137,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 10628937,
+            "compiles": 1.0,
+            "conses": 145084,
+            "frames": 2,
+            "ms-median": 65.276,
+            "ms-p95": 98.958,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/distortion-comparison",
+          "svg": {
+            "alloc-bytes": 61968789,
+            "compiles": 1.0,
+            "conses": 385662,
+            "frames": 2,
+            "ms-median": 194.851,
+            "ms-p95": 197.925,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 63051242,
+            "compiles": 1.0,
+            "conses": 400782,
+            "frames": 2,
+            "ms-median": 196.182,
+            "ms-p95": 249.683,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/donut-chart",
+          "svg": {
+            "alloc-bytes": 206885,
+            "compiles": 1.0,
+            "conses": 8053,
+            "frames": 2,
+            "ms-median": 1.123,
+            "ms-p95": 4.406,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3632266,
+            "compiles": 1.0,
+            "conses": 20745,
+            "frames": 2,
+            "ms-median": 2.753,
+            "ms-p95": 20.031,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/donut-chart-labelled",
+          "svg": {
+            "alloc-bytes": 600446,
+            "compiles": 1.0,
+            "conses": 21774,
+            "frames": 2,
+            "ms-median": 3.469,
+            "ms-p95": 3.534,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5281354,
+            "compiles": 1.0,
+            "conses": 39874,
+            "frames": 2,
+            "ms-median": 4.1,
+            "ms-p95": 24.34,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/dorling-cartogram",
+          "svg": {
+            "alloc-bytes": 79123148,
+            "compiles": 1.0,
+            "conses": 2039917,
+            "frames": 2,
+            "ms-median": 147.354,
+            "ms-p95": 159.108,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 80090560,
+            "compiles": 1.0,
+            "conses": 2043700,
+            "frames": 2,
+            "ms-median": 144.713,
+            "ms-p95": 150.947,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/dot-plot",
+          "svg": {
+            "alloc-bytes": 1027398,
+            "compiles": 1.0,
+            "conses": 41331,
+            "frames": 2,
+            "ms-median": 6.523,
+            "ms-p95": 6.614,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1813950,
+            "compiles": 1.0,
+            "conses": 45114,
+            "frames": 2,
+            "ms-median": 9.093,
+            "ms-p95": 9.237,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/earthquakes",
+          "svg": {
+            "alloc-bytes": 56184119,
+            "compiles": 1.0,
+            "conses": 1555673,
+            "frames": 2,
+            "ms-median": 231.82,
+            "ms-p95": 242.931,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 54135406,
+            "compiles": 1.0,
+            "conses": 1411385,
+            "frames": 2,
+            "ms-median": 194.906,
+            "ms-p95": 233.12,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/earthquakes-globe",
+          "svg": {
+            "alloc-bytes": 44971980,
+            "compiles": 1.0,
+            "conses": 1070723,
+            "frames": 2,
+            "ms-median": 172.291,
+            "ms-p95": 223.387,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 46569814,
+            "compiles": 1.0,
+            "conses": 1091116,
+            "frames": 2,
+            "ms-median": 162.63,
+            "ms-p95": 194.598,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/edge-bundling",
+          "svg": {
+            "alloc-bytes": 84372070,
+            "compiles": 1.0,
+            "conses": 3868376,
+            "frames": 2,
+            "ms-median": 279.079,
+            "ms-p95": 316.008,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 92730991,
+            "compiles": 1.0,
+            "conses": 4114009,
+            "frames": 2,
+            "ms-median": 282.224,
+            "ms-p95": 620.932,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/error-bars",
+          "svg": {
+            "alloc-bytes": 896329,
+            "compiles": 1.0,
+            "conses": 35668,
+            "frames": 2,
+            "ms-median": 5.157,
+            "ms-p95": 6.352,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1573094,
+            "compiles": 1.0,
+            "conses": 34434,
+            "frames": 2,
+            "ms-median": 5.681,
+            "ms-p95": 6.035,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/falkensee-population",
+          "svg": {
+            "alloc-bytes": 1027814,
+            "compiles": 1.0,
+            "conses": 35216,
+            "frames": 2,
+            "ms-median": 5.701,
+            "ms-p95": 5.73,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1669250,
+            "compiles": 1.0,
+            "conses": 31484,
+            "frames": 2,
+            "ms-median": 5.437,
+            "ms-p95": 10.551,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/flight-passengers",
+          "svg": {
+            "alloc-bytes": 587820,
+            "compiles": 1.0,
+            "conses": 22253,
+            "frames": 2,
+            "ms-median": 3.262,
+            "ms-p95": 3.783,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1292736,
+            "compiles": 1.0,
+            "conses": 21229,
+            "frames": 2,
+            "ms-median": 4.059,
+            "ms-p95": 6.797,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/force-directed-layout",
+          "svg": {
+            "alloc-bytes": 411825892,
+            "compiles": 1.0,
+            "conses": 7693632,
+            "frames": 2,
+            "ms-median": 764.892,
+            "ms-p95": 1029.262,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 413035214,
+            "compiles": 1.0,
+            "conses": 7708196,
+            "frames": 2,
+            "ms-median": 803.853,
+            "ms-p95": 1132.503,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/global-development",
+          "svg": {
+            "alloc-bytes": 4988723,
+            "compiles": 1.0,
+            "conses": 233522,
+            "frames": 2,
+            "ms-median": 23.197,
+            "ms-p95": 27.507,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5558982,
+            "compiles": 1.0,
+            "conses": 232772,
+            "frames": 2,
+            "ms-median": 24.916,
+            "ms-p95": 27.973,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/grouped-bar-chart",
+          "svg": {
+            "alloc-bytes": 503823,
+            "compiles": 1.0,
+            "conses": 17745,
+            "frames": 2,
+            "ms-median": 3.265,
+            "ms-p95": 3.523,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1309808,
+            "compiles": 1.0,
+            "conses": 19150,
+            "frames": 2,
+            "ms-median": 3.905,
+            "ms-p95": 5.757,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/heatmap",
+          "svg": {
+            "alloc-bytes": 667496,
+            "compiles": 1.0,
+            "conses": 19405,
+            "frames": 2,
+            "ms-median": 4.08,
+            "ms-p95": 4.491,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3113788,
+            "compiles": 1.0,
+            "conses": 56852,
+            "frames": 2,
+            "ms-median": 5.868,
+            "ms-p95": 23.877,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/histogram",
+          "svg": {
+            "alloc-bytes": 934823,
+            "compiles": 1.0,
+            "conses": 31724,
+            "frames": 2,
+            "ms-median": 6.589,
+            "ms-p95": 7.032,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1551533,
+            "compiles": 1.0,
+            "conses": 28850,
+            "frames": 2,
+            "ms-median": 6.495,
+            "ms-p95": 14.436,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/histogram-null-values",
+          "svg": {
+            "alloc-bytes": 3871044,
+            "compiles": 1.0,
+            "conses": 153592,
+            "frames": 2,
+            "ms-median": 38.063,
+            "ms-p95": 38.094,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4694344,
+            "compiles": 1.0,
+            "conses": 156436,
+            "frames": 2,
+            "ms-median": 24.286,
+            "ms-p95": 24.809,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/horizon-graph",
+          "svg": {
+            "alloc-bytes": 860419,
+            "compiles": 1.0,
+            "conses": 24399,
+            "frames": 2,
+            "ms-median": 4.119,
+            "ms-p95": 4.318,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3726968,
+            "compiles": 1.0,
+            "conses": 72923,
+            "frames": 2,
+            "ms-median": 6.853,
+            "ms-p95": 26.976,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/hourly-heatmap",
+          "svg": {
+            "alloc-bytes": 76031138,
+            "compiles": 1.0,
+            "conses": 3175044,
+            "frames": 2,
+            "ms-median": 463.202,
+            "ms-p95": 491.518,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 81776945,
+            "compiles": 1.0,
+            "conses": 3418813,
+            "frames": 2,
+            "ms-median": 407.477,
+            "ms-p95": 574.218,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/hypothetical-outcome-plots",
+          "svg": {
+            "alloc-bytes": 468556,
+            "compiles": 1.0,
+            "conses": 16693,
+            "frames": 2,
+            "ms-median": 2.77,
+            "ms-p95": 4.66,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1306824,
+            "compiles": 1.0,
+            "conses": 19504,
+            "frames": 2,
+            "ms-median": 3.651,
+            "ms-p95": 5.849,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/interactive-legend",
+          "svg": {
+            "alloc-bytes": 2901700,
+            "compiles": 1.0,
+            "conses": 122978,
+            "frames": 2,
+            "ms-median": 17.816,
+            "ms-p95": 21.248,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3680093,
+            "compiles": 1.0,
+            "conses": 131316,
+            "frames": 2,
+            "ms-median": 21.313,
+            "ms-p95": 24.289,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/job-voyager",
+          "svg": {
+            "alloc-bytes": 104475086,
+            "compiles": 1.0,
+            "conses": 5169064,
+            "frames": 2,
+            "ms-median": 421.161,
+            "ms-p95": 444.059,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 141184582,
+            "compiles": 1.0,
+            "conses": 5863687,
+            "frames": 2,
+            "ms-median": 476.239,
+            "ms-p95": 849.299,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/labeled-scatter-plot",
+          "svg": {
+            "alloc-bytes": 47906493,
+            "compiles": 1.0,
+            "conses": 1815553,
+            "frames": 2,
+            "ms-median": 291.274,
+            "ms-p95": 323.799,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 48074486,
+            "compiles": 1.0,
+            "conses": 1783920,
+            "frames": 2,
+            "ms-median": 256.662,
+            "ms-p95": 322.348,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/line",
+          "svg": {
+            "alloc-bytes": 519916,
+            "compiles": 1.0,
+            "conses": 17704,
+            "frames": 2,
+            "ms-median": 3.151,
+            "ms-p95": 3.456,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1144564,
+            "compiles": 1.0,
+            "conses": 14661,
+            "frames": 2,
+            "ms-median": 2.481,
+            "ms-p95": 6.592,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/line-chart",
+          "svg": {
+            "alloc-bytes": 552994,
+            "compiles": 1.0,
+            "conses": 20005,
+            "frames": 2,
+            "ms-median": 4.066,
+            "ms-p95": 4.076,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1403774,
+            "compiles": 1.0,
+            "conses": 25570,
+            "frames": 2,
+            "ms-median": 3.815,
+            "ms-p95": 7.246,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/loess-regression",
+          "svg": {
+            "alloc-bytes": 89525705,
+            "compiles": 1.0,
+            "conses": 1386100,
+            "frames": 2,
+            "ms-median": 192.306,
+            "ms-p95": 198.659,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 90133874,
+            "compiles": 1.0,
+            "conses": 1389686,
+            "frames": 2,
+            "ms-median": 191.592,
+            "ms-p95": 210.111,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/map-with-tooltip",
+          "svg": {
+            "alloc-bytes": 150340042,
+            "compiles": 1.0,
+            "conses": 1951666,
+            "frames": 2,
+            "ms-median": 551.512,
+            "ms-p95": 1181.647,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 148205648,
+            "compiles": 1.0,
+            "conses": 2025410,
+            "frames": 2,
+            "ms-median": 609.337,
+            "ms-p95": 806.205,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/multi",
+          "svg": {
+            "alloc-bytes": 1049272,
+            "compiles": 1.0,
+            "conses": 41610,
+            "frames": 2,
+            "ms-median": 5.879,
+            "ms-p95": 6.249,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1833358,
+            "compiles": 1.0,
+            "conses": 44934,
+            "frames": 2,
+            "ms-median": 5.374,
+            "ms-p95": 12.784,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/nested-bar-chart",
+          "svg": {
+            "alloc-bytes": 802218,
+            "compiles": 1.0,
+            "conses": 27755,
+            "frames": 2,
+            "ms-median": 4.582,
+            "ms-p95": 4.679,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1597310,
+            "compiles": 1.0,
+            "conses": 30338,
+            "frames": 2,
+            "ms-median": 5.81,
+            "ms-p95": 6.837,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/overview-plus-detail",
+          "svg": {
+            "alloc-bytes": 957197,
+            "compiles": 1.0,
+            "conses": 34739,
+            "frames": 2,
+            "ms-median": 6.033,
+            "ms-p95": 6.145,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3964436,
+            "compiles": 1.0,
+            "conses": 111406,
+            "frames": 2,
+            "ms-median": 8.599,
+            "ms-p95": 21.851,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/packed-bubble-chart",
+          "svg": {
+            "alloc-bytes": 520415,
+            "compiles": 1.0,
+            "conses": 16699,
+            "frames": 2,
+            "ms-median": 2.697,
+            "ms-p95": 2.81,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1299342,
+            "compiles": 1.0,
+            "conses": 18284,
+            "frames": 2,
+            "ms-median": 2.547,
+            "ms-p95": 3.012,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/pacman",
+          "svg": {
+            "alloc-bytes": 4651047,
+            "compiles": 1.0,
+            "conses": 192651,
+            "frames": 2,
+            "ms-median": 19.48,
+            "ms-p95": 20.278,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5924400,
+            "compiles": 1.0,
+            "conses": 211130,
+            "frames": 2,
+            "ms-median": 21.991,
+            "ms-p95": 24.328,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/parallel-coordinates",
+          "svg": {
+            "alloc-bytes": 18447881,
+            "compiles": 1.0,
+            "conses": 959763,
+            "frames": 2,
+            "ms-median": 64.396,
+            "ms-p95": 64.649,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 47342254,
+            "compiles": 1.0,
+            "conses": 1965944,
+            "frames": 2,
+            "ms-median": 107.774,
+            "ms-p95": 702.025,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/parallel-coordinates-interactive",
+          "svg": {
+            "alloc-bytes": 78899116,
+            "compiles": 1.0,
+            "conses": 4039583,
+            "frames": 2,
+            "ms-median": 293.399,
+            "ms-p95": 329.99,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 104412474,
+            "compiles": 1.0,
+            "conses": 4927076,
+            "frames": 2,
+            "ms-median": 267.828,
+            "ms-p95": 562.146,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/pi-monte-carlo",
+          "svg": {
+            "alloc-bytes": 54359527,
+            "compiles": 1.0,
+            "conses": 2892212,
+            "frames": 2,
+            "ms-median": 229.966,
+            "ms-p95": 238.541,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 55180376,
+            "compiles": 1.0,
+            "conses": 2919312,
+            "frames": 2,
+            "ms-median": 237.279,
+            "ms-p95": 247.279,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/pie-chart",
+          "svg": {
+            "alloc-bytes": 206713,
+            "compiles": 1.0,
+            "conses": 8053,
+            "frames": 2,
+            "ms-median": 1.096,
+            "ms-p95": 12.168,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3512336,
+            "compiles": 1.0,
+            "conses": 21230,
+            "frames": 2,
+            "ms-median": 2.506,
+            "ms-p95": 20.428,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/platformer",
+          "svg": {
+            "alloc-bytes": 18327735,
+            "compiles": 1.0,
+            "conses": 914713,
+            "frames": 2,
+            "ms-median": 76.949,
+            "ms-p95": 77.516,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 21402444,
+            "compiles": 1.0,
+            "conses": 1008363,
+            "frames": 2,
+            "ms-median": 80.121,
+            "ms-p95": 111.868,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/population-pyramid",
+          "svg": {
+            "alloc-bytes": 2608336,
+            "compiles": 1.0,
+            "conses": 112214,
+            "frames": 2,
+            "ms-median": 15.649,
+            "ms-p95": 15.726,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3303426,
+            "compiles": 1.0,
+            "conses": 111238,
+            "frames": 2,
+            "ms-median": 12.156,
+            "ms-p95": 14.992,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/probability-density",
+          "svg": {
+            "alloc-bytes": 3411858,
+            "compiles": 1.0,
+            "conses": 128725,
+            "frames": 2,
+            "ms-median": 15.485,
+            "ms-p95": 15.916,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4539757,
+            "compiles": 1.0,
+            "conses": 144069,
+            "frames": 2,
+            "ms-median": 16.297,
+            "ms-p95": 19.931,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/projections",
+          "svg": {
+            "alloc-bytes": 852362848,
+            "compiles": 1.0,
+            "conses": 4397980,
+            "frames": 2,
+            "ms-median": 3324.855,
+            "ms-p95": 3482.13,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 832846046,
+            "compiles": 1.0,
+            "conses": 4571474,
+            "frames": 2,
+            "ms-median": 3532.49,
+            "ms-p95": 3780.336,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/quantile-dot-plot",
+          "svg": {
+            "alloc-bytes": 799303,
+            "compiles": 1.0,
+            "conses": 29230,
+            "frames": 2,
+            "ms-median": 5.44,
+            "ms-p95": 6.711,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1357910,
+            "compiles": 1.0,
+            "conses": 23278,
+            "frames": 2,
+            "ms-median": 4.421,
+            "ms-p95": 5.48,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/quantile-quantile-plot",
+          "svg": {
+            "alloc-bytes": 2050267,
+            "compiles": 1.0,
+            "conses": 70351,
+            "frames": 2,
+            "ms-median": 16.959,
+            "ms-p95": 17.28,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2637011,
+            "compiles": 1.0,
+            "conses": 68110,
+            "frames": 2,
+            "ms-median": 13.43,
+            "ms-p95": 29.201,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/radar-chart",
+          "svg": {
+            "alloc-bytes": 1561089,
+            "compiles": 1.0,
+            "conses": 58366,
+            "frames": 2,
+            "ms-median": 7.842,
+            "ms-p95": 7.996,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2672707,
+            "compiles": 1.0,
+            "conses": 71465,
+            "frames": 2,
+            "ms-median": 13.026,
+            "ms-p95": 16.264,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/radial-plot",
+          "svg": {
+            "alloc-bytes": 282289,
+            "compiles": 1.0,
+            "conses": 10663,
+            "frames": 2,
+            "ms-median": 2.269,
+            "ms-p95": 2.542,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2671611,
+            "compiles": 1.0,
+            "conses": 18884,
+            "frames": 2,
+            "ms-median": 2.544,
+            "ms-p95": 11.41,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/radial-tree-layout",
+          "svg": {
+            "alloc-bytes": 12198119,
+            "compiles": 1.0,
+            "conses": 552413,
+            "frames": 2,
+            "ms-median": 62.308,
+            "ms-p95": 63.275,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 14647402,
+            "compiles": 1.0,
+            "conses": 592717,
+            "frames": 2,
+            "ms-median": 65.93,
+            "ms-p95": 102.217,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/regression",
+          "svg": {
+            "alloc-bytes": 31481874,
+            "compiles": 1.0,
+            "conses": 1372180,
+            "frames": 2,
+            "ms-median": 155.959,
+            "ms-p95": 169.172,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 32222065,
+            "compiles": 1.0,
+            "conses": 1376036,
+            "frames": 2,
+            "ms-median": 129.328,
+            "ms-p95": 145.037,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/reorderable-matrix",
+          "svg": {
+            "alloc-bytes": 166513380,
+            "compiles": 1.0,
+            "conses": 9432344,
+            "frames": 2,
+            "ms-median": 476.087,
+            "ms-p95": 533.911,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 168821450,
+            "compiles": 1.0,
+            "conses": 9500851,
+            "frames": 2,
+            "ms-median": 405.185,
+            "ms-p95": 499.787,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/rug-histogram",
+          "svg": {
+            "alloc-bytes": 2041001,
+            "compiles": 1.0,
+            "conses": 71992,
+            "frames": 2,
+            "ms-median": 9.937,
+            "ms-p95": 11.614,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2623768,
+            "compiles": 1.0,
+            "conses": 69153,
+            "frames": 2,
+            "ms-median": 9.231,
+            "ms-p95": 12.973,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/scatter-plot",
+          "svg": {
+            "alloc-bytes": 3113691,
+            "compiles": 1.0,
+            "conses": 134233,
+            "frames": 2,
+            "ms-median": 16.825,
+            "ms-p95": 18.079,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3971702,
+            "compiles": 1.0,
+            "conses": 144922,
+            "frames": 2,
+            "ms-median": 16.741,
+            "ms-p95": 24.777,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/scatter-plot-null-values",
+          "svg": {
+            "alloc-bytes": 35779168,
+            "compiles": 1.0,
+            "conses": 1508367,
+            "frames": 2,
+            "ms-median": 153.31,
+            "ms-p95": 169.735,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 36620374,
+            "compiles": 1.0,
+            "conses": 1538856,
+            "frames": 2,
+            "ms-median": 169.627,
+            "ms-p95": 204.094,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/series-line",
+          "svg": {
+            "alloc-bytes": 639407,
+            "compiles": 1.0,
+            "conses": 21621,
+            "frames": 2,
+            "ms-median": 3.681,
+            "ms-p95": 4.311,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1290502,
+            "compiles": 1.0,
+            "conses": 20156,
+            "frames": 2,
+            "ms-median": 3.232,
+            "ms-p95": 9.498,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/serpentine-timeline",
+          "svg": {
+            "alloc-bytes": 44939910,
+            "compiles": 1.0,
+            "conses": 2472466,
+            "frames": 2,
+            "ms-median": 132.093,
+            "ms-p95": 138.541,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 45889097,
+            "compiles": 1.0,
+            "conses": 2479559,
+            "frames": 2,
+            "ms-median": 143.297,
+            "ms-p95": 149.971,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/sparkline",
+          "svg": {
+            "alloc-bytes": 289608,
+            "compiles": 1.0,
+            "conses": 10091,
+            "frames": 2,
+            "ms-median": 1.721,
+            "ms-p95": 2.125,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1304290,
+            "compiles": 1.0,
+            "conses": 15984,
+            "frames": 2,
+            "ms-median": 3.01,
+            "ms-p95": 4.647,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/stacked-area-chart",
+          "svg": {
+            "alloc-bytes": 734691,
+            "compiles": 1.0,
+            "conses": 23888,
+            "frames": 2,
+            "ms-median": 3.489,
+            "ms-p95": 3.95,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2658062,
+            "compiles": 1.0,
+            "conses": 48968,
+            "frames": 2,
+            "ms-median": 4.646,
+            "ms-p95": 19.345,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/stacked-bar-chart",
+          "svg": {
+            "alloc-bytes": 597907,
+            "compiles": 1.0,
+            "conses": 21499,
+            "frames": 2,
+            "ms-median": 3.555,
+            "ms-p95": 3.81,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1500776,
+            "compiles": 1.0,
+            "conses": 24124,
+            "frames": 2,
+            "ms-median": 5.299,
+            "ms-p95": 7.168,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/stock-index-chart",
+          "svg": {
+            "alloc-bytes": 7039818,
+            "compiles": 2.0,
+            "conses": 288123,
+            "frames": 2,
+            "ms-median": 38.865,
+            "ms-p95": 39.261,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 2.0
+          },
+          "text": {
+            "alloc-bytes": 7868057,
+            "compiles": 2.0,
+            "conses": 301308,
+            "frames": 2,
+            "ms-median": 34.009,
+            "ms-p95": 44.759,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 2.0
+          }
+        },
+        {
+          "name": "render/sunburst",
+          "svg": {
+            "alloc-bytes": 2458389,
+            "compiles": 1.0,
+            "conses": 111909,
+            "frames": 2,
+            "ms-median": 10.769,
+            "ms-p95": 12.159,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 545605409,
+            "compiles": 1.0,
+            "conses": 2238831,
+            "frames": 2,
+            "ms-median": 11.367,
+            "ms-p95": 2795.28,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/table-scrollbar",
+          "svg": {
+            "alloc-bytes": 978336,
+            "compiles": 1.0,
+            "conses": 38757,
+            "frames": 2,
+            "ms-median": 4.916,
+            "ms-p95": 5.834,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1913350,
+            "compiles": 1.0,
+            "conses": 41989,
+            "frames": 2,
+            "ms-median": 7.814,
+            "ms-p95": 8.389,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/time-units",
+          "svg": {
+            "alloc-bytes": 25173694,
+            "compiles": 1.0,
+            "conses": 1260086,
+            "frames": 2,
+            "ms-median": 129.453,
+            "ms-p95": 130.661,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 25936728,
+            "compiles": 1.0,
+            "conses": 1258038,
+            "frames": 2,
+            "ms-median": 138.013,
+            "ms-p95": 138.615,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/timelines",
+          "svg": {
+            "alloc-bytes": 614066,
+            "compiles": 1.0,
+            "conses": 21843,
+            "frames": 2,
+            "ms-median": 4.409,
+            "ms-p95": 4.729,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1398367,
+            "compiles": 1.0,
+            "conses": 22876,
+            "frames": 2,
+            "ms-median": 4.836,
+            "ms-p95": 6.192,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/top-k-plot",
+          "svg": {
+            "alloc-bytes": 4750596,
+            "compiles": 1.0,
+            "conses": 196011,
+            "frames": 2,
+            "ms-median": 24.927,
+            "ms-p95": 25.831,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5285020,
+            "compiles": 1.0,
+            "conses": 188098,
+            "frames": 2,
+            "ms-median": 23.604,
+            "ms-p95": 34.165,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/top-k-plot-with-others",
+          "svg": {
+            "alloc-bytes": 8398846,
+            "compiles": 1.0,
+            "conses": 288139,
+            "frames": 2,
+            "ms-median": 43.067,
+            "ms-p95": 45.668,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 9048954,
+            "compiles": 1.0,
+            "conses": 279840,
+            "frames": 2,
+            "ms-median": 49.358,
+            "ms-p95": 50.982,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/tree-layout",
+          "svg": {
+            "alloc-bytes": 14082091,
+            "compiles": 1.0,
+            "conses": 620280,
+            "frames": 2,
+            "ms-median": 80.661,
+            "ms-p95": 88.467,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 20969814,
+            "compiles": 1.0,
+            "conses": 757624,
+            "frames": 2,
+            "ms-median": 68.472,
+            "ms-p95": 151.713,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/treemap",
+          "svg": {
+            "alloc-bytes": 8091882,
+            "compiles": 1.0,
+            "conses": 395047,
+            "frames": 2,
+            "ms-median": 39.057,
+            "ms-p95": 41.37,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 14665424,
+            "compiles": 1.0,
+            "conses": 526106,
+            "frames": 2,
+            "ms-median": 40.034,
+            "ms-p95": 96.854,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/u-district-cuisine",
+          "svg": {
+            "alloc-bytes": 11756375,
+            "compiles": 1.0,
+            "conses": 521697,
+            "frames": 2,
+            "ms-median": 63.208,
+            "ms-p95": 65.02,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 15335051,
+            "compiles": 1.0,
+            "conses": 571489,
+            "frames": 2,
+            "ms-median": 64.181,
+            "ms-p95": 89.624,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/violin-plot",
+          "svg": {
+            "alloc-bytes": 15626536,
+            "compiles": 1.0,
+            "conses": 308195,
+            "frames": 2,
+            "ms-median": 65.124,
+            "ms-p95": 73.324,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 17108394,
+            "compiles": 1.0,
+            "conses": 328496,
+            "frames": 2,
+            "ms-median": 62.008,
+            "ms-p95": 72.17,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/volcano-contours",
+          "svg": {
+            "alloc-bytes": 9821905,
+            "compiles": 1.0,
+            "conses": 190184,
+            "frames": 2,
+            "ms-median": 74.473,
+            "ms-p95": 75.418,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 13027212,
+            "compiles": 1.0,
+            "conses": 302090,
+            "frames": 2,
+            "ms-median": 73.489,
+            "ms-p95": 115.203,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/warming-stripes",
+          "svg": {
+            "alloc-bytes": 2310478,
+            "compiles": 1.0,
+            "conses": 87901,
+            "frames": 2,
+            "ms-median": 11.39,
+            "ms-p95": 13.394,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5751000,
+            "compiles": 1.0,
+            "conses": 181741,
+            "frames": 2,
+            "ms-median": 17.882,
+            "ms-p95": 22.785,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/watch",
+          "svg": {
+            "alloc-bytes": 917604,
+            "compiles": 1.0,
+            "conses": 28889,
+            "frames": 2,
+            "ms-median": 5.638,
+            "ms-p95": 5.985,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3481015,
+            "compiles": 1.0,
+            "conses": 44800,
+            "frames": 2,
+            "ms-median": 7.888,
+            "ms-p95": 21.736,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/weekly-temperature",
+          "svg": {
+            "alloc-bytes": 581612,
+            "compiles": 1.0,
+            "conses": 20442,
+            "frames": 2,
+            "ms-median": 2.952,
+            "ms-p95": 3.789,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 1921396,
+            "compiles": 1.0,
+            "conses": 33782,
+            "frames": 2,
+            "ms-median": 6.808,
+            "ms-p95": 11.642,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/wheat-and-wages",
+          "svg": {
+            "alloc-bytes": 1199388,
+            "compiles": 1.0,
+            "conses": 48148,
+            "frames": 2,
+            "ms-median": 6.315,
+            "ms-p95": 6.329,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2986960,
+            "compiles": 1.0,
+            "conses": 78405,
+            "frames": 2,
+            "ms-median": 8.167,
+            "ms-p95": 17.929,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/wheat-plot",
+          "svg": {
+            "alloc-bytes": 5159325,
+            "compiles": 1.0,
+            "conses": 193996,
+            "frames": 2,
+            "ms-median": 36.238,
+            "ms-p95": 36.62,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 6400071,
+            "compiles": 1.0,
+            "conses": 216952,
+            "frames": 2,
+            "ms-median": 43.29,
+            "ms-p95": 48.38,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/wind-vectors",
+          "svg": {
+            "alloc-bytes": 32465704,
+            "compiles": 1.0,
+            "conses": 1480611,
+            "frames": 2,
+            "ms-median": 224.569,
+            "ms-p95": 224.755,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 34187684,
+            "compiles": 1.0,
+            "conses": 1518961,
+            "frames": 2,
+            "ms-median": 223.68,
+            "ms-p95": 270.748,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/word-cloud",
+          "svg": {
+            "alloc-bytes": 2734262,
+            "compiles": 1.0,
+            "conses": 113958,
+            "frames": 2,
+            "ms-median": 15.044,
+            "ms-p95": 15.786,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 3529862,
+            "compiles": 1.0,
+            "conses": 115820,
+            "frames": 2,
+            "ms-median": 15.374,
+            "ms-p95": 17.601,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/world-map",
+          "svg": {
+            "alloc-bytes": 35325187,
+            "compiles": 1.0,
+            "conses": 271441,
+            "frames": 2,
+            "ms-median": 147.273,
+            "ms-p95": 156.3,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 37517080,
+            "compiles": 1.0,
+            "conses": 306184,
+            "frames": 2,
+            "ms-median": 114.763,
+            "ms-p95": 193.866,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/zoomable-binned-plot",
+          "svg": {
+            "alloc-bytes": 2743762,
+            "compiles": 1.0,
+            "conses": 118655,
+            "frames": 2,
+            "ms-median": 12.391,
+            "ms-p95": 12.465,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 4935620,
+            "compiles": 1.0,
+            "conses": 163964,
+            "frames": 2,
+            "ms-median": 13.586,
+            "ms-p95": 24.982,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/zoomable-circle-packing",
+          "svg": {
+            "alloc-bytes": 4278879,
+            "compiles": 1.0,
+            "conses": 116074,
+            "frames": 2,
+            "ms-median": 19.167,
+            "ms-p95": 22.369,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 5047219,
+            "compiles": 1.0,
+            "conses": 118864,
+            "frames": 2,
+            "ms-median": 19.822,
+            "ms-p95": 23.046,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/zoomable-scatter-plot",
+          "svg": {
+            "alloc-bytes": 1567624,
+            "compiles": 1.0,
+            "conses": 65320,
+            "frames": 2,
+            "ms-median": 8.32,
+            "ms-p95": 8.576,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 2611476,
+            "compiles": 1.0,
+            "conses": 80562,
+            "frames": 2,
+            "ms-median": 9.226,
+            "ms-p95": 13.223,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        },
+        {
+          "name": "render/zoomable-world-map",
+          "svg": {
+            "alloc-bytes": 33442157,
+            "compiles": 1.0,
+            "conses": 262600,
+            "frames": 2,
+            "ms-median": 116.783,
+            "ms-p95": 125.802,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 0.0,
+            "scenes": 1.0
+          },
+          "text": {
+            "alloc-bytes": 35205712,
+            "compiles": 1.0,
+            "conses": 291569,
+            "frames": 2,
+            "ms-median": 123.921,
+            "ms-p95": 174.181,
+            "patches": 0.0,
+            "renders": 1.0,
+            "repaints": 1.0,
+            "scenes": 1.0
+          }
+        }
+      ]
+    }
+  },
+  "note": "Recorded by make bench-record; gated by make bench-check (alloc and calls only).",
+  "tolerance": {"alloc": 0.1, "calls": 0}
+}
+

@@ -1,4 +1,5 @@
 (eas :fetcher github :repo "davidawad/eas.el"
      :files ("src/*.el" "src/*.json"
-             (:exclude "src/*-test.el" "src/eas-text-gallery.el" "src/eas-vl-gallery-bench.el")
+             (:exclude "src/*-test.el" "src/eas-text-gallery.el" "src/eas-vl-gallery-bench.el"
+                       "src/eas-perf.el" "src/eas-perf-gate.el")
              "templates" "examples"))

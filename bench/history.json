@@ -1,0 +1,41 @@
+[
+  {
+    "date": "2026-10-07",
+    "live": [
+      {"name": "ladder-25", "svg": 678342, "svg-ms": 4.823, "text": 1399462, "text-ms": 9.406},
+      {"name": "ladder-100", "svg": 2030535, "svg-ms": 14.844, "text": 2702049, "text-ms": 22.876},
+      {"name": "depth-25", "svg": 689680, "svg-ms": 5.95, "text": 1029935, "text-ms": 8.452},
+      {"name": "depth-100", "svg": 1156931, "svg-ms": 6.863, "text": 1519378, "text-ms": 9.968},
+      {"name": "candles", "svg": 2532534, "svg-ms": 15.194, "text": 3880521, "text-ms": 21.834},
+      {"name": "clock", "svg": 140031, "svg-ms": 1.312, "text": 1181977, "text-ms": 6.098},
+      {"name": "pacman", "svg": 357952, "svg-ms": 3.243, "text": 1904663, "text-ms": 13.612},
+      {"name": "pi-monte-carlo", "svg": 192059874, "svg-ms": 1413.886, "text": 188625672, "text-ms": 1261.839},
+      {"name": "hover-airports", "svg": 254412, "svg-ms": 0.741, "text": 1838988, "text-ms": 7.411},
+      {"name": "hover-counties", "svg": 275464120, "svg-ms": 1331.484, "text": 75670747, "text-ms": 54.377},
+      {"name": "resize", "svg": 2976770, "svg-ms": 26.863, "text": 3960431, "text-ms": 25.792}
+    ],
+    "mode": "byte",
+    "render": {"svg": 4228560625, "svg-ms": 20200.128, "text": 4972385244, "text-ms": 20693.17},
+    "version": "0.2.3"
+  },
+  {
+    "date": "2026-10-07",
+    "live": [
+      {"name": "ladder-25", "svg": 678310, "svg-ms": 6.909, "text": 1399430, "text-ms": 8.025},
+      {"name": "ladder-100", "svg": 2030503, "svg-ms": 14.435, "text": 2702017, "text-ms": 19.613},
+      {"name": "depth-25", "svg": 689648, "svg-ms": 4.372, "text": 1029903, "text-ms": 6.628},
+      {"name": "depth-100", "svg": 1156899, "svg-ms": 4.053, "text": 1519346, "text-ms": 8.723},
+      {"name": "candles", "svg": 2532502, "svg-ms": 14.059, "text": 3880489, "text-ms": 14.127},
+      {"name": "clock", "svg": 139999, "svg-ms": 0.796, "text": 1181945, "text-ms": 3.475},
+      {"name": "pacman", "svg": 357920, "svg-ms": 2.368, "text": 1904599, "text-ms": 8.557},
+      {"name": "pi-monte-carlo", "svg": 192059838, "svg-ms": 904.646, "text": 188625640, "text-ms": 795.331},
+      {"name": "hover-airports", "svg": 254380, "svg-ms": 0.538, "text": 1838956, "text-ms": 4.707},
+      {"name": "hover-counties", "svg": 275464088, "svg-ms": 1171.84, "text": 75670711, "text-ms": 6.09},
+      {"name": "resize", "svg": 2976770, "svg-ms": 18.107, "text": 3960431, "text-ms": 15.999}
+    ],
+    "mode": "native",
+    "render": {"svg": 4228560831, "svg-ms": 15468.123, "text": 4972384906, "text-ms": 15763.459},
+    "version": "0.2.3"
+  }
+]
+

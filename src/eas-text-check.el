@@ -22,7 +22,8 @@
 ;;   side        a bottom axis label not below its axis line, or a
 ;;               left axis label not left of it.
 ;;   contrast    a glyph's color is under WCAG 3:1 against the
-;;               background, drawn for a light and for a dark one.
+;;               background, drawn for a light and for a dark one (a
+;;               line or label on a tile: against the tile's color).
 ;;   width       a line is wider than the columns the chart was asked
 ;;               to fit (a terminal window cuts it with a `$').
 ;;
@@ -242,14 +243,20 @@ maps keys to cells."
     (while (< pos (length text))
       (let ((next (or (next-single-property-change pos 'face text) (length text)))
             (face (get-text-property pos 'face text)))
-        (when-let* ((fg (and (consp face) (plist-get face :foreground))))
-          (when (and (stringp fg) (not (member fg seen)) (eas-text-ink--rgb fg)
+        (when-let* ((fg (and (consp face) (plist-get face :foreground)))
+                    ;; A glyph on a tile is read against the tile; block
+                    ;; elements (▀ ▄ ░) paint both colors as ink.
+                    (under (let ((b (plist-get face :background)))
+                             (if (and (eas-text-ink--rgb b)
+                                      (not (string-match-p "[▀-▟]" (substring-no-properties text pos next))))
+                                 b bg))))
+          (when (and (stringp fg) (not (member (cons fg under) seen)) (eas-text-ink--rgb fg)
                      (string-match-p "[^[:space:]]" (substring-no-properties text pos next)))
-            (push fg seen)
-            (let ((ratio (eas-text-ink-contrast fg bg)))
+            (push (cons fg under) seen)
+            (let ((ratio (eas-text-ink-contrast fg under)))
               (when (< ratio eas-text-ink-min-contrast)
                 (push (format "contrast: %s on the %s background %s is %.2f:1 (mark %s)"
-                              fg mode bg ratio (get-text-property pos 'eas-mark text))
+                              fg mode under ratio (get-text-property pos 'eas-mark text))
                       out)))))
         (setq pos next)))
     (nreverse out)))

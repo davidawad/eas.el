@@ -29,6 +29,7 @@
 (require 'eas-text-band)
 (require 'eas-text-ramp)
 (require 'eas-render-cache)
+(require 'eas-text-tile)
 
 (defface eas-axis '((t :inherit shadow)) "Face for eas axis lines and grid." :group 'faces)
 (defface eas-label '((t :inherit default)) "Face for eas tick labels." :group 'faces)
@@ -524,9 +525,20 @@ sits under strokes.  Later marks win ties."
 (defun eas-text--marks (g view)
   "Draw every mark of VIEW into grid G, clipped to its plot."
   (let ((prios (mapcar (lambda (p) (/ p 100.0)) (eas-text--mark-prios view)))
-        (clip (eas-text--clip g view)))
+        (clip (eas-text--clip g view))
+        (eas-text-tile--cells (make-hash-table :test 'eql)))
     (seq-doseq (mark (plist-get view :marks))
-      (eas-text--mark g view mark (pop prios) clip))))
+      (eas-text--mark g view mark (pop prios) clip))
+    (eas-text-tile-resolve g)))
+
+(defun eas-text--tiled-p (view)
+  "Non-nil when some rect of VIEW draws as a tile (`eas-text-tile-p').
+Tiles share one table across the view's marks and resolve after the
+last of them, so such a view paints its marks as one step."
+  (seq-some (lambda (mark)
+              (and (member (plist-get mark :mark) '("bar" "rect" "brush"))
+                   (seq-some (lambda (item) (eas-text-tile-p mark item)) (plist-get mark :items))))
+            (plist-get view :marks)))
 
 (defun eas-text--mark (g view mark prio clip)
   "Draw MARK of VIEW into grid G at PRIO, clipped to CLIP cells."
@@ -538,7 +550,8 @@ sits under strokes.  Later marks win ties."
           (let ((eas-text-trace-item (and eas-text-trace (list (plist-get view :id) (plist-get mark :id) i))))
            (pcase (plist-get mark :mark)
              ((or "line" "area" "trail") (eas-text--series g view mark item clip prio))
-             ((or "bar" "rect" "brush") (eas-text--rect g view mark item clip prio))
+             ((or "bar" "rect" "brush") (if (eas-text-tile-p mark item) (eas-text-tile-draw g view mark item clip prio)
+                                          (eas-text--rect g view mark item clip prio)))
              ("geoshape" (eas-geoshape-text g view mark item clip prio))
              ("arc" (let ((props (eas-text--item-props view mark item (plist-get item :datum))))
                       (eas-text-arc-dots item (eas-text--grid-cw g) (eas-text--grid-ch g)
@@ -759,13 +772,18 @@ KEY holds every input it reads besides the grid, for
       (let ((prios (mapcar (lambda (p) (/ p 100.0)) (eas-text--mark-prios view)))
             (clip (eas-text--clip g view))
             (where (list (plist-get view :id) (plist-get view :bounds) (plist-get view :scales))))
+       (if (eas-text--tiled-p view)
+           ;; Tiles resolve across the view's marks: one step for all of them.
+           (push (cons (list :tiled-marks where (plist-get view :marks))
+                       (lambda (g) (eas-text--marks g view)))
+                 steps)
         (seq-doseq (mark (plist-get view :marks))
           (let ((prio (pop prios)))
             (push (cons (list :mark where prio
                               ;; An image may read a file: never reuse it.
                               (if (equal (plist-get mark :mark) "image") (make-symbol "image") mark))
                         (lambda (g) (eas-text--mark g view mark prio clip)))
-                  steps))))
+                  steps)))))
       (push (cons (list :legends (plist-get view :id) (plist-get view :legends))
                   (lambda (g) (eas-text--legends g view)))
             steps))

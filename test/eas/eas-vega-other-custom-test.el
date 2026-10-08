@@ -82,7 +82,7 @@ its reference chart there."
 
 (defun eas-vega-other-custom-rasterizer-p ()
   "Non-nil when native SVG can be rasterized and PNGs decoded here."
-  (and (executable-find eas-chart-rsvg-program) (zlib-available-p)))
+  (and (executable-find eas-chart-rsvg-program) (and (fboundp 'zlib-available-p) (zlib-available-p))))
 
 (defun eas-vega-other-custom-compare (name &optional svg out)
   "Compare native SVG of NAME with its Vega reference PNG.

@@ -122,7 +122,7 @@ is not path data, `empty' when it covers no cell centre."
         (let ((raw (with-temp-buffer
                      (set-buffer-multibyte nil)
                      (apply #'insert (nreverse idat))
-                     (and (zlib-decompress-region (point-min) (point-max)) (buffer-string)))))
+                     (and (fboundp 'zlib-decompress-region) (zlib-decompress-region (point-min) (point-max)) (buffer-string)))))
           (when (and raw (= (length raw) (* h (1+ (* 4 w)))))
             (list :w w :h h :rgba (eas-png--unfilter raw w h 4))))))))
 

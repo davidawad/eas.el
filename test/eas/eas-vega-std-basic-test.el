@@ -333,7 +333,7 @@ Return the `eas-png-compare' plist with the better :ratio and :offset."
 (ert-deftest eas-vega-std-basic-gallery-holds-its-verdicts ()
   "Each example, rasterized, stays within its threshold of the reference image."
   :tags '(:gallery)
-  (unless (zlib-available-p) (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
+  (unless (and (fboundp 'zlib-available-p) (zlib-available-p)) (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
   (unless (executable-find eas-chart-rsvg-program)
     (eas-test-skip (format "%s is not on PATH; needed to rasterize native SVG" eas-chart-rsvg-program)))
   (let (failures)

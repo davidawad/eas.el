@@ -9,7 +9,7 @@
   "An ERT test NAME running BODY, skipped without zlib."
   (declare (indent 1))
   `(ert-deftest ,name ()
-     (unless (zlib-available-p) (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
+     (unless (and (fboundp 'zlib-available-p) (zlib-available-p)) (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
      ,@body))
 
 (defun eas-png-test--be32 (n)

@@ -416,7 +416,7 @@
 (ert-deftest eas-vega-contour-templates-match-the-references ()
   "Native renderings stay within their recorded threshold of the Vega references."
   :tags '(:gallery)
-  (unless (and (executable-find eas-chart-rsvg-program) (zlib-available-p))
+  (unless (and (executable-find eas-chart-rsvg-program) (and (fboundp 'zlib-available-p) (zlib-available-p)))
     (eas-test-skip (format "%s not on PATH; install librsvg's rsvg-convert to compare with test/vega-examples/ref"
                            eas-chart-rsvg-program)))
   (dolist (name eas-vega-contour--names)

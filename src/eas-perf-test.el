@@ -202,5 +202,18 @@ CALLS are compiles, patches, scenes, renders and repaints."
                  (should (equal (mapcar #'caddr (eas-perf-test--statuses verdict)) '("pass" "pass")))))
       (delete-file file))))
 
+(ert-deftest eas-perf-skips-workloads-this-emacs-cannot-run ()
+  (cl-letf (((symbol-function 'eas-perf-native-p) (lambda () nil))
+            ((symbol-function 'eas-perf-zlib-p) (lambda () nil)))
+    (should (eas-perf-unavailable-p "cold-native/projections"))
+    (should (eas-perf-unavailable-p "render/contour-plot"))
+    (should-not (eas-perf-unavailable-p "cold/projections"))
+    (should-not (eas-perf-unavailable-p "ladder-25"))
+    (should-not (cl-some (lambda (w) (string-prefix-p "cold-native/" (car w))) (eas-perf-workloads))))
+  (cl-letf (((symbol-function 'eas-perf-native-p) (lambda () t))
+            ((symbol-function 'eas-perf-zlib-p) (lambda () t)))
+    (should-not (eas-perf-unavailable-p "cold-native/projections"))
+    (should-not (eas-perf-unavailable-p "render/contour-plot"))))
+
 (provide 'eas-perf-test)
 ;;; eas-perf-test.el ends here

@@ -62,6 +62,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'seq)
 (require 'eas)
 (require 'eas-view)
 (require 'eas-play)
@@ -414,6 +415,18 @@ BACKEND, when non-nil, is the `eas-geo-backend' the frames draw with."
 The cold-native/ workloads run only then."
   (let ((eas-geo-backend 'auto)) (eq (eas-geo-backend-active) 'native)))
 
+(defun eas-perf-zlib-p ()
+  "Return non-nil when this Emacs has zlib, which PNG-reading workloads need."
+  (and (fboundp 'zlib-available-p) (zlib-available-p)))
+
+(defun eas-perf-unavailable-p (name)
+  "Return non-nil when workload NAME cannot run in this Emacs.
+cold-native/ needs the native geo module; the contour and density
+renders read PNGs and need zlib.  Such workloads are skipped, not missing."
+  (or (and (string-prefix-p "cold-native/" name) (not (eas-perf-native-p)))
+      (and (member name '("render/contour-plot" "render/density-heatmaps"))
+           (not (eas-perf-zlib-p)))))
+
 (defun eas-perf-live-workloads ()
   "The live workloads: alist of (NAME . SETUP), SETUP a function of a target.
 SETUP returns (STEP . CLOSE)."
@@ -441,14 +454,15 @@ SETUP returns (STEP . CLOSE)."
 
 (defun eas-perf-workloads ()
   "Every workload, live ones first, then render/NAME per template."
-  (append (eas-perf-live-workloads)
-          (mapcar (lambda (name) (cons (concat "render/" name) (eas-perf--render name)))
-                  (eas-template-names))
-          (mapcar (lambda (name) (cons (concat "cold/" name) (eas-perf--cold name)))
-                  eas-perf-cold)
-          (and (eas-perf-native-p)
-               (mapcar (lambda (name) (cons (concat "cold-native/" name) (eas-perf--cold name 'native)))
-                       eas-perf-cold))))
+  (seq-remove
+   (lambda (w) (eas-perf-unavailable-p (car w)))
+   (append (eas-perf-live-workloads)
+           (mapcar (lambda (name) (cons (concat "render/" name) (eas-perf--render name)))
+                   (eas-template-names))
+           (mapcar (lambda (name) (cons (concat "cold/" name) (eas-perf--cold name)))
+                   eas-perf-cold)
+           (mapcar (lambda (name) (cons (concat "cold-native/" name) (eas-perf--cold name 'native)))
+                   eas-perf-cold))))
 
 (defun eas-perf-measure (name setup target)
   "Measure workload NAME (SETUP as in `eas-perf-live-workloads') on TARGET.

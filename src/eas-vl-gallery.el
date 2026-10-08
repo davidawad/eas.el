@@ -277,7 +277,7 @@ The mask is NAME's status.json entry field."
 
 (defun eas-vl-gallery-rasterizer-p ()
   "Non-nil when native SVG can be rasterized and PNGs decoded here."
-  (and (executable-find eas-chart-rsvg-program) (zlib-available-p)))
+  (and (executable-find eas-chart-rsvg-program) (and (fboundp 'zlib-available-p) (zlib-available-p))))
 
 (defun eas-vl-gallery-omit-marks (scene types)
   "Return SCENE with every mark whose type is in TYPES (strings) dropped."

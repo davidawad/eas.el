@@ -111,7 +111,7 @@ Signals INVALID_INPUT for PNGs this decoder does not handle."
            (raw (with-temp-buffer
                   (set-buffer-multibyte nil)
                   (apply #'insert (nreverse idat))
-                  (unless (zlib-decompress-region (point-min) (point-max))
+                  (unless (and (fboundp 'zlib-decompress-region) (zlib-decompress-region (point-min) (point-max)))
                     (eas-signal "INVALID_INPUT" (format "%s: corrupt image data" file) :file file))
                   (buffer-string))))
       (unless (= (length raw) (* h (1+ (* w bpp))))

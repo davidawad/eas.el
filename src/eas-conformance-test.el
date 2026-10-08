@@ -11,7 +11,7 @@
 
 (defun eas-conformance-test--rasterizer-p ()
   "Non-nil when native SVG can be rasterized and decoded here."
-  (and (executable-find eas-chart-rsvg-program) (zlib-available-p)))
+  (and (executable-find eas-chart-rsvg-program) (and (fboundp 'zlib-available-p) (zlib-available-p))))
 
 (defvar eas-conformance-test--results nil
   "Gallery results of this session, with the oracle when it can run.")
@@ -105,7 +105,7 @@ Its oracle verdicts are checked too wherever the oracle can run."
 The images are the committed references, or fresh builds when bin/chart
 is on PATH; only rsvg-convert is needed."
   :tags '(:gallery)
-  (unless (zlib-available-p) (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
+  (unless (and (fboundp 'zlib-available-p) (zlib-available-p)) (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
   (unless (eas-conformance-test--rasterizer-p)
     (eas-test-skip (format "%s not on PATH; needed to rasterize native SVG for the image oracle"
                              eas-chart-rsvg-program)))

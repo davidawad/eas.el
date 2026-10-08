@@ -128,7 +128,7 @@ Gallery-group entries (with :ref) carry their own verdict in :ref-problem."
 Return (:status :detail ...): STATUS is \"pass\", \"fail\" or
 \"unverified\" (when the native SVG cannot be rasterized here)."
   (cond
-   ((not (zlib-available-p)) (list :status "unverified" :detail "this Emacs lacks zlib, needed to decode PNGs"))
+   ((not (and (fboundp 'zlib-available-p) (zlib-available-p))) (list :status "unverified" :detail "this Emacs lacks zlib, needed to decode PNGs"))
    ((not (executable-find eas-chart-rsvg-program))
     (list :status "unverified"
           :detail (format "%s is not on PATH; needed to rasterize native SVG" eas-chart-rsvg-program)))

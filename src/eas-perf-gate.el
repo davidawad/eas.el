@@ -116,7 +116,8 @@ or \"missing\"."
                                         (t "pass")))
                       rows))))))
       (seq-doseq (b base-ws)
-        (unless (eas-perf--find (plist-get run :workloads) (plist-get b :name))
+        (unless (or (eas-perf--find (plist-get run :workloads) (plist-get b :name))
+                    (eas-perf-unavailable-p (plist-get b :name)))
           (dolist (target '("svg" "text"))
             (when (plist-get b (intern (concat ":" target)))
               (push (list :name (plist-get b :name) :target target :status "missing"

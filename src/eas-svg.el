@@ -374,10 +374,10 @@ Nil for a symbol drawn from SVG path data, left to `eas-svg--item'."
   (let* ((shape (plist-get item :shape)) (x (plist-get item :x)) (y (plist-get item :y))
          (size (plist-get item :size)) (angle (plist-get item :angle))
          (r (/ (sqrt (max 0 size)) 2.0))
-         (square (and (equal shape "square") (not angle)))
-         (d (and (not square) (eas-symbols-path shape x y size angle))))
-    (unless (and (not square) (not d) (stringp shape) (string-match-p "\\`[ \t]*[Mm]" shape))
-      (let ((acc (cond (square (eas-svg--a " height=\"" (* 2 r)
+         (square-p (and (equal shape "square") (not angle)))
+         (d (and (not square-p) (eas-symbols-path shape x y size angle))))
+    (unless (and (not square-p) (not d) (stringp shape) (string-match-p "\\`[ \t]*[Mm]" shape))
+      (let ((acc (cond (square-p (eas-svg--a " height=\"" (* 2 r)
                                            (eas-svg--a " width=\"" (* 2 r)
                                                        (eas-svg--a " y=\"" (- y r)
                                                                    (eas-svg--a " x=\"" (- x r) (list "<rect"))))))
@@ -389,7 +389,7 @@ Nil for a symbol drawn from SVG path data, left to `eas-svg--item'."
               acc (eas-svg--a " stroke-width=\"" (unless none (plist-get item :strokeWidth)) acc)
               acc (eas-svg--a " opacity=\"" opacity acc))
         (eas-svg--close (eas-svg--styled-pieces item nil acc)
-                        (cond (square "></rect>") (d "></path>") (t "></circle>")))))))
+                        (cond (square-p "></rect>") (d "></path>") (t "></circle>")))))))
 
 (defun eas-svg--text-string (item fill opacity)
   "The printed <text> of one-line text ITEM with FILL and OPACITY, or nil."

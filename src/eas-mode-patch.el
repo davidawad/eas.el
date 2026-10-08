@@ -31,6 +31,15 @@
 ;; `set-text-properties' per run of equal properties.  No substring is
 ;; made on the way, and eas buffers keep no undo list (`eas-view-mode').
 ;; Modification hooks still run: they are how others see the frame.
+;;
+;; eas-8s9: reading the buffer back made the record path dearer than
+;; the strings it replaced in a terminal, where redisplay adds
+;; `fontified' to every cell and no plist compared `eq' any more.  The
+;; model now keeps, per line, the cells it wrote there last (a shadow,
+;; vectors swapped with the scratch, so nothing is allocated per
+;; frame).  A changed line is diffed with its shadow, never with the
+;; buffer; changed runs fewer than `eas-mode-patch-gap' cells apart
+;; are written as one, and a long run goes in as one string.
 
 ;;; Code:
 
@@ -122,16 +131,34 @@ per run, as for a `delete-region' and `insert'."
         (combine-change-calls pos (if fresh pos (+ pos (- e s)))
           (goto-char pos)
           (unless fresh (delete-region pos (+ pos (- e s))))
-          (let ((j s)) (while (< j e) (insert-char (aref chars j) 1) (setq j (1+ j))))
+          ;; A long run goes in as one string (eas-8s9): one insertion
+          ;; for the buffer and redisplay, not one per cell.
+          (if (< (- e s) 4)
+              (let ((j s)) (while (< j e) (insert-char (aref chars j) 1) (setq j (1+ j))))
+            (let ((v (eas-mode-patch--run-vector (- e s))))
+              (dotimes (k (- e s)) (aset v k (aref chars (+ s k))))
+              (insert (concat v))))
           (eas-mode-patch--props-write pos s e))
       (eas-mode-patch--props-write pos s e))
     (- e s)))
 
-(defun eas-mode-patch--cells (bol eol line)
+(defvar eas-mode-patch--run-vectors (make-vector 0 nil)
+  "A reused vector of each length N, to make a run's string from.")
+
+(defun eas-mode-patch--run-vector (n)
+  "Return a vector of length N, the same one for every run of N cells."
+  (when (>= n (length eas-mode-patch--run-vectors))
+    (setq eas-mode-patch--run-vectors
+          (vconcat eas-mode-patch--run-vectors (make-vector (- (1+ n) (length eas-mode-patch--run-vectors)) nil))))
+  (or (aref eas-mode-patch--run-vectors n) (aset eas-mode-patch--run-vectors n (make-vector n nil))))
+
+(defun eas-mode-patch--cells (bol eol line &optional n)
   "Rewrite the buffer between BOL and EOL to LINE, reading the buffer.
 LINE is a string or an `eas-text-row'.  Only the runs of cells that
-differ are written.  Return the number of cells written."
-  (let* ((n (eas-mode-patch--fill line)) (len (- eol bol)) (m (min n len)) (j 0) (written 0)
+differ are written.  N, when given, is the length of LINE already in
+the scratch (`eas-mode-patch--fill').  Return the number of cells
+written."
+  (let* ((n (or n (eas-mode-patch--fill line))) (len (- eol bol)) (m (min n len)) (j 0) (written 0)
          (chars eas-mode-patch--chars) (props eas-mode-patch--props))
     ;; The tail first: the common part keeps its positions.
     (cond ((> len n) (delete-region (+ bol n) eol))
@@ -149,10 +176,58 @@ differ are written.  Return the number of cells written."
             (setq written (+ written (eas-mode-patch--write pos j k)) j k)))))
     written))
 
+;;; Shadows: the cells a line got last (eas-8s9)
+
+(defconst eas-mode-patch-gap 3
+  "Same cells between two changed runs of a line that are written over.
+Runs this close are written as one: one change, one delete and insert,
+instead of one per run.")
+
+(defun eas-mode-patch--keep (shadow n)
+  "Make the N cells in the scratch a line's shadow; return the shadow.
+A shadow is [CHARS PROPS N].  The scratch takes SHADOW's vectors (or
+fresh ones when SHADOW is nil) in exchange, so once every line has a
+shadow, keeping one allocates nothing."
+  (let ((chars eas-mode-patch--chars) (props eas-mode-patch--props))
+    (if shadow
+        (setq eas-mode-patch--chars (aref shadow 0) eas-mode-patch--props (aref shadow 1))
+      (setq shadow (make-vector 3 nil)
+            eas-mode-patch--chars (make-vector (length chars) nil)
+            eas-mode-patch--props (make-vector (length chars) nil)))
+    (aset shadow 0 chars) (aset shadow 1 props) (aset shadow 2 n)
+    shadow))
+
+(defun eas-mode-patch--against (shadow bol n)
+  "Rewrite the line at BOL from SHADOW to the N cells in the scratch.
+The buffer is not read: SHADOW is what the line holds.  Runs of
+differing cells less than `eas-mode-patch-gap' cells apart are
+written as one.  Return the number of cells written."
+  (let* ((chars eas-mode-patch--chars) (props eas-mode-patch--props)
+         (old-chars (aref shadow 0)) (old-props (aref shadow 1)) (len (aref shadow 2))
+         (m (min n len)) (j 0) (written 0))
+    ;; The tail first: the common part keeps its positions.
+    (cond ((> len n) (delete-region (+ bol n) (+ bol len)))
+          ((> n len) (setq written (eas-mode-patch--write (+ bol len) len n t))))
+    (while (< j m)
+      (if (and (eq (aref chars j) (aref old-chars j))
+               (let ((p (aref props j)) (q (aref old-props j))) (or (eq p q) (equal p q))))
+          (setq j (1+ j))
+        ;; E ends the run; K looks up to the gap past it for more.
+        (let ((e (1+ j)) (k (1+ j)))
+          (while (and (< k m) (<= (- k e) eas-mode-patch-gap))
+            (unless (and (eq (aref chars k) (aref old-chars k))
+                         (let ((p (aref props k)) (q (aref old-props k))) (or (eq p q) (equal p q))))
+              (setq e (1+ k)))
+            (setq k (1+ k)))
+          (setq written (+ written (eas-mode-patch--write (+ bol j) j e)) j k))))
+    written))
+
 (defvar-local eas-mode-patch--model nil
-  "What `eas-mode-patch-lines' wrote last: [LINES CHARS-TICK SIZE].
-LINES is a vector of strings; the model is good while the buffer's
-`buffer-chars-modified-tick' and size are still CHARS-TICK and SIZE.")
+  "What `eas-mode-patch-lines' wrote last: [LINES CHARS-TICK SIZE SHADOWS].
+LINES is a vector of strings or `eas-text-row' records; the model is
+good while the buffer's `buffer-chars-modified-tick' and size are
+still CHARS-TICK and SIZE.  SHADOWS holds, per line, nil or the cells
+written there last (`eas-mode-patch--keep').")
 
 (defun eas-mode-patch--string-runs (old new)
   "Find where strings OLD and NEW differ, as a list of (START . END).
@@ -173,26 +248,31 @@ its properties.  Runs come last first."
     (when start (push (cons start n) runs))
     runs))
 
-(defun eas-mode-patch--retained (old new)
+(defun eas-mode-patch--retained (old new shadows)
   "Rewrite the buffer, showing line vector OLD, to line vector NEW.
-They have the same length.  Two strings are diffed with each other; a
-line that is an `eas-text-row' (either) is diffed with the buffer.
-The cells that differ are written in place.  Returns cells written."
+They have the same length.  A changed line is diffed with its shadow
+in SHADOWS when it has one, else two strings with each other and a
+line that is an `eas-text-row' (either) with the buffer.  The cells
+that differ are written in place, and the line's cells become its
+shadow.  Returns cells written."
   (let ((n (length new)) (written 0))
     (save-excursion
       (goto-char (point-min))
       (dotimes (i n)
         (let ((a (aref old i)) (b (aref new i)) (bol (point)))
-          (unless (eq a b)
-            (if (and (stringp a) (stringp b))
-                (unless (equal-including-properties a b)
-                  (let ((la (length a)) (lb (length b)))
-                    (eas-mode-patch--fill b)
-                    (cond ((> la lb) (delete-region (+ bol lb) (+ bol la)))
-                          ((> lb la) (setq written (+ written (eas-mode-patch--write (+ bol la) la lb t)))))
-                    (pcase-dolist (`(,s . ,e) (eas-mode-patch--string-runs a b))
-                      (setq written (+ written (eas-mode-patch--write (+ bol s) s e))))))
-              (setq written (+ written (eas-mode-patch--cells bol (line-end-position) b)))))
+          (unless (or (eq a b) (and (stringp a) (stringp b) (equal-including-properties a b)))
+            (let ((shadow (aref shadows i)) (nb (eas-mode-patch--fill b)))
+              (setq written
+                    (+ written
+                       (cond (shadow (eas-mode-patch--against shadow bol nb))
+                             ((and (stringp a) (stringp b))
+                              (let ((la (length a)) (w 0))
+                                (cond ((> la nb) (delete-region (+ bol nb) (+ bol la)))
+                                      ((> nb la) (setq w (eas-mode-patch--write (+ bol la) la nb t))))
+                                (pcase-dolist (`(,s . ,e) (eas-mode-patch--string-runs a b) w)
+                                  (setq w (+ w (eas-mode-patch--write (+ bol s) s e))))))
+                             (t (eas-mode-patch--cells bol (line-end-position) b nb)))))
+              (aset shadows i (eas-mode-patch--keep shadow nb))))
           (goto-char bol)
           (forward-line 1))))
     written))
@@ -201,11 +281,13 @@ The cells that differ are written in place.  Returns cells written."
   "Make the current buffer LINES joined by newlines, rewriting only what differs.
 LINES is a list of strings without newlines, or `eas-text-row' records
 \(`eas-text-render-rows').  Returns the number of cells written."
-  (let* ((new (vconcat lines)) (old (and (eas-mode-patch--model-p) (aref eas-mode-patch--model 0))))
+  (let* ((new (vconcat lines)) (model (and (eas-mode-patch--model-p) eas-mode-patch--model))
+         (old (and model (aref model 0)))
+         (shadows (if (and old (= (length old) (length new))) (aref model 3) (make-vector (length new) nil))))
     (prog1 (if (and old (= (length old) (length new)))
-               (eas-mode-patch--retained old new)
+               (eas-mode-patch--retained old new shadows)
              (eas-mode-patch--buffer lines))
-      (setq eas-mode-patch--model (vector new (buffer-chars-modified-tick) (buffer-size))))))
+      (setq eas-mode-patch--model (vector new (buffer-chars-modified-tick) (buffer-size) shadows)))))
 
 (defun eas-mode-patch--model-p ()
   "Non-nil when the retained model still describes the current buffer."

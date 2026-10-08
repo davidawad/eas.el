@@ -530,3 +530,90 @@ costing redisplay more than the strings they replaced. Next step there:
 write a changed run as one propertized `insert` when most of its cells
 change (the clock's hand and the airport's highlighted routes), and keep
 the per-cell path for the sparse runs it wins on.
+
+## Phase 5 (eas-8s9): diff against what was written, write runs whole
+
+Phase 4 left the clock about 1 ms dearer in a terminal than before it.
+Splitting the terminal frame into redraw and redisplay (same tree, rows
+left as records vs composed strings) showed where: redisplay cost the
+same both ways (clock 4.08 vs 3.99 ms); the redraw did not (3.21 vs
+2.46 ms). A record row was diffed against the buffer, and in `emacs
+-nw` redisplay puts `fontified` on every cell it shows, so no buffer
+plist was `eq` to a rendered one and every cell of every changed row
+fell through to the two-way plist subset test.
+
+### What changed
+
+| change | file | effect |
+|---|---|---|
+| the patch model keeps a shadow per line: the chars and props it wrote there last, in vectors swapped with the scratch (nothing allocated per frame once every line has one) | eas-mode-patch.el | a changed line is diffed with its shadow by `eq`, never with the buffer |
+| changed runs fewer than `eas-mode-patch-gap` (3) same cells apart are written as one run | eas-mode-patch.el | one change, delete and insert where a row had several |
+| a run of 4 or more cells goes in as one string (`concat` of a reused vector), then one `set-text-properties` per run of `eq` props | eas-mode-patch.el | one insertion, not one `insert-char` per cell |
+
+The first frame after a full rewrite, and lines with no shadow yet, take
+the Phase 4 paths. Output is unchanged: goldens untouched,
+`src/eas-text-frames-test.el` adds random line edits (equal but not `eq`
+props, `fontified` added between frames, strip moves, outside edits)
+checked against a fresh insert after every frame, and a test that a
+shadowed diff reads no buffer property and merges two near runs.
+
+### Clock in a real terminal
+
+The 0.2.3 tree's blobs are not in this checkout, so before is 0.2.4
+(94e119a) in a copy, same run, alternating. `scripts/bench-frame-tty.el`,
+`emacs -nw` 110x45 in `tmux -L eas`, clock only, 200 frames, 3 rounds,
+ms per frame with redisplay (in parentheses: 4 updates per redisplay):
+
+| mode | 0.2.4 (rounds) | now (rounds) | mean 0.2.4 → now |
+|---|---|---|---|
+| byte | 8.07, 8.00, 7.42 (10.72, 10.18, 10.41) | 6.36, 6.86, 6.58 (8.91, 8.87, 8.34) | **7.83 → 6.60** |
+| native | 6.66, 6.60, 6.27 (8.10, 9.69, 8.90) | 5.65, 5.83, 6.04 (6.91, 7.53, 7.54) | **6.51 → 5.84** |
+
+On this box 0.2.4's byte clock (7.4–8.1 ms) matches what Phase 4
+measured for it (7.42, 8.21), and now sits at the 6.2–6.5 ms Phase 4
+measured for its base; native is below that base.
+
+### All workloads in a real terminal
+
+40 frames, two rounds each (ladder, depth, clock, pacman, airport hover;
+the buffer equalled a full render in every run):
+
+| mode | tree | ladder | depth | clock | pacman | airport |
+|---|---|---|---|---|---|---|
+| byte | 0.2.4 | 7.69, 7.32 | 15.15, 14.23 | 9.00, 7.94 | 11.91, 11.26 | 18.70, 17.06 |
+| byte | now | 6.70, 6.15 | 13.10, 12.86 | 6.71, 8.75 | 11.40, 11.90 | 14.95, 14.42 |
+| native | 0.2.4 | 6.16, 6.03 | 11.13, 11.28 | 5.85, 6.06 | 10.42, 10.18 | 14.44, 14.58 |
+| native | now | 5.85, 5.57 | 10.82, 10.55 | 6.11, 6.07 | 9.51, 10.14 | 12.39, 12.38 |
+
+(40 frames of the clock are noisy, hence the 200-frame table above.)
+The airport hover gains most (2–4 ms): it changes the most cells a
+frame (about 400), so it saves most on the diff, and its highlighted
+routes are long runs, now one insertion each.
+
+### Batch frames (3x40, gc-cons-percentage 0.1; shadow diff only)
+
+| workload | mode | patch 0.2.4 → now | total 0.2.4 → now |
+|---|---|---|---|
+| order-book ladder push | byte | 0.92 → 0.69 | 9.38 → 9.14 |
+| depth-live push | byte | 2.63 → 1.64 | 17.26 → 16.17 |
+| clock tick | byte | 1.67 → 1.09 | 6.79 → 6.15 |
+| pacman tick | byte | 1.93 → 1.30 | 14.58 → 13.85 |
+| airport-connections hover | byte | 3.57 → 2.41 | 10.64 → 9.61 |
+| order-book ladder push | native | 0.66 → 0.55 | 8.75 → 8.88 |
+| depth-live push | native | 1.75 → 1.20 | 16.01 → 14.84 |
+| clock tick | native | 1.00 → 0.64 | 5.57 → 4.91 |
+| pacman tick | native | 1.13 → 0.86 | 13.14 → 12.40 |
+| airport-connections hover | native | 2.32 → 1.95 | 8.19 → 8.23 |
+
+Allocation per frame is flat in the batch bench (the shadows are
+allocated once). `make bench-check` passes byte and native (228 of 228);
+the text side of the live workloads allocates less (ladder-25 −7.5%,
+depth-25 −9.5%, hover-airports −4%, clock −1.5%), and only those text
+entries were re-recorded in bench/baseline.json.
+
+### What is left
+
+On the clock, redisplay is now about two thirds of a terminal frame
+(about 4 ms byte): the values strip, the last line, changes every tick,
+so redisplay lays out every line from the hands down to it. That is
+redisplay's range, not the patch's writes.

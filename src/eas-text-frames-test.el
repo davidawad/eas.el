@@ -256,6 +256,77 @@ The cached lines equal an uncached render, and a buffer patched with
       (should (equal (buffer-string) "one"))
       (should-not (progn (insert "!") (eas-mode-patch-last-line "two"))))))
 
+;; eas-8s9: a line the model wrote is diffed with its shadow (the
+;; cells it got last), not with the buffer, and runs a few cells apart
+;; are written as one.
+(defun eas-text-frames-test--random-line ()
+  "A random line: chars from a small set, props equal but rarely `eq'."
+  (let ((faces '(nil (face bold) (face (:foreground "red")) (face italic eas-datum 3))))
+    (apply #'concat
+           (cl-loop repeat (random 4)
+                    collect (let ((props (copy-tree (nth (random (length faces)) faces))))
+                              (apply #'propertize (make-string (1+ (random 6)) (aref "ab\u2801\u28ff " (random 5)))
+                                     props))))))
+
+(defun eas-text-frames-test--unfontified ()
+  "The buffer's text without the `fontified' redisplay adds."
+  (let ((s (buffer-string))) (remove-list-of-text-properties 0 (length s) '(fontified) s) s))
+
+(ert-deftest eas-text-frames-random-patches-equal-fresh-inserts ()
+  "Random line edits patched frame after frame equal the lines inserted.
+Between frames redisplay may add `fontified', the strip line may move
+through `eas-mode-patch-last-line', and an outside edit drops the
+model (and its shadows)."
+  (random "eas-8s9 patches")
+  (with-temp-buffer
+    (let ((lines (cl-loop repeat 8 collect (eas-text-frames-test--random-line))) (written 0))
+      (dotimes (i 120)
+        (setq lines (cl-loop for line in lines
+                             collect (pcase (random 4)
+                                       (0 (eas-text-frames-test--random-line))
+                                       (1 (let ((copy (copy-sequence line)))
+                                            (when (> (length copy) 0)
+                                              (dotimes (_ (1+ (random 3)))
+                                                (let ((k (random (length copy))))
+                                                  (aset copy k (aref "ab\u2802" (random 3))))))
+                                            copy))
+                                       (_ line))))
+        (setq written (+ written (eas-mode-patch-lines lines)))
+        (should (equal-including-properties (list i (eas-text-frames-test--unfontified))
+                                           (list i (mapconcat #'identity lines "\n"))))
+        (pcase (% i 7)
+          (2 (put-text-property (point-min) (/ (point-max) 2) 'fontified t))
+          (4 (let ((last (eas-text-frames-test--random-line)))
+               (eas-mode-patch-last-line last)
+               (setq lines (append (butlast lines) (list last)))
+               (should (equal-including-properties (eas-text-frames-test--unfontified)
+                                                  (mapconcat #'identity lines "\n")))))
+          (6 (when (= (% i 3) 0) (goto-char (point-max)) (insert "x") (setq lines (append (butlast lines) (list (concat (car (last lines)) "x"))))))))
+      (should (> written 0)))))
+
+(ert-deftest eas-text-frames-shadow-patch-reads-no-buffer ()
+  "With every line's shadow kept, a frame's diff reads no buffer property.
+Two runs two cells apart go in as one change."
+  (with-temp-buffer
+    (let ((a (list (propertize "abcdefgh" 'face 'bold) "0123456789"))
+          (b (list (propertize "abcdefgh" 'face 'italic) "0123456788"))
+          (changes nil))
+      (eas-mode-patch-lines a)
+      (eas-mode-patch-lines b)
+      (eas-mode-patch-lines a)
+      (let ((buffer (current-buffer)))
+        (add-hook 'after-change-functions
+                  (lambda (beg end _) (when (eq (current-buffer) buffer) (push (cons beg end) changes)))
+                  nil t)
+        (cl-letf* ((at (symbol-function 'text-properties-at))
+                   ((symbol-function 'text-properties-at)
+                    (lambda (pos &optional object)
+                      (if (stringp object) (funcall at pos object) (error "Read the buffer's properties")))))
+          (eas-mode-patch-lines (list (car a) "0X2Y45678Z"))))
+      (should (equal (buffer-string) "abcdefgh\n0X2Y45678Z"))
+      ;; Cells 1 and 3 (two apart) are one change; cell 9 is its own.
+      (should (equal (sort (mapcar (lambda (c) (- (cdr c) (car c))) changes) #'<) '(1 3))))))
+
 (ert-deftest eas-text-frames-string-runs ()
   "Runs where two lines differ, by character or by properties."
   (should (equal (eas-mode-patch--string-runs "abcdef" "aXcdeY") '((5 . 6) (1 . 2))))

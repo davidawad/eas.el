@@ -89,10 +89,12 @@ rotation, degrees) as in d3."
                                    (vector (+ (- (* ca rx) (* sa ry)) dx) (- dy (* sa rx) (* ca ry)))))))
          (c (funcall st (funcall raw lam phi) 0 0))
          (dx (- x (aref c 0))) (dy (- y (aref c 1)))
+         ;; (* k sx X) is (* (* k sx) X), and k times 1 or -1 is exact.
+         (ksx (* k sx)) (ksy (* k sy))
          (project (if (= alpha 0)
                       ;; st inlined: the same arithmetic, a call fewer per point.
                       (lambda (l p) (let ((r (funcall raw l p)))
-                                      (vector (+ dx (* k sx (aref r 0))) (- dy (* k sy (aref r 1))))))
+                                      (vector (+ dx (* ksx (aref r 0))) (- dy (* ksy (aref r 1))))))
                     (lambda (l p) (funcall st (funcall raw l p) dx dy))))
          (point (lambda (lon lat) (let ((r (funcall (car rot) (* lon eas-geo-rad) (* lat eas-geo-rad))))
                                     (funcall project (aref r 0) (aref r 1)))))

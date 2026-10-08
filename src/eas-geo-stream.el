@@ -26,6 +26,7 @@
 (defconst eas-geo-eps 1e-6 "D3-geo's epsilon.")
 (defconst eas-geo-eps2 1e-12 "D3-geo's epsilon squared.")
 (defconst eas-geo-half-pi (/ float-pi 2) "Half of pi.")
+(defconst eas-geo--quarter-pi (/ float-pi 4) "Quarter of pi.")
 (defconst eas-geo-tau (* 2 float-pi) "Two pi.")
 (defconst eas-geo-rad (/ float-pi 180) "Radians per degree.")
 (defconst eas-geo-nan 0.0e+NaN "Not a number, d3's NaN.")
@@ -40,19 +41,19 @@
   "Call STREAM's SLOT closure with ARGS."
   `(funcall (,(intern (format "eas-geo-stream-%s" slot)) ,stream) ,@args))
 
-(defun eas-geo-point (s x y &optional m)
+(defsubst eas-geo-point (s x y &optional m)
   "Send point X Y (flag M) to stream S."
   (funcall (eas-geo-stream-point s) x y m))
 
-(defun eas-geo-asin (x) "D3's clamped asin of X." (cond ((> x 1) eas-geo-half-pi) ((< x -1) (- eas-geo-half-pi)) (t (asin x))))
-(defun eas-geo-acos (x) "D3's clamped acos of X." (cond ((> x 1) 0.0) ((< x -1) float-pi) (t (acos x))))
-(defun eas-geo-sign (x) "Sign of X as d3 has it." (cond ((> x 0) 1) ((< x 0) -1) (t 0)))
+(defsubst eas-geo-asin (x) "D3's clamped asin of X." (cond ((> x 1) eas-geo-half-pi) ((< x -1) (- eas-geo-half-pi)) (t (asin x))))
+(defsubst eas-geo-acos (x) "D3's clamped acos of X." (cond ((> x 1) 0.0) ((< x -1) float-pi) (t (acos x))))
+(defsubst eas-geo-sign (x) "Sign of X as d3 has it." (cond ((> x 0) 1) ((< x 0) -1) (t 0)))
 (defun eas-geo-nan-p (x) "Non-nil when X is NaN." (and (floatp x) (isnan x)))
-(defun eas-geo-rem (a b) "JavaScript's A % B." (- a (* b (ftruncate (/ a (float b))))))
+(defsubst eas-geo-rem (a b) "JavaScript's A % B." (- a (* b (ftruncate (/ a (float b))))))
 
 ;;; Cartesian helpers
 
-(defun eas-geo-cartesian (lam phi)
+(defsubst eas-geo-cartesian (lam phi)
   "Unit vector of spherical LAM PHI (radians)."
   (let ((c (cos phi))) (vector (* c (cos lam)) (* c (sin lam)) (sin phi))))
 
@@ -60,7 +61,7 @@
   "Spherical [lambda phi] of cartesian V."
   (vector (atan (aref v 1) (aref v 0)) (eas-geo-asin (aref v 2))))
 
-(defun eas-geo-dot (a b) "Dot product of A and B."
+(defsubst eas-geo-dot (a b) "Dot product of A and B."
   (+ (* (aref a 0) (aref b 0)) (* (aref a 1) (aref b 1)) (* (aref a 2) (aref b 2))))
 
 (defun eas-geo-cross (a b) "Cross product of A and B."
@@ -75,13 +76,13 @@
   "V scaled to unit length (V itself when null)."
   (let ((l (sqrt (eas-geo-dot v v)))) (if (> l 0) (eas-geo-scale3 v (/ 1.0 l)) v)))
 
-(defun eas-geo-point-equal (a b)
+(defsubst eas-geo-point-equal (a b)
   "Non-nil when points A and B coincide within epsilon."
   (and (< (abs (- (aref a 0) (aref b 0))) eas-geo-eps) (< (abs (- (aref a 1) (aref b 1))) eas-geo-eps)))
 
 ;;; Rotation (d3 rotation.js)
 
-(defun eas-geo--wrap-lambda (lam)
+(defsubst eas-geo--wrap-lambda (lam)
   "LAM wrapped into [-pi, pi] as d3 does."
   (if (> (abs lam) float-pi) (- lam (* (fround (/ lam eas-geo-tau)) eas-geo-tau)) lam))
 
@@ -126,9 +127,13 @@ DL DP DG are the rotation angles in radians."
 
 (defun eas-geo-radians-rotate (rotate sink)
   "Stream converting degrees to radians, then ROTATE (L P -> [L P]), into SINK."
-  (eas-geo-transformer sink (lambda (s x y _m)
-                              (let ((r (funcall rotate (* x eas-geo-rad) (* y eas-geo-rad))))
-                                (eas-geo-point s (aref r 0) (aref r 1))))))
+  (let ((s (eas-geo-transformer sink #'ignore)))
+    ;; One closure per point, not the transformer's two.
+    (setf (eas-geo-stream-point s)
+          (lambda (x y &optional _m)
+            (let ((r (funcall rotate (* x eas-geo-rad) (* y eas-geo-rad))))
+              (eas-geo-point sink (aref r 0) (aref r 1)))))
+    s))
 
 ;;; Adaptive resampling (d3 resample.js)
 
@@ -141,6 +146,15 @@ Return a function SINK -> stream."
   (if (not (> delta2 0))
       (lambda (sink) (eas-geo-transformer sink (lambda (s x y _m) (let ((p (funcall project x y))) (eas-geo-point s (aref p 0) (aref p 1))))))
     (lambda (sink) (eas-geo--resample-stream project delta2 sink))))
+
+(defmacro eas-geo--resample-far (delta4 depth x0 y0 x1 y1)
+  "Non-nil when `eas-geo--resample-line' would subdivide X0 Y0 - X1 Y1.
+DELTA4 is four times its DELTA2 and DEPTH what remains: the test it
+starts with, made inline by the hot callers so a short segment costs
+no call.  The arguments are variables, evaluated more than once, and
+not named dx or dy."
+  `(and (> ,depth 0)
+        (let ((dx (- ,x1 ,x0)) (dy (- ,y1 ,y0))) (> (+ (* dx dx) (* dy dy)) ,delta4))))
 
 (defun eas-geo--resample-line (project delta2 x0 y0 l0 a0 b0 c0 x1 y1 l1 a1 b1 c1 depth sink)
   "Subdivide the projected segment X0 Y0 - X1 Y1 into SINK.
@@ -161,10 +175,12 @@ PROJECT and DELTA2 as in `eas-geo-resample'; DEPTH is what remains."
         (when (or (> (/ (* dz dz) d2) delta2)
                   (> (abs (- (/ (+ (* dx dx2) (* dy dy2)) d2) 0.5)) 0.3)
                   (< (+ (* a0 a1) (* b0 b1) (* c0 c1)) eas-geo--cos-min-distance))
-          (let ((a (/ a m)) (b (/ b m)))
-            (eas-geo--resample-line project delta2 x0 y0 l0 a0 b0 c0 x2 y2 l2 a b c depth sink)
+          (let ((a (/ a m)) (b (/ b m)) (delta4 (* 4 delta2)))
+            (when (eas-geo--resample-far delta4 depth x0 y0 x2 y2)
+              (eas-geo--resample-line project delta2 x0 y0 l0 a0 b0 c0 x2 y2 l2 a b c depth sink))
             (eas-geo-point sink x2 y2)
-            (eas-geo--resample-line project delta2 x2 y2 l2 a b c x1 y1 l1 a1 b1 c1 depth sink)))))))
+            (when (eas-geo--resample-far delta4 depth x2 y2 x1 y1)
+              (eas-geo--resample-line project delta2 x2 y2 l2 a b c x1 y1 l1 a1 b1 c1 depth sink))))))))
 
 (defun eas-geo--resample-stream (project delta2 sink)
   "The resampling stream of PROJECT at DELTA2 into SINK."
@@ -252,7 +268,7 @@ EVENTS (`eas-geo-recorder'), in one loop: the same calls into SINK with
 the same numbers, without a closure call per point."
   (let ((l00 0) (x00 0) (y00 0) (a00 0) (b00 0) (c00 0)
         (l0 0) (x0 eas-geo-nan) (y0 eas-geo-nan) (a0 0) (b0 0) (c0 0)
-        (ring nil))
+        (ring nil) (delta4 (* 4 delta2)) (depth eas-geo--max-depth))
     (dotimes (e (length events))
       (let ((ev (aref events e)))
         (cond
@@ -263,15 +279,16 @@ the same numbers, without a closure call per point."
             (while (< i n)
               (let* ((l (aref flat i)) (a (aref flat (+ i 2))) (b (aref flat (+ i 3))) (c (aref flat (+ i 4)))
                      (pr (funcall project l (aref flat (1+ i)))) (x (aref pr 0)) (y (aref pr 1)))
-                (eas-geo--resample-line project delta2 x0 y0 l0 a0 b0 c0 x y l a b c eas-geo--max-depth sink)
+                (when (eas-geo--resample-far delta4 depth x0 y0 x y)
+                  (eas-geo--resample-line project delta2 x0 y0 l0 a0 b0 c0 x y l a b c depth sink))
                 (setq x0 x y0 y l0 l a0 a b0 b c0 c)
                 (eas-geo-point sink x0 y0)
                 (when (and ring (= i 0))
                   (setq l00 l x00 x0 y00 y0 a00 a0 b00 b0 c00 c0)))
               (setq i (+ i 5)))
-            (when ring
+            (when (and ring (eas-geo--resample-far delta4 depth x0 y0 x00 y00))
               (eas-geo--resample-line project delta2 x0 y0 l0 a0 b0 c0 x00 y00 l00 a00 b00 c00
-                                      eas-geo--max-depth sink))
+                                      depth sink))
             (eas-geo--call line-end sink)))
          ((vectorp ev)
           (let ((p (funcall project (aref ev 0) (aref ev 1)))) (eas-geo-point sink (aref p 0) (aref p 1))))

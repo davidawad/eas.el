@@ -113,7 +113,7 @@ SINK) walks the clip edge."
 
 ;;; Spherical point in polygon (d3 polygonContains.js)
 
-(defun eas-geo--longitude (pt)
+(defsubst eas-geo--longitude (pt)
   "Longitude of PT wrapped as d3 does."
   (let ((l (aref pt 0)))
     (if (<= (abs l) float-pi) l
@@ -131,10 +131,10 @@ POLYGON is a list of rings of [L P] vectors (radians)."
       (let ((m (length ring)))
         (when (> m 0)
           (let* ((p0 (aref ring (1- m))) (l0 (eas-geo--longitude p0))
-                 (ph0 (+ (/ (aref p0 1) 2) (/ float-pi 4))) (s0 (sin ph0)) (c0 (cos ph0)))
+                 (ph0 (+ (/ (aref p0 1) 2) eas-geo--quarter-pi)) (s0 (sin ph0)) (c0 (cos ph0)))
             (dotimes (j m)
               (let* ((p1 (aref ring j)) (l1 (eas-geo--longitude p1))
-                     (ph1 (+ (/ (aref p1 1) 2) (/ float-pi 4))) (s1 (sin ph1)) (c1 (cos ph1))
+                     (ph1 (+ (/ (aref p1 1) 2) eas-geo--quarter-pi)) (s1 (sin ph1)) (c1 (cos ph1))
                      (delta (- l1 l0)) (sign (if (>= delta 0) 1 -1)) (abs-delta (* sign delta))
                      (anti (> abs-delta float-pi)) (k (* s0 s1)))
                 (setq sum (+ sum (atan (* k sign (sin abs-delta)) (+ (* c0 c1) (* k (cos abs-delta))))))

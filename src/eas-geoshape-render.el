@@ -50,33 +50,56 @@
 
 ;;; SVG
 
+(defconst eas-geoshape--ints
+  (let ((v (make-vector 8192 nil))) (dotimes (i 8192) (aset v i (number-to-string i))) v)
+  "The decimal strings of 0 to 8191, the integer parts of path numbers.")
+
+(defconst eas-geoshape--fracs
+  (let ((v (make-vector 100 nil)))
+    (dotimes (r 100)
+      (aset v r (cond ((= r 0) "") ((= (% r 10) 0) (format ".%d" (/ r 10))) (t (format ".%02d" r)))))
+    v)
+  "The trimmed decimals of the hundredths 0 to 99: \"\", \".1\", \".01\"...")
+
+(defun eas-geoshape--n-slow (v)
+  "Number V as `eas-svg--n' writes a float: \"%.2f\" trimmed."
+  (let ((s (format "%.2f" v)))
+    (cond ((string-suffix-p ".00" s) (substring s 0 -3))
+          ((eq (aref s (1- (length s))) ?0) (substring s 0 -1))
+          (t s))))
+
+(defmacro eas-geoshape--push-n (v place)
+  "Push float V's strings onto PLACE, as \"%.2f\" writes V, trimmed.
+A trailing \".00\" or \"0\" goes, as in `eas-svg--n'.  V times 100
+rounds to the hundredths \"%.2f\" prints unless it lies within 1e-4
+of a tie (its rounding error is below 1e-9 under 8191): those, NaNs
+and large numbers take `format'.  Whole parts and decimals come from
+tables, so a number allocates no string."
+  (macroexp-let2 nil v v
+    `(let* ((s (* ,v 100.0)) (n (and (< -819100.0 s 819100.0) (round s))))
+       (if (and n (< -0.4999 (- s n) 0.4999))
+           (let ((m (abs n)))
+             (when (or (< n 0) (and (= n 0) (< (copysign 1.0 ,v) 0))) (push "-" ,place))
+             (push (aref eas-geoshape--ints (/ m 100)) ,place)
+             (push (aref eas-geoshape--fracs (% m 100)) ,place))
+         (push (eas-geoshape--n-slow ,v) ,place)))))
+
 (defun eas-geoshape--svg-rings (x y paths)
   "SVG path data of PATHS ([CLOSED XY...] vectors) moved by X Y.
 Each number as `eas-svg--n' writes it, \"%.2f\" without a trailing
-\".00\" or \"0\", but one `format' per path and one pass to trim them
-all: a world map's thousands of points are most of its SVG's cost."
-  (let (parts)
+\".00\" or \"0\", from `eas-geoshape--push-n's tables and one `concat':
+a world map's thousands of points are most of its SVG's cost."
+  (let ((parts nil))
     (seq-doseq (p paths)
-      (let* ((flat (aref p 1)) (n (length flat)) (args nil) (i n))
-        (if (= n 0) (when (eq (aref p 0) t) (push "Z" parts))
-          (while (> i 0)
-            (setq i (- i 2))
-            (push (+ y (aref flat (1+ i))) args)
-            (push (+ x (aref flat i)) args))
-          (push (apply #'format
-                       (concat "M%.2f,%.2f" (apply #'concat (make-list (1- (/ n 2)) "L%.2f,%.2f"))
-                               (if (eq (aref p 0) t) "Z" ""))
-                       args)
-                parts))))
-    (if (null parts) ""
-      (with-temp-buffer
-        (apply #'insert (nreverse parts))
-        ;; "%.2f" puts exactly two digits after each point.
-        (goto-char (point-min))
-        (while (search-forward ".00" nil t) (delete-char -3))
-        (goto-char (point-min))
-        (while (re-search-forward "\\.[1-9]0" nil t) (delete-char -1))
-        (buffer-string)))))
+      (let* ((flat (aref p 1)) (n (length flat)) (i 0))
+        (while (< i n)
+          (push (if (= i 0) "M" "L") parts)
+          (eas-geoshape--push-n (+ x (aref flat i)) parts)
+          (push "," parts)
+          (eas-geoshape--push-n (+ y (aref flat (1+ i))) parts)
+          (setq i (+ i 2)))
+        (when (eq (aref p 0) t) (push "Z" parts))))
+    (if parts (apply #'concat (nreverse parts)) "")))
 
 (defun eas-geoshape-svg-d (item)
   "The SVG path data of geoshape ITEM, in absolute pixels."

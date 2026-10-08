@@ -26,9 +26,7 @@
 (require 'eas-geo-stream)
 (require 'eas-geo-polyhedral)
 
-(defconst eas-geo--quarter-pi (/ float-pi 4) "Quarter of pi.")
-
-(defun eas-geo--xy (x y) "The point [X Y]." (vector x y))
+(defsubst eas-geo--xy (x y) "The point [X Y]." (vector x y))
 
 ;;; d3-geo
 
@@ -129,13 +127,21 @@
   (let ((c (funcall eas-geo-raw-azimuthal-equal-area (/ l 2.0) p)))
     (eas-geo--xy (* 2 (aref c 0)) (aref c 1))))
 
+(defvar eas-geo-raw--mollweide-memo (vector nil 0.0 0.0)
+  "The last latitude `eas-geo-raw-mollweide' solved: [P COS-THETA Y].
+An interrupted Mollweide projects each point twice at one latitude (the
+point and its lobe's offset); the Newton iteration runs once.")
+
 (defun eas-geo-raw-mollweide (l p)
   "D3's mollweideRaw of L P."
-  (let* ((cp float-pi) (cps (* cp (sin p))) (i 30) (delta 1.0))
-    (while (and (> (abs delta) eas-geo-eps) (> i 0))
-      (setq delta (/ (- (+ p (sin p)) cps) (+ 1 (cos p))) p (- p delta) i (1- i)))
-    (let ((th (/ p 2)))
-      (eas-geo--xy (* (/ (sqrt 2) eas-geo-half-pi) l (cos th)) (* (sqrt 2) (sin th))))))
+  (let ((memo eas-geo-raw--mollweide-memo))
+    (unless (eql p (aref memo 0))
+      (let* ((p0 p) (cp float-pi) (cps (* cp (sin p))) (i 30) (delta 1.0))
+        (while (and (> (abs delta) eas-geo-eps) (> i 0))
+          (setq delta (/ (- (+ p (sin p)) cps) (+ 1 (cos p))) p (- p delta) i (1- i)))
+        (let ((th (/ p 2)))
+          (aset memo 1 (cos th)) (aset memo 2 (* (sqrt 2) (sin th))) (aset memo 0 p0))))
+    (eas-geo--xy (* (/ (sqrt 2) eas-geo-half-pi) l (aref memo 1)) (aref memo 2))))
 
 (defun eas-geo-raw-sinusoidal (l p) "D3's sinusoidalRaw of L P." (eas-geo--xy (* l (cos p)) p))
 
@@ -201,20 +207,38 @@
 
 ;;; Elliptic projections (d3-geo-projection elliptic.js, guyou.js, square.js, quincuncial)
 
+(defvar eas-geo--agm-memo nil
+  "Alist of M to `eas-geo--agm' of M.")
+
+(defun eas-geo--agm (m)
+  "Return the arithmetic-geometric means `eas-geo-elliptic-f' needs at M.
+A vector [AS BS DIVISOR]: the A and B of each step, and what PHI is
+divided by at the end.  They depend on M only, so they are made once."
+  (or (cdr (assoc m eas-geo--agm-memo))
+      (let ((a 1.0) (b (sqrt (- 1 m))) (c (sqrt m)) (i 0) as bs)
+        (while (> (abs c) eas-geo-eps)
+          (push a as) (push b bs)
+          (setq c (/ (+ a b) 2) b (sqrt (* a b)) a c c (/ (- a b) 2) i (1+ i)))
+        (let ((v (vector (vconcat (nreverse as)) (vconcat (nreverse bs)) (* (expt 2.0 i) a))))
+          (push (cons m v) eas-geo--agm-memo)
+          v))))
+
 (defun eas-geo-elliptic-f (phi m)
   "F(PHI|M), the incomplete elliptic integral of the first kind."
   (cond
    ((= m 0) phi)
    ((= m 1) (log (tan (+ (/ phi 2) eas-geo--quarter-pi))))
-   (t (let ((a 1.0) (b (sqrt (- 1 m))) (c (sqrt m)) (i 0))
-        (while (> (abs c) eas-geo-eps)
-          (if (/= (eas-geo-rem phi float-pi) 0)
-              (let ((dphi (atan (/ (* b (tan phi)) a))))
-                (when (< dphi 0) (setq dphi (+ dphi float-pi)))
-                (setq phi (+ phi dphi (* (ftruncate (/ phi float-pi)) float-pi))))
-            (setq phi (+ phi phi)))
-          (setq c (/ (+ a b) 2) b (sqrt (* a b)) a c c (/ (- a b) 2) i (1+ i)))
-        (/ phi (* (expt 2.0 i) a))))))
+   (t (let* ((agm (eas-geo--agm m)) (as (aref agm 0)) (bs (aref agm 1)) (n (length as)) (i 0))
+        (while (< i n)
+          ;; q is both `eas-geo-rem's quotient and the turns kept.
+          (let ((q (ftruncate (/ phi float-pi))))
+            (if (/= (- phi (* float-pi q)) 0)
+                (let ((dphi (atan (/ (* (aref bs i) (tan phi)) (aref as i)))))
+                  (when (< dphi 0) (setq dphi (+ dphi float-pi)))
+                  (setq phi (+ phi dphi (* q float-pi))))
+              (setq phi (+ phi phi))))
+          (setq i (1+ i)))
+        (/ phi (aref agm 2))))))
 
 (defun eas-geo-elliptic-fi (phi psi m)
   "F(PHI + i PSI|M) as [RE IM] (Abramowitz and Stegun 17.4.11)."
@@ -236,7 +260,7 @@
 (defun eas-geo-raw-guyou (l p)
   "D3's guyouRaw of L P."
   (let* ((kk (aref eas-geo--guyou 2))
-         (psi (log (tan (+ (/ float-pi 4) (/ (abs p) 2)))))
+         (psi (log (tan (+ eas-geo--quarter-pi (/ (abs p) 2)))))
          (r (/ (exp (- psi)) (aref eas-geo--guyou 3)))
          (x (* r (cos (- l)))) (y (* r (sin (- l))))
          (x2 (* x x)) (y1 (+ y 1)) (tt (- 1 x2 (* y y)))

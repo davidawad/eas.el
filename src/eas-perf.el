@@ -28,6 +28,10 @@
 ;;                          ladder-25, depth-25 and hover-airports
 ;;   render/NAME            opening and drawing template NAME once, for
 ;;                          every template (the first render)
+;;   cold/NAME              the same for the map templates of
+;;                          `eas-perf-cold', every cache emptied first
+;;                          (files read, shapes projected, memos, SVG
+;;                          fragments), as in a fresh Emacs
 ;;
 ;; Every workload runs on both targets.  Per frame it reports three
 ;; kinds of metric:
@@ -67,6 +71,9 @@
 (defvar eas-perf-warmup 3 "Frames run before measuring a live workload.")
 
 (defvar eas-perf-render-frames 2 "Opens measured per first-render workload.")
+
+(defvar eas-perf-cold '("projections" "county-unemployment" "map-with-tooltip" "world-map")
+  "Templates whose cold first render is a workload (cold/NAME).")
 
 (defvar eas-perf-heavy '("hover-counties" "pi-monte-carlo")
   "Live workloads slow enough to measure over `eas-perf-heavy-frames'.
@@ -374,6 +381,23 @@ The result is a function of a target, as `eas-perf--play'."
       (cons (lambda (i buffer) (let ((eas-perf--tiles t)) (funcall step i buffer)))
             (cdr pair)))))
 
+(defun eas-perf--forget ()
+  "Empty the caches a first render fills, as in a fresh Emacs."
+  (eas-geoshape-forget)
+  (clrhash eas-data-url--cache)
+  (clrhash eas-topojson--files)
+  (clrhash eas-svg--n-cache)
+  (eas-memo-clear)
+  (eas-render-cache-clear))
+
+(defun eas-perf--cold (template)
+  "Setup of the cold first render of TEMPLATE, as a function of a target."
+  (let ((render (eas-perf--render template)))
+    (lambda (target)
+      (let ((pair (funcall render target)))
+        (cons (lambda (i buffer) (eas-perf--forget) (funcall (car pair) i buffer))
+              (cdr pair))))))
+
 (defun eas-perf-live-workloads ()
   "The live workloads: alist of (NAME . SETUP), SETUP a function of a target.
 SETUP returns (STEP . CLOSE)."
@@ -403,12 +427,14 @@ SETUP returns (STEP . CLOSE)."
   "Every workload, live ones first, then render/NAME per template."
   (append (eas-perf-live-workloads)
           (mapcar (lambda (name) (cons (concat "render/" name) (eas-perf--render name)))
-                  (eas-template-names))))
+                  (eas-template-names))
+          (mapcar (lambda (name) (cons (concat "cold/" name) (eas-perf--cold name)))
+                  eas-perf-cold)))
 
 (defun eas-perf-measure (name setup target)
   "Measure workload NAME (SETUP as in `eas-perf-live-workloads') on TARGET.
 Return its metrics plist; a workload that fails gives (:error MESSAGE)."
-  (let ((render (string-prefix-p "render/" name)))
+  (let ((render (string-match-p "\\`\\(render\\|cold\\)/" name)))
     (condition-case err
         (let ((pair (funcall setup target)))
           (unwind-protect

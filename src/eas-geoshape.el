@@ -46,6 +46,7 @@
 (require 'eas-geo)
 (require 'eas-projection)
 (require 'eas-geoshape-render)
+(require 'eas-gc)
 
 (defconst eas-geoshape-x "eas_geo_x" "Field holding a projected point's x.")
 (defconst eas-geoshape-y "eas_geo_y" "Field holding a projected point's y (up from the bottom).")
@@ -320,6 +321,12 @@ SPEC is a projection's plain values (its :spec); TABLE maps a geometry
 \=(`eas-geoshape--identity'), by identity and weakly, to (TYPE . VALUE),
 VALUE as `eas-geoshape--project' returns it.")
 
+(defun eas-geoshape-forget ()
+  "Forget every projected shape and recorded spherical stream.
+The next compile of a map projects it as a fresh Emacs would."
+  (setq eas-geoshape--projected nil)
+  (clrhash eas-geo-proj--recorded))
+
 (defvar eas-geoshape-projected-max 32
   "Projections whose shapes `eas-geoshape--projected' keeps.
 A grid of maps (the projections template draws 24) needs one each.")
@@ -403,7 +410,11 @@ item through it (`eas-patch--items').  Call it inside
                     (eas-marks--extras unit row))))))))
 
 (defun eas-geoshape-items (unit scales bounds _metrics)
-  "Scene items of geoshape UNIT with SCALES in plot BOUNDS [X Y W H]."
+  "Scene items of geoshape UNIT with SCALES in plot BOUNDS [X Y W H].
+A map's first compile conses hundreds of megabytes of floats (the
+projections grid about 550 MB), so collection waits until Emacs is
+idle (`eas-gc-defer'), as during an interaction."
+  (eas-gc-defer)
   (let ((row-fn (eas-geoshape-row-fn unit scales bounds)) out)
     (seq-do-indexed (lambda (row i) (let ((item (funcall row-fn row i))) (when item (push item out))))
                     (plist-get unit :rows))

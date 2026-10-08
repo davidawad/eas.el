@@ -129,5 +129,46 @@ separates concatenated views."
                              (- (aref (plist-get (aref vs 1) :bounds) 1) (aref (plist-get (aref vs 0) :bounds) 1))))))
     (should (= (- (funcall gap 40) (funcall gap 10)) 30))))
 
+;;; Geo first render (eas-gzi): faster, the same numbers
+
+(ert-deftest eas-projection-path-numbers-print-as-format ()
+  "Path numbers from tables are what \"%.2f\", trimmed, writes."
+  (require 'eas-geoshape-render)
+  (let ((print (lambda (v) (let (l) (eas-geoshape--push-n v l) (apply #'concat (nreverse l)))))
+        (eas-svg--n-cache (make-hash-table :test 'eql))
+        (state (vector 12345)))
+    (dolist (v (list 0.0 -0.0 0.005 -0.005 0.015 0.125 -0.125 1.005 2.675 -0.004 -0.006 99.995
+                     8190.995 8191.994 8191.995 -8191.996 1e10 -1e10 0.0e+NaN 1.0e+INF -1.0e+INF))
+      (should (equal (funcall print v) (eas-svg--n v))))
+    (dotimes (_ 20000)
+      (aset state 0 (% (+ (* (aref state 0) 1103515245) 12345) 2147483648))
+      (let ((v (- (/ (aref state 0) 131072.0) 8192.0)))
+        (should (equal (funcall print v) (eas-svg--n v)))
+        (should (equal (funcall print (/ (fround (* v 200)) 200)) (eas-svg--n (/ (fround (* v 200)) 200))))))))
+
+(ert-deftest eas-projection-elliptic-and-mollweide-memos-change-nothing ()
+  "The AGM steps and the Mollweide latitude memo give d3's numbers."
+  (require 'eas-geo-raw)
+  (let ((reference
+         (lambda (phi m)
+           (let ((a 1.0) (b (sqrt (- 1 m))) (c (sqrt m)) (i 0))
+             (while (> (abs c) eas-geo-eps)
+               (if (/= (eas-geo-rem phi float-pi) 0)
+                   (let ((dphi (atan (/ (* b (tan phi)) a))))
+                     (when (< dphi 0) (setq dphi (+ dphi float-pi)))
+                     (setq phi (+ phi dphi (* (ftruncate (/ phi float-pi)) float-pi))))
+                 (setq phi (+ phi phi)))
+               (setq c (/ (+ a b) 2) b (sqrt (* a b)) a c c (/ (- a b) 2) i (1+ i)))
+             (/ phi (* (expt 2.0 i) a))))))
+    (dolist (m '(0.3 0.97 0.029))
+      (dolist (phi '(0.0 0.1 -0.7 1.2 3.141592653589793 4.0 -5.5))
+        (should (eql (eas-geo-elliptic-f phi m) (funcall reference phi m))))))
+  (let ((fresh (lambda (l p) (setq eas-geo-raw--mollweide-memo (vector nil 0.0 0.0))
+                 (eas-geo-raw-mollweide l p))))
+    (dolist (p '(0.0 0.5 -1.2 1.5707963267948966))
+      (let ((a (funcall fresh 1.0 p)))
+        (should (equal (eas-geo-raw-mollweide -2.0 p) (funcall fresh -2.0 p)))
+        (should (equal (eas-geo-raw-mollweide 1.0 p) a))))))
+
 (provide 'eas-projection-test)
 ;;; eas-projection-test.el ends here

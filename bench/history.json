@@ -40,39 +40,65 @@
   {
     "date": "2026-10-08",
     "live": [
-      {"name": "ladder-25", "svg": 209083, "svg-ms": 2.61, "text": 359786, "text-ms": 5.116},
-      {"name": "ladder-100", "svg": 492754, "svg-ms": 3.205, "text": 851437, "text-ms": 11.562},
-      {"name": "depth-25", "svg": 377353, "svg-ms": 4.108, "text": 436732, "text-ms": 7.735},
-      {"name": "depth-100", "svg": 820184, "svg-ms": 4.831, "text": 834276, "text-ms": 7.285},
-      {"name": "candles", "svg": 1214865, "svg-ms": 5.996, "text": 2162582, "text-ms": 16.348},
-      {"name": "clock", "svg": 111609, "svg-ms": 0.782, "text": 286992, "text-ms": 4.144},
-      {"name": "pacman", "svg": 275694, "svg-ms": 2.551, "text": 579977, "text-ms": 7.908},
-      {"name": "pi-monte-carlo", "svg": 8528246, "svg-ms": 71.483, "text": 7438748, "text-ms": 66.74},
-      {"name": "hover-airports", "svg": 234528, "svg-ms": 0.724, "text": 767984, "text-ms": 5.066},
-      {"name": "hover-counties", "svg": 1331306, "svg-ms": 4.678, "text": 550154, "text-ms": 1.636},
-      {"name": "resize", "svg": 2119315, "svg-ms": 17.777, "text": 2595818, "text-ms": 20.126}
+      {"name": "ladder-25", "svg": 209083, "svg-ms": 1.419, "text": 359786, "text-ms": 3.416},
+      {"name": "ladder-100", "svg": 492754, "svg-ms": 2.589, "text": 851437, "text-ms": 9.614},
+      {"name": "depth-25", "svg": 377353, "svg-ms": 3.321, "text": 436732, "text-ms": 6.961},
+      {"name": "depth-100", "svg": 820184, "svg-ms": 4.72, "text": 834276, "text-ms": 7.918},
+      {"name": "candles", "svg": 1214865, "svg-ms": 3.851, "text": 2162582, "text-ms": 12.53},
+      {"name": "clock", "svg": 111609, "svg-ms": 0.66, "text": 286992, "text-ms": 2.561},
+      {"name": "pacman", "svg": 275694, "svg-ms": 1.837, "text": 579977, "text-ms": 4.383},
+      {"name": "pi-monte-carlo", "svg": 8528246, "svg-ms": 39.184, "text": 7438748, "text-ms": 45.654},
+      {"name": "hover-airports", "svg": 234528, "svg-ms": 0.721, "text": 767984, "text-ms": 3.478},
+      {"name": "hover-counties", "svg": 1331586, "svg-ms": 2.795, "text": 550154, "text-ms": 1.009},
+      {"name": "resize", "svg": 2119289, "svg-ms": 11.688, "text": 2595818, "text-ms": 13.918},
+      {"name": "cold/projections", "svg": 550913083, "svg-ms": 1546.632, "text": 561770307, "text-ms": 2271.072},
+      {
+        "name": "cold/county-unemployment",
+        "svg": 326574595,
+        "svg-ms": 1273.509,
+        "text": 309733160,
+        "text-ms": 1309.284
+      },
+      {"name": "cold/map-with-tooltip", "svg": 140575681, "svg-ms": 643.773, "text": 137885428, "text-ms": 630.47},
+      {"name": "cold/world-map", "svg": 33328459, "svg-ms": 125.824, "text": 36519121, "text-ms": 155.581}
     ],
     "mode": "byte",
-    "render": {"svg": 2112849312, "svg-ms": 11532.235, "text": 2031373338, "text-ms": 10708.91},
+    "render": {"svg": 2096831256, "svg-ms": 7991.164, "text": 2015406713, "text-ms": 7476.844},
     "version": "0.2.4"
   },
   {
     "date": "2026-10-08",
     "live": [
-      {"name": "ladder-25", "svg": 209051, "svg-ms": 1.41, "text": 359754, "text-ms": 3.04},
-      {"name": "ladder-100", "svg": 492722, "svg-ms": 3.172, "text": 851405, "text-ms": 8.785},
-      {"name": "depth-25", "svg": 377321, "svg-ms": 3.113, "text": 436700, "text-ms": 6.012},
-      {"name": "depth-100", "svg": 820152, "svg-ms": 4.929, "text": 834244, "text-ms": 6.938},
-      {"name": "candles", "svg": 1214833, "svg-ms": 3.677, "text": 2162550, "text-ms": 15.253},
-      {"name": "clock", "svg": 111577, "svg-ms": 0.569, "text": 286960, "text-ms": 2.028},
-      {"name": "pacman", "svg": 275662, "svg-ms": 1.444, "text": 579945, "text-ms": 3.809},
-      {"name": "pi-monte-carlo", "svg": 8528214, "svg-ms": 41.641, "text": 7438716, "text-ms": 55.031},
-      {"name": "hover-airports", "svg": 234496, "svg-ms": 0.694, "text": 767952, "text-ms": 3.349},
-      {"name": "hover-counties", "svg": 1331274, "svg-ms": 2.539, "text": 550122, "text-ms": 1.069},
-      {"name": "resize", "svg": 2119315, "svg-ms": 10.944, "text": 2595818, "text-ms": 13.119}
+      {"name": "ladder-25", "svg": 209051, "svg-ms": 0.94, "text": 359754, "text-ms": 1.996},
+      {"name": "ladder-100", "svg": 492722, "svg-ms": 1.786, "text": 851405, "text-ms": 5.596},
+      {"name": "depth-25", "svg": 377321, "svg-ms": 1.784, "text": 436700, "text-ms": 4.194},
+      {"name": "depth-100", "svg": 820152, "svg-ms": 2.82, "text": 834244, "text-ms": 4.17},
+      {"name": "candles", "svg": 1214833, "svg-ms": 2.448, "text": 2162550, "text-ms": 9.005},
+      {"name": "clock", "svg": 111577, "svg-ms": 0.444, "text": 286960, "text-ms": 1.697},
+      {"name": "pacman", "svg": 275662, "svg-ms": 1.261, "text": 579945, "text-ms": 2.927},
+      {"name": "pi-monte-carlo", "svg": 8528214, "svg-ms": 33.015, "text": 7438716, "text-ms": 32.395},
+      {"name": "hover-airports", "svg": 234496, "svg-ms": 0.416, "text": 767952, "text-ms": 2.492},
+      {"name": "hover-counties", "svg": 1331554, "svg-ms": 1.925, "text": 550122, "text-ms": 0.921},
+      {"name": "resize", "svg": 2119289, "svg-ms": 7.762, "text": 2595818, "text-ms": 9.301},
+      {"name": "cold/projections", "svg": 550838607, "svg-ms": 1244.572, "text": 561695831, "text-ms": 1923.717},
+      {
+        "name": "cold/county-unemployment",
+        "svg": 325882373,
+        "svg-ms": 1055.449,
+        "text": 309040938,
+        "text-ms": 1039.548
+      },
+      {
+        "name": "cold/map-with-tooltip",
+        "svg": 140344947,
+        "svg-ms": 474.617,
+        "text": 137654694,
+        "text-ms": 466.858
+      },
+      {"name": "cold/world-map", "svg": 33316898, "svg-ms": 110.739, "text": 36507560, "text-ms": 133.6}
     ],
     "mode": "native",
-    "render": {"svg": 2112849502, "svg-ms": 8800.895, "text": 2031373544, "text-ms": 8109.837},
+    "render": {"svg": 2096723118, "svg-ms": 5970.704, "text": 2015298736, "text-ms": 5574.532},
     "version": "0.2.4"
   }
 ]

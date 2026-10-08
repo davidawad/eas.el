@@ -55,7 +55,13 @@
 ;; `eas-slice-stats' counts images: :rastered (new images Emacs must
 ;; rasterize, and :pixels their chart pixels), :kept (unchanged),
 ;; :ring-hits (found in the ring), :flushed, and frames: :full (that
-;; redrew everything), :whole (one image) and :unchanged.  Each image rasterizes to exactly the pixels of the same
+;; redrew everything), :whole (one image) and :unchanged; :diffs,
+;; :hashes, :splits and :maps count the work deciding them took, and
+;; `eas-slice-trace' sees each frame's decision and time.  A frame drawn
+;; as one image uses the chart's SVG as is, so the path that drew one
+;; image before tiles costs little more than it did.
+;;
+;; Each image rasterizes to exactly the pixels of the same
 ;; part of the current scene drawn afresh, and to those of a whole
 ;; render but for a few anti-aliased edge pixels: eas-slice-test.el
 ;; checks both with rsvg-convert.
@@ -145,15 +151,25 @@ A row is a buffer line; it must be at least a line of text tall.")
 :pixels counts the chart pixels of rastered tiles, :chart-pixels those
 of every frame's chart, :whole the frames drawn as one image,
 :unchanged those whose SVG and hot spots had not changed and :flushed
-the images dropped from the image cache.
+the images dropped from the image cache.  Deciding: :diffs counts scene
+diffs, :hashes SVG digests, :splits SVGs cut for tiles and :maps hot
+spots clipped to a tile.
 `eas-slice-stats-reset' zeroes it.")
 
 (defun eas-slice-stats-reset ()
   "Zero `eas-slice-stats'."
   (setq eas-slice-stats (list :frames 0 :tiles 0 :rastered 0 :kept 0 :ring-hits 0 :full 0
-                              :pixels 0 :chart-pixels 0 :whole 0 :unchanged 0 :flushed 0)))
+                              :pixels 0 :chart-pixels 0 :whole 0 :unchanged 0 :flushed 0
+                              :diffs 0 :hashes 0 :splits 0 :maps 0)))
 
 (eas-slice-stats-reset)
+
+(defvar eas-slice-trace nil
+  "Nil, or a function called with a plist after each frame.
+The plist has :mode (`whole' or `tiles'), :images (shown), :rastered,
+:ratio, :share (the frame's estimated cost as tiles over one image,
+nil when the running mean did not take one), :area and :runs of its
+changed cells and :ms, the milliseconds `eas-slice-frame' took.")
 
 (defun eas-slice--count (key n)
   "Add N to counter KEY of `eas-slice-stats'."
@@ -169,7 +185,8 @@ hot-spot ids to their help-echo text.  MODE is `whole' (one image) or
 `tiles', RATIO the running mean of the cost of the frames' changes as
 tiles over that of one image (`eas-slice-gain').  HITS counts the
 images it found in the ring, SEEN lists the md5 of the SVG of recent
-frames, the latest first."
+frames that hashed theirs, the latest first (a frame hashes its SVG
+only when the cost model asks)."
   scene svg theme xs ys segs tiles maps help mode ratio (hits 0) seen)
 
 ;;; The grid
@@ -336,6 +353,7 @@ image spec does not change when only a tooltip's text does."
 Rects are clipped to the tile, so an area that changed elsewhere
 leaves this tile's map alone.  With hash HELP, string help-echos move
 into it (`eas-slice--props')."
+  (eas-slice--count :maps 1)
   (let ((out nil) (w (- x1 x0)) (h (- y1 y0)))
     (dolist (area map)
       (let* ((shape (car area))
@@ -413,6 +431,7 @@ Return (ATTRS BEFORE . AFTER): ATTRS the text after the root's viewBox
 up to its `>'; BEFORE the body up to the background rect's attributes
 \(sized in percent of the viewport), AFTER the rest, or nil when there
 is no such rect.  Nil when SVG does not start as `eas-svg-dom' prints."
+  (eas-slice--count :splits 1)
   (when (string-match "\\`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"[^\"]*\" height=\"[^\"]*\" viewBox=\"[^\"]*\"\\([^>]*\\)>" svg)
     (let* ((attrs (match-string 1 svg)) (start (match-end 0))
            (bg (string-search eas-slice--background svg start)))
@@ -429,6 +448,14 @@ background rect, sized in percent of the viewport, is moved onto it."
           (cadr parts)
           (when (cddr parts) (format " x=\"%d\" y=\"%d\"" x y))
           (cddr parts)))
+
+(defun eas-slice--whole-svg (svg w h)
+  "SVG itself when it is already the tile of the whole W by H chart; or nil.
+That is when its root is W wide and H high in whole pixels, its
+viewBox from the origin: the tile would draw the same pixels."
+  (let ((head (format "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\""
+                      w h w h)))
+    (and (string-prefix-p head svg) svg)))
 
 (defun eas-slice--image (data map x y &optional whole)
   "An image descriptor of tile DATA at X Y, with hot spots MAP.
@@ -496,8 +523,10 @@ Whole-chart images (`eas-slice--image') never enter the ring."
         (push e drop)))
     (setq eas-slice--ring (nreverse keep))
     (dolist (e drop)
-      ;; One cache entry serves every `equal' spec: keep a shown one.
-      (unless (cl-some (lambda (s) (equal s (cdr e))) shown)
+      ;; One cache entry serves every spec of the same SVG data (hot
+      ;; spots aside): keep a shown one's.
+      (unless (let ((data (plist-get (cdr (cdr e)) :data)))
+                (cl-some (lambda (s) (let ((d (plist-get (cdr s) :data))) (or (eq d data) (equal d data)))) shown))
         (eas-slice--flush (cdr e)))))))
 
 (defun eas-slice--from-ring (image)
@@ -574,8 +603,12 @@ its pixels (`eas-slice--cost').  The mode starts as one image and
 turns to tiles once the frames' changes cost at most `eas-slice-gain'
 of one image as tiles, a running mean; it turns back at
 `eas-slice-leave'.  A frame changing more than `eas-slice-whole-share'
-of the pixels counts as costing one image at least."
-  (let* ((size (plist-get scene :size))
+of the pixels counts as costing one image at least.
+
+The whole chart's image is SVG itself when that fits, and SVG is
+hashed only for a small change seen as one image, or as tiles."
+  (let* ((t0 (and eas-slice-trace (float-time)))
+         (size (plist-get scene :size))
          (w (round (plist-get size :w))) (h (round (plist-get size :h)))
          (xs (eas-slice--edges w eas-slice-size 1))
          (ys (eas-slice--edges h eas-slice-size (max eas-slice-min-height 1)))
@@ -583,17 +616,19 @@ of the pixels counts as costing one image at least."
          (same-grid (and prev (equal xs (eas-slice-frame-xs prev)) (equal ys (eas-slice-frame-ys prev))
                          (equal theme (eas-slice-frame-theme prev))))
          (same-svg (and same-grid (equal svg (eas-slice-frame-svg prev))))
-         (boxes (cond ((not same-grid) t) (same-svg nil) (t (eas-slice-dirty (eas-slice-frame-scene prev) scene))))
+         (mode (if same-grid (eas-slice-frame-mode prev) 'whole))
+         (ratio (if same-grid (eas-slice-frame-ratio prev) 1.0))
+         (share nil)
+         (boxes (cond ((not same-grid) t) (same-svg nil)
+                      (t (eas-slice--count :diffs 1) (eas-slice-dirty (eas-slice-frame-scene prev) scene))))
          (old-segs (and same-grid (eas-slice-frame-segs prev)))
          (old-tiles (and same-grid (eas-slice-frame-tiles prev)))
          (kb (/ (length svg) 1024.0))
          (whole-cost (eas-slice--cost 1 (* w h) kb))
          (dirty (make-vector ny nil)) (runs 0) (area 0)
          (help (make-hash-table :test 'eq))
-         (md5 (secure-hash 'md5 svg))
+         (md5 nil)
          (seen (and same-grid (eas-slice-frame-seen prev)))
-         (mode (if same-grid (eas-slice-frame-mode prev) 'whole))
-         (ratio (if same-grid (eas-slice-frame-ratio prev) 1.0))
          (parts nil) (rows nil) (replaced nil) (taken nil)
          (rastered 0) (kept 0) (hits 0) (pixels 0))
     ;; The cells the frame changed: their runs and pixels.
@@ -606,7 +641,9 @@ of the pixels counts as costing one image at least."
             (setq area (+ area (* (- (aref xs (1+ c)) (aref xs c)) (- y1 y0)))))
           (setq last (aref v c)))
         (aset dirty r v)))
-    (cl-flet* ((tile-map (seg) (eas-slice--tile-map map (aref xs (aref seg 2)) (aref ys (aref seg 0))
+    (cl-flet* ((hash ()
+                 (or md5 (progn (eas-slice--count :hashes 1) (setq md5 (secure-hash 'md5 svg)))))
+               (tile-map (seg) (eas-slice--tile-map map (aref xs (aref seg 2)) (aref ys (aref seg 0))
                                                     (aref xs (aref seg 3)) (aref ys (aref seg 1)) help))
                (draw (seg)
                  ;; SEG drawn anew: the same image as PREV's there when its
@@ -615,15 +652,23 @@ of the pixels counts as costing one image at least."
                         (y0 (aref ys (aref seg 0))) (y1 (aref ys (aref seg 1)))
                         (seg-map (tile-map seg))
                         (k (and same-svg (cl-position seg old-segs :test #'equal))))
-                   (if (and k (equal seg-map (aref (eas-slice-frame-maps prev) k)))
-                       (list seg (aref old-tiles k) seg-map 'kept)
+                   (cond
+                    ((and k (equal seg-map (aref (eas-slice-frame-maps prev) k)))
+                     (list seg (aref old-tiles k) seg-map 'kept))
+                    ;; The whole chart: its own SVG when it fits, and never
+                    ;; in the ring.
+                    ((equal seg (vector 0 ny 0 nx))
+                     (let ((data (or (eas-slice--whole-svg svg w h)
+                                     (eas-slice-tile-svg (or (eas-slice--split svg) (error "Unexpected SVG root for tiles"))
+                                                         0 0 w h))))
+                       (list seg (eas-slice--image data seg-map 0 0 t) seg-map 'new)))
+                    (t
                      (unless parts
                        (setq parts (or (eas-slice--split svg) (error "Unexpected SVG root for tiles"))))
-                     (let* ((new (eas-slice--image (eas-slice-tile-svg parts x0 y0 (- x1 x0) (- y1 y0)) seg-map x0 y0
-                                                  (equal seg (vector 0 ny 0 nx))))
+                     (let* ((new (eas-slice--image (eas-slice-tile-svg parts x0 y0 (- x1 x0) (- y1 y0)) seg-map x0 y0))
                             (ring (eas-slice--from-ring new)))
                        (when ring (push ring taken))
-                       (list seg (or ring new) seg-map (if ring 'ring 'new))))))
+                       (list seg (or ring new) seg-map (if ring 'ring 'new)))))))
                (cost (entries)
                  (let ((n 0) (px 0))
                    (dolist (e entries)
@@ -653,7 +698,9 @@ of the pixels counts as costing one image at least."
        ;; Tiles: keep drawing tiles while they stay cheap.
        ((eq mode 'tiles)
         (setq rows (tiles))
-        (setq ratio (+ (* (- 1 eas-slice--weight) ratio) (* eas-slice--weight (/ (cost (apply #'append rows)) whole-cost))))
+        (hash)
+        (setq share (/ (cost (apply #'append rows)) whole-cost))
+        (setq ratio (+ (* (- 1 eas-slice--weight) ratio) (* eas-slice--weight share)))
         (when (>= ratio eas-slice-leave)
           ;; Too dear of late: one image.
           (setq mode 'whole rows nil)))
@@ -662,8 +709,9 @@ of the pixels counts as costing one image at least."
         ;; small change to a frame shown lately would find its tiles in
         ;; the ring; a large one costs one image whatever it revisits.
         (let ((steady (cond ((or (not same-grid) (>= area (* eas-slice-whole-share w h))) whole-cost)
-                            ((member md5 seen) (* 0.5 (eas-slice--cost runs area kb)))
+                            ((member (hash) seen) (* 0.5 (eas-slice--cost runs area kb)))
                             (t (eas-slice--cost runs area kb)))))
+          (when same-grid (setq share (/ steady whole-cost)))
           ;; A new chart starts between the two thresholds, undecided.
           (setq ratio (if same-grid
                           (+ (* (- 1 eas-slice--weight) ratio) (* eas-slice--weight (/ steady whole-cost)))
@@ -696,10 +744,15 @@ of the pixels counts as costing one image at least."
       (eas-slice--count :ring-hits hits)
       (when (eq boxes t) (eas-slice--count :full 1))
       (when (= (length tiles) 1) (eas-slice--count :whole 1))
+      (when eas-slice-trace
+        (funcall eas-slice-trace
+                 (list :mode mode :images (length tiles) :rastered rastered :ratio ratio
+                       :share share :area area :runs runs
+                       :ms (* 1000 (- (float-time) t0)))))
       (cons (eas-slice--make-frame :scene scene :svg svg :theme theme :xs xs :ys ys
                                    :segs segs :tiles tiles :maps (vconcat (mapcar #'caddr entries))
                                    :help help :mode mode :ratio ratio :hits hits
-                                   :seen (cons md5 (take (1- eas-slice-ring-patience) (delete md5 seen))))
+                                   :seen (if md5 (cons md5 (take (1- eas-slice-ring-patience) (delete md5 seen))) seen))
             replaced))))
 
 ;;; The buffer

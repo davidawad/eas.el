@@ -904,6 +904,44 @@ differently, set them from the `images rastered` line each case logs.
 The ladder could be cheaper as tiles if a tile's SVG held only the
 elements it shows; the renderer emits one document, so that is left out.
 
+### 8.15.2 What deciding costs (eas-gui3)
+
+The one-image path (ladder, depth, airport hover) carried the tiles'
+bookkeeping: the whole image was cut from the chart's SVG and joined
+again (two copies of a 139 KB document for the airports), and every
+frame hashed its SVG for the cost model's revisit test.
+
+- **The whole image is the chart's SVG** (`eas-slice--whole-svg`) when
+  its root is already the whole chart in whole pixels: no split, no
+  copy, and no ring lookup (whole images never enter the ring).
+- **SVG hashed on demand**: only for a small change seen as one image
+  (the revisit test) or a tiled frame. A frame redrawing most of the
+  chart costs one image whatever it revisits, so it does not hash.
+- **Counters and a trace.** `eas-slice-stats` gains :diffs, :hashes,
+  :splits and :maps; `eas-slice-trace` gets each frame's mode, images,
+  ratio, share, changed area and runs, and its ms.
+- The ring's flush keeps any image whose SVG data a shown image uses
+  (`eq` first), not only an `equal` spec: one cache entry serves both.
+
+Replayed headlessly (1000x640, byte-compiled, median `eas-slice-frame`
+ms over 40-60 frames; decisions and images rasterized identical to
+before on every frame):
+
+| workload | before | after |
+|---|---:|---:|
+| ladder push (one image) | 0.44 | 0.39 |
+| airport hover (one image) | 0.62 | 0.35 |
+| pacman | 1.10 | 0.95 |
+| clock +1 s | 0.52 | 0.43 |
+
+Tried and dropped: skipping the scene diff while one image could not
+turn to tiles in a frame, the running mean fed the last measured share.
+It saved another 0.2 ms, but pacman's cost changes from frame to frame
+and the stale shares skewed its mean: it kept to one image and found
+no tile in the ring (`eas-slice-revisiting-animation-finds-the-ring`
+failed). Under a millisecond against ~100 ms of raster, the decision
+stays exact.
+
 ## 9. Terminal parity through a real terminal (fc-qx1.8)
 
 `scripts/eas-spikes/tty-parity.sh` opens a point chart (brush, click

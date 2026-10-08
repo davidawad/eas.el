@@ -437,6 +437,30 @@ would lay out the whole document again for a share of its pixels."
               (should (eq (nth 4 f) 'whole))))
         (eas-view-close view)))))
 
+(ert-deftest eas-slice-one-image-draws-its-own-svg ()
+  "As one image, a frame neither cuts nor copies the chart's SVG.
+The image's data is the SVG itself, and a frame changing most of the
+chart does not hash it.  `eas-slice-trace' sees every frame."
+  (eas-slice-test--with
+    (let ((view (eas-view-open (eas-json-encode eas-slice-test--deep-ladder) :id "slice-deep" :size '(1000 . 640)
+                               :target 'svg :rows (eas-slice-test--deep-book 1)))
+          (trace nil))
+      (unwind-protect
+          (let* ((eas-slice-trace (lambda (p) (push p trace)))
+                 (frames (eas-slice-test--cached-drive view '(1000 . 640) #'eas-slice-test--deep-push 16)))
+            (dolist (f frames) (should (= (nth 0 f) 1)) (should (eq (nth 4 f) 'whole)))
+            (should (= (length trace) 17))
+            (dolist (p trace)
+              (should (eq (plist-get p :mode) 'whole))
+              (should (= (plist-get p :images) 1))
+              (should (numberp (plist-get p :ms))))
+            (should (zerop (plist-get eas-slice-stats :splits)))
+            (should (< (plist-get eas-slice-stats :hashes) 17))
+            (let* ((scene (eas-view-scene view)) (svg (eas-svg-render scene))
+                   (frame (car (eas-slice-frame scene svg nil nil nil))))
+              (should (eq (plist-get (cdr (aref (eas-slice-frame-tiles frame) 0)) :data) svg))))
+        (eas-view-close view)))))
+
 (ert-deftest eas-slice-revisiting-animation-finds-the-ring ()
   "Pacman revisits its frames: as tiles it finds them in the ring.
 It never rasterizes more pixels than one image a frame would."

@@ -691,6 +691,109 @@ spread):
   unchanged chart 1.6 ms of raster), the readout does not re-rasterize
   when unchanged, and the cache does not thrash. The raster is filed.
 
+### 8.15 Tiled GUI frames (eas-e3s)
+
+8.14 left the raster as the GUI frame's cost: librsvg draws the whole
+chart image whenever its SVG changes, about 40 ms per million device
+pixels on that Retina NS window (clock 25.8 ms at 500x290, 61.0 at
+800x500, 103.0 at 1000x640, all at 2x). `src/eas-slice.el` now draws a
+GUI chart as several images, so a frame rasterizes only the part of the
+chart it changed:
+
+- **A grid of cells, images of runs of cells.** The chart is cut into
+  cells of about `eas-slice-size` (120) pixels. A row of cells is a
+  buffer line (`line-height` t on its newline, so the line is exactly
+  as tall as its images). Each image is the chart's own SVG under a root
+  whose viewBox is its rectangle, with the `100%` background rect moved
+  onto it. An image whose cells did not change keeps the very image
+  descriptor of the last frame, so Emacs finds it in its image cache.
+  The changed cells of a row are redrawn as one image per run of
+  cells, because each image costs some fixed time besides its pixels.
+- **What changed comes from the scenes** (`eas-slice-dirty`). Marks are
+  compared item by item. The bounds of each changed item, before and
+  after, padded for strokes, text-metric error and anti-aliasing, mark
+  the cells to redraw. A bar that grew marks only the strip its end
+  moved over. Anything else (size, axes, legends, titles, face theme)
+  redraws everything.
+- **Frames that keep changing most of the chart are one image.** When
+  the running share of the chart that frames change (the mean of this
+  frame's and the last's, a full redraw counting as 1) reaches
+  `eas-slice-whole-share` (0.6), the frame is a single image, as before
+  tiles. A ladder push, a depth push and a resize therefore cost what
+  they did before.
+- **Hot spots.** Each image's `:map` holds only the areas it overlaps,
+  clipped to it and in its own pixels. Help-echo text is kept in a
+  buffer-local table that `eas-slice-help-echo` reads, so a tooltip
+  whose text changed does not change the image spec (Emacs keys its
+  image cache on the whole spec, `:map` included). `:eas-origin` gives
+  the image's offset in the chart, and `eas-mode-event-px` adds it back.
+- **A bounded ring of replaced images** (`eas-slice-ring-bytes`,
+  32 MB of estimated raster) stays unflushed. An animation that
+  revisits a frame finds its images there, and images leaving the ring
+  are flushed. Tiles keep this affordable: they hold the changed parts
+  only, where 8.14 needed 133 MB for pacman's 14 whole frames.
+- **The visible part only.** Emacs rasterizes the images a window
+  shows, so a chart taller or wider than its window (truncated lines)
+  costs only what is visible.
+
+`eas-slice-tiles` (`auto`: graphic frames) switches tiles on. Batch and
+terminal frames draw as before, and static SVG goldens are unchanged
+(the SVG renderer is untouched).
+
+**Correctness** (`src/eas-slice-test.el`, needs rsvg-convert; this box
+has no root, so librsvg 2.60 and its fonts were unpacked into /tmp).
+Live views are driven through `eas-mode-redraw` in batch: clock and
+pacman ticks, ladder pushes, airport hovers. On checked frames every
+image on display, kept or redrawn, rasterizes **byte for byte** to the
+same rectangle cut from the current scene drawn afresh: a kept image
+was not touched by the frames since. Against one render of the whole
+chart, the images differ in at most 0.07% of pixels (worst 0.066%,
+tolerance 0.2%). These are single anti-aliased edge pixels, ±1-18 in a
+channel: librsvg does not rasterize a translated viewBox bit for bit
+the same, even for the cell at the origin.
+
+**Images rasterized per frame** (`make bench`, `tiles/*` workloads at
+1000x640, 20 frames, gated as `:slices`). These counts do not depend on
+the machine. "Before" is one image per changed frame, the whole chart.
+The milliseconds after are **estimates, not measurements**: this box
+has no display. They use 8.14's raster cost, about 103 ms for the whole
+1000x640 chart at 2x and proportional to pixels, plus 0 to 6 ms of fixed
+cost per image (the 8.14 points fit an intercept anywhere in that
+range):
+
+| workload | before: ms (8.14, measured) | images rasterized / shown | chart pixels rasterized | after: ms (estimate) |
+|---|---:|---:|---:|---:|
+| clock tick | 92.4 | 2.95 / 12.4 | 24.1% | 25-43 |
+| pacman tick | 74.4 | 4.7 / 26.95 (+ ring hits) | 17.0% | 18-46 |
+| airport-connections hover | 105.3 | 3.3 / 10.7 | 39.4% | 41-60 |
+| ladder push, 25 levels | 83.2 | 1.0 / 1.0 (one image) | 100% | as before |
+| depth push, 25 levels | 73.5 | 4.6 / 6.6 | 82.5% | 85-113 |
+
+- **Hover, clock and pacman lose 50-80% of their raster.** On the NS
+  window that is about 25-50 ms a frame instead of 75-105.
+- **Ladder and depth change nearly the whole chart.** The ladder's ten
+  level deltas move bars in every row, and the depth's axis rescales on
+  most pushes, a full redraw. The ladder is one image again. Depth
+  alternates full redraws with light frames and can cost a few images
+  more than one; at a fixed cost of 6 ms per image it would be up to
+  ~30% slower than before. Whether that cost is nearer 0 or 6 ms
+  decides it, and only an NS run can tell.
+- Cell size trade-off (same workloads, images / pixels per frame): at
+  80 px the clock is 4.5 / 21%, the ladder 20.4 / 83% (before the
+  whole-image rule); at 240 px the clock is 1.9 / 43%. 120 px is the
+  middle; the fixed cost per image, still unmeasured, would move it.
+- Engine cost per frame grows a little: the SVG string is concatenated
+  once per redrawn image (clock 201 KB a frame against 109 KB for one
+  SVG; the airport hover about 1 MB, since its routes make a large
+  document), and the scene diff and hot-spot clipping are 0.5-1 ms.
+
+**Unmeasured, for the next NS run** (`scripts/eas-spikes/gui/ns-frames.el`
+with `eas-slice-tiles` t and nil): the fixed cost per image, Emacs's
+`xi:include` wrapper parsing the whole document once per image, and
+whether the rows join without a seam at 2x. `line-height` t should make
+them, and each image is a whole number of pixels high. Tune
+`eas-slice-size` and `eas-slice-whole-share` from those numbers.
+
 ## 9. Terminal parity through a real terminal (fc-qx1.8)
 
 `scripts/eas-spikes/tty-parity.sh` opens a point chart (brush, click

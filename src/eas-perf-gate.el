@@ -37,7 +37,7 @@
 (defconst eas-perf-default-tolerance '(:alloc 0.1 :calls 0)
   "Tolerances of a new baseline: fractions of the baseline value.")
 
-(defconst eas-perf-gated '(:alloc-bytes :compiles :patches :scenes :renders :repaints)
+(defconst eas-perf-gated '(:alloc-bytes :compiles :patches :scenes :renders :repaints :slices)
   "Metrics the gate compares.")
 
 ;;; Files
@@ -106,19 +106,22 @@ or \"missing\"."
             (let* ((now (plist-get w target)) (base (plist-get b target))
                    (over (and base now (not (plist-get now :error)) (not (plist-get base :error))
                               (eas-perf--compare-metrics base now tolerance))))
-              (push (list :name (plist-get w :name) :target (substring (symbol-name target) 1)
+              ;; tiles/ workloads run on one target only.
+              (when (or now base)
+                (push (list :name (plist-get w :name) :target (substring (symbol-name target) 1)
                           :base base :now now :over over
                           :status (cond ((plist-get now :error) "error")
                                         ((or (null base) (plist-get base :error)) "new")
                                         (over "fail")
                                         (t "pass")))
-                    rows)))))
+                      rows))))))
       (seq-doseq (b base-ws)
         (unless (eas-perf--find (plist-get run :workloads) (plist-get b :name))
           (dolist (target '("svg" "text"))
-            (push (list :name (plist-get b :name) :target target :status "missing"
-                        :base (plist-get b (intern (concat ":" target))))
-                  rows))))
+            (when (plist-get b (intern (concat ":" target)))
+              (push (list :name (plist-get b :name) :target target :status "missing"
+                          :base (plist-get b (intern (concat ":" target))))
+                    rows)))))
       (setq rows (nreverse rows))
       (list :status (if (seq-some (lambda (r) (member (plist-get r :status) '("fail" "error"))) rows)
                         "fail" "pass")
@@ -135,11 +138,16 @@ or \"missing\"."
   (if (numberp bytes) (format "%.1f" (/ bytes 1024.0)) "-"))
 
 (defun eas-perf--calls (m)
-  "The call counts of metrics M as compiles/patches/scenes/renders/repaints."
+  "The call counts of metrics M as compiles/patches/scenes/renders/repaints.
+Tiles re-rasterized out of tiles shown follow when M counts them."
   (if (and m (not (plist-get m :error)))
-      (mapconcat (lambda (k) (let ((v (plist-get m (intern (format ":%s" k)))))
-                               (if (and (numberp v) (= v (round v))) (format "%d" v) (format "%s" v))))
-                 eas-perf-call-metrics "/")
+      (concat (mapconcat (lambda (k) (let ((v (plist-get m (intern (format ":%s" k)))))
+                                       (if (and (numberp v) (= v (round v))) (format "%d" v) (format "%s" v))))
+                         eas-perf-call-metrics "/")
+              (if (plist-get m :slices)
+                  (format ", tiles %s of %s (%s%% px)" (plist-get m :slices) (plist-get m :slice-tiles)
+                          (plist-get m :slice-area))
+                ""))
     "-"))
 
 (defun eas-perf--delta (base now)
@@ -275,6 +283,7 @@ A row for the same version and mode is replaced."
                    '("workload" "target" "KB/frame" "conses/frame" "calls" "ms median/p95")
                    (cl-loop for w in rows
                             append (cl-loop for target in '(:svg :text)
+                                            when (plist-get w target)
                                             collect (append (list (plist-get w :name) (substring (symbol-name target) 1))
                                                             (funcall cells w target))))))))
     (concat

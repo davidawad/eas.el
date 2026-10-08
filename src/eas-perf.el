@@ -23,6 +23,9 @@
 ;;                          airport-connections and county-unemployment
 ;;                          templates
 ;;   resize                 a stock chart cycling through four sizes
+;;   tiles/NAME             a live workload drawn as GUI tiles at 1000x640
+;;                          (eas-slice.el, SVG only): clock, pacman,
+;;                          ladder-25, depth-25 and hover-airports
 ;;   render/NAME            opening and drawing template NAME once, for
 ;;                          every template (the first render)
 ;;
@@ -37,6 +40,10 @@
 ;;            selection patches of a cached plan), scenes, renders and
 ;;            repaints (text grids patched into a buffer)
 ;;   time     wall-clock ms, median and p95 over the measured frames
+;;   slices   tiles/ only: images re-rasterized per frame (:slices) out
+;;            of the images shown (:slice-tiles), and the percentage of
+;;            the chart's pixels they cover (:slice-area): what librsvg
+;;            would draw again in a GUI frame (eas-e3s)
 ;;
 ;; Alloc and calls are hardware independent and gate regressions
 ;; (eas-perf-gate.el); time is reported only.  Clocks are fixed, so no
@@ -51,6 +58,7 @@
 (require 'eas-svg)
 (require 'eas-text)
 (require 'eas-mode-patch)
+(require 'eas-slice)
 (require 'eas-template)
 (require 'eas-bench)
 
@@ -68,6 +76,15 @@ gate as well and keep the suite short.")
 (defvar eas-perf-heavy-frames 8 "Frames measured per heavy workload.")
 
 (defconst eas-perf-text-size '(:cols 100 :rows 40) "Cell size of the text frames.")
+
+(defconst eas-perf-tile-size '(1000 . 640)
+  "Pixel size of the tiles/ workloads: the NS window of engine-spikes 8.14.")
+
+(defvar eas-perf--svg-size nil
+  "Pixel size of SVG views when the workload names none (nil: its own).")
+
+(defvar eas-perf--tiles nil
+  "Non-nil while a tiles/ workload draws: SVG frames are drawn as tiles.")
 
 (defconst eas-perf-targets '(svg text) "Targets every workload runs on.")
 
@@ -111,9 +128,16 @@ The value is a string."
 (defun eas-perf--draw (view buffer)
   "Draw VIEW's scene as the glue does, text into BUFFER."
   (let ((scene (eas-view-scene view)))
-    (if (eq (eas-view-target view) 'svg) (eas-svg-render scene)
+    (cond
+     ((and eas-perf--tiles (eq (eas-view-target view) 'svg))
+      ;; What `eas-mode-redraw' does in a GUI frame, but the values strip.
       (with-current-buffer buffer
-        (let ((inhibit-read-only t)) (eas-mode-patch-text (eas-text-render scene)))))))
+        (let ((inhibit-read-only t))
+          (eas-slice-redraw scene (eas-svg-render scene) (eas-svg-hot-spots scene) nil ""))))
+     ((eq (eas-view-target view) 'svg) (eas-svg-render scene))
+     (t
+      (with-current-buffer buffer
+        (let ((inhibit-read-only t)) (eas-mode-patch-text (eas-text-render scene))))))))
 
 (defmacro eas-perf--counting (counts &rest body)
   "Run BODY, tallying each `eas-perf-counted' function into hash COUNTS."
@@ -135,10 +159,13 @@ STEP gets the frame number and the scratch buffer; it does the update
 and the draw.  Return the per-frame metrics plist."
   (let ((buffer (generate-new-buffer " *eas-perf*"))
         (counts (make-hash-table :test 'eq))
-        (ms nil) (bytes 0) (conses 0))
+        (ms nil) (bytes 0) (conses 0)
+        (slices 0) (tiles 0) (pixels 0) (chart 0))
     (unwind-protect
         (progn
           (dotimes (i warmup) (funcall step i buffer))
+          (setq slices (plist-get eas-slice-stats :rastered) tiles (plist-get eas-slice-stats :tiles)
+                pixels (plist-get eas-slice-stats :pixels) chart (plist-get eas-slice-stats :chart-pixels))
           (garbage-collect)
           (eas-perf--counting counts
             (dotimes (i frames)
@@ -156,6 +183,13 @@ and the draw.  Return the per-frame metrics plist."
      (cl-loop for m in eas-perf-call-metrics
               append (list (intern (format ":%s" m))
                            (/ (round (* 100.0 (gethash m counts 0)) frames) 100.0)))
+     (let ((shown (- (plist-get eas-slice-stats :tiles) tiles)))
+       (when (> shown 0)
+         (list :slices (/ (round (* 100.0 (- (plist-get eas-slice-stats :rastered) slices)) frames) 100.0)
+               :slice-tiles (/ (round (* 100.0 shown) frames) 100.0)
+               :slice-area (/ (round (* 1000.0 (- (plist-get eas-slice-stats :pixels) pixels))
+                                     (max 1 (- (plist-get eas-slice-stats :chart-pixels) chart)))
+                              10.0))))
      (list :ms-median (eas-scene-round (eas-perf--percentile ms 0.5))
            :ms-p95 (eas-scene-round (eas-perf--percentile ms 0.95))))))
 
@@ -163,7 +197,7 @@ and the draw.  Return the per-frame metrics plist."
 
 (defun eas-perf--size (target &optional svg-size)
   "The view size for TARGET: the text cells, or SVG-SIZE (nil: the spec's)."
-  (if (eq target 'text) eas-perf-text-size svg-size))
+  (if (eq target 'text) eas-perf-text-size (or svg-size eas-perf--svg-size)))
 
 (defun eas-perf--view-step (view update)
   "Return a frame step: call UPDATE with the frame number, then draw VIEW."
@@ -245,7 +279,7 @@ and the draw.  Return the per-frame metrics plist."
   "Open SPEC on TARGET; return (STEP . CLOSE) calling UPDATE (VIEW I) per frame.
 SVG-SIZE is the pixel size (default 640x360)."
   (let ((view (eas-view-open spec :target target
-                             :size (eas-perf--size target (or svg-size '(640 . 360))))))
+                             :size (eas-perf--size target (or svg-size eas-perf--svg-size '(640 . 360))))))
     (cons (eas-perf--view-step view (lambda (i) (funcall update view i)))
           (lambda () (eas-view-close view)))))
 
@@ -332,6 +366,14 @@ The result is a function of a target, as `eas-perf--play'."
                   (eas-view-close view))))
             #'ignore))))
 
+(defun eas-perf--tiled (setup)
+  "SETUP of a live workload, drawn as tiles at `eas-perf-tile-size'."
+  (lambda (target)
+    (let* ((pair (let ((eas-perf--svg-size eas-perf-tile-size)) (funcall setup target)))
+           (step (car pair)))
+      (cons (lambda (i buffer) (let ((eas-perf--tiles t)) (funcall step i buffer)))
+            (cdr pair)))))
+
 (defun eas-perf-live-workloads ()
   "The live workloads: alist of (NAME . SETUP), SETUP a function of a target.
 SETUP returns (STEP . CLOSE)."
@@ -346,7 +388,16 @@ SETUP returns (STEP . CLOSE)."
                                                   (lambda (i) (+ 1000 (* 100 (% (1+ i) 40))))))
         (cons "hover-airports" (eas-perf--hover "airport-connections"))
         (cons "hover-counties" (eas-perf--hover "county-unemployment"))
-        (cons "resize" #'eas-perf--resize)))
+        (cons "resize" #'eas-perf--resize)
+        (cons "tiles/clock" (eas-perf--tiled (eas-perf--play "clock")))
+        (cons "tiles/pacman" (eas-perf--tiled (eas-perf--play "pacman")))
+        (cons "tiles/ladder-25" (eas-perf--tiled (eas-perf--ladder 25)))
+        (cons "tiles/depth-25" (eas-perf--tiled (eas-perf--depth-workload 25)))
+        (cons "tiles/hover-airports" (eas-perf--tiled (eas-perf--hover "airport-connections")))))
+
+(defun eas-perf--targets (name)
+  "Return the targets of workload NAME: tiles/ are GUI frames, SVG only."
+  (if (string-prefix-p "tiles/" name) '(svg) eas-perf-targets))
 
 (defun eas-perf-workloads ()
   "Every workload, live ones first, then render/NAME per template."
@@ -380,7 +431,7 @@ With PROGRESS, report each workload on stderr.  Return the run plist:
     (dolist (w (eas-perf-workloads))
       (when (or (null only) (string-match-p only (car w)))
         (let ((t0 (float-time))
-              (row (cl-loop for target in eas-perf-targets
+              (row (cl-loop for target in (eas-perf--targets (car w))
                             append (list (intern (format ":%s" target))
                                          (eas-perf-measure (car w) (cdr w) target)))))
           (when progress

@@ -34,6 +34,7 @@
 (require 'eas-crosshair)
 (require 'eas-mode-patch)
 (require 'eas-mode-strip)
+(require 'eas-slice)
 (require 'eas-readout)
 (require 'eas-gc)
 (require 'eas-live)
@@ -63,7 +64,10 @@ events use the cell under the pointer (SNAP as in `eas-mode-point-px')."
                (scale (plist-get (cdr (posn-image posn)) :scale))
                ;; `create-image' leaves :scale `default' when none is given.
                (scale (if (numberp scale) scale 1)))
-          (vector (/ (car xy) (float scale)) (/ (cdr xy) (float scale))))
+          ;; A tile knows where it lies in the chart (`eas-slice-frame').
+          (let ((origin (or (plist-get (cdr (posn-image posn)) :eas-origin) '(0 . 0))))
+            (vector (+ (car origin) (/ (car xy) (float scale)))
+                    (+ (cdr origin) (/ (cdr xy) (float scale))))))
       (when-let* ((pos (posn-point posn)))
         (eas-mode-point-px pos snap)))))
 
@@ -167,8 +171,18 @@ Both must have the same SVG data and the same :map hot spots."
       (let ((old (get-text-property (point-min) 'display)))
         (cond
          ((not (eas-view-interactive view))
+          (eas-slice-forget)
           (eas-mode--flush-replaced old nil) (erase-buffer) (eas-mode--insert-static view))
+         ;; Tiles: only those the frame changed rasterize again (eas-e3s).
+         ((and (eas-mode--gui-p) (eas-slice-p))
+          (let ((map (eas-svg-hot-spots scene)))
+            (unless (plist-get (cdr-safe old) :eas-origin) (eas-mode--flush-replaced old nil))
+            (eas-slice-redraw scene (eas-svg-render scene) map
+                              (and (display-graphic-p) (eas-svg-theme-from-faces))
+                              (eas-mode-strip-string view))
+            (eas-mode--hot-spot-keys (list 'image :map map))))
          ((eas-mode--gui-p)
+          (eas-slice-forget)
           (let ((image (eas-svg-image scene :scale 1)))
             (if (eas-mode--same-image-p old image)
                 ;; The same picture and hot spots: leave the image be.
@@ -185,6 +199,7 @@ Both must have the same SVG data and the same :map hot spots."
          ;; does: at 4 frames a second the default threshold collected
          ;; every other frame, most of each frame's time (eas-b2s.5).
          (t (eas-gc-defer)
+            (eas-slice-forget)
             (eas-mode--flush-replaced old nil)
             (eas-mode-patch-lines (nconc (eas-text-render-rows scene) (list (eas-mode-strip-string view)))))))
       (if (eas-mode--gui-p) (goto-char (min pos (point-max)))

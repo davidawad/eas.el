@@ -942,6 +942,22 @@ no tile in the ring (`eas-slice-revisiting-animation-finds-the-ring`
 failed). Under a millisecond against ~100 ms of raster, the decision
 stays exact.
 
+### 8.15.3 Measured in one session against 1980ab6 (0.2.5)
+
+`scripts/eas-spikes/gui/run-ns.sh ns-frames.el`, GUI Emacs 30.2 on Retina NS (scale factor 2.0, frame 1020x704), niced, started when the machine's one-minute load was below 8 (7.8 for the 1980ab6 run, 7.5 for the 0.2.5 run, 8.9 and 6.6 at their ends). 8 warm-up frames dropped, 50 timed. Median milliseconds per changed frame, `:total` (step, readout, redraw and `(redisplay t)`), the shipped configuration of each tree:
+
+| workload | 1980ab6 | 0.2.5 | ratio |
+|---|---:|---:|---:|
+| ladder push, 25 levels | 66.1 | 67.7 | 1.02 |
+| depth push, 25 levels | 66.7 | 67.2 | 1.01 |
+| clock tick, +1 s | 71.3 | 23.9 | 0.34 |
+| clock tick, +60 s | 69.0 | 25.4 | 0.37 |
+| pacman tick | 68.1 | 68.5 | 1.01 |
+| airport-connections hover | 76.5 | 76.9 | 1.01 |
+| airport-connections parked | 1.1 | 1.1 | 1.00 |
+
+The clock, whose changes touch a small part of the image, drops to about a third. Ladder, depth, pacman and hover change most of the chart each frame, so the cost model keeps one image and they cost what they did (the 1-2 percent differences are noise between runs). Earlier runs of this table on a loaded machine (load average 36 to 45) showed the shipped configuration 15 to 40 percent slower than one image on ladder and hover; the same-session comparison above, at low load, does not reproduce that, and the engine time spent deciding is under 1 ms per frame (8.15.2).
+
 ## 9. Terminal parity through a real terminal (fc-qx1.8)
 
 `scripts/eas-spikes/tty-parity.sh` opens a point chart (brush, click

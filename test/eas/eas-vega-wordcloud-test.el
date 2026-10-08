@@ -339,6 +339,8 @@
 
 (ert-deftest eas-vega-wordcloud-reference-has-words ()
   ;; vg2png measures text with node-canvas, so Vega placed its words.
+  (unless (and (fboundp 'zlib-available-p) (zlib-available-p))
+    (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
   (let ((ref (eas-png-read (eas-test-file "test/vega-examples/ref/word-cloud.png"))))
     (should (equal (list (plist-get ref :w) (plist-get ref :h)) '(800 400)))
     (should (> (eas-vega-wordcloud-ink ref) 0.02))))

@@ -173,6 +173,8 @@
 
 (ert-deftest eas-vega-contour-png-round-trips ()
   "The native PNG encoder writes what eas-png.el reads back."
+  (unless (and (fboundp 'zlib-available-p) (zlib-available-p))
+    (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
   (let* ((rgba (unibyte-string 255 0 0 255  0 255 0 128  0 0 255 0  10 20 30 40  1 2 3 4  250 251 252 253))
          (file (make-temp-file "eas-vega-contour" nil ".png")))
     (unwind-protect
@@ -185,6 +187,8 @@
 
 (ert-deftest eas-vega-contour-heatmap-colors-and-opacity ()
   "A constant color fades with value / max; a scheme maps it; opacity fixes alpha."
+  (unless (and (fboundp 'zlib-available-p) (zlib-available-p))
+    (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
   (let* ((rows [(:g "a" :x 0 :y 0 :value 0) (:g "a" :x 1 :y 0 :value 2) (:g "a" :x 0 :y 1 :value 4) (:g "a" :x 1 :y 1 :value 1)])
          (img (lambda (params)
                 (let ((url (plist-get (aref (eas-contour-heatmap rows (append params '(:as "image" :groupby ["g"]))) 0) :image)))
@@ -261,6 +265,8 @@
 
 (ert-deftest eas-vega-contour-text-samples-png-images ()
   "An image of PNG data colors each cell with the pixel under its centre."
+  (unless (and (fboundp 'zlib-available-p) (zlib-available-p))
+    (eas-test-skip "this Emacs lacks zlib, needed to decode PNGs"))
   (let* ((url (eas-contour-png-url 2 1 (unibyte-string 255 0 0 255  0 0 255 128)))
          (cells (eas-contour-text-image-cells url 0 0 40 10 10 10)))
     (should (equal (mapcar (lambda (c) (seq-take c 3)) cells)

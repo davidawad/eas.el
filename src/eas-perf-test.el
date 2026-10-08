@@ -101,7 +101,8 @@ CALLS are compiles, patches, scenes, renders and repaints."
                  "pi-monte-carlo" "hover-airports" "hover-counties" "resize"))
       (should (member n names)))
     (dolist (template (eas-template-names))
-      (should (member (concat "render/" template) names)))))
+      (unless (eas-perf-unavailable-p (concat "render/" template))
+        (should (member (concat "render/" template) names))))))
 
 (ert-deftest eas-perf-failing-workload-is-data ()
   (let ((m (eas-perf-measure "boom" (lambda (_) (error "Kaboom")) 'svg)))

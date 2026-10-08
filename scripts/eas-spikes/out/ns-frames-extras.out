@@ -1,0 +1,6 @@
+emacs 30.2 frame-scale-factor=2.0 frame=1020x704 compiled=t load-avg=(11.6669921875 10.7763671875 10.8544921875) warmup=8 frames=50
+workload                     config             stage   ms
+readout image alone, 1 distinct svg per frame mean=   5.08 p50=   4.99 p95=   5.69 max=   5.90
+clock raster, frame 500x350                  mean=  27.11 p50=  25.80 p95=  31.69 max=  48.74 (image (500 . 290) px)
+clock raster, frame 800x560                  mean=  61.08 p50=  60.97 p95=  61.75 max=  62.39 (image (800 . 500) px)
+clock raster, frame 1000x700                 mean= 103.82 p50= 103.01 p95= 107.10 max= 127.37 (image (1000 . 640) px)

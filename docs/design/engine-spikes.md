@@ -612,6 +612,85 @@ margin. Emacs logged every event, the view's hovered datum and
   report rate, how soft the 1x raster looks on Retina), real iTerm2 and
   kitty clicks, GTK `GDK_SCALE`, a human hover session.
 
+### 8.14 GUI (NS) after 0.2.4 (`ns-frames.el`, eas-poo)
+
+Same machine and window as 8.10 (Emacs 30.2 NS, `frame-scale-factor` 2.0,
+1000x640 chart, 1020x704 frame), byte-compiled eas 0.2.4, niced, the
+laptop in use (load average 10-12), so read the milliseconds as upper
+bounds. `scripts/eas-spikes/gui/run-ns.sh ns-frames.el OUT`
+(`NSF_EXTRAS=1` for the two extra measurements); raw output in
+`scripts/eas-spikes/out/ns-frames.out` and `ns-frames-extras.out`. Each
+frame is the change, the readout line (`eas-mode-strip-string`, an SVG
+image line in a GUI), `eas-mode-redraw`, then `(redisplay t)`; 8 warm-up
+frames dropped, 50 timed. Milliseconds, median / p95 per frame, shipped
+config (render cache on, replaced images flushed):
+
+| workload | step | readout | redraw | raster (redisplay) | total | image cache after |
+|---|---:|---:|---:|---:|---:|---:|
+| ladder push, 25 levels | 0.9 / 14.3 | 0.01 / 0.1 | 0.7 / 0.8 | 83.2 / 103.7 | **92.8 / 107.9** | +1.1 MB |
+| depth push, 25 levels | 1.0 / 13.1 | 0.2 / 12.3 | 0.6 / 0.7 | 73.5 / 85.2 | **83.7 / 87.9** | +12.8 MB |
+| clock tick | 0.5 / 14.8 | 0.2 / 13.3 | 0.5 / 0.6 | 92.4 / 107.0 | **93.7 / 109.3** | +13.0 MB |
+| pacman tick | 1.2 / 16.9 | 5.1 / 21.3 | 0.6 / 0.7 | 74.4 / 169.4 | **96.5 / 176.2** | +0 |
+| airport-connections hover | 0.5 / 1.0 | 0.15 / 0.19 | 0.6 / 0.7 | 105.3 / 131.3 | **106.6 / 133.3** | +12.5 MB |
+| airport-connections, pointer parked | 0.2 / 0.3 | 0.01 / 0.01 | 0.1 / 28.0 | 1.6 / 1.8 | **1.9 / 30.1** | +0.2 MB |
+
+Every row but the last changes the chart SVG on every frame (the clock
+moves its hands at 1 s per tick; pacman revisits 14 distinct frames in
+50). The p95 spikes of 12-28 ms in step, readout and redraw are garbage
+collections: this loop never goes idle, which `eas-gc-defer` waits for.
+"Image cache after" is `image-cache-size` after the run minus before
+it, and is bounded: it is one extra window-sized image (about 9-13 MB on
+this Retina frame).
+
+By config (median total ms; the airport hover and ladder rows are the
+spread):
+
+| workload | shipped | render cache off | no image-flush | readout as text, no image |
+|---|---:|---:|---:|---:|
+| ladder push | 92.8 | 107.0 | 98.9 | 89.3 |
+| depth push | 83.7 | 94.9 | 105.1 | 95.5 |
+| clock tick | 93.7 | 122.4 | 118.2 | 114.7 |
+| pacman tick | 96.5 | 119.6 | **14.3** | 105.9 |
+| airport-connections hover | 106.6 | 163.6 | 120.7 | 117.2 |
+| airport-connections parked | 1.9 | 5.1 | 2.1 | 2.1 |
+
+- **The chart raster dominates: 74-105 ms of every changed frame, 80-95%
+  of the total.** The engine (step, readout, redraw) is 1-3 ms at the
+  median, in line with the batch benches (bench/frames-0.2.4.md). The
+  raster is the same for a trivial clock (92 ms) and the airport map
+  (105 ms) because it scales with image pixels, not with marks: the clock
+  rasterizes in **25.8 ms at 500x290, 61.0 at 800x500 and 103.0 at
+  1000x640** (`ns-frames-extras.out`). A live chart in a window this size
+  tops out near 10 frames a second whatever eas does; 0.2.4 moved the
+  engine's share, not this one. Filed as eas-e3s with the ideas (cap the
+  rasterized size, a bounded ring of unflushed frames, a smaller redraw
+  area); none is small.
+- **The readout line is not the problem.** The image is 1020x16 px and
+  costs **5.0 ms** (p95 5.7) to rasterize when its text changes (a
+  distinct readout every frame), about 5% of a frame; building the
+  string is 0.01-0.2 ms (memoized per scene, state and width). Turning
+  the readout image into plain text saves nothing outside noise (ladder
+  89 vs 93, airport hover 117 vs 107 ms). When the readout does not
+  change, the same image is reused: parked pointer **1.9 ms** total. Pacman is the
+  one slow readout (5.1 ms median, 21 at p95): its strip lists many
+  fields and changes every tick.
+- **The eas render cache earns its place on NS**, as in 8.10: hover
+  106.6 vs 163.6 ms, clock 93.7 vs 122.4, ladder 92.8 vs 107.0; the
+  parked pointer 1.9 vs 5.1 ms (its redraw 0.1 vs 3.0 ms).
+- **The Emacs image cache must still be flushed**: without `image-flush`
+  it grows by **12 MB a frame** (595-617 MB over 50 frames, RSS +1.1 to
+  +1.2 GB); with it, 9-13 MB in total. No-flush is not faster for
+  charts that never repeat (ladder 98.9 vs 92.8, depth 105.1 vs 83.7,
+  hover 120.7 vs 106.6). It is faster only for an animation that revisits
+  frames: **pacman 14.3 ms median unflushed against 96.5 flushed**,
+  because 36 of its 50 frames are in the cache already, at the price of
+  133 MB for the 14 distinct images. A bounded ring would need to hold
+  the whole loop to win, which is the 133 MB; left out.
+- **Fixed: nothing.** No one cost is both dominant and small to fix:
+  the 8.10 repeated-image bug stays fixed (parked 1.9 ms, hover with an
+  unchanged chart 1.6 ms of raster), the readout does not re-rasterize
+  when unchanged, and the cache does not thrash. The raster is filed.
+
 ## 9. Terminal parity through a real terminal (fc-qx1.8)
 
 `scripts/eas-spikes/tty-parity.sh` opens a point chart (brush, click

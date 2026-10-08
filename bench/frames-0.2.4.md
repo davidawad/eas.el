@@ -112,3 +112,34 @@ once to warm up and then measures 2 more opens, which reuse the retained
 projections (89eef0d).  The real-terminal bench reports eas-text-render
 as "not byte-compiled" in native mode because its check only knows byte
 code.  The native .eln files were loaded.
+
+## GUI (NS) after 0.2.4 (eas-poo)
+
+Measured 2026-10-08 in a real GUI frame: Emacs 30.2 NS build on an Apple
+M5 Max, Retina (`frame-scale-factor` 2.0), a 1000x640 chart window,
+byte-compiled 0.2.4, niced, the laptop in use. The batch tables above
+cannot see this half: the readout line drawn as an SVG image line and
+librsvg plus the NS draw per frame. Per frame: the change, the readout,
+`eas-mode-redraw`, then `(redisplay t)`; 8 warm-up and 50 timed frames
+(`scripts/eas-spikes/gui/ns-frames.el`; method, all four configs and the
+analysis in docs/design/engine-spikes.md section 8.14). Milliseconds,
+median (p95):
+
+| workload | engine: step + readout + redraw | raster | frame total | total, render cache off | total, readout as text |
+|---|---:|---:|---:|---:|---:|
+| ladder push (25 levels) | 1.6 | 83.2 (103.7) | 92.8 (107.9) | 107.0 (110.0) | 89.3 (122.2) |
+| depth push (25 levels) | 1.8 | 73.5 (85.2) | 83.7 (87.9) | 94.9 (105.2) | 95.5 (118.5) |
+| clock tick | 1.2 | 92.4 (107.0) | 93.7 (109.3) | 122.4 (153.5) | 114.7 (148.7) |
+| pacman tick | 6.8 | 74.4 (169.4) | 96.5 (176.2) | 119.6 (252.5) | 105.9 (245.1) |
+| airport-connections hover | 1.2 | 105.3 (131.3) | 106.6 (133.3) | 163.6 (207.8) | 117.2 (154.6) |
+| airport-connections, pointer parked | 0.4 | 1.6 (1.8) | 1.9 (30.1) | 5.1 (6.4) | 2.1 (33.9) |
+
+Engine share is 1-2 ms per frame (pacman 7, its strip), matching the
+batch figures; the raster of a new 1000x640 image is 74-105 ms and
+scales with pixels (clock: 25.8 ms at 500x290, 61.0 at 800x500, 103.0 at
+1000x640). The readout image alone is 5.0 ms to rasterize when its text
+changes and free when it does not. The Emacs image cache grows 12 MB a
+frame without `image-flush` (595-617 MB in 50 frames) and stays within
+one extra image (9-13 MB) with it; an unflushed cache makes pacman 14.3
+ms instead of 96.5 by reusing its 14 distinct frames, for 133 MB. The
+raster cost is filed as eas-e3s; nothing was fixed in this pass.

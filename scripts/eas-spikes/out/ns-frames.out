@@ -1,0 +1,198 @@
+emacs 30.2 frame-scale-factor=2.0 frame=1020x704 compiled=t load-avg=(9.955078125 10.22607421875 10.76025390625) warmup=8 frames=50
+workload                     config             stage   ms
+ladder push (25 levels)      shipped            distinct chart SVGs: 50 of 50
+ladder push (25 levels)      shipped            :step   mean=   5.22 p50=   0.89 p95=  14.33 max=  15.74
+ladder push (25 levels)      shipped            :strip  mean=   0.03 p50=   0.01 p95=   0.13 max=   0.17
+ladder push (25 levels)      shipped            :redraw mean=   1.17 p50=   0.66 p95=   0.79 max=  14.19
+ladder push (25 levels)      shipped            :raster mean=  84.70 p50=  83.20 p95= 103.66 max= 105.85
+ladder push (25 levels)      shipped            :total  mean=  91.12 p50=  92.75 p95= 107.94 max= 116.03
+ladder push (25 levels)      shipped            cache   image-cache-size 10464000 -> 11584000 bytes (+1120000), RSS +245040 KB
+depth push (25 levels)       shipped            distinct chart SVGs: 50 of 50
+depth push (25 levels)       shipped            :step   mean=   4.02 p50=   0.98 p95=  13.08 max=  13.38
+depth push (25 levels)       shipped            :strip  mean=   1.83 p50=   0.17 p95=  12.29 max=  12.85
+depth push (25 levels)       shipped            :redraw mean=   0.88 p50=   0.64 p95=   0.72 max=  12.21
+depth push (25 levels)       shipped            :raster mean=  73.91 p50=  73.47 p95=  85.20 max=  85.92
+depth push (25 levels)       shipped            :total  mean=  80.64 p50=  83.73 p95=  87.87 max=  88.24
+depth push (25 levels)       shipped            cache   image-cache-size 10464000 -> 23232000 bytes (+12768000), RSS -89888 KB
+clock tick (+60 s, hands move) shipped            distinct chart SVGs: 50 of 50
+clock tick (+60 s, hands move) shipped            :step   mean=   1.28 p50=   0.45 p95=  13.53 max=  14.87
+clock tick (+60 s, hands move) shipped            :strip  mean=   1.03 p50=   0.23 p95=  13.08 max=  14.46
+clock tick (+60 s, hands move) shipped            :redraw mean=   1.07 p50=   0.52 p95=   0.64 max=  15.09
+clock tick (+60 s, hands move) shipped            :raster mean=  89.27 p50=  92.04 p95=  96.11 max= 106.86
+clock tick (+60 s, hands move) shipped            :total  mean=  92.65 p50=  93.54 p95= 108.10 max= 109.16
+clock tick (+60 s, hands move) shipped            cache   image-cache-size 10464000 -> 23456000 bytes (+12992000), RSS +26320 KB
+clock tick (+1 s, as live)   shipped            distinct chart SVGs: 50 of 50
+clock tick (+1 s, as live)   shipped            :step   mean=   1.36 p50=   0.46 p95=  14.77 max=  15.64
+clock tick (+1 s, as live)   shipped            :strip  mean=   1.09 p50=   0.24 p95=  13.33 max=  15.47
+clock tick (+1 s, as live)   shipped            :redraw mean=   1.09 p50=   0.53 p95=   0.58 max=  14.82
+clock tick (+1 s, as live)   shipped            :raster mean=  92.79 p50=  92.36 p95= 106.99 max= 107.74
+clock tick (+1 s, as live)   shipped            :total  mean=  96.33 p50=  93.70 p95= 109.29 max= 109.50
+clock tick (+1 s, as live)   shipped            cache   image-cache-size 10464000 -> 23456000 bytes (+12992000), RSS +26272 KB
+pacman tick                  shipped            distinct chart SVGs: 14 of 50
+pacman tick                  shipped            :step   mean=   4.52 p50=   1.17 p95=  16.90 max=  17.31
+pacman tick                  shipped            :strip  mean=  10.19 p50=   5.05 p95=  21.26 max=  21.42
+pacman tick                  shipped            :redraw mean=   1.11 p50=   0.59 p95=   0.67 max=  14.96
+pacman tick                  shipped            :raster mean=  90.24 p50=  74.44 p95= 169.41 max= 170.15
+pacman tick                  shipped            :total  mean= 106.05 p50=  96.46 p95= 176.23 max= 176.90
+pacman tick                  shipped            cache   image-cache-size 10464000 -> 10464000 bytes (+0), RSS +120032 KB
+airport-connections hover    shipped            distinct chart SVGs: 50 of 50
+airport-connections hover    shipped            :step   mean=   1.11 p50=   0.53 p95=   1.02 max=  26.79
+airport-connections hover    shipped            :strip  mean=   0.69 p50=   0.15 p95=   0.19 max=  26.42
+airport-connections hover    shipped            :redraw mean=   1.56 p50=   0.57 p95=   0.71 max=  25.71
+airport-connections hover    shipped            :raster mean= 108.38 p50= 105.26 p95= 131.25 max= 134.44
+airport-connections hover    shipped            :total  mean= 111.73 p50= 106.64 p95= 133.27 max= 138.66
+airport-connections hover    shipped            cache   image-cache-size 10464000 -> 23008000 bytes (+12544000), RSS -81552 KB
+airport-connections parked   shipped            distinct chart SVGs: 1 of 50
+airport-connections parked   shipped            :step   mean=   0.25 p50=   0.24 p95=   0.31 max=   0.32
+airport-connections parked   shipped            :strip  mean=   0.01 p50=   0.01 p95=   0.01 max=   0.01
+airport-connections parked   shipped            :redraw mean=   4.54 p50=   0.13 p95=  28.04 max=  28.43
+airport-connections parked   shipped            :raster mean=   1.49 p50=   1.55 p95=   1.82 max=   1.87
+airport-connections parked   shipped            :total  mean=   6.28 p50=   1.94 p95=  30.07 max=  30.40
+airport-connections parked   shipped            cache   image-cache-size 10464000 -> 10688000 bytes (+224000), RSS -9200 KB
+ladder push (25 levels)      render-cache-off   distinct chart SVGs: 50 of 50
+ladder push (25 levels)      render-cache-off   :step   mean=   2.42 p50=   0.81 p95=  20.58 max=  22.09
+ladder push (25 levels)      render-cache-off   :strip  mean=   0.03 p50=   0.01 p95=   0.15 max=   0.15
+ladder push (25 levels)      render-cache-off   :redraw mean=   8.90 p50=   1.82 p95=  22.13 max=  22.64
+ladder push (25 levels)      render-cache-off   :raster mean=  91.92 p50=  84.96 p95= 107.26 max= 107.80
+ladder push (25 levels)      render-cache-off   :total  mean= 103.26 p50= 106.98 p95= 109.99 max= 111.74
+ladder push (25 levels)      render-cache-off   cache   image-cache-size 10464000 -> 11584000 bytes (+1120000), RSS +70560 KB
+depth push (25 levels)       render-cache-off   distinct chart SVGs: 50 of 50
+depth push (25 levels)       render-cache-off   :step   mean=   4.59 p50=   1.05 p95=  21.25 max=  21.73
+depth push (25 levels)       render-cache-off   :strip  mean=   0.57 p50=   0.18 p95=   0.20 max=  19.95
+depth push (25 levels)       render-cache-off   :redraw mean=   3.88 p50=   1.15 p95=  21.15 max=  21.75
+depth push (25 levels)       render-cache-off   :raster mean=  83.87 p50=  81.83 p95= 102.58 max= 102.83
+depth push (25 levels)       render-cache-off   :total  mean=  92.92 p50=  94.90 p95= 105.19 max= 105.59
+depth push (25 levels)       render-cache-off   cache   image-cache-size 10464000 -> 23232000 bytes (+12768000), RSS -53696 KB
+clock tick (+60 s, hands move) render-cache-off   distinct chart SVGs: 50 of 50
+clock tick (+60 s, hands move) render-cache-off   :step   mean=   1.64 p50=   0.47 p95=  18.62 max=  20.59
+clock tick (+60 s, hands move) render-cache-off   :strip  mean=   0.74 p50=   0.23 p95=   0.36 max=  24.89
+clock tick (+60 s, hands move) render-cache-off   :redraw mean=   2.63 p50=   0.96 p95=  20.53 max=  24.24
+clock tick (+60 s, hands move) render-cache-off   :raster mean=  98.69 p50=  92.81 p95= 125.91 max= 150.60
+clock tick (+60 s, hands move) render-cache-off   :total  mean= 103.70 p50=  95.02 p95= 142.33 max= 152.91
+clock tick (+60 s, hands move) render-cache-off   cache   image-cache-size 10464000 -> 23456000 bytes (+12992000), RSS +26608 KB
+clock tick (+1 s, as live)   render-cache-off   distinct chart SVGs: 50 of 50
+clock tick (+1 s, as live)   render-cache-off   :step   mean=   1.93 p50=   0.56 p95=  18.55 max=  29.90
+clock tick (+1 s, as live)   render-cache-off   :strip  mean=   1.24 p50=   0.30 p95=   0.59 max=  24.48
+clock tick (+1 s, as live)   render-cache-off   :redraw mean=   3.08 p50=   1.22 p95=  25.29 max=  25.88
+clock tick (+1 s, as live)   render-cache-off   :raster mean= 117.47 p50= 115.43 p95= 151.28 max= 166.87
+clock tick (+1 s, as live)   render-cache-off   :total  mean= 123.72 p50= 122.35 p95= 153.45 max= 168.92
+clock tick (+1 s, as live)   render-cache-off   cache   image-cache-size 10464000 -> 23456000 bytes (+12992000), RSS +20208 KB
+pacman tick                  render-cache-off   distinct chart SVGs: 14 of 50
+pacman tick                  render-cache-off   :step   mean=   5.16 p50=   1.38 p95=  26.83 max=  32.19
+pacman tick                  render-cache-off   :strip  mean=  11.21 p50=   6.52 p95=  31.29 max=  33.86
+pacman tick                  render-cache-off   :redraw mean=   3.65 p50=   1.93 p95=  25.77 max=  26.87
+pacman tick                  render-cache-off   :raster mean= 110.18 p50=  97.14 p95= 215.07 max= 240.76
+pacman tick                  render-cache-off   :total  mean= 130.21 p50= 119.55 p95= 252.48 max= 282.54
+pacman tick                  render-cache-off   cache   image-cache-size 10464000 -> 10464000 bytes (+0), RSS +71584 KB
+airport-connections hover    render-cache-off   distinct chart SVGs: 50 of 50
+airport-connections hover    render-cache-off   :step   mean=   0.81 p50=   0.73 p95=   1.48 max=   2.08
+airport-connections hover    render-cache-off   :strip  mean=   1.10 p50=   0.18 p95=   0.34 max=  45.57
+airport-connections hover    render-cache-off   :redraw mean=  18.69 p50=   7.81 p95=  42.86 max=  49.61
+airport-connections hover    render-cache-off   :raster mean= 141.88 p50= 138.66 p95= 197.83 max= 225.63
+airport-connections hover    render-cache-off   :total  mean= 162.48 p50= 163.58 p95= 207.76 max= 261.36
+airport-connections hover    render-cache-off   cache   image-cache-size 10464000 -> 23008000 bytes (+12544000), RSS -55200 KB
+airport-connections parked   render-cache-off   distinct chart SVGs: 1 of 50
+airport-connections parked   render-cache-off   :step   mean=   0.28 p50=   0.26 p95=   0.48 max=   0.53
+airport-connections parked   render-cache-off   :strip  mean=   0.01 p50=   0.01 p95=   0.02 max=   0.02
+airport-connections parked   render-cache-off   :redraw mean=   4.31 p50=   3.04 p95=   3.86 max=  37.33
+airport-connections parked   render-cache-off   :raster mean=   1.76 p50=   1.71 p95=   2.39 max=   2.82
+airport-connections parked   render-cache-off   :total  mean=   6.37 p50=   5.05 p95=   6.41 max=  40.22
+airport-connections parked   render-cache-off   cache   image-cache-size 10464000 -> 10688000 bytes (+224000), RSS +464 KB
+ladder push (25 levels)      no-image-flush     distinct chart SVGs: 50 of 50
+ladder push (25 levels)      no-image-flush     :step   mean=   2.62 p50=   0.99 p95=  19.49 max=  25.18
+ladder push (25 levels)      no-image-flush     :strip  mean=   0.03 p50=   0.02 p95=   0.17 max=   0.21
+ladder push (25 levels)      no-image-flush     :redraw mean=   2.56 p50=   0.36 p95=  20.23 max=  32.30
+ladder push (25 levels)      no-image-flush     :raster mean=  90.51 p50=  89.11 p95= 110.74 max= 130.58
+ladder push (25 levels)      no-image-flush     :total  mean=  95.73 p50=  98.86 p95= 128.52 max= 131.98
+ladder push (25 levels)      no-image-flush     cache   image-cache-size 10464000 -> 605504000 bytes (+595040000), RSS +1233552 KB
+depth push (25 levels)       no-image-flush     distinct chart SVGs: 50 of 50
+depth push (25 levels)       no-image-flush     :step   mean=   5.63 p50=   1.29 p95=  25.25 max=  32.10
+depth push (25 levels)       no-image-flush     :strip  mean=   0.21 p50=   0.20 p95=   0.33 max=   0.46
+depth push (25 levels)       no-image-flush     :redraw mean=   0.77 p50=   0.24 p95=   0.41 max=  26.83
+depth push (25 levels)       no-image-flush     :raster mean=  96.20 p50=  96.53 p95= 117.60 max= 158.65
+depth push (25 levels)       no-image-flush     :total  mean= 102.80 p50= 105.05 p95= 136.07 max= 160.43
+depth push (25 levels)       no-image-flush     cache   image-cache-size 10464000 -> 617152000 bytes (+606688000), RSS +1128432 KB
+clock tick (+60 s, hands move) no-image-flush     distinct chart SVGs: 50 of 50
+clock tick (+60 s, hands move) no-image-flush     :step   mean=   1.23 p50=   0.55 p95=   0.71 max=  19.07
+clock tick (+60 s, hands move) no-image-flush     :strip  mean=   1.11 p50=   0.29 p95=   0.36 max=  23.57
+clock tick (+60 s, hands move) no-image-flush     :redraw mean=   0.65 p50=   0.18 p95=   0.22 max=  24.15
+clock tick (+60 s, hands move) no-image-flush     :raster mean= 104.46 p50= 108.12 p95= 137.61 max= 142.00
+clock tick (+60 s, hands move) no-image-flush     :total  mean= 107.46 p50= 111.44 p95= 142.90 max= 147.73
+clock tick (+60 s, hands move) no-image-flush     cache   image-cache-size 10464000 -> 617376000 bytes (+606912000), RSS +1187904 KB
+clock tick (+1 s, as live)   no-image-flush     distinct chart SVGs: 50 of 50
+clock tick (+1 s, as live)   no-image-flush     :step   mean=   1.00 p50=   0.56 p95=   0.71 max=  24.25
+clock tick (+1 s, as live)   no-image-flush     :strip  mean=   1.05 p50=   0.30 p95=   0.68 max=  19.65
+clock tick (+1 s, as live)   no-image-flush     :redraw mean=   1.49 p50=   0.18 p95=  18.08 max=  24.74
+clock tick (+1 s, as live)   no-image-flush     :raster mean= 112.32 p50= 115.64 p95= 129.42 max= 144.97
+clock tick (+1 s, as live)   no-image-flush     :total  mean= 115.85 p50= 118.24 p95= 145.15 max= 149.18
+clock tick (+1 s, as live)   no-image-flush     cache   image-cache-size 10464000 -> 617376000 bytes (+606912000), RSS +1187872 KB
+pacman tick                  no-image-flush     distinct chart SVGs: 14 of 50
+pacman tick                  no-image-flush     :step   mean=   4.55 p50=   1.46 p95=  25.74 max=  26.95
+pacman tick                  no-image-flush     :strip  mean=   9.45 p50=   6.43 p95=  30.36 max=  30.91
+pacman tick                  no-image-flush     :redraw mean=   1.60 p50=   0.31 p95=  17.70 max=  24.30
+pacman tick                  no-image-flush     :raster mean=  11.37 p50=   4.91 p95=  73.59 max=  86.93
+pacman tick                  no-image-flush     :total  mean=  26.98 p50=  14.27 p95=  80.28 max=  99.51
+pacman tick                  no-image-flush     cache   image-cache-size 10464000 -> 143584000 bytes (+133120000), RSS +330096 KB
+airport-connections hover    no-image-flush     distinct chart SVGs: 50 of 50
+airport-connections hover    no-image-flush     :step   mean=   1.34 p50=   0.75 p95=   1.23 max=  29.46
+airport-connections hover    no-image-flush     :strip  mean=   0.20 p50=   0.17 p95=   0.30 max=   0.53
+airport-connections hover    no-image-flush     :redraw mean=   3.17 p50=   0.26 p95=  28.89 max=  30.40
+airport-connections hover    no-image-flush     :raster mean= 114.84 p50= 118.44 p95= 152.88 max= 163.84
+airport-connections hover    no-image-flush     :total  mean= 119.55 p50= 120.68 p95= 157.34 max= 185.20
+airport-connections hover    no-image-flush     cache   image-cache-size 10464000 -> 616928000 bytes (+606464000), RSS +1198768 KB
+airport-connections parked   no-image-flush     distinct chart SVGs: 1 of 50
+airport-connections parked   no-image-flush     :step   mean=   0.31 p50=   0.30 p95=   0.62 max=   0.69
+airport-connections parked   no-image-flush     :strip  mean=   0.02 p50=   0.01 p95=   0.02 max=   0.18
+airport-connections parked   no-image-flush     :redraw mean=   5.15 p50=   0.16 p95=  32.29 max=  39.35
+airport-connections parked   no-image-flush     :raster mean=   1.57 p50=   1.52 p95=   2.30 max=   2.52
+airport-connections parked   no-image-flush     :total  mean=   7.05 p50=   2.05 p95=  34.85 max=  41.91
+airport-connections parked   no-image-flush     cache   image-cache-size 10464000 -> 10688000 bytes (+224000), RSS +448 KB
+ladder push (25 levels)      readout-text-only  distinct chart SVGs: 50 of 50
+ladder push (25 levels)      readout-text-only  :step   mean=   3.90 p50=   0.92 p95=  24.64 max=  31.92
+ladder push (25 levels)      readout-text-only  :strip  mean=   0.02 p50=   0.02 p95=   0.06 max=   0.10
+ladder push (25 levels)      readout-text-only  :redraw mean=   2.24 p50=   0.87 p95=  18.09 max=  18.36
+ladder push (25 levels)      readout-text-only  :raster mean=  85.12 p50=  82.13 p95= 109.14 max= 128.95
+ladder push (25 levels)      readout-text-only  :total  mean=  91.29 p50=  89.29 p95= 122.18 max= 132.28
+ladder push (25 levels)      readout-text-only  cache   image-cache-size 10240000 -> 10240000 bytes (+0), RSS +19504 KB
+depth push (25 levels)       readout-text-only  distinct chart SVGs: 50 of 50
+depth push (25 levels)       readout-text-only  :step   mean=   5.38 p50=   1.29 p95=  23.80 max=  27.78
+depth push (25 levels)       readout-text-only  :strip  mean=   0.07 p50=   0.07 p95=   0.09 max=   0.17
+depth push (25 levels)       readout-text-only  :redraw mean=   0.77 p50=   0.78 p95=   0.99 max=   1.16
+depth push (25 levels)       readout-text-only  :raster mean=  88.10 p50=  89.59 p95= 106.54 max= 131.16
+depth push (25 levels)       readout-text-only  :total  mean=  94.32 p50=  95.50 p95= 118.45 max= 132.80
+depth push (25 levels)       readout-text-only  cache   image-cache-size 10240000 -> 10240000 bytes (+0), RSS +16 KB
+clock tick (+60 s, hands move) readout-text-only  distinct chart SVGs: 50 of 50
+clock tick (+60 s, hands move) readout-text-only  :step   mean=   2.52 p50=   0.57 p95=  19.81 max=  24.50
+clock tick (+60 s, hands move) readout-text-only  :strip  mean=   0.13 p50=   0.08 p95=   0.23 max=   1.85
+clock tick (+60 s, hands move) readout-text-only  :redraw mean=   0.94 p50=   0.72 p95=   2.43 max=   5.97
+clock tick (+60 s, hands move) readout-text-only  :raster mean= 106.45 p50= 104.82 p95= 126.19 max= 152.84
+clock tick (+60 s, hands move) readout-text-only  :total  mean= 110.04 p50= 106.81 p95= 135.68 max= 165.84
+clock tick (+60 s, hands move) readout-text-only  cache   image-cache-size 10240000 -> 10240000 bytes (+0), RSS +64 KB
+clock tick (+1 s, as live)   readout-text-only  distinct chart SVGs: 50 of 50
+clock tick (+1 s, as live)   readout-text-only  :step   mean=   2.76 p50=   0.57 p95=  24.13 max=  36.43
+clock tick (+1 s, as live)   readout-text-only  :strip  mean=   0.12 p50=   0.10 p95=   0.26 max=   0.57
+clock tick (+1 s, as live)   readout-text-only  :redraw mean=   0.86 p50=   0.77 p95=   1.44 max=   1.68
+clock tick (+1 s, as live)   readout-text-only  :raster mean= 114.64 p50= 110.16 p95= 146.03 max= 173.82
+clock tick (+1 s, as live)   readout-text-only  :total  mean= 118.38 p50= 114.74 p95= 148.72 max= 194.73
+clock tick (+1 s, as live)   readout-text-only  cache   image-cache-size 10240000 -> 10240000 bytes (+0), RSS +16 KB
+pacman tick                  readout-text-only  distinct chart SVGs: 14 of 50
+pacman tick                  readout-text-only  :step   mean=   6.97 p50=   1.55 p95=  32.99 max=  67.24
+pacman tick                  readout-text-only  :strip  mean=   2.37 p50=   0.38 p95=  20.93 max=  36.21
+pacman tick                  readout-text-only  :redraw mean=   3.72 p50=   0.87 p95=  23.94 max=  32.96
+pacman tick                  readout-text-only  :raster mean= 120.32 p50=  97.54 p95= 241.71 max= 292.67
+pacman tick                  readout-text-only  :total  mean= 133.39 p50= 105.89 p95= 245.07 max= 295.19
+pacman tick                  readout-text-only  cache   image-cache-size 10240000 -> 10240000 bytes (+0), RSS +64 KB
+airport-connections hover    readout-text-only  distinct chart SVGs: 50 of 50
+airport-connections hover    readout-text-only  :step   mean=   1.83 p50=   0.75 p95=   1.32 max=  31.12
+airport-connections hover    readout-text-only  :strip  mean=   0.08 p50=   0.08 p95=   0.12 max=   0.19
+airport-connections hover    readout-text-only  :redraw mean=   3.21 p50=   0.80 p95=  29.78 max=  31.69
+airport-connections hover    readout-text-only  :raster mean= 117.08 p50= 115.46 p95= 149.02 max= 167.14
+airport-connections hover    readout-text-only  :total  mean= 122.19 p50= 117.15 p95= 154.60 max= 181.29
+airport-connections hover    readout-text-only  cache   image-cache-size 10240000 -> 10240000 bytes (+0), RSS +576 KB
+airport-connections parked   readout-text-only  distinct chart SVGs: 1 of 50
+airport-connections parked   readout-text-only  :step   mean=   0.31 p50=   0.30 p95=   0.48 max=   0.50
+airport-connections parked   readout-text-only  :strip  mean=   0.02 p50=   0.01 p95=   0.02 max=   0.06
+airport-connections parked   readout-text-only  :redraw mean=   5.15 p50=   0.17 p95=  31.81 max=  37.16
+airport-connections parked   readout-text-only  :raster mean=   1.70 p50=   1.61 p95=   2.27 max=   3.19
+airport-connections parked   readout-text-only  :total  mean=   7.17 p50=   2.11 p95=  33.86 max=  40.61
+airport-connections parked   readout-text-only  cache   image-cache-size 10240000 -> 10240000 bytes (+0), RSS +16 KB

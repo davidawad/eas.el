@@ -19,10 +19,5 @@ node_modules/
 # Local task store (not published)
 .beads/
 
-<<<<<<< HEAD
-# The built native geo module (module/, eas-geo-native.el)
-||||||| parent of 0953069 (feat(geo): optional native module for the projection hot path)
-=======
 # The optional Rust geo module, as make module installs it
->>>>>>> 0953069 (feat(geo): optional native module for the projection hot path)
 /lib/

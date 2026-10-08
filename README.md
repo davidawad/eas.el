@@ -207,14 +207,16 @@ on macOS). eas loads it lazily, the first time a map needs it.
 `M-: (eas-geo-backend-active)` returns `native` or `lisp`, the backend
 in use.
 
-Measured first renders (fresh `emacs -Q --batch`, byte-compiled, Linux,
-Emacs 30.1; the Elisp column is from `docs/design/geo-first-render.md`):
+Measured first renders: a fresh `emacs -Q --batch` on Linux with Emacs 30.1, best of 6, in milliseconds, pure Elisp
+against the native module; the output is byte-identical between the
+two backends.
 
-<!-- The release step replaces the next line with the measured table:
-     template | Elisp (ms) | module (ms) | speedup.  Elisp before:
-     projections 2035, county-unemployment 1380, map-with-tooltip 820,
-     world-map 173. -->
-MODULE_NUMBERS
+| template | byte-compiled Elisp | byte-compiled module | native-compiled Elisp | native-compiled module |
+|---|---|---|---|---|
+| projections | 2379 | 453 | 1787 | 251 |
+| county-unemployment | 1502 | 421 | 1240 | 219 |
+| map-with-tooltip | 919 | 263 | 828 | 273 |
+| world-map | 172 | 27 | 173 | 20 |
 
 ## Quick start
 

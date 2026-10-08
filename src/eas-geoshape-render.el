@@ -9,7 +9,10 @@
 ;; projected path relative to its anchor :x :y: :paths, a vector of
 ;; [CLOSED XY...] (CLOSED t for a polygon ring, :false for a line),
 ;; :circles of [DX DY R] (point geometries) and :box [X0 Y0 X1 Y1].
-;; Everything here only reads those coordinates.
+;; Everything here only reads those coordinates.  :paths may be packed
+;; by the native backend (eas-geo-native.el), which also printed the
+;; SVG path data: `eas-geoshape-paths' unpacks it for the readers that
+;; need coordinates (text, hit tests, an item moved).
 ;;
 ;;   SVG    one path per item (rings closed with Z, points as circles),
 ;;          filled by the nonzero rule as Vega's canvas fills them.
@@ -26,7 +29,10 @@
 (require 'eas-core)
 
 (declare-function eas-svg--n "eas-svg")
+(declare-function eas-geo-native-paths "eas-geo-native")
 (declare-function eas-svg--node "eas-svg")
+(declare-function eas-svg--a "eas-svg")
+(declare-function eas-svg--escape "eas-svg")
 (declare-function eas-mark-style-svg "eas-mark-style")
 (declare-function eas-text--put "eas-text")
 (declare-function eas-text--col "eas-text")
@@ -36,6 +42,12 @@
 (declare-function eas-text--grid-cw "eas-text")
 (declare-function eas-text--grid-ch "eas-text")
 (defvar eas-text--dot-prio)
+
+(defun eas-geoshape-paths (item)
+  "ITEM's :paths, a vector of [CLOSED XY...] vectors.
+A native item's paths are packed until read (`eas-geo-native-paths')."
+  (let ((p (plist-get item :paths)))
+    (if (user-ptrp p) (eas-geo-native-paths p) p)))
 
 (defun eas-geoshape--visible-fill-p (item)
   "Non-nil when ITEM's fill paints."
@@ -107,15 +119,49 @@ X Y, the same string.  An item moved elsewhere prints its own.")
   "The SVG path data of geoshape ITEM, in absolute pixels."
   (let* ((x (plist-get item :x)) (y (plist-get item :y)) (paths (plist-get item :paths))
          (hit (gethash paths eas-geoshape--svg-d))
-         (parts (list (if (and hit (eql (car hit) x) (eql (cadr hit) y)) (cddr hit)
-                        (eas-geoshape--svg-rings x y paths)))))
-    (seq-doseq (c (plist-get item :circles))
+         (d (if (and hit (eql (car hit) x) (eql (cadr hit) y)) (cddr hit)
+              (eas-geoshape--svg-rings x y (eas-geoshape-paths item))))
+         (circles (plist-get item :circles)))
+    (if (seq-empty-p circles) d (eas-geoshape--svg-d-circles x y d circles))))
+
+(defun eas-geoshape--svg-d-circles (x y d circles)
+  "Path data D followed by CIRCLES ([DX DY R]) around X Y."
+  (let ((parts (list d)))
+    (seq-doseq (c circles)
       (let* ((cx (+ x (aref c 0))) (cy (+ y (aref c 1))) (r (aref c 2)) (rs (eas-svg--n r)))
         (push (format "M%s,%sA%s,%s,0,1,1,%s,%sA%s,%s,0,1,1,%s,%sZ"
                       (eas-svg--n (+ cx r)) (eas-svg--n cy) rs rs (eas-svg--n (- cx r)) (eas-svg--n cy)
                       rs rs (eas-svg--n (+ cx r)) (eas-svg--n cy))
               parts)))
     (apply #'concat (nreverse parts))))
+
+(defun eas-geoshape-svg-string (item fill stroke opacity)
+  "The printed SVG of geoshape ITEM painted FILL, STROKE and OPACITY.
+The text `eas-geoshape-svg''s node prints to, without the node: path
+data needs no escaping (digits, signs, dots, commas and the letters of
+its commands, and of a NaN), and a map has thousands of items."
+  (let* ((visible (not (equal stroke "none")))
+         (acc (eas-svg--a " opacity=\"" opacity
+                          (eas-svg--a " stroke-width=\"" (and visible (plist-get item :strokeWidth))
+                                      (eas-svg--a " stroke=\"" (and visible stroke)
+                                                  (eas-svg--a " fill=\"" (or fill "none")
+                                                              (list "\"" (eas-geoshape-svg-d item) " d=\"" "<path"))))))
+         (have-stroke (and visible stroke t)) (have-width (and visible (plist-get item :strokeWidth) t))
+         (outline (plist-get item :outline)))
+    ;; `eas-mark-style-svg''s attributes, in its order.
+    (when (and outline (> outline 0))
+      (unless have-stroke (setq acc (cl-list* "\"" (eas-svg--escape (plist-get item :stroke)) " stroke=\"" acc)))
+      (unless have-width (setq acc (eas-svg--a " stroke-width=\"" outline acc))))
+    (dolist (a '((:fillOpacity . " fill-opacity=\"") (:strokeOpacity . " stroke-opacity=\"")
+                 (:strokeDashOffset . " stroke-dashoffset=\"") (:strokeMiterLimit . " stroke-miterlimit=\"")))
+      (let ((v (plist-get item (car a)))) (when (numberp v) (setq acc (eas-svg--a (cdr a) v acc)))))
+    (dolist (a '((:strokeCap . " stroke-linecap=\"") (:strokeJoin . " stroke-linejoin=\"")))
+      (let ((v (plist-get item (car a)))) (when (stringp v) (setq acc (eas-svg--a (cdr a) v acc)))))
+    (let ((dash (plist-get item :strokeDash)))
+      (when (vectorp dash) (setq acc (cl-list* "\"" (mapconcat #'eas-svg--n dash ",") " stroke-dasharray=\"" acc))))
+    (when (plist-get item :blend)
+      (setq acc (cl-list* "\"" (concat "mix-blend-mode:" (plist-get item :blend)) " style=\"" acc)))
+    (apply #'concat (nreverse (cons "></path>" acc)))))
 
 (defun eas-geoshape-svg (item fill stroke opacity)
   "The SVG node of geoshape ITEM painted FILL, STROKE and OPACITY."
@@ -132,7 +178,7 @@ X Y, the same string.  An item moved elsewhere prints its own.")
   "Sorted (X . WINDING) crossings of ITEM's closed rings with the line Y.
 Y is relative to the item's anchor."
   (let (out)
-    (seq-doseq (p (plist-get item :paths))
+    (seq-doseq (p (eas-geoshape-paths item))
       (when (eq (aref p 0) t)
         (let* ((flat (aref p 1)) (n (/ (length flat) 2)))
           (dotimes (i n)
@@ -184,7 +230,7 @@ mark covers that cell."
   "Draw ITEM's rings and lines into G as braille with PROPS at PRIO in CLIP."
   (let ((eas-text--dot-prio prio) (pf (lambda (_) props))
         (x (plist-get item :x)) (y (plist-get item :y)))
-    (seq-doseq (p (plist-get item :paths))
+    (seq-doseq (p (eas-geoshape-paths item))
       (let* ((flat (aref p 1)) (n (/ (length flat) 2)))
         (dotimes (i (if (eq (aref p 0) t) n (1- n)))
           (let ((j (mod (1+ i) n)))

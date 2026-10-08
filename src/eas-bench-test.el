@@ -188,6 +188,20 @@
     (should (= gc-cons-threshold 800000))
     (should-not eas-gc--timer)))
 
+(ert-deftest eas-bench-gc-defers-a-batch-render-for-good ()
+  (let ((gc-cons-threshold 800000) (noninteractive t) (eas-gc--saved nil) (eas-gc--timer nil)
+        (eas-gc-cons-threshold (* 64 1024 1024)))
+    (eas-gc-defer-render)
+    (should (= gc-cons-threshold (* 64 1024 1024)))
+    (should-not eas-gc--timer)
+    ;; A larger value is kept; nil leaves GC alone.
+    (let ((gc-cons-threshold (* 128 1024 1024)))
+      (eas-gc-defer-render)
+      (should (= gc-cons-threshold (* 128 1024 1024))))
+    (let ((eas-gc-cons-threshold nil) (gc-cons-threshold 800000))
+      (eas-gc-defer-render)
+      (should (= gc-cons-threshold 800000)))))
+
 ;;; The ladder, the budget and the verb
 
 (defconst eas-bench-test--result

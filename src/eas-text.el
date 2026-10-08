@@ -17,6 +17,7 @@
 ;;; Code:
 
 (require 'eas-core)
+(require 'eas-gc)
 (require 'eas-glyph)
 (require 'eas-hit)
 (require 'eas-arc)
@@ -1106,7 +1107,9 @@ the buffer (eas-b2s.9), and `eas-text-row-string' gives its string."
   (let ((eas-text--defer-rows t)) (eas-text--render-rows scene)))
 
 (defun eas-text--render-rows (scene)
-  "SCENE's rows, cached or not; see `eas-text-render-rows'."
+  "SCENE's rows, cached or not; see `eas-text-render-rows'.
+Collection waits until they are drawn (`eas-gc-defer-render')."
+  (eas-gc-defer-render)
   (eas-text-ink-with
    (let* ((g (eas-text--new scene t))
           ;; What every step depends on besides its key; nil caches nothing.

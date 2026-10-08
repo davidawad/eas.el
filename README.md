@@ -205,18 +205,23 @@ on macOS). eas loads it lazily, the first time a map needs it.
 | `lisp` | never load the module |
 
 `M-: (eas-geo-backend-active)` returns `native` or `lisp`, the backend
-in use.
+in use. The environment variable `EAS_GEO_BACKEND` (`lisp`, `native` or
+`auto`) sets the initial value of `eas-geo-backend`, so `EAS_GEO_BACKEND=lisp
+eas render ...` draws without the module.
 
-Measured first renders: a fresh `emacs -Q --batch` on Linux with Emacs 30.1, best of 6, in milliseconds, pure Elisp
-against the native module; the output is byte-identical between the
-two backends.
+Measured first renders: open the template and print its SVG in a fresh
+`emacs -Q --batch`, garbage collection included, best of 6, on an 8-core
+Linux box (4 CPUs of quota) with Emacs 30.1, in ms
+(`scripts/eas-spikes/geo-first-render.sh`, `docs/design/geo-first-render.md`):
 
-| template | byte-compiled Elisp | byte-compiled module | native-compiled Elisp | native-compiled module |
-|---|---|---|---|---|
-| projections | 2379 | 453 | 1787 | 251 |
-| county-unemployment | 1502 | 421 | 1240 | 219 |
-| map-with-tooltip | 919 | 263 | 828 | 273 |
-| world-map | 172 | 27 | 173 | 20 |
+| template | Elisp, byte | module, byte | Elisp, native-comp | module, native-comp |
+|---|---:|---:|---:|---:|
+| projections | 2592 | 313 | 2196 | 237 |
+| county-unemployment | 1571 | 262 | 1397 | 196 |
+| map-with-tooltip | 751 | 230 | 601 | 178 |
+| world-map | 141 | 27 | 118 | 22 |
+
+Both backends draw byte-identical SVG.
 
 ## Quick start
 

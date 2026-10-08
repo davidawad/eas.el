@@ -250,9 +250,9 @@ CONFIG's countTitle names a count of records."
       (eas-time-format (eas-time-parse value) "%b %d, %Y")))
    (t (eas-expr--string value))))
 
-(defun eas-encode-tooltip (encoding mark row)
-  "Return ROW's tooltip under ENCODING and MARK, or nil.
-The tooltip is a vector of (:title TITLE :value FORMATTED) in order."
+(defun eas-encode-tooltip-defs (encoding mark)
+  "The tooltip of ENCODING and MARK as a list of (DEF . TITLE), or nil.
+What `eas-encode-tooltip' shows for every row: a unit makes it once."
   (let* ((tip (plist-get encoding :tooltip))
          (defs (cond ((vectorp tip) (append tip nil))
                      ((and tip (eas-object-p tip) (plist-get tip :field)) (list tip))
@@ -261,14 +261,23 @@ The tooltip is a vector of (:title TITLE :value FORMATTED) in order."
                                when (and (memq ch '(:x :y :x2 :y2 :color :fill :stroke :size :text :theta :radius))
                                          (eas-object-p d) (plist-get d :field))
                                collect d)))))
-    (when defs
-      (vconcat (mapcar (lambda (d)
-                         ;; A stacked channel shows its own value, not the stack's end.
-                         (when (plist-get d :stack-field)
-                           (setq d (plist-put (copy-sequence d) :field (plist-get d :stack-field))))
-                         (list :title (or (eas-encode-title d) (plist-get d :field))
-                               :value (eas-encode-format-value d (eas-encode-raw d row))))
-                       defs)))))
+    (mapcar (lambda (d)
+              ;; A stacked channel shows its own value, not the stack's end.
+              (when (plist-get d :stack-field)
+                (setq d (plist-put (copy-sequence d) :field (plist-get d :stack-field))))
+              (cons d (or (eas-encode-title d) (plist-get d :field))))
+            defs)))
+
+(defun eas-encode-tooltip-row (defs row)
+  "ROW's tooltip under DEFS from `eas-encode-tooltip-defs', or nil."
+  (when defs
+    (vconcat (mapcar (lambda (dt) (list :title (cdr dt) :value (eas-encode-format-value (car dt) (eas-encode-raw (car dt) row))))
+                     defs))))
+
+(defun eas-encode-tooltip (encoding mark row)
+  "Return ROW's tooltip under ENCODING and MARK, or nil.
+The tooltip is a vector of (:title TITLE :value FORMATTED) in order."
+  (eas-encode-tooltip-row (eas-encode-tooltip-defs encoding mark) row))
 
 (provide 'eas-encode)
 ;;; eas-encode.el ends here

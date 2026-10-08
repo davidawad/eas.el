@@ -132,7 +132,10 @@ plist is computed once per unit and shared by every item."
                         (let ((enc (plist-get unit :encoding)))
                           (or (plist-get enc :tooltip)
                               (eas-true-p (plist-get (plist-get unit :mark) :tooltip)))))
-                      (eas-encode-tooltip (plist-get unit :encoding) (plist-get unit :mark) row)))
+                      (eas-encode-tooltip-row
+                       (eas-marks--memo 'tooltip-defs
+                         (eas-encode-tooltip-defs (plist-get unit :encoding) (plist-get unit :mark)))
+                       row)))
         (href (let ((def (plist-get (plist-get unit :encoding) :href)))
                 (if def (eas-encode-raw def row) (plist-get (plist-get unit :mark) :href)))))
     (append (when tooltip (list :tooltip tooltip))

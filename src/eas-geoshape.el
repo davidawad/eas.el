@@ -416,9 +416,10 @@ native backend is in use (`eas-geo-native-p')."
 
 (defun eas-geoshape--native-value (r ox oy)
   "The `eas-geoshape--project' value of native result R placed at OX OY.
-R is [AX AY PATHS CIRCLES BOX D]; D is kept for `eas-geoshape-svg-d'."
+R is [AX AY PATHS CIRCLES BOX D]; D is kept for `eas-geoshape-svg-d'.
+PATHS may be packed (`eas-geoshape-paths')."
   (let ((paths (aref r 2)))
-    (when (> (length paths) 0)
+    (when (or (user-ptrp paths) (> (length paths) 0))
       (puthash paths (cons (+ ox (aref r 0)) (cons (+ oy (aref r 1)) (aref r 5))) eas-geoshape--svg-d))
     (cons (vector (aref r 0) (aref r 1)) (list paths (aref r 3) (aref r 4)))))
 

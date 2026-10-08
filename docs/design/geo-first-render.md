@@ -416,3 +416,110 @@ Threads in the module were tried (one shape per task over 8 cores) and
 did not pay on the measured box: the batch per map is a few
 milliseconds and the first render got slower.  They stay available
 behind EAS_GEO_MODULE_THREADS, off by default.
+
+## Fifth pass: the scene around the module
+
+The goal was restated as the user sees it: under 200 ms for the
+projections template and every map template, native-compiled, in a
+fresh batch Emacs, garbage collection included, and as far under as
+possible byte-compiled.  Output stays byte-identical: the same SVG
+with both backends and as before (the md5 of every template's SVG is
+unchanged), and the parity tests hold.
+
+### Measuring
+
+`scripts/eas-spikes/geo-first-render.sh [N]` compiles a copy of src/
+(byte, or byte and native), then for each template, compile mode and
+backend starts `emacs -Q --batch` N times, alternating, opens the view
+and prints its SVG once at the default `gc-cons-threshold`, and keeps
+the best render (open and print), the total (with the template
+registry) and the collection a session would run once idle
+(`garbage-collect` right after: 25-70 ms).  `EAS_FR_PROFILE=FILE`
+writes a flat CPU profile.  This box (8 cores, a 4-CPU cgroup quota)
+is 15-30% slower than the one of the fourth pass, so both sides of
+every comparison below were measured here, one after the other.
+
+### Where the time went (native-compiled, module, before)
+
+- projections, 317 ms: the module call ~45% (Rust projecting,
+  resampling, clipping and printing ~120-146 ms; 400k Lisp floats for
+  the scene ~45 ms), collections during the render 45-60 ms, the SVG
+  document ~12%;
+- county-unemployment, 289 ms: collections ~30%, the module ~18%
+  (Rust ~50-60 ms over albersUsa's three insets), data ~20% (TopoJSON
+  decode ~40 ms, `eas-resolve--strip`), per-item styles and tooltips
+  ~10%.
+
+### What changed
+
+- Collection waits for the render in batch too.  A view's open and
+  its SVG or text print call `eas-gc-defer-render`: in a session that is
+  `eas-gc-defer` (collection when idle, as for interactions); in batch,
+  which is never idle, `gc-cons-threshold` is raised to
+  `eas-gc-cons-threshold` (64 MB) and stays.  A scoped binding does not
+  do it: the view opens in one call and prints in another, and the
+  collection pending at the end of the first would run inside the
+  second.  `eas-gc-defer` itself still leaves batch alone.
+- Paths stay packed in the module.  `eas-geo-module-shapes` takes a
+  seventh argument, PACKED: a shape's relative paths then come back as
+  a module handle instead of [CLOSED XY...] vectors of Lisp floats.
+  The SVG needs only the path data the module printed; the text
+  renderer, hit tests and an item drawn away from its anchor read the
+  coordinates through `eas-geoshape-paths`, which unpacks a handle once
+  (`eas-geo-module-paths`, memoized weakly per handle) to the same
+  values.  Anchors, boxes and circles stay Lisp numbers.  A module
+  built before this pass (six arguments) is still used, unpacked.
+- Geoshape items print without a DOM node (`eas-geoshape-svg-string`,
+  inside the retained-fragment memo, so a re-render still hits): no
+  node, no escaping of the path data (it cannot hold XML specials), no
+  copy of it.  A test compares it with the node's print over the
+  style attributes.
+- Data: TopoJSON arcs, lines and rings are decoded into vectors
+  directly, not through lists (the same points, the same edge cases,
+  checked against the old code on every TopoJSON in examples/data);
+  `eas-resolve--strip` copies an array only once an element changes,
+  not every ring of a map; a unit computes its tooltip's fields and
+  titles once (`eas-encode-tooltip-defs`), not per row.
+
+### Results
+
+Best of 6, render (open and print) in ms, GC included:
+
+| template | compiled | Elisp before | Elisp after | module before | module after |
+|---|---|---:|---:|---:|---:|
+| projections | byte | 2837 | 2592 | 414 | 313 |
+| projections | native | 2314 | 2196 | 317 | 237 |
+| county-unemployment | byte | 1675 | 1571 | 360 | 262 |
+| county-unemployment | native | 1499 | 1397 | 289 | 196 |
+| map-with-tooltip | byte | 988 | 751 | 362 | 230 |
+| map-with-tooltip | native | 736 | 601 | 292 | 178 |
+| world-map | byte | 179 | 141 | 31 | 27 |
+| world-map | native | 154 | 118 | 26 | 22 |
+
+The collection a session then runs once idle is 25-45 ms with the
+module and 30-70 ms with Elisp; it is not in the render.  The template
+registry and example bindings add 260-290 ms to a fresh Emacs's total
+on this box, paid once per session.
+
+So, native-compiled with the module: county-unemployment (196 ms),
+map-with-tooltip (178) and world-map (22) are under 200 ms on this
+box; projections (237) is not.  Scaled by this box's measured
+slowdown against the fourth pass's (1.25-1.3 for these runs),
+projections would be about 185-190 ms there.  Byte-compiled, every map
+template is 230-313 ms except world-map.
+
+### The floor that remains
+
+What is left of projections' 237 ms: the module ~150 ms, the SVG
+document ~30 ms, the compile around it ~40 ms, resolution ~15 ms.  The
+module's time is the projection itself: about 400k points through
+d3's resampling and 24 raw projections, kept bit-exact with Elisp
+(glibc's libm, Elisp's order of operations).  The elliptic ones
+(guyou, peirceQuincuncial) alone are ~35 ms.  No shape dominates (the
+largest is at most a fifth of its map), the spherical streams are already
+recorded once per rotation and clip with their unit vectors, and the
+SVG numbers cost ~20 ms.  Threads were measured again: on this box's
+4-CPU quota, 8 threads took the projection from 143 to 120 ms, so
+they stay off.  Under 200 ms here would need the Rust projection
+itself faster without changing a bit, or the grid's maps drawn lazily
+(see the third pass).

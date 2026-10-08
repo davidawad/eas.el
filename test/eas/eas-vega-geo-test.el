@@ -227,7 +227,7 @@ antimeridian or hold a pole."
     (should (null (eas-spec-unsupported spec)))
     (should (= (length marks) 1))
     (should (equal (plist-get item :stroke) "red"))
-    (should (eq (aref (aref (plist-get item :paths) 0) 0) t))
+    (should (eq (aref (aref (eas-geoshape-paths item) 0) 0) t))
     ;; the square spans 100 * 10 degrees in radians, east and north of the centre
     (let ((box (eas-geoshape-item-box item)))
       (should (< (abs (- (aref box 0) 100)) 0.6))
@@ -529,6 +529,21 @@ About a minute byte-compiled, so it runs with the gallery."
             (when (> ratio 0.001)
               (push (format "%s at %dx: %.4f%% of pixels differ" name zoom (* 100 ratio)) problems))))))
     (should (equal problems nil))))
+
+(ert-deftest eas-vega-geo-svg-string-prints-as-the-node ()
+  "`eas-geoshape-svg-string' is the text `eas-geoshape-svg''s node prints to."
+  (let ((base (list :x 10.5 :y 20.25 :paths (vector (vector t [0.0 0.0 5.0 0.0 5.0 5.0]) (vector :false [1.0 1.0 2.0 3.0]))
+                    :circles nil :box [0.0 0.0 5.0 5.0])))
+    (dolist (extra '(() (:fill "#4c78a8") (:fill "#4c78a8" :stroke "white" :strokeWidth 0.5)
+                     (:stroke "none" :strokeWidth 2) (:stroke "black" :outline 2) (:outline 1.5)
+                     (:fill "a&b" :fillOpacity 0.5 :strokeOpacity 0.25 :strokeDashOffset 1 :strokeMiterLimit 4)
+                     (:stroke "red" :strokeCap "round" :strokeJoin "bevel" :strokeDash [4 2] :blend "multiply")
+                     (:circles [[1.0 2.0 3.0]] :fill "red")))
+      (let* ((item (append extra base))
+             (fill (plist-get item :fill)) (stroke (plist-get item :stroke)))
+        (dolist (opacity '(nil 0.5))
+          (should (equal (eas-geoshape-svg-string item fill stroke opacity)
+                         (eas-svg-retain-string (list (eas-geoshape-svg item fill stroke opacity))))))))))
 
 (provide 'eas-vega-geo-test)
 ;;; eas-vega-geo-test.el ends here

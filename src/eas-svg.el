@@ -39,6 +39,7 @@
 (require 'eas-mark-style)
 (require 'eas-legend-style)
 (require 'eas-font-file)
+(require 'eas-gc)
 
 (defcustom eas-svg-font-embed 'url
   "How an SVG carries the font files its scene registered (:fonts).
@@ -246,6 +247,7 @@ SVG path data.  ATTRS may hold :angle, degrees clockwise."
      (t (apply #'eas-svg--node 'circle :cx x :cy y :r r attrs)))))
 
 (declare-function eas-geoshape-svg "eas-geoshape-render")
+(declare-function eas-geoshape-svg-string "eas-geoshape-render")
 
 (defun eas-svg--item (mark item)
   "SVG node for ITEM of MARK."
@@ -606,7 +608,11 @@ retained between frames (`eas-svg-retain-part')."
 A direct printer's string when one has the item, else the retained
 print of its node (`eas-svg-retain-item')."
   (or (eas-svg--item-string kind item)
-      (eas-svg-retain-item kind item (lambda () (eas-svg--item mark item)))))
+      (eas-svg-retain-item kind item (lambda () (eas-svg--item mark item))
+                           (and (equal kind "geoshape") (not (plist-get item :gradient))
+                                (lambda () (eas-geoshape-svg-string
+                                            item (plist-get item :fill) (plist-get item :stroke)
+                                            (let ((o (plist-get item :opacity))) (and o (/= o 1) o))))))))
 
 (defun eas-svg--mark-nodes (mark)
   "SVG nodes of MARK's items.
@@ -723,7 +729,9 @@ view VIEW-ID (`eas-svg-retain-mark'); svg-print inserts it as it is."
                  (nreverse children)))))
 
 (defun eas-svg-render (scene &optional theme)
-  "Return SCENE drawn as an SVG string under THEME."
+  "Return SCENE drawn as an SVG string under THEME.
+Collection waits until it is drawn (`eas-gc-defer-render')."
+  (eas-gc-defer-render)
   (eas-svg-retain-to-string (let ((eas-svg--fragments t)) (eas-svg-dom scene theme))))
 
 ;;; Hot spots

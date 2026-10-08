@@ -195,16 +195,17 @@ gap a little at a time, about 25 bytes allocated per byte printed."
 
 (defvar eas-paint--svg-defs)
 
-(defun eas-svg-retain-item (kind item node-fn)
+(defun eas-svg-retain-item (kind item node-fn &optional string-fn)
   "Return the printed node of ITEM of a mark of KIND, made by NODE-FN.
-Nil when NODE-FN gives no node.  An item that records a gradient
+Nil when NODE-FN gives no node.  STRING-FN, when non-nil, prints the
+same text without the node.  An item that records a gradient
 definition is printed afresh each time, so the definition is recorded."
-  (if (or (not eas-render-cache-enabled) (plist-get item :gradient))
-      (let ((node (funcall node-fn))) (and node (eas-svg-retain-string (list node))))
-    (let ((s (eas-svg-retain-memo (cons kind item)
-                                  (lambda () (let ((node (funcall node-fn)))
-                                               (if node (eas-svg-retain-string (list node)) 'none))))))
-      (and (stringp s) s))))
+  (let ((print (or string-fn (lambda () (let ((node (funcall node-fn)))
+                                          (and node (eas-svg-retain-string (list node))))))))
+    (if (or (not eas-render-cache-enabled) (plist-get item :gradient))
+        (funcall print)
+      (let ((s (eas-svg-retain-memo (cons kind item) (lambda () (or (funcall print) 'none)))))
+        (and (stringp s) s)))))
 
 
 (defun eas-svg-retain--merge-defs (defs)

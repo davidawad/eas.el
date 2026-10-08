@@ -31,17 +31,19 @@
   "The decoded arcs of TOPOLOGY, a vector of point vectors."
   (let* ((tr (plist-get topology :transform))
          (sx (and tr (aref (plist-get tr :scale) 0))) (sy (and tr (aref (plist-get tr :scale) 1)))
-         (tx (and tr (aref (plist-get tr :translate) 0))) (ty (and tr (aref (plist-get tr :translate) 1))))
-    (vconcat
-     (mapcar (lambda (arc)
-               (let ((x 0) (y 0))
-                 (vconcat (mapcar (lambda (p)
-                                    (if tr
-                                        (progn (setq x (+ x (aref p 0)) y (+ y (aref p 1)))
-                                               (vector (+ (* x sx) tx) (+ (* y sy) ty)))
-                                      (vector (aref p 0) (aref p 1))))
-                                  arc))))
-             (plist-get topology :arcs)))))
+         (tx (and tr (aref (plist-get tr :translate) 0))) (ty (and tr (aref (plist-get tr :translate) 1)))
+         (in (let ((a (plist-get topology :arcs))) (if (vectorp a) a (vconcat a))))
+         (out (make-vector (length in) nil)))
+    (dotimes (k (length in))
+      (let* ((arc (let ((a (aref in k))) (if (vectorp a) a (vconcat a)))) (n (length arc)) (pts (make-vector n nil)) (x 0) (y 0))
+        (dotimes (i n)
+          (let ((p (aref arc i)))
+            (aset pts i (if tr
+                            (progn (setq x (+ x (aref p 0)) y (+ y (aref p 1)))
+                                   (vector (+ (* x sx) tx) (+ (* y sy) ty)))
+                          (vector (aref p 0) (aref p 1))))))
+        (aset out k pts)))
+    out))
 
 (defun eas-topojson--position (topology p)
   "Position P of a Point geometry in TOPOLOGY, untransformed."
@@ -51,21 +53,29 @@
       p)))
 
 (defun eas-topojson--line (arcs indices)
-  "The line stitched from ARCS at INDICES (negative: reversed ~i)."
-  (let ((points nil))
-    (seq-doseq (i indices)
-      (let* ((arc (aref arcs (if (< i 0) (lognot i) i)))
-             (pts (if (< i 0) (reverse (append arc nil)) (append arc nil))))
-        (when points (pop points))
-        (dolist (p pts) (push p points))))
-    (when (< (length points) 2) (push (car points) points))
-    (vconcat (nreverse points))))
+  "The line stitched from ARCS at INDICES (negative: reversed ~i).
+Each arc after the first replaces the last point so far with its own
+first.  A line of one point repeats it; of none, it is [nil]."
+  (let ((size 0))
+    (seq-doseq (i indices) (setq size (+ size (length (aref arcs (if (< i 0) (lognot i) i))))))
+    (let ((line (make-vector size nil)) (k 0))
+      (seq-doseq (i indices)
+        (let* ((arc (aref arcs (if (< i 0) (lognot i) i))) (m (length arc)))
+          (when (> k 0) (setq k (1- k)))
+          (if (< i 0)
+              (dotimes (j m) (aset line (+ k j) (aref arc (- m j 1))))
+            (dotimes (j m) (aset line (+ k j) (aref arc j))))
+          (setq k (+ k m))))
+      (cond ((= k 0) (vector nil))
+            ((= k 1) (vector (aref line 0) (aref line 0)))
+            ((= k size) line)
+            (t (substring line 0 k))))))
 
 (defun eas-topojson--ring (arcs indices)
   "The closed ring stitched from ARCS at INDICES."
-  (let ((ring (append (eas-topojson--line arcs indices) nil)))
-    (while (< (length ring) 4) (setq ring (append ring (list (car ring)))))
-    (vconcat ring)))
+  (let ((line (eas-topojson--line arcs indices)))
+    (if (>= (length line) 4) line
+      (vconcat line (make-vector (- 4 (length line)) (aref line 0))))))
 
 (defun eas-topojson--geometry (topology arcs o)
   "GeoJSON geometry of TopoJSON object O in TOPOLOGY (decoded ARCS)."

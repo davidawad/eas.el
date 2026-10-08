@@ -31,6 +31,7 @@
 (require 'eas-chart)
 (require 'eas-tip)
 (require 'eas-strip)
+(require 'eas-gc)
 
 (defvar eas-views (make-hash-table :test 'equal)
   "Live views by id.")
@@ -126,7 +127,9 @@ Resolving strips x-eas from the spec; extensions read theirs here.")
 SOURCE is a template name (resolved with BINDINGS) or a chart/v1 spec.
 SUBJECT names what is shown (\"TSM\") for a readable id
 TEMPLATE:SUBJECT; ID overrides.  ROWS replaces the root data.  SIZE,
-TARGET and CELL are as in `eas-compile'."
+TARGET and CELL are as in `eas-compile'.  Collection waits until the
+view is drawn (`eas-gc-defer-render')."
+  (eas-gc-defer-render)
   (let* ((template (and (stringp source) (not (string-prefix-p "{" (string-trim-left source)))
                         (not (string-suffix-p ".json" source))
                         source))

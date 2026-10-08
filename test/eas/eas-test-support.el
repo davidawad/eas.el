@@ -11,10 +11,8 @@
 (require 'eas-core)
 (require 'eas-geo-native)
 
-;; EAS_GEO_BACKEND=lisp|native|auto runs the suite under one geo backend.
-(let ((backend (getenv "EAS_GEO_BACKEND")))
-  (when (member backend '("lisp" "native" "auto"))
-    (setq eas-geo-backend (intern backend))))
+;; EAS_GEO_BACKEND=lisp|native|auto runs the suite under one geo backend:
+;; `eas-geo-backend' takes its initial value from that variable.
 
 (defconst eas-test-root
   (file-name-directory

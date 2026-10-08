@@ -261,12 +261,17 @@ objects their source made (`eas-resolve-hash' encodes each once)."
    ((vectorp node)
     (let ((hit (and eas-resolve--stripped (gethash node eas-resolve--stripped))))
       (or hit
-          (let* ((out (mapcar #'eas-resolve--strip node))
-                 (same (let ((i -1)) (cl-loop for x in out always (eq x (aref node (setq i (1+ i)))))))
-                 (value (if same node (vconcat out))))
-            (when (and eas-resolve--stripped (>= (length node) 64))
-              (puthash node value eas-resolve--stripped))
-            value))))
+          ;; Copied only once an element changes: rings of a map stay as they are.
+          (let ((n (length node)) (i 0) (copy nil))
+            (while (< i n)
+              (let* ((x (aref node i)) (v (eas-resolve--strip x)))
+                (unless (or copy (eq v x)) (setq copy (copy-sequence node)))
+                (when copy (aset copy i v)))
+              (setq i (1+ i)))
+            (let ((value (or copy node)))
+              (when (and eas-resolve--stripped (>= n 64))
+                (puthash node value eas-resolve--stripped))
+              value)))))
    ((and (eas-object-p node) node)
     (let ((same t) out)
       (cl-loop for (key value) on node by #'cddr

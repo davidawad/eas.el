@@ -17,7 +17,13 @@
 ;; puts the user's value back.  It never lowers a larger value, and it
 ;; leaves alone a value someone else changed in between.  Set
 ;; `eas-gc-cons-threshold' to nil to leave GC to the user entirely.
-;; Batch Emacs (tests, bin/eas) is left alone.
+;; `eas-gc-defer' leaves batch Emacs (tests, bin/eas) alone.
+;;
+;; A render (opening a view, printing its SVG or text) calls
+;; `eas-gc-defer-render' (eas-gzi): in a session that is
+;; `eas-gc-defer'.  Batch Emacs is never idle, so there it raises the
+;; threshold for good: a batch render then collects as a session's
+;; does, not while it draws.
 
 ;;; Code:
 
@@ -56,6 +62,17 @@
       (setq gc-cons-threshold eas-gc--saved))
     (setq eas-gc--saved nil)
     (garbage-collect)))
+
+(defun eas-gc-defer-render ()
+  "Defer collection before a render: open a view, print its SVG or text.
+In a session this is `eas-gc-defer'.  Batch Emacs (tests, bin/eas) is
+never idle, so there `gc-cons-threshold' is raised to
+`eas-gc-cons-threshold' and stays: a map's first render conses tens of
+megabytes, which a session collects once idle, not while it draws."
+  (if noninteractive
+      (when (and eas-gc-cons-threshold (< gc-cons-threshold eas-gc-cons-threshold))
+        (setq gc-cons-threshold eas-gc-cons-threshold))
+    (eas-gc-defer)))
 
 (provide 'eas-gc)
 ;;; eas-gc.el ends here

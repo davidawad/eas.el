@@ -89,6 +89,10 @@
                          (list :type type :rotate [-150 70 0] :clipAngle 120)))
    (list (list :type "albersUsa" :precision 2) (list :type "conicEqualArea" :parallels [10 70]))))
 
+(defun eas-geo-native-test--unpacked (value)
+  "VALUE, as `eas-geoshape--project' makes it, with its paths unpacked."
+  (cons (car value) (cons (eas-geoshape-paths (list :paths (cadr value))) (cddr value))))
+
 (defun eas-geo-native-test--compare (spec shapes)
   "Problems found projecting SHAPES under projection SPEC with both backends."
   (let* ((proj (eas-geo-proj spec 120 '(200 150))) (problems nil))
@@ -96,12 +100,13 @@
       (let ((out (eas-geo-native-shapes (plist-get proj :native) shapes (car o) (cdr o) eas-geoshape-tolerance)))
         (cl-loop for shape in shapes for r across out for i from 0
                  do (let* ((lisp (eas-geoshape--project proj shape))
-                           (native (and r (eas-geoshape--native-value r (car o) (cdr o)))))
+                           (native (and r (eas-geo-native-test--unpacked
+                                           (eas-geoshape--native-value r (car o) (cdr o))))))
                       (cond
                        ((not (equal lisp native))
                         (push (format "%S shape %d: projected values differ" spec i) problems))
                        ((and r (not (equal (aref r 5) (eas-geoshape--svg-rings (+ (car o) (aref r 0)) (+ (cdr o) (aref r 1))
-                                                                               (aref r 2)))))
+                                                                               (eas-geoshape-paths (list :paths (aref r 2)))))))
                         (push (format "%S shape %d: SVG path data differ" spec i) problems)))))))
     (let ((objects (seq-remove (lambda (s) (equal (plist-get s :type) "Sphere")) shapes)))
       (dolist (objs (list shapes objects))
@@ -122,6 +127,18 @@ so bit for bit, as are SVG path data and fit bounds."
       (setq problems (append problems (eas-geo-native-test--compare spec shapes))))
     (eas-geoshape-forget)
     (should (equal problems nil))))
+
+(ert-deftest eas-geo-native-paths-stay-packed-until-read ()
+  "Native paths are a module handle, unpacked once, to the Elisp's values."
+  (eas-geo-native-test--require)
+  (let* ((eas-geo-backend 'native) (shapes (eas-geo-native-test--shapes))
+         (proj (eas-geo-proj (list :type "equalEarth") 120 '(200 150)))
+         (out (eas-geo-native-shapes (plist-get proj :native) shapes 0 0 eas-geoshape-tolerance))
+         (i (cl-position-if (lambda (r) (and r (user-ptrp (aref r 2)))) out))
+         (item (list :paths (aref (aref out i) 2))))
+    (should (eq (eas-geoshape-paths item) (eas-geoshape-paths item)))
+    (should (equal (eas-geoshape-paths item)
+                   (car (cdr (let ((eas-geo-backend 'lisp)) (eas-geoshape--project proj (nth i shapes)))))))))
 
 ;;; Parity of map templates
 
@@ -179,6 +196,17 @@ A minute or so with the Elisp backend, so it runs with the gallery."
       (let ((eas-geo-backend 'native))
         (should-error (eas-geo-proj-fit (list :type "mercator") (list (list :type "Point" :coordinates [1 2]))
                                         [0 0 100 100]))))))
+
+(ert-deftest eas-geo-backend-initial-value-follows-the-environment ()
+  (dolist (case '(("lisp" . lisp) ("native" . native) ("auto" . auto) ("nonsense" . auto) (nil . auto)))
+    (let ((process-environment (cons (if (car case) (concat "EAS_GEO_BACKEND=" (car case)) "EAS_GEO_BACKEND")
+                                     process-environment)))
+      (should (eq (car (read-from-string
+                        (shell-command-to-string
+                         (format "%s -Q --batch -L %s -l eas-geo-native --eval '(prin1 eas-geo-backend)'"
+                                 (shell-quote-argument (expand-file-name invocation-name invocation-directory))
+                                 (shell-quote-argument (expand-file-name "src" eas-test-root))))))
+                  (cdr case))))))
 
 (provide 'eas-geo-native-test)
 ;;; eas-geo-native-test.el ends here

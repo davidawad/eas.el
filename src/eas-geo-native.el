@@ -23,7 +23,8 @@
 ;;
 ;; The module works on batches: a geometry is read once into a handle
 ;; (`eas-geo-native-handle', kept weakly per coordinates object), and
-;; one call projects every shape of a map or measures a fit.
+;; one call projects every shape of a map or measures a fit.  A shape's
+;; paths come back packed, unpacked on first read (`eas-geo-native-paths').
 
 ;;; Code:
 
@@ -35,8 +36,13 @@
   :group 'applications
   :prefix "eas-")
 
-(defcustom eas-geo-backend 'auto
+(defcustom eas-geo-backend
+  (pcase (getenv "EAS_GEO_BACKEND")
+    ("lisp" 'lisp) ("native" 'native) (_ 'auto))
   "Which backend projects map shapes.
+The initial value follows the environment variable EAS_GEO_BACKEND
+(lisp, native or auto) when it is set, so bin/eas and batch runs can pick
+one without Lisp; any other value means `auto'.
 The symbol `auto' uses the native module eas-geo-module when it loads
 and Elisp otherwise; `native' requires the module (a `user-error' when
 it is missing or fails to load); `lisp' never loads it.  Both backends
@@ -141,6 +147,7 @@ Each value is (TYPE . HANDLE).")
 (declare-function eas-geo-module-geometry "eas-geo-module")
 (declare-function eas-geo-module-shapes "eas-geo-module")
 (declare-function eas-geo-module-fit "eas-geo-module")
+(declare-function eas-geo-module-paths "eas-geo-module")
 
 (defconst eas-geo-native--codes
   '(("Point" . 2) ("MultiPoint" . 3) ("LineString" . 4) ("MultiLineString" . 5)
@@ -200,12 +207,27 @@ PARAMS is a projection's :native; nil when the module is not in use."
 Return a vector with, per shape, nil or [AX AY PATHS CIRCLES BOX D]: the
 anchor, the paths, circles and box relative to it (as
 `eas-geoshape--relative'), and the SVG path data of the paths moved by
-OX + AX, OY + AY.  TOLERANCE as `eas-geo-proj-path'.  Return nil when
-the module is not in use or failed."
+OX + AX, OY + AY.  Non-empty PATHS stay in the module, packed, when it
+can unpack them (`eas-geo-native-paths'): a map's SVG needs only D,
+and its hundreds of thousands of floats are made when the text
+renderer or a hit test reads them.  TOLERANCE as `eas-geo-proj-path'.
+Return nil when the module is not in use or failed."
   (and params (eas-geo-native-p)
        (eas-geo-native--guard
-         (eas-geo-module-shapes params (vconcat (mapcar #'eas-geo-native-handle shapes))
-                                ox oy tolerance 4.5))))
+         (let ((handles (vconcat (mapcar #'eas-geo-native-handle shapes))))
+           ;; A module built before eas-geo-module-paths takes 6 arguments.
+           (if (fboundp 'eas-geo-module-paths)
+               (eas-geo-module-shapes params handles ox oy tolerance 4.5 t)
+             (eas-geo-module-shapes params handles ox oy tolerance 4.5))))))
+
+(defvar eas-geo-native--unpacked (make-hash-table :test 'eq :weakness 'key)
+  "Paths unpacked by `eas-geo-native-paths', weakly by their packed handle.")
+
+(defun eas-geo-native-paths (packed)
+  "The [CLOSED XY...] vectors of PACKED paths, made once per PACKED.
+PACKED comes from `eas-geo-native-shapes'."
+  (or (gethash packed eas-geo-native--unpacked)
+      (puthash packed (eas-geo-module-paths packed) eas-geo-native--unpacked)))
 
 (provide 'eas-geo-native)
 ;;; eas-geo-native.el ends here

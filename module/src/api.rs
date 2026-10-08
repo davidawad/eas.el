@@ -22,6 +22,16 @@ unsafe extern "C" fn finalize_node(p: *mut c_void) {
     }
 }
 
+/// A shape's relative paths kept in the module (`eas-geo-module-paths').
+type Paths = Vec<(bool, Vec<f64>)>;
+
+unsafe extern "C" fn finalize_paths(p: *mut c_void) {
+    if !p.is_null() {
+        // SAFETY: P came from Box::into_raw in `shapes'.
+        drop(unsafe { Box::from_raw(p as *mut Paths) });
+    }
+}
+
 fn node_of(e: E, v: Value) -> Result<Arc<Node>> {
     let ours = e.user_finalizer(v).is_some_and(|f| std::ptr::fn_addr_eq(f, finalize_node as unsafe extern "C" fn(*mut c_void)));
     if !ours {
@@ -226,15 +236,27 @@ fn shapes(e: E, args: &[Value]) -> Result<Value> {
     let oy = e.num(args[3])?;
     let tolerance = opt_num(e, args[4])?;
     let radius = e.num(args[5])?;
+    let packed = args.len() > 6 && e.is_not_nil(args[6]);
     let trace = std::env::var_os("EAS_GEO_MODULE_TRACE").is_some();
     let t0 = std::time::Instant::now();
-    let done = project_all(&proj, &geoms, ox, oy, tolerance, radius);
+    let mut done = project_all(&proj, &geoms, ox, oy, tolerance, radius);
     let t1 = std::time::Instant::now();
     let out = Out::new(e);
     let results: Vec<Value> = done
-        .iter()
+        .iter_mut()
         .map(|d| match d {
             None => out.nil,
+            Some(d) if packed && !d.rel.paths.is_empty() => {
+                let (axv, ayv) = match d.anchor {
+                    Some((ax, ay)) => (e.float(ax), e.float(ay)),
+                    None => (e.integer(0), e.integer(0)),
+                };
+                let b: Box<Paths> = Box::new(std::mem::take(&mut d.rel.paths));
+                let paths = e.user_ptr(finalize_paths, Box::into_raw(b) as *mut c_void);
+                let circles = d.rel.circles.iter().map(|c| out.floats(e, c)).collect();
+                let item = vec![axv, ayv, paths, out.vec(e, circles), out.floats(e, &d.rel.bbox), e.string(&d.d)];
+                out.vec(e, item)
+            }
             Some(d) => {
                 let (axv, ayv) = match d.anchor {
                     Some((ax, ay)) => (e.float(ax), e.float(ay)),
@@ -262,6 +284,25 @@ fn shapes(e: E, args: &[Value]) -> Result<Value> {
     }
     e.check()?;
     Ok(out.vec(e, results))
+}
+
+/// (eas-geo-module-paths HANDLE): the [CLOSED XY...] vectors of a
+/// shape's paths that `shapes' kept packed.
+fn paths(e: E, args: &[Value]) -> Result<Value> {
+    let v = args[0];
+    let ours = e.user_finalizer(v).is_some_and(|f| std::ptr::fn_addr_eq(f, finalize_paths as unsafe extern "C" fn(*mut c_void)));
+    if !ours {
+        return Err(Error("not eas-geo-module paths".into()));
+    }
+    // SAFETY: the finalizer check proves the pointer is a live Box<Paths>.
+    let ps = unsafe { &*(e.get_user_ptr(v)? as *const Paths) };
+    let out = Out::new(e);
+    let items = ps
+        .iter()
+        .map(|(closed, flat)| out.vec(e, vec![if *closed { out.t } else { out.false_ }, out.floats(e, flat)]))
+        .collect();
+    e.check()?;
+    Ok(out.vec(e, items))
 }
 
 /// (eas-geo-module-fit PARAMS GEOMS): [X0 Y0 X1 Y1] of GEOMS projected.
@@ -310,6 +351,7 @@ macro_rules! export {
 export!(fn_geometry, geometry);
 export!(fn_shapes, shapes);
 export!(fn_fit, fit);
+export!(fn_paths, paths);
 export!(fn_version, version);
 
 /// Define the module's functions and provide its feature.
@@ -324,9 +366,16 @@ pub fn init(e: E) {
     e.defun(
         "eas-geo-module-shapes",
         6,
-        6,
+        7,
         fn_shapes,
-        "Project GEOMS under PARAMS: per geometry nil or [AX AY PATHS CIRCLES BOX D].\n\n(fn PARAMS GEOMS OX OY TOLERANCE RADIUS)",
+        "Project GEOMS under PARAMS: per geometry nil or [AX AY PATHS CIRCLES BOX D].\nWith PACKED, non-empty PATHS is a handle for `eas-geo-module-paths'.\n\n(fn PARAMS GEOMS OX OY TOLERANCE RADIUS &optional PACKED)",
+    );
+    e.defun(
+        "eas-geo-module-paths",
+        1,
+        1,
+        fn_paths,
+        "The [CLOSED XY...] vectors of packed PATHS from `eas-geo-module-shapes'.\n\n(fn PATHS)",
     );
     e.defun("eas-geo-module-fit", 2, 2, fn_fit, "Bounds [X0 Y0 X1 Y1] of GEOMS under PARAMS.\n\n(fn PARAMS GEOMS)");
     e.defun("eas-geo-module-version", 0, 0, fn_version, "The module's version string.");

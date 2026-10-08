@@ -40,8 +40,8 @@
   (pcase (getenv "EAS_GEO_BACKEND")
     ("lisp" 'lisp) ("native" 'native) (_ 'auto))
   "Which backend projects map shapes.
-The initial value follows the environment variable EAS_GEO_BACKEND
-(lisp, native or auto) when it is set, so bin/eas and batch runs can pick
+The initial value follows the environment variable EAS_GEO_BACKEND,
+set to `lisp', `native' or `auto', so bin/eas and batch runs can pick
 one without Lisp; any other value means `auto'.
 The symbol `auto' uses the native module eas-geo-module when it loads
 and Elisp otherwise; `native' requires the module (a `user-error' when

@@ -25,11 +25,15 @@
 ;; the strip its end moved over).  Anything else that changed (size,
 ;; axes, legends, titles, theme) redraws everything.
 ;;
-;; Each image also costs a fixed time besides its pixels, so the changed
-;; cells of a row are drawn as one image per run, and frames that keep
-;; changing most of the chart (a running share of at least
-;; `eas-slice-whole-share', a full redraw counting as all of it) are
-;; drawn as one image, as before tiles.
+;; Each image also costs a fixed time besides its pixels, and that time
+;; grows with the document: every tile is the whole chart's SVG, which
+;; librsvg parses and lays out for each image (eas-bcp: an airport hover
+;; as five tiles cost more than one image).  The changed cells of a row
+;; are drawn as one image per run, and each chart has a mode, one image
+;; or tiles, chosen from a cost model (`eas-slice--cost') with
+;; hysteresis: it turns to tiles only once its frames, on a running mean,
+;; cost clearly less as tiles (`eas-slice-gain'), and back at
+;; `eas-slice-leave'.  A frame whose SVG did not change keeps every image.
 ;;
 ;; The images lie in rows, one buffer line each, with `line-height' t
 ;; on the newline so the line is exactly as tall as its images.  Emacs
@@ -40,15 +44,18 @@
 ;; tooltip does not change the image spec; :eas-origin is its offset in
 ;; the chart (`eas-mode-event-px' adds it back).
 ;;
-;; A replaced image is not flushed at once: a bounded ring
+;; A replaced tile is not flushed at once: a bounded ring
 ;; (`eas-slice-ring-bytes' of raster) keeps recent ones in the image
 ;; cache, so an animation that revisits a frame (pacman) finds them.
-;; Images leaving the ring are flushed with `image-flush'.
+;; Images leaving the ring are flushed with `image-flush'; so are whole
+;; chart images, and the whole ring once it has served no frame for
+;; `eas-slice-ring-patience' frames.  A redraw rewrites only the buffer
+;; lines whose images changed.
 ;;
 ;; `eas-slice-stats' counts images: :rastered (new images Emacs must
 ;; rasterize, and :pixels their chart pixels), :kept (unchanged),
-;; :ring-hits (found in the ring) and :full (frames that redrew
-;; everything).  Each image rasterizes to exactly the pixels of the same
+;; :ring-hits (found in the ring), :flushed, and frames: :full (that
+;; redrew everything), :whole (one image) and :unchanged.  Each image rasterizes to exactly the pixels of the same
 ;; part of the current scene drawn afresh, and to those of a whole
 ;; render but for a few anti-aliased edge pixels: eas-slice-test.el
 ;; checks both with rsvg-convert.
@@ -72,17 +79,56 @@
 Smaller tiles redraw less area per change and cost more images."
   :type 'integer :group 'eas-chart)
 
-(defcustom eas-slice-whole-share 0.6
-  "Share of the chart frames must change to be drawn as one image.
-The share is a running mean over frames, a full redraw counting as 1.
-Each image costs a fixed time besides its pixels: frames changing
-most of the chart are cheaper as one image than as many tiles."
+(defcustom eas-slice-whole-share 0.4
+  "Most share of the chart's pixels a frame may redraw as tiles.
+A frame redrawing more counts as one image's cost or more: frames
+that keep changing that much are drawn as one image."
+  :type 'number :group 'eas-chart)
+
+(defcustom eas-slice-image-cost '(6.0 . 0.08)
+  "Fixed cost of rasterizing one image, (MS . MS-PER-KB) of its SVG.
+Every tile is the chart's whole document under its own viewBox, so
+librsvg parses and lays out all of it, text included, for each image:
+the fixed cost grows with the document (engine-spikes.md 8.15)."
+  :type '(cons number number) :group 'eas-chart)
+
+(defcustom eas-slice-pixel-cost 0.04
+  "Cost of rasterizing a thousand device pixels, in ms."
+  :type 'number :group 'eas-chart)
+
+(defcustom eas-slice-gain 0.6
+  "Tiles start when they cost at most this share of one image.
+The share is a running mean over frames of the estimated cost of the
+frame's changed cells as tiles over that of one image of the chart."
+  :type 'number :group 'eas-chart)
+
+(defcustom eas-slice-leave 0.85
+  "Tiles stop when they cost at least this share of one image.
+Above `eas-slice-gain', so a chart does not flip between the two:
+each switch to tiles redraws every pixel."
   :type 'number :group 'eas-chart)
 
 (defcustom eas-slice-ring-bytes (* 32 1024 1024)
   "Raster bytes of replaced tiles kept in the image cache, for revisits.
-Zero flushes every replaced tile at once."
+Zero flushes every replaced tile at once.  A whole chart's image is
+flushed at once, and the ring is emptied when it has not served a
+frame for `eas-slice-ring-patience' frames."
   :type 'integer :group 'eas-chart)
+
+(defvar eas-slice-ring-patience 32
+  "Frames the ring may go without a hit before it is emptied.
+A chart that does not revisit its frames then keeps no replaced tiles.")
+
+(defvar eas-slice--weight 0.15
+  "Weight of a frame's cost in the running mean that switches modes.
+Low, so one cheap frame does not start tiles and one dear frame (an
+animation's reset, a full redraw) does not end tiles that pay off on
+the frames around it.")
+
+(defvar eas-slice-scale nil
+  "Device pixels per chart pixel the costs assume; nil: the frame's.
+Outside a graphic frame (batch, tests, bench) it is 2, as on the
+Retina window the costs were measured on.")
 
 (defvar eas-slice-ring-max 256
   "Most replaced tiles the ring holds, whatever their size.")
@@ -97,13 +143,15 @@ A row is a buffer line; it must be at least a line of text tall.")
 (defvar eas-slice-stats nil
   "Tile counters, a plist: :frames :tiles :rastered :kept :ring-hits :full.
 :pixels counts the chart pixels of rastered tiles, :chart-pixels those
-of every frame's chart.
+of every frame's chart, :whole the frames drawn as one image,
+:unchanged those whose SVG and hot spots had not changed and :flushed
+the images dropped from the image cache.
 `eas-slice-stats-reset' zeroes it.")
 
 (defun eas-slice-stats-reset ()
   "Zero `eas-slice-stats'."
   (setq eas-slice-stats (list :frames 0 :tiles 0 :rastered 0 :kept 0 :ring-hits 0 :full 0
-                              :pixels 0 :chart-pixels 0)))
+                              :pixels 0 :chart-pixels 0 :whole 0 :unchanged 0 :flushed 0)))
 
 (eas-slice-stats-reset)
 
@@ -113,12 +161,16 @@ of every frame's chart.
 
 (cl-defstruct (eas-slice-frame (:constructor eas-slice--make-frame) (:copier nil))
   "One frame drawn as tiles.
-SCENE and THEME are what it was drawn from, XS and YS the grid's
+SCENE, SVG and THEME are what it was drawn from, XS and YS the grid's
 column and row edges, TILES a vector of image descriptors in display
 order, SEGS for each its cells [R0 R1 C0 C1] (rows R0 to R1 and
-columns C0 to C1, the ends excluded) and MAPS its :map.  HEAVY is the
-running share of the chart frames changed (`eas-slice-whole-share').  HELP maps hot-spot ids to their help-echo text."
-  scene theme xs ys segs tiles maps help heavy)
+columns C0 to C1, the ends excluded) and MAPS its :map.  HELP maps
+hot-spot ids to their help-echo text.  MODE is `whole' (one image) or
+`tiles', RATIO the running mean of the cost of the frames' changes as
+tiles over that of one image (`eas-slice-gain').  HITS counts the
+images it found in the ring, SEEN lists the md5 of the SVG of recent
+frames, the latest first."
+  scene svg theme xs ys segs tiles maps help mode ratio (hits 0) seen)
 
 ;;; The grid
 
@@ -378,9 +430,11 @@ background rect, sized in percent of the viewport, is moved onto it."
           (when (cddr parts) (format " x=\"%d\" y=\"%d\"" x y))
           (cddr parts)))
 
-(defun eas-slice--image (data map x y)
-  "An image descriptor of tile DATA at X Y, with hot spots MAP."
-  (let ((props (list :map map :original-map map :scale 1 :ascent 'center :eas-origin (cons x y))))
+(defun eas-slice--image (data map x y &optional whole)
+  "An image descriptor of tile DATA at X Y, with hot spots MAP.
+WHOLE non-nil means the tile is the whole chart: :eas-whole says so."
+  (let ((props (append (list :map map :original-map map :scale 1 :ascent 'center :eas-origin (cons x y))
+                       (and whole (list :eas-whole t)))))
     (if (and (display-images-p) (image-type-available-p 'svg))
         (apply #'create-image data 'svg t props)
       (append (list 'image :type 'svg :data data) props))))
@@ -396,9 +450,21 @@ background rect, sized in percent of the viewport, is moved onto it."
   "Replaced tile images kept in the image cache, the latest first.
 Each entry is (BYTES . IMAGE).")
 
+(defun eas-slice--scale ()
+  "Device pixels per chart pixel (`eas-slice-scale')."
+  (or eas-slice-scale
+      (if (and (display-graphic-p) (fboundp 'frame-scale-factor)) (frame-scale-factor) 2)))
+
+(defun eas-slice--cost (images pixels kb)
+  "Estimated ms to rasterize IMAGES images of PIXELS chart pixels in all.
+KB is the size of the chart's SVG (`eas-slice-image-cost')."
+  (let ((scale (eas-slice--scale)))
+    (+ (* images (+ (car eas-slice-image-cost) (* kb (cdr eas-slice-image-cost))))
+       (* 0.001 eas-slice-pixel-cost pixels scale scale))))
+
 (defun eas-slice--bytes (image)
   "Raster bytes IMAGE takes in the image cache, an estimate."
-  (let* ((scale (if (and (display-graphic-p) (fboundp 'frame-scale-factor)) (frame-scale-factor) 1))
+  (let* ((scale (eas-slice--scale))
          (data (plist-get (cdr image) :data))
          (w (and (string-match "\\`<svg[^>]* width=\"\\([0-9]+\\)\" height=\"\\([0-9]+\\)\"" data)
                  (string-to-number (match-string 1 data))))
@@ -407,24 +473,32 @@ Each entry is (BYTES . IMAGE).")
 
 (defun eas-slice--flush (image)
   "Drop IMAGE from the image cache."
+  (eas-slice--count :flushed 1)
   (when (fboundp 'image-flush) (image-flush image t)))
 
-(defun eas-slice--retire (images shown)
+(defvar-local eas-slice--ring-idle 0
+  "Frames since the ring last served an image.")
+
+(defun eas-slice--retire (images shown &optional budget)
   "Put replaced IMAGES in the ring, flushing what falls out of it.
-SHOWN is the list of images on display, which are never flushed."
+SHOWN is the list of images on display, which are never flushed.
+BUDGET is the ring's raster bytes, default `eas-slice-ring-bytes'.
+Whole-chart images (`eas-slice--image') never enter the ring."
+  (let ((budget (or budget eas-slice-ring-bytes)))
   (dolist (image images)
     (unless (cl-some (lambda (e) (eq (cdr e) image)) eas-slice--ring)
-      (push (cons (eas-slice--bytes image) image) eas-slice--ring)))
+      (push (cons (if (plist-get (cdr image) :eas-whole) (1+ budget) (eas-slice--bytes image)) image)
+            eas-slice--ring)))
   (let ((total 0) (n 0) (keep nil) (drop nil))
     (dolist (e eas-slice--ring)
-      (if (and (< n eas-slice-ring-max) (<= (+ total (car e)) eas-slice-ring-bytes))
+      (if (and (< n eas-slice-ring-max) (<= (+ total (car e)) budget))
           (progn (push e keep) (setq total (+ total (car e)) n (1+ n)))
         (push e drop)))
     (setq eas-slice--ring (nreverse keep))
     (dolist (e drop)
       ;; One cache entry serves every `equal' spec: keep a shown one.
       (unless (cl-some (lambda (s) (equal s (cdr e))) shown)
-        (eas-slice--flush (cdr e))))))
+        (eas-slice--flush (cdr e)))))))
 
 (defun eas-slice--from-ring (image)
   "An image of the ring `equal' to IMAGE, taken out of the ring; or nil."
@@ -449,6 +523,37 @@ Each span is (C0 . C1), C1 excluded."
         (push (cons c (1+ c)) runs)))
     (nreverse runs)))
 
+(defun eas-slice--plan (nx ny xs ys dirty prev old-segs same-grid map help)
+  "Plan a tiled frame: which images of PREV to keep, which cells to redraw.
+NX and NY count the grid's columns and rows, XS and YS its edges,
+DIRTY the changed cells of each row (bool vectors), OLD-SEGS PREV's
+segments when SAME-GRID.  MAP and HELP are as in `eas-slice--tile-map'.
+Return the rows in display order, each a list of entries sorted by
+column: (SEG . K) keeps image K of PREV, (SEG) draws SEG anew."
+  (let ((out nil))
+    (dotimes (r ny)
+      (let ((redraw (make-bool-vector nx (not same-grid))) (row nil) (d (aref dirty r)))
+        ;; Keep the old images of this row whose cells and hot spots are
+        ;; unchanged; an image spanning rows (a whole frame) is replaced.
+        (when same-grid
+          (dotimes (k (length old-segs))
+            (let ((seg (aref old-segs k)))
+              (when (and (<= (aref seg 0) r) (< r (aref seg 1)))
+                (let ((c0 (aref seg 2)) (c1 (aref seg 3)))
+                  (if (and (= (aref seg 1) (1+ (aref seg 0)))
+                           (cl-loop for c from c0 below c1 never (aref d c))
+                           (equal (eas-slice--tile-map map (aref xs c0) (aref ys r) (aref xs c1) (aref ys (1+ r)) help)
+                                  (aref (eas-slice-frame-maps prev) k)))
+                      (push (cons seg k) row)
+                    (cl-loop for c from c0 below c1 do (aset redraw c t))))))))
+        ;; The rest: a run of changed cells is one image, as is a run of
+        ;; the unchanged cells of a replaced image.
+        (dolist (run (append (eas-slice--runs (cl-loop for c below nx when (and (aref redraw c) (aref d c)) collect c))
+                             (eas-slice--runs (cl-loop for c below nx when (and (aref redraw c) (not (aref d c))) collect c))))
+          (push (list (vector r (1+ r) (car run) (cdr run))) row))
+        (push (sort row (lambda (a b) (< (aref (car a) 2) (aref (car b) 2)))) out)))
+    (nreverse out)))
+
 (defun eas-slice-frame (scene svg map theme prev)
   "Tile SCENE, drawn as SVG with hot spots MAP, reusing frame PREV.
 THEME is anything else the drawing depended on (face colors): a
@@ -456,12 +561,20 @@ change redraws every tile.  PREV is the last `eas-slice-frame' of
 this buffer, or nil.  Return (FRAME . REPLACED): FRAME the new
 `eas-slice-frame', REPLACED the images of PREV it no longer shows.
 
-The grid cuts the chart into cells of about `eas-slice-size'; an
-image covers a run of cells of one row.  The cells a frame changed
-are redrawn as one image per run of changed cells, so a change that
-spans a row costs one image, not one per cell (each image has a
-fixed cost besides its pixels).  An image some of whose cells changed
-is redrawn whole: its unchanged cells become images of their own."
+A frame whose SVG and hot spots did not change keeps every image.
+Otherwise the chart is one image or tiles, as the buffer's mode says.
+The grid cuts the chart into cells of about `eas-slice-size'; a tile
+covers a run of cells of one row.  The cells a frame changed are
+redrawn as one image per run of changed cells, so a change that spans
+a row costs one image, not one per cell.  A tile some of whose cells
+changed is redrawn whole: its unchanged cells become tiles of their own.
+
+Each image costs a fixed time that grows with the document, besides
+its pixels (`eas-slice--cost').  The mode starts as one image and
+turns to tiles once the frames' changes cost at most `eas-slice-gain'
+of one image as tiles, a running mean; it turns back at
+`eas-slice-leave'.  A frame changing more than `eas-slice-whole-share'
+of the pixels counts as costing one image at least."
   (let* ((size (plist-get scene :size))
          (w (round (plist-get size :w))) (h (round (plist-get size :h)))
          (xs (eas-slice--edges w eas-slice-size 1))
@@ -469,109 +582,125 @@ is redrawn whole: its unchanged cells become images of their own."
          (nx (1- (length xs))) (ny (1- (length ys)))
          (same-grid (and prev (equal xs (eas-slice-frame-xs prev)) (equal ys (eas-slice-frame-ys prev))
                          (equal theme (eas-slice-frame-theme prev))))
-         (boxes (if same-grid (eas-slice-dirty (eas-slice-frame-scene prev) scene) t))
+         (same-svg (and same-grid (equal svg (eas-slice-frame-svg prev))))
+         (boxes (cond ((not same-grid) t) (same-svg nil) (t (eas-slice-dirty (eas-slice-frame-scene prev) scene))))
          (old-segs (and same-grid (eas-slice-frame-segs prev)))
-         (dirty (make-vector ny nil)) (share 0) (heavy 0)
-         (parts nil) (segs nil) (tiles nil) (maps nil)
+         (old-tiles (and same-grid (eas-slice-frame-tiles prev)))
+         (kb (/ (length svg) 1024.0))
+         (whole-cost (eas-slice--cost 1 (* w h) kb))
+         (dirty (make-vector ny nil)) (runs 0) (area 0)
          (help (make-hash-table :test 'eq))
-         (replaced nil) (rastered 0) (kept 0) (hits 0) (pixels 0))
-    ;; The cells the frame changed, and their share of the chart.
+         (md5 (secure-hash 'md5 svg))
+         (seen (and same-grid (eas-slice-frame-seen prev)))
+         (mode (if same-grid (eas-slice-frame-mode prev) 'whole))
+         (ratio (if same-grid (eas-slice-frame-ratio prev) 1.0))
+         (parts nil) (rows nil) (replaced nil) (taken nil)
+         (rastered 0) (kept 0) (hits 0) (pixels 0))
+    ;; The cells the frame changed: their runs and pixels.
     (dotimes (r ny)
-      (let ((y0 (aref ys r)) (y1 (aref ys (1+ r))) (v (make-bool-vector nx (eq boxes t))))
-        (unless (eq boxes t)
-          (dotimes (c nx)
-            (when (eas-slice--touches boxes (aref xs c) y0 (aref xs (1+ c)) y1)
-              (aset v c t)
-              (setq share (+ share (* (- (aref xs (1+ c)) (aref xs c)) (- y1 y0)))))))
+      (let ((y0 (aref ys r)) (y1 (aref ys (1+ r))) (v (make-bool-vector nx (eq boxes t))) (last nil))
+        (dotimes (c nx)
+          (when (or (eq boxes t) (and boxes (eas-slice--touches boxes (aref xs c) y0 (aref xs (1+ c)) y1)))
+            (aset v c t)
+            (unless last (setq runs (1+ runs)))
+            (setq area (+ area (* (- (aref xs (1+ c)) (aref xs c)) (- y1 y0)))))
+          (setq last (aref v c)))
         (aset dirty r v)))
-    ;; Tiles redraw every old image a changed cell lies in: count those,
-    ;; unless the last frame was one image (it must split again).
-    (when (and same-grid (consp boxes) (> (length old-segs) 1))
-      (setq share 0)
-      (seq-doseq (seg old-segs)
-        (when (cl-loop for r from (aref seg 0) below (aref seg 1)
-                       thereis (cl-loop for c from (aref seg 2) below (aref seg 3) thereis (aref (aref dirty r) c)))
-          (setq share (+ share (* (- (aref xs (aref seg 3)) (aref xs (aref seg 2)))
-                                  (- (aref ys (aref seg 1)) (aref ys (aref seg 0)))))))))
-    (setq share (if (eq boxes t) 1.0 (/ share (float (max 1 (* w h))))))
-    (setq heavy (if (and prev (eas-slice-frame-heavy prev))
-                    (/ (+ share (eas-slice-frame-heavy prev)) 2.0)
-                  share))
-    (cl-flet ((draw (r0 r1 c0 c1)
-                ;; A new image of rows R0 to R1 and columns C0 to C1, or the ring's.
-                (let* ((x0 (aref xs c0)) (x1 (aref xs c1)) (y0 (aref ys r0)) (y1 (aref ys r1))
-                       (seg-map (eas-slice--tile-map map x0 y0 x1 y1 help)))
-                  (unless parts
-                    (setq parts (or (eas-slice--split svg) (error "Unexpected SVG root for tiles"))))
-                  (let* ((new (eas-slice--image (eas-slice-tile-svg parts x0 y0 (- x1 x0) (- y1 y0)) seg-map x0 y0))
-                         (ring (eas-slice--from-ring new)))
-                    (if ring (setq hits (1+ hits))
-                      (setq rastered (1+ rastered) pixels (+ pixels (* (- x1 x0) (- y1 y0)))))
-                    (list (vector r0 r1 c0 c1) (or ring new) seg-map))))
-              (keep (k)
-                (list (aref old-segs k) (aref (eas-slice-frame-tiles prev) k) (aref (eas-slice-frame-maps prev) k))))
-      (let ((out nil))
-        (cond
-         ;; Nothing changed: every image stays, a whole one too.
-         ((and same-grid (null boxes)
-               (cl-loop for k below (length old-segs)
-                        for seg = (aref old-segs k)
-                        always (equal (eas-slice--tile-map map (aref xs (aref seg 2)) (aref ys (aref seg 0))
-                                                           (aref xs (aref seg 3)) (aref ys (aref seg 1)) help)
-                                      (aref (eas-slice-frame-maps prev) k))))
-          (push (cl-loop for k below (length old-segs) collect (keep k)) out)
-          (setq kept (length old-segs)))
-         ;; Frames change most of the chart, of late: one image
-         ;; (`eas-slice-whole-share').  The share is a running mean, so
-         ;; a chart does not alternate between one image and tiles: each
-         ;; switch to tiles redraws everything.
-         ((>= heavy eas-slice-whole-share)
-          (when same-grid (setq replaced (append (eas-slice-frame-tiles prev) replaced)))
-          (push (list (draw 0 ny 0 nx)) out))
-         (t
-          (dotimes (r ny)
-            (let ((redraw (make-bool-vector nx (not same-grid))) (row nil) (d (aref dirty r)))
-              ;; Keep the old images of this row whose cells and hot spots
-              ;; are unchanged; an image spanning rows (a whole frame) is
-              ;; replaced.
-              (when same-grid
-                (dotimes (k (length old-segs))
-                  (let ((seg (aref old-segs k)))
-                    (when (and (<= (aref seg 0) r) (< r (aref seg 1)))
-                      (let ((c0 (aref seg 2)) (c1 (aref seg 3)))
-                        (if (and (= (aref seg 1) (1+ (aref seg 0)))
-                                 (cl-loop for c from c0 below c1 never (aref d c))
-                                 (equal (eas-slice--tile-map map (aref xs c0) (aref ys r) (aref xs c1) (aref ys (1+ r)) help)
-                                        (aref (eas-slice-frame-maps prev) k)))
-                            (progn (push (keep k) row) (setq kept (1+ kept)))
-                          (unless (memq (aref (eas-slice-frame-tiles prev) k) replaced)
-                            (push (aref (eas-slice-frame-tiles prev) k) replaced))
-                          (cl-loop for c from c0 below c1 do (aset redraw c t))))))))
-              ;; The rest: a run of changed cells is one image, as is a run
-              ;; of the unchanged cells of a replaced image.
-              (dolist (run (append (eas-slice--runs (cl-loop for c below nx when (and (aref redraw c) (aref d c)) collect c))
-                                   (eas-slice--runs (cl-loop for c below nx when (and (aref redraw c) (not (aref d c))) collect c))))
-                (push (draw r (1+ r) (car run) (cdr run)) row))
-              (push (sort row (lambda (a b) (< (aref (car a) 2) (aref (car b) 2)))) out)))))
-        ;; OUT holds the rows, the last first.
-        (dolist (e (apply #'append (nreverse out)))
-          (push (nth 0 e) segs) (push (nth 1 e) tiles) (push (nth 2 e) maps))))
-    (when (and prev (not same-grid))
-      (setq replaced (append (eas-slice-frame-tiles prev) replaced)))
-    ;; An image both replaced and shown again (from the ring) stays.
-    (setq replaced (cl-remove-if (lambda (i) (memq i tiles)) replaced))
-    (eas-slice--count :frames 1)
-    (eas-slice--count :tiles (length tiles))
-    (eas-slice--count :rastered rastered)
-    (eas-slice--count :pixels pixels)
-    (eas-slice--count :chart-pixels (* w h))
-    (eas-slice--count :kept kept)
-    (eas-slice--count :ring-hits hits)
-    (when (eq boxes t) (eas-slice--count :full 1))
-    (cons (eas-slice--make-frame :scene scene :theme theme :xs xs :ys ys
-                                 :segs (vconcat (nreverse segs)) :tiles (vconcat (nreverse tiles))
-                                 :maps (vconcat (nreverse maps)) :help help :heavy heavy)
-          replaced)))
+    (cl-flet* ((tile-map (seg) (eas-slice--tile-map map (aref xs (aref seg 2)) (aref ys (aref seg 0))
+                                                    (aref xs (aref seg 3)) (aref ys (aref seg 1)) help))
+               (draw (seg)
+                 ;; SEG drawn anew: the same image as PREV's there when its
+                 ;; SVG and hot spots are the same, else the ring's or a new one.
+                 (let* ((x0 (aref xs (aref seg 2))) (x1 (aref xs (aref seg 3)))
+                        (y0 (aref ys (aref seg 0))) (y1 (aref ys (aref seg 1)))
+                        (seg-map (tile-map seg))
+                        (k (and same-svg (cl-position seg old-segs :test #'equal))))
+                   (if (and k (equal seg-map (aref (eas-slice-frame-maps prev) k)))
+                       (list seg (aref old-tiles k) seg-map 'kept)
+                     (unless parts
+                       (setq parts (or (eas-slice--split svg) (error "Unexpected SVG root for tiles"))))
+                     (let* ((new (eas-slice--image (eas-slice-tile-svg parts x0 y0 (- x1 x0) (- y1 y0)) seg-map x0 y0
+                                                  (equal seg (vector 0 ny 0 nx))))
+                            (ring (eas-slice--from-ring new)))
+                       (when ring (push ring taken))
+                       (list seg (or ring new) seg-map (if ring 'ring 'new))))))
+               (cost (entries)
+                 (let ((n 0) (px 0))
+                   (dolist (e entries)
+                     (when (eq (nth 3 e) 'new)
+                       (let ((seg (car e)))
+                         (setq n (1+ n) px (+ px (* (- (aref xs (aref seg 3)) (aref xs (aref seg 2)))
+                                                    (- (aref ys (aref seg 1)) (aref ys (aref seg 0)))))))))
+                   (if (> px (* eas-slice-whole-share w h))
+                       (max whole-cost (eas-slice--cost n px kb))
+                     (eas-slice--cost n px kb))))
+               (tiles ()
+                 (mapcar (lambda (row)
+                           (mapcar (lambda (e)
+                                     (if (cdr e)
+                                         (list (car e) (aref old-tiles (cdr e)) (aref (eas-slice-frame-maps prev) (cdr e)) 'kept)
+                                       (draw (car e))))
+                                   row))
+                         (eas-slice--plan nx ny xs ys dirty prev old-segs same-grid map help))))
+      (cond
+       ;; Nothing drawn changed, hot spots included: every image stays.
+       ((and same-grid (null boxes)
+             (cl-loop for k below (length old-segs)
+                      always (equal (tile-map (aref old-segs k)) (aref (eas-slice-frame-maps prev) k))))
+        (setq rows (list (cl-loop for k below (length old-segs)
+                                  collect (list (aref old-segs k) (aref old-tiles k) (aref (eas-slice-frame-maps prev) k) 'kept))))
+        (eas-slice--count :unchanged 1))
+       ;; Tiles: keep drawing tiles while they stay cheap.
+       ((eq mode 'tiles)
+        (setq rows (tiles))
+        (setq ratio (+ (* (- 1 eas-slice--weight) ratio) (* eas-slice--weight (/ (cost (apply #'append rows)) whole-cost))))
+        (when (>= ratio eas-slice-leave)
+          ;; Too dear of late: one image.
+          (setq mode 'whole rows nil)))
+       (t
+        ;; One image: would the changes, as tiles, cost clearly less?  A
+        ;; small change to a frame shown lately would find its tiles in
+        ;; the ring; a large one costs one image whatever it revisits.
+        (let ((steady (cond ((or (not same-grid) (>= area (* eas-slice-whole-share w h))) whole-cost)
+                            ((member md5 seen) (* 0.5 (eas-slice--cost runs area kb)))
+                            (t (eas-slice--cost runs area kb)))))
+          ;; A new chart starts between the two thresholds, undecided.
+          (setq ratio (if same-grid
+                          (+ (* (- 1 eas-slice--weight) ratio) (* eas-slice--weight (/ steady whole-cost)))
+                        (min 1.0 (/ (+ eas-slice-gain eas-slice-leave) 2.0))))
+          (when (<= ratio eas-slice-gain)
+            (setq mode 'tiles rows (tiles))))))
+      (unless rows
+        (setq rows (list (list (draw (vector 0 ny 0 nx)))))))
+    (let* ((entries (apply #'append rows))
+           (segs (vconcat (mapcar #'car entries)))
+           (tiles (vconcat (mapcar #'cadr entries))))
+      (dolist (e entries)
+        (pcase (nth 3 e)
+          ('kept (setq kept (1+ kept)))
+          ('ring (setq hits (1+ hits)))
+          (_ (setq rastered (1+ rastered)
+                   pixels (+ pixels (* (- (aref xs (aref (car e) 3)) (aref xs (aref (car e) 2)))
+                                       (- (aref ys (aref (car e) 1)) (aref ys (aref (car e) 0)))))))))
+      ;; PREV's images not shown any more are replaced; ring tiles taken
+      ;; for tiles not drawn after all go back to the ring.
+      (setq replaced (append (and prev (eas-slice-frame-tiles prev)) taken))
+      (setq replaced (cl-remove-if (lambda (i) (cl-find i tiles :test #'eq))
+                                    (cl-remove-duplicates replaced :test #'eq)))
+      (eas-slice--count :frames 1)
+      (eas-slice--count :tiles (length tiles))
+      (eas-slice--count :rastered rastered)
+      (eas-slice--count :pixels pixels)
+      (eas-slice--count :chart-pixels (* w h))
+      (eas-slice--count :kept kept)
+      (eas-slice--count :ring-hits hits)
+      (when (eq boxes t) (eas-slice--count :full 1))
+      (when (= (length tiles) 1) (eas-slice--count :whole 1))
+      (cons (eas-slice--make-frame :scene scene :svg svg :theme theme :xs xs :ys ys
+                                   :segs segs :tiles tiles :maps (vconcat (mapcar #'caddr entries))
+                                   :help help :mode mode :ratio ratio :hits hits
+                                   :seen (cons md5 (take (1- eas-slice-ring-patience) (delete md5 seen))))
+            replaced))))
 
 ;;; The buffer
 
@@ -584,31 +713,75 @@ is redrawn whole: its unchanged cells become images of their own."
     ('auto (and (display-graphic-p) (image-type-available-p 'svg)))
     (v v)))
 
+(defun eas-slice--lines (frame)
+  "FRAME's tiles by buffer line: a list of lists, top to bottom."
+  (let ((nx (1- (length (eas-slice-frame-xs frame))))
+        (tiles (eas-slice-frame-tiles frame)) (segs (eas-slice-frame-segs frame))
+        (lines nil) (line nil))
+    (dotimes (i (length tiles))
+      (push (aref tiles i) line)
+      (when (= (aref (aref segs i) 3) nx)
+        (push (nreverse line) lines)
+        (setq line nil)))
+    (nreverse lines)))
+
+(defun eas-slice--insert-line (tiles)
+  "Insert the images TILES at point, one character each."
+  (dolist (tile tiles)
+    (insert (propertize "#" 'display tile 'rear-nonsticky t))))
+
 (defun eas-slice-insert (frame)
   "Insert FRAME's tiles at point, a row per line, each line ending in a newline."
-  (let ((nx (1- (length (eas-slice-frame-xs frame))))
-        (tiles (eas-slice-frame-tiles frame)) (segs (eas-slice-frame-segs frame)))
-    (dotimes (i (length tiles))
-      (insert (propertize "#" 'display (aref tiles i) 'rear-nonsticky t))
-      (when (= (aref (aref segs i) 3) nx)
-        ;; The line is exactly as tall as its tiles.
-        (insert (propertize "\n" 'line-height t 'line-spacing 0))))))
+  (dolist (line (eas-slice--lines frame))
+    (eas-slice--insert-line line)
+    ;; The line is exactly as tall as its tiles.
+    (insert (propertize "\n" 'line-height t 'line-spacing 0))))
+
+(defun eas-slice--patch (old new)
+  "Make the buffer's chart lines, showing OLD, show NEW instead.
+OLD and NEW are lists of lines of images (`eas-slice--lines').  Only
+the lines whose images changed are rewritten, so redisplay leaves the
+others be.  Return where the chart ends, or nil, changing nothing,
+when the lines differ in number or the buffer does not show OLD."
+  (when (and (= (length old) (length new))
+             (let ((pos (point-min)))
+               (cl-loop for line in old
+                        always (and (cl-loop for tile in line
+                                             always (eq (get-text-property pos 'display) tile)
+                                             do (setq pos (1+ pos)))
+                                    (eq (char-after pos) ?\n)
+                                    (setq pos (1+ pos))))))
+    (save-excursion
+      (goto-char (point-min))
+      (cl-loop for o in old for n in new
+               do (if (and (= (length o) (length n)) (cl-every #'eq o n))
+                      (forward-char (length o))
+                    (delete-region (point) (+ (point) (length o)))
+                    (eas-slice--insert-line n))
+               do (forward-char 1))
+      (point))))
 
 (defun eas-slice-redraw (scene svg map theme strip)
   "Make the current buffer show SCENE (drawn as SVG, hot spots MAP) as tiles.
 THEME is as for `eas-slice-frame'; STRIP is the text under the chart.
-Unchanged tiles keep their images; replaced ones go to the ring."
+Unchanged tiles keep their images, and the lines and strip that did
+not change are left in place; replaced tiles go to the ring."
   (let* ((prev (and eas-slice--frame
                     (eq (get-text-property (point-min) 'display) (aref (eas-slice-frame-tiles eas-slice--frame) 0))
                     eas-slice--frame))
          (result (eas-slice-frame scene svg map theme prev))
-         (frame (car result)))
+         (frame (car result))
+         (end (and prev (eas-slice--patch (eas-slice--lines prev) (eas-slice--lines frame)))))
     (unless prev (setq result (cons frame (and eas-slice--frame (append (eas-slice-frame-tiles eas-slice--frame) nil)))))
-    (erase-buffer)
-    (eas-slice-insert frame)
-    (insert strip)
+    (if (not end)
+        (progn (erase-buffer) (eas-slice-insert frame) (insert strip))
+      (unless (equal-including-properties (buffer-substring end (point-max)) strip)
+        (delete-region end (point-max))
+        (save-excursion (goto-char end) (insert strip))))
     (setq eas-slice--frame frame eas-slice--help (eas-slice-frame-help frame))
-    (eas-slice--retire (cdr result) (append (eas-slice-frame-tiles frame) nil))
+    (setq eas-slice--ring-idle (if (> (eas-slice-frame-hits frame) 0) 0 (1+ eas-slice--ring-idle)))
+    (eas-slice--retire (cdr result) (append (eas-slice-frame-tiles frame) nil)
+                       (if (> eas-slice--ring-idle eas-slice-ring-patience) 0 eas-slice-ring-bytes))
     frame))
 
 (defun eas-slice-forget ()

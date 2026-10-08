@@ -219,14 +219,16 @@ images rasterized again and the share of the chart they cover, as
       (unwind-protect
           (let ((counts (eas-slice-test--drive view '(1000 . 640)
                                                (lambda (v _) (cl-incf clock 1.0) (eas-play-tick v clock))
-                                               12 nil)))
+                                               18 nil)))
             (should (= (eas-slice-test--tiles '(1000 . 640)) 24))
             ;; The first frames are one image; once ticks have shown they
-            ;; change little, each redraws a few images, under half the chart.
+            ;; change little, the chart turns to tiles and each frame
+            ;; redraws a few images, under half the chart.
             (should (= (car (car counts)) 1))
+            (should (> (plist-get eas-slice-stats :whole) 0))
             (dolist (n (last counts 6))
-              (should (< (car n) 12))
-              (should (< (cdr n) 0.5))))
+              (should (< (car n) 12)))
+            (should (< (apply #'+ (mapcar #'cdr (last counts 6))) (* 6 0.5))))
         (eas-play-detach view) (eas-view-close view)))))
 
 (ert-deftest eas-slice-unchanged-frame-keeps-every-tile ()
@@ -253,18 +255,200 @@ images rasterized again and the share of the chart they cover, as
 
 (ert-deftest eas-slice-ring-returns-a-revisited-tile ()
   "A frame that comes back finds its tiles in the ring, not the rasterizer."
-  (eas-slice-test--with
+  (let ((eas-slice-gain 2.0) (eas-slice-leave 3.0))
+   (eas-slice-test--with
     (let ((view (eas-view-open eas-slice-test--ladder :id "slice-ring" :size '(640 . 360)
                                :rows (eas-slice-test--book 0))))
       (unwind-protect
           (let ((counts (eas-slice-test--drive
                          view '(640 . 360)
                          (lambda (v i) (eas-dispatch v (list :type "push" :key "price" :rows (eas-slice-test--book (% (1+ i) 2)))))
-                         6 nil)))
+                         12 nil)))
             (should (> (plist-get eas-slice-stats :ring-hits) 0))
-            ;; From the third frame on every frame is a revisit.
-            (should (cl-every (lambda (n) (zerop (car n))) (nthcdr 2 counts))))
+            ;; Every frame is a revisit: the ring serves every frame.
+            (should (cl-every (lambda (n) (zerop (car n))) (last counts 6))))
+        (eas-view-close view))))))
+
+;;; The image cache, modeled
+
+(defun eas-slice-test--shown ()
+  "The chart lines of the current buffer: their images, then the strip."
+  (let ((end (text-property-any (point-min) (point-max) 'eas-strip t)))
+    (list (cl-loop for pos from (point-min) below (or end (point-max))
+                   collect (or (get-text-property pos 'display) (char-after pos)))
+          (and end (buffer-substring end (point-max))))))
+
+(defun eas-slice-test--fresh (frame)
+  "What `eas-slice-test--shown' reads after FRAME is inserted afresh."
+  (let ((strip (let ((pos (text-property-any (point-min) (point-max) 'eas-strip t)))
+                 (and pos (buffer-substring pos (point-max))))))
+    (with-temp-buffer
+      (eas-slice-insert frame)
+      (when strip (insert strip))
+      (eas-slice-test--shown))))
+
+(defun eas-slice-test--cached-drive (view size update frames)
+  "Show VIEW at SIZE and run FRAMES of UPDATE against a model image cache.
+Emacs rasterizes an image whose spec is not `equal' to one in its
+cache, and `image-flush' drops one; the model does both.  Return a
+list per frame of (RASTERED SAME CACHED RING MODE SHOWN): the images
+the frame rasterized, whether every image shown is `eq' to the last
+frame's, the images in the cache after it, the ring's estimated
+bytes, the frame's mode and the images it shows."
+  (let ((cache (make-hash-table :test 'equal)) (out nil) (shown nil))
+    (cl-letf (((symbol-function 'image-flush) (lambda (spec &optional _) (remhash spec cache))))
+      (with-temp-buffer
+        (eas-view-mode)
+        (setq eas-mode--view view)
+        (eas-view-resize view size 'svg)
+        (dotimes (i (1+ frames))
+          (unless (zerop i) (funcall update view (1- i)))
+          (eas-mode-redraw)
+          (let* ((tiles (append (eas-slice-frame-tiles eas-slice--frame) nil))
+                 (rastered (cl-count-if-not (lambda (tile) (gethash tile cache)) tiles)))
+            ;; Lines patched in place read as the frame drawn afresh.
+            (should (equal (eas-slice-test--shown) (eas-slice-test--fresh eas-slice--frame)))
+            (dolist (tile tiles) (puthash tile t cache))
+            (unless (zerop i)
+              (push (list rastered (and (= (length tiles) (length shown)) (cl-every #'eq tiles shown))
+                          (hash-table-count cache) (apply #'+ (mapcar #'car eas-slice--ring))
+                          (eas-slice-frame-mode eas-slice--frame) (length tiles))
+                    out))
+            (setq shown tiles)))))
+    (nreverse out)))
+
+(defun eas-slice-test--deep-book (seed)
+  "A 2x25-level book, seeded by SEED: the ns-frames.el ladder's rows."
+  (let ((state seed))
+    (vconcat
+     (cl-loop for side in '("ask" "bid")
+              append (cl-loop for i below 25
+                              do (setq state (% (+ (* state 1103515245) 12345) 2147483648))
+                              collect (list :side side :level i
+                                            :price (if (equal side "ask") (+ 100.01 (* 0.01 i)) (- 99.99 (* 0.01 i)))
+                                            :size (+ 1 (% (/ state 7) 20))))))))
+
+(defun eas-slice-test--deep-push (view i)
+  "Push to VIEW the book of step I: ten of its fifty levels change."
+  (let ((book (eas-slice-test--deep-book 1)) (seed 1))
+    (dotimes (k (1+ i))
+      (let ((fresh (eas-slice-test--deep-book (+ 2 k))))
+        (dotimes (_ 10)
+          (setq seed (% (+ (* seed 1103515245) 12345) 2147483648))
+          (aset book (% seed 50) (aref fresh (% seed 50))))))
+    (eas-dispatch view (list :type "push" :rows book :window 50))))
+
+(defconst eas-slice-test--deep-ladder
+  '(:width 400 :height 300
+    :encoding (:y (:field "price" :type "ordinal" :sort "descending" :axis (:format ".2f")))
+    :layer [(:mark (:type "bar")
+             :encoding (:x (:field "size" :type "quantitative" :scale (:domain [0 40]))
+                        :color (:field "side" :type "nominal")))
+            (:mark (:type "text" :align "left")
+             :encoding (:x (:field "size" :type "quantitative") :text (:field "size" :type "quantitative")))])
+  "The ns-frames.el price ladder.")
+
+(ert-deftest eas-slice-unchanged-svg-rasterizes-nothing ()
+  "A frame that draws the same SVG keeps the very images, whole or tiles."
+  (dolist (tiles '(nil t))
+    (let ((eas-slice-gain (if tiles 2.0 -1.0)) (eas-slice-leave (if tiles 3.0 0.0)))
+      (eas-slice-test--with
+        (let ((view (eas-view-open eas-slice-test--ladder :id "slice-same" :size '(640 . 360)
+                                   :rows (eas-slice-test--book 0))))
+          (unwind-protect
+              (let ((frames (eas-slice-test--cached-drive
+                             view '(640 . 360)
+                             (lambda (v _) (eas-dispatch v (list :type "push" :key "price" :rows (eas-slice-test--book 0))))
+                             6)))
+                (should (eq (nth 4 (car (last frames))) (if tiles 'tiles 'whole)))
+                ;; Once the mode settled, nothing rasterizes again and every
+                ;; image is the last frame's own.
+                (dolist (f (nthcdr 2 frames))
+                  (should (zerop (nth 0 f)))
+                  (should (nth 1 f)))
+                (should (>= (plist-get eas-slice-stats :unchanged) 4)))
+            (eas-view-close view)))))))
+
+(ert-deftest eas-slice-parked-pointer-rasterizes-nothing ()
+  "A pointer that does not move over the airports map keeps the image."
+  (eas-slice-test--with
+    (let ((view (eas-view-open "airport-connections" :bindings (eas-template-example "airport-connections")
+                               :target 'svg :size '(640 . 400))))
+      (unwind-protect
+          (let ((frames (eas-slice-test--cached-drive
+                         view '(640 . 400) (lambda (v _) (eas-dispatch v '(:type "pointermove" :px [3 3]))) 4)))
+            (dolist (f (cdr frames))
+              (should (zerop (nth 0 f)))
+              (should (nth 1 f))))
         (eas-view-close view)))))
+
+(ert-deftest eas-slice-image-cache-stays-bounded ()
+  "Replaced images leave the cache: the ring is bounded and empties when idle."
+  (let ((eas-slice-ring-patience 6))
+    (eas-slice-test--with
+      (let ((view (eas-play-open "clock" :bindings (eas-template-example "clock") :target 'svg :size '(1000 . 640))))
+        (unwind-protect
+            (let ((frames (eas-slice-test--cached-drive
+                           view '(1000 . 640) (lambda (v _) (cl-incf clock 1.0) (eas-play-tick v clock)) 30)))
+              (should (eq (nth 4 (car (last frames))) 'tiles))
+              (dolist (f frames) (should (<= (nth 3 f) eas-slice-ring-bytes)))
+              ;; A clock never comes back to a frame: once the ring has gone
+              ;; unused, the cache holds what is shown and nothing else.
+              (should (zerop (nth 3 (car (last frames)))))
+              (should (= (nth 2 (car (last frames))) (nth 5 (car (last frames))))))
+          (eas-play-detach view) (eas-view-close view)))))
+  ;; One image a frame: the last one is flushed at once.
+  (eas-slice-test--with
+    (let ((view (eas-view-open (eas-json-encode eas-slice-test--deep-ladder) :id "slice-deep" :size '(1000 . 640)
+                               :target 'svg :rows (eas-slice-test--deep-book 1))))
+      (unwind-protect
+          (dolist (f (eas-slice-test--cached-drive view '(1000 . 640) #'eas-slice-test--deep-push 8))
+            (should (= (nth 2 f) 1))
+            (should (zerop (nth 3 f))))
+        (eas-view-close view)))))
+
+(ert-deftest eas-slice-whole-chart-changes-stay-one-image ()
+  "Frames that change most of the chart are one image, not tiles.
+The ns-frames.el ladder push and airport hover: as tiles each image
+would lay out the whole document again for a share of its pixels."
+  (eas-slice-test--with
+    (let ((view (eas-view-open (eas-json-encode eas-slice-test--deep-ladder) :id "slice-deep" :size '(1000 . 640)
+                               :target 'svg :rows (eas-slice-test--deep-book 1))))
+      (unwind-protect
+          (dolist (f (eas-slice-test--cached-drive view '(1000 . 640) #'eas-slice-test--deep-push 16))
+            (should (= (nth 0 f) 1)))
+        (eas-view-close view)))
+    (let* ((view (eas-view-open "airport-connections" :bindings (eas-template-example "airport-connections")
+                                :target 'svg :size '(1000 . 640)))
+           (items nil))
+      (unwind-protect
+          (progn
+            (eas-view-resize view '(1000 . 640) 'svg)
+            (setq items (seq-some (lambda (m) (and (member (plist-get m :mark) '("circle" "point" "symbol"))
+                                                   (> (length (plist-get m :items)) 0) (plist-get m :items)))
+                                  (plist-get (aref (plist-get (eas-view-scene view) :views) 0) :marks)))
+            (dolist (f (eas-slice-test--cached-drive
+                        view '(1000 . 640)
+                        (lambda (v i) (let ((item (aref items (% (* 7 i) (length items)))))
+                                        (eas-dispatch v (list :type "pointermove"
+                                                              :px (vector (plist-get item :x) (plist-get item :y))))))
+                        16))
+              (should (<= (nth 0 f) 1))
+              (should (eq (nth 4 f) 'whole))))
+        (eas-view-close view)))))
+
+(ert-deftest eas-slice-revisiting-animation-finds-the-ring ()
+  "Pacman revisits its frames: as tiles it finds them in the ring.
+It never rasterizes more pixels than one image a frame would."
+  (eas-slice-test--with
+    (let ((view (eas-play-open "pacman" :bindings (eas-template-example "pacman") :target 'svg :size '(1000 . 640))))
+      (unwind-protect
+          (let ((frames (eas-slice-test--cached-drive
+                         view '(1000 . 640) (lambda (v _) (cl-incf clock 1.0) (eas-play-tick v clock)) 60)))
+            (should (memq 'tiles (mapcar (lambda (f) (nth 4 f)) frames)))
+            (should (> (plist-get eas-slice-stats :ring-hits) 0))
+            (should (< (plist-get eas-slice-stats :pixels) (plist-get eas-slice-stats :chart-pixels))))
+        (eas-play-detach view) (eas-view-close view)))))
 
 (ert-deftest eas-slice-event-px-adds-the-tile-origin ()
   (let* ((image (list 'image :type 'svg :data "" :scale 1 :eas-origin '(160 . 320)))
@@ -274,17 +458,18 @@ images rasterized again and the share of the chart they cover, as
 (ert-deftest eas-slice-tiles-equal-a-full-render-clock ()
   "Clock ticks: every tile on display has the full render's pixels."
   (eas-slice-test--rsvg)
-  (eas-slice-test--with
-    (let ((view (eas-play-open "clock" :bindings (eas-template-example "clock") :target 'svg :size '(640 . 400))))
-      (unwind-protect
-          (eas-slice-test--drive view '(640 . 400) (lambda (v _) (cl-incf clock 7.0) (eas-play-tick v clock))
-                                 8 '(0 3 5 7))
-        (eas-play-detach view) (eas-view-close view)))))
+  (let ((eas-slice-gain 2.0) (eas-slice-leave 3.0))
+    (eas-slice-test--with
+      (let ((view (eas-play-open "clock" :bindings (eas-template-example "clock") :target 'svg :size '(640 . 400))))
+        (unwind-protect
+            (eas-slice-test--drive view '(640 . 400) (lambda (v _) (cl-incf clock 7.0) (eas-play-tick v clock))
+                                   8 '(0 3 5 7))
+          (eas-play-detach view) (eas-view-close view))))))
 
 (ert-deftest eas-slice-tiles-equal-a-full-render-pacman ()
   "Pacman ticks: every tile on display has the full render's pixels."
   (eas-slice-test--rsvg)
-  (let ((eas-slice-whole-share 2.0))
+  (let ((eas-slice-whole-share 2.0) (eas-slice-gain 2.0) (eas-slice-leave 3.0))
     (eas-slice-test--with
       (let ((view (eas-play-open "pacman" :bindings (eas-template-example "pacman") :target 'svg :size '(640 . 400))))
 	(unwind-protect
@@ -296,7 +481,7 @@ images rasterized again and the share of the chart they cover, as
 (ert-deftest eas-slice-tiles-equal-a-full-render-ladder ()
   "Ladder pushes: every tile on display has the full render's pixels."
   (eas-slice-test--rsvg)
-  (let ((eas-slice-whole-share 2.0))
+  (let ((eas-slice-whole-share 2.0) (eas-slice-gain 2.0) (eas-slice-leave 3.0))
     (eas-slice-test--with
       (let ((view (eas-view-open eas-slice-test--ladder :id "slice-ladder" :size '(640 . 360)
 				 :rows (eas-slice-test--book 0))))
@@ -311,7 +496,7 @@ images rasterized again and the share of the chart they cover, as
 (ert-deftest eas-slice-tiles-equal-a-full-render-airports ()
   "Airport hovers: every tile on display has the full render's pixels."
   (eas-slice-test--rsvg)
-  (let ((eas-slice-whole-share 2.0))
+  (let ((eas-slice-whole-share 2.0) (eas-slice-gain 2.0) (eas-slice-leave 3.0))
     (eas-slice-test--with
       (let ((view (eas-view-open "airport-connections" :bindings (eas-template-example "airport-connections")
 				 :target 'svg :size '(640 . 400))))

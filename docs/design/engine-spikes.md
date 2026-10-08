@@ -720,7 +720,7 @@ chart it changed:
   frame's and the last's, a full redraw counting as 1) reaches
   `eas-slice-whole-share` (0.6), the frame is a single image, as before
   tiles. A ladder push, a depth push and a resize therefore cost what
-  they did before.
+  they did before. (Replaced by a cost model in 8.15.1.)
 - **Hot spots.** Each image's `:map` holds only the areas it overlaps,
   clipped to it and in its own pixels. Help-echo text is kept in a
   buffer-local table that `eas-slice-help-echo` reads, so a tooltip
@@ -728,7 +728,7 @@ chart it changed:
   image cache on the whole spec, `:map` included). `:eas-origin` gives
   the image's offset in the chart, and `eas-mode-event-px` adds it back.
 - **A bounded ring of replaced images** (`eas-slice-ring-bytes`,
-  32 MB of estimated raster) stays unflushed. An animation that
+  32 MB of estimated raster) stays unflushed (8.15.1: emptied when idle). An animation that
   revisits a frame finds its images there, and images leaving the ring
   are flushed. Tiles keep this affordable: they hold the changed parts
   only, where 8.14 needed 133 MB for pacman's 14 whole frames.
@@ -793,6 +793,116 @@ with `eas-slice-tiles` t and nil): the fixed cost per image, Emacs's
 whether the rows join without a seam at 2x. `line-height` t should make
 them, and each image is a whole number of pixels high. Tune
 `eas-slice-size` and `eas-slice-whole-share` from those numbers.
+
+### 8.15.1 One image or tiles, by cost (eas-bcp)
+
+The NS run of `ns-frames.el` on the Retina laptop (median ms per frame,
+1980ab6 one image -> d9257a7 tiles): ladder push 92.8 -> 99.7, depth
+push 83.7 -> 64.5, clock +1 s 93.7 -> 41.6, clock +60 s 93.5 -> 46.4,
+pacman 96.5 -> 43.7, **airport hover 106.6 -> 145.3**, parked 1.9 -> 2.7;
+the image cache grew 34 MB over 50 ladder frames.
+
+**"Distinct chart SVGs: 1 of 50" was a measurement artifact.** The
+script hashed the `display` at `point-min`, which with tiles is the
+top-left tile, axis labels that never change. Replayed headlessly
+(`ns-frames.el`'s workloads at 1000x640 in batch, every image on display
+checked against a model of the image cache: Emacs rasterizes a spec not
+`equal` to a cached one, `image-flush` drops one), every ladder and
+depth frame has a new chart SVG (50 of 50), and d9257a7 rasterized 6.9
+ladder images a frame, 45.6% of its pixels. An unchanged SVG did not
+re-rasterize. `ns-frames.el` now hashes all the chart's images and logs
+`eas-slice-stats` per case, and gains `tiles-off` (one image, as
+1980ab6) and `tiles-always` configs.
+
+**Why tiles lost on the ladder and the airports.** Every tile is the
+chart's whole document under its own viewBox: librsvg parses and lays
+out all of it, text included, for every image, then fills only the
+tile's pixels. The fixed cost of an image therefore grows with the
+document. Fitting the NS medians against the replayed image counts:
+
+| workload | SVG | images / frame (d9257a7) | pixels | NS ms | fixed ms per image |
+|---|---:|---:|---:|---:|---:|
+| clock +1 s | 9 KB | 2.6 | 22% | 41.6 | ~6 |
+| ladder push | 23 KB | 6.9 | 46% | 99.7 | ~7.5 |
+| airport hover | 139 KB | 4.7 | 74% | 145.3 | ~15 |
+
+About 5.4 ms + 0.067 ms per KB of SVG, and 100 ms for the 1000x640 chart's
+pixels at 2x (8.14: 0.039 ms per thousand device pixels). The airport
+hover redraws three quarters of the map in five images, each laying out
+the 139 KB map: more than the one image it replaced.
+
+**Fix (`src/eas-slice.el`).**
+
+- **Unchanged SVG.** A frame whose SVG is `equal` to the last one's and
+  whose hot spots are the same keeps every image, `eq` (`:unchanged`).
+  A tile drawn again with the same SVG and `:map` is the last frame's
+  object. Tested on the model cache, as one image and as tiles: zero
+  rasterizations, the same objects (`eas-slice-unchanged-svg-rasterizes-nothing`,
+  `eas-slice-parked-pointer-rasterizes-nothing`).
+- **A cost model** (`eas-slice--cost`): an image costs
+  `eas-slice-image-cost` (6 ms + 0.08 ms per KB of SVG, above the fit)
+  plus `eas-slice-pixel-cost` (0.04 ms per thousand device pixels;
+  device pixels from `frame-scale-factor`, 2 in batch). A frame
+  changing more than `eas-slice-whole-share` (now 0.4) of the pixels
+  counts as one image at least.
+- **A mode per chart, with hysteresis.** A chart starts as one image.
+  Each frame adds its cost as tiles over the cost of one image to a
+  running mean (weight 0.15). As one image, the tiles' cost is that of
+  the runs of changed cells, halved when the SVG is one of the last 32
+  frames' (some of its tiles would be in the ring); a frame changing
+  more than `eas-slice-whole-share` of the pixels counts as one image
+  whatever it revisits. The chart turns to tiles
+  when the mean falls to `eas-slice-gain` (0.6) and back to one image
+  when it reaches `eas-slice-leave` (0.85). A full redraw while tiled
+  stays tiles: going to one image and back would draw every pixel
+  twice.
+- **The ring** keeps 32 MB, but whole-chart images never enter it (one
+  is 10 MB at 2x and a whole frame seldom comes back), and it is emptied
+  once it has served no frame for `eas-slice-ring-patience` (32) frames.
+  A chart that never revisits keeps only what it shows
+  (`eas-slice-image-cache-stays-bounded`).
+- **Lines in place.** A redraw rewrites only the buffer lines whose
+  images changed, and the strip only when it changed, instead of
+  erasing the buffer.
+
+**Replayed, 1000x640, 8 warm-up frames then 50** (the NS estimate is
+the model above: 5.4 ms + 0.067 ms/KB per image, 100 ms for all pixels;
+the image cache counts images at 2x):
+
+| workload | one image (1980ab6) | d9257a7: images, px, est. ms | now: images, px, est. ms | mode now |
+|---|---:|---:|---:|---|
+| ladder push | 1.0, 100%, 107 | 6.9, 46%, 94 (NS 99.7) | 1.0, 100%, 107 | one image |
+| depth push | 1.0, 100%, 106 | 1.0, 100%, 106 | 1.0, 100%, 106 | one image |
+| clock +60 s | 1.0, 100%, 106 | 3.1, 22%, 41 | 3.1, 22%, 41 | tiles |
+| clock +1 s | 1.0, 100%, 106 | 2.6, 22%, 38 | 2.6, 22%, 38 | tiles |
+| pacman | 1.0, 100%, 108 | 0.8, 3%, 10 | 2.9, 31%, 54 | tiles after ~25 frames |
+| airport hover | 1.0, 100%, 115 | 4.7, 74%, 143 (NS 145.3) | 1.0, 100%, 115 | one image |
+| airport parked | 0 | 0 | 0 | unchanged |
+
+- Ladder, depth and airport hover are one image a frame again, the
+  1980ab6 path but for the tile bookkeeping (under 1 ms).
+- Clock keeps its tiles. Pacman turns to tiles once its frames repeat,
+  and within ~1.5 loops (about 30 frames) the ring serves nearly every
+  frame (0 images rasterized on most of the last 20 frames); the
+  50-frame window still includes that warm-up. d9257a7 was tiled from
+  the first frame, so it is cheaper over those 50 frames.
+- Image cache over 50 frames: ladder, depth, airport: one image, no
+  growth; clock: the ring empties after 32 idle frames; pacman: the ring
+  (up to 32 MB) serves its revisits.
+- `make bench` `tiles/*` (1000x640, 3 warm-up then 20 frames; images
+  rasterized / shown, share of pixels): clock 3.3 / 12.4, 28%; pacman
+  3.25 / 5.6, 85% (the 20 frames are its switch to tiles); ladder and
+  depth 1 / 1, 100%; airport sweep 1.6 / 1.7, 90% (it tries tiles on the
+  hovers that touch nothing, then goes back: about one image's cost).
+- Every pixel-equality test passes (librsvg 2.60 unpacked into /tmp, 18
+  of 18 eas-slice tests), with tiles forced on.
+
+**To check on the NS laptop** (`run-ns.sh ns-frames.el OUT`): `shipped`
+against `tiles-off` per workload, and `tiles-always` to read the fixed
+cost per image again. The cost constants are `defcustom`s: if NS reads
+differently, set them from the `images rastered` line each case logs.
+The ladder could be cheaper as tiles if a tile's SVG held only the
+elements it shows; the renderer emits one document, so that is left out.
 
 ## 9. Terminal parity through a real terminal (fc-qx1.8)
 

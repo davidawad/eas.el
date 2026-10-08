@@ -6,8 +6,10 @@
 ;; change, the readout line (`eas-mode-strip-string', an image line in
 ;; a GUI), `eas-mode-redraw', then `(redisplay t)' (librsvg and the NS
 ;; draw).  ms per frame, WARMUP frames dropped, then FRAMES timed.
-;; Configs: shipped; render cache off; no image-flush (cache growth);
-;; readout without its image.
+;; Configs: shipped; tiles off (one image a frame, as before eas-e3s);
+;; tiles on every frame (no one-image fallback); render cache off; no
+;; image-flush (cache growth); readout without its image.  Each case
+;; also logs the images rasterized per frame (`eas-slice-stats').
 
 (require 'eas)
 (require 'eas-mode)
@@ -113,11 +115,21 @@
 (advice-add 'eas-mode-strip--string :filter-args
             (lambda (args) (if nsf--strip-image args (list (nth 0 args) (nth 1 args) nil (nth 3 args)))))
 
+(defun nsf--chart-data (buf)
+  "The SVG data of every image BUF shows above its strip, joined."
+  (with-current-buffer buf
+    (let ((end (or (text-property-any (point-min) (point-max) 'eas-strip t) (point-max))) (out nil))
+      (dotimes (i (- end (point-min)))
+        (let ((d (get-text-property (+ (point-min) i) 'display)))
+          (when (eq (car-safe d) 'image) (push (plist-get (cdr d) :data) out))))
+      (mapconcat #'identity (nreverse out) "\n"))))
+
 (defun nsf--run-frames (case)
   "Time frames of CASE (VIEW . STEP); return stats plist per stage."
   (let* ((view (car case)) (step (cdr case)) (buf (eas-view-buffer view))
-         stp strp red ras tot (distinct (make-hash-table :test 'equal)))
+         stp strp red ras tot (distinct (make-hash-table :test 'equal)) (slices nil))
     (dotimes (k (+ nsf-warmup nsf-frames))
+      (when (= k nsf-warmup) (eas-slice-stats-reset))
       (let ((t0 (spike-now-ms)))
         (funcall step k)
         (let ((t1 (spike-now-ms)))
@@ -128,11 +140,13 @@
               (redisplay t)
               (let ((t4 (spike-now-ms)))
                 (when (>= k nsf-warmup)
-                  (puthash (secure-hash 'md5 (format "%S" (plist-get (cdr (with-current-buffer buf (get-text-property (point-min) 'display))) :data)))
-                           t distinct)
+                  ;; Every chart image, not the first: with tiles the first
+                  ;; is the top-left tile, which seldom changes (eas-bcp).
+                  (puthash (secure-hash 'md5 (nsf--chart-data buf)) t distinct)
                   (push (- t1 t0) stp) (push (- t2 t1) strp) (push (- t3 t2) red)
                   (push (- t4 t3) ras) (push (- t4 t0) tot))))))))
-    (list :distinct (hash-table-count distinct) :step (spike-stats stp) :strip (spike-stats strp) :redraw (spike-stats red)
+    (setq slices (copy-sequence eas-slice-stats))
+    (list :distinct (hash-table-count distinct) :slices slices :step (spike-stats stp) :strip (spike-stats strp) :redraw (spike-stats red)
           :raster (spike-stats ras) :total (spike-stats tot))))
 
 (defconst nsf--cases
@@ -145,8 +159,10 @@
     ("airport-connections parked" . ,(lambda () (nsf--hover-case "airport-connections" t)))))
 
 (defconst nsf--configs
-  '(("shipped" t t t) ("render-cache-off" nil t t) ("no-image-flush" t nil t) ("readout-text-only" t t nil))
-  "(NAME RENDER-CACHE FLUSH STRIP-IMAGE).")
+  '(("shipped" t t t auto) ("tiles-off" t t t nil) ("tiles-always" t t t always)
+    ("render-cache-off" nil t t auto) ("no-image-flush" t nil t auto) ("readout-text-only" t t nil auto))
+  "(NAME RENDER-CACHE FLUSH STRIP-IMAGE TILES).
+TILES is `eas-slice-tiles', or `always' for tiles on every frame.")
 
 ;;; Extras: the readout image alone, and raster against image size.
 
@@ -195,13 +211,22 @@
   (if (getenv "NSF_EXTRAS") (nsf--extras)
   (dolist (cfg nsf--configs)
     (dolist (c nsf--cases)
-      (let ((eas-render-cache-enabled (nth 1 cfg)) (nsf--flush (nth 2 cfg)) (nsf--strip-image (nth 3 cfg)))
+      (let ((eas-render-cache-enabled (nth 1 cfg)) (nsf--flush (nth 2 cfg)) (nsf--strip-image (nth 3 cfg))
+            (eas-slice-tiles (if (eq (nth 4 cfg) 'always) t (nth 4 cfg)))
+            (eas-slice-gain (if (eq (nth 4 cfg) 'always) 100.0 eas-slice-gain))
+            (eas-slice-leave (if (eq (nth 4 cfg) 'always) 200.0 eas-slice-leave)))
         (eas-render-cache-clear) (clear-image-cache) (garbage-collect)
         (let* ((case (handler-bind ((error (lambda (e) (spike-log "ERR %S\n%s" e (with-output-to-string (backtrace))))))
                        (funcall (cdr c)))) (buf (eas-view-buffer (car case)))
                (cache0 (image-cache-size)) (rss0 (spike-rss-kb))
                (m (nsf--run-frames case)))
           (spike-log "%-28s %-18s distinct chart SVGs: %d of %d" (car c) (car cfg) (plist-get m :distinct) nsf-frames)
+          (let ((st (plist-get m :slices)))
+            (spike-log "%-28s %-18s images  rastered %.2f/frame (%.1f%% of chart px), shown %.1f, whole frames %d, unchanged %d, ring hits %d, flushed %d"
+                       (car c) (car cfg) (/ (plist-get st :rastered) (float nsf-frames))
+                       (/ (* 100.0 (plist-get st :pixels)) (max 1 (plist-get st :chart-pixels)))
+                       (/ (plist-get st :tiles) (float nsf-frames)) (plist-get st :whole)
+                       (plist-get st :unchanged) (plist-get st :ring-hits) (plist-get st :flushed)))
           (dolist (p '(:step :strip :redraw :raster :total))
             (spike-log "%-28s %-18s %-7s %s" (car c) (car cfg) p (spike-fmt (plist-get m p))))
           (spike-log "%-28s %-18s cache   image-cache-size %d -> %d bytes (%+d), RSS %+d KB"

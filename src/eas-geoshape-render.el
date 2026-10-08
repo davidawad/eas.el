@@ -55,39 +55,36 @@
   "The decimal strings of 0 to 8191, the integer parts of path numbers.")
 
 (defconst eas-geoshape--fracs
-  (let ((v (make-vector 100 nil)))
-    (dotimes (r 100)
-      (aset v r (cond ((= r 0) "") ((= (% r 10) 0) (format ".%d" (/ r 10))) (t (format ".%02d" r)))))
+  (let ((v (make-vector 10 nil)))
+    (dotimes (r 10) (aset v r (if (= r 0) "" (format ".%d" r))))
     v)
-  "The trimmed decimals of the hundredths 0 to 99: \"\", \".1\", \".01\"...")
+  "The trimmed decimals of the tenths 0 to 9: \"\", \".1\"...")
 
 (defun eas-geoshape--n-slow (v)
-  "Number V as `eas-svg--n' writes a float: \"%.2f\" trimmed."
-  (let ((s (format "%.2f" v)))
-    (cond ((string-suffix-p ".00" s) (substring s 0 -3))
-          ((eq (aref s (1- (length s))) ?0) (substring s 0 -1))
-          (t s))))
+  "Number V as a path number: \"%.1f\" without a trailing \".0\"."
+  (let ((s (format "%.1f" v)))
+    (if (string-suffix-p ".0" s) (substring s 0 -2) s)))
 
 (defmacro eas-geoshape--push-n (v place)
-  "Push float V's strings onto PLACE, as \"%.2f\" writes V, trimmed.
-A trailing \".00\" or \"0\" goes, as in `eas-svg--n'.  V times 100
-rounds to the hundredths \"%.2f\" prints unless it lies within 1e-4
-of a tie (its rounding error is below 1e-9 under 8191): those, NaNs
-and large numbers take `format'.  Whole parts and decimals come from
-tables, so a number allocates no string."
+  "Push float V's strings onto PLACE, as \"%.1f\" writes V, trimmed.
+A path point needs a tenth of a pixel: its error, 0.05 pixels, is a
+tenth of a device pixel on a 2x display.  A trailing \".0\" goes.  V
+times 10 rounds to the tenths \"%.1f\" prints unless it lies within
+1e-4 of a tie: those, NaNs and large numbers take `format'.  Whole
+parts and decimals come from tables, so a number allocates no string."
   (macroexp-let2 nil v v
-    `(let* ((s (* ,v 100.0)) (n (and (< -819100.0 s 819100.0) (round s))))
+    `(let* ((s (* ,v 10.0)) (n (and (< -81910.0 s 81910.0) (round s))))
        (if (and n (< -0.4999 (- s n) 0.4999))
            (let ((m (abs n)))
              (when (or (< n 0) (and (= n 0) (< (copysign 1.0 ,v) 0))) (push "-" ,place))
-             (push (aref eas-geoshape--ints (/ m 100)) ,place)
-             (push (aref eas-geoshape--fracs (% m 100)) ,place))
+             (push (aref eas-geoshape--ints (/ m 10)) ,place)
+             (push (aref eas-geoshape--fracs (% m 10)) ,place))
          (push (eas-geoshape--n-slow ,v) ,place)))))
 
 (defun eas-geoshape--svg-rings (x y paths)
   "SVG path data of PATHS ([CLOSED XY...] vectors) moved by X Y.
-Each number as `eas-svg--n' writes it, \"%.2f\" without a trailing
-\".00\" or \"0\", from `eas-geoshape--push-n's tables and one `concat':
+Each number to a tenth of a pixel, \"%.1f\" without a trailing
+\".0\", from `eas-geoshape--push-n's tables and one `concat':
 a world map's thousands of points are most of its SVG's cost."
   (let ((parts nil))
     (seq-doseq (p paths)

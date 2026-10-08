@@ -334,21 +334,51 @@ the same numbers, without a closure call per point."
 
 ;;; The path sink
 
-(defun eas-geo-path-sink (radius)
+(defconst eas-geo--simplify-run 6
+  "Points a simplified line drops in a row at most (`eas-geo-path-sink').")
+
+(defun eas-geo-path-sink (radius &optional tolerance)
   "A sink collecting projected geometry; RADIUS is a Point's circle radius.
 `eas-geo-stream-result' returns (:paths PATHS :circles CIRCLES :polygons N):
 PATHS a list of (CLOSED . FLAT-XY-VECTOR) in stream order, CIRCLES a list
-of [CX CY R]."
-  (let ((paths nil) (circles nil) (polygon nil) (line nil) (pts nil) (npoly 0)
-        (s (eas-geo-stream--make)))
+of [CX CY R].
+
+With TOLERANCE (pixels), a line drops a point B lying closer than it to
+the segment from the last point kept to the point after B, at most
+`eas-geo--simplify-run' in a row; its ends stay.  A ring left with
+fewer than four points keeps them all when it had under 16."
+  (let* ((paths nil) (circles nil) (polygon nil) (line nil) (pts nil) (npoly 0)
+         (tol2 (and tolerance (> tolerance 0) (* tolerance tolerance)))
+         (ax nil) (ay 0.0) (bx nil) (by 0.0) (run 0) (all nil) (nall 0)
+         (s (eas-geo-stream--make)))
     (setf (eas-geo-stream-point s)
-          (lambda (x y &optional _m)
-            (if line (setcar pts (cons y (cons x (car pts)))) (push (vector x y radius) circles)))
-          (eas-geo-stream-line-start s) (lambda () (setq line t) (push nil pts))
+          (if tol2
+              (lambda (x y &optional _m)
+                (cond ((not line) (push (vector x y radius) circles))
+                      (t
+                       (when (< nall 16) (push x all) (push y all) (setq nall (1+ nall)))
+                       (cond
+                        ((null ax) (setcar pts (cons y (cons x (car pts)))) (setq ax x ay y))
+                        ((null bx) (setq bx x by y))
+                        ((and (< run eas-geo--simplify-run)
+                              (let* ((dx (- x ax)) (dy (- y ay)) (ex (- bx ax)) (ey (- by ay))
+                                     (z (- (* dx ey) (* dy ex))) (d2 (+ (* dx dx) (* dy dy))))
+                                (if (> d2 0) (< (* z z) (* tol2 d2)) (< (+ (* ex ex) (* ey ey)) tol2))))
+                         (setq bx x by y run (1+ run)))
+                        (t (setcar pts (cons by (cons bx (car pts))))
+                           (setq ax bx ay by bx x by y run 0))))))
+            (lambda (x y &optional _m)
+              (if line (setcar pts (cons y (cons x (car pts)))) (push (vector x y radius) circles))))
+          (eas-geo-stream-line-start s)
+          (lambda () (setq line t ax nil bx nil run 0 all nil nall 0) (push nil pts))
           (eas-geo-stream-line-end s)
           (lambda ()
             (setq line nil)
+            (when bx (setcar pts (cons by (cons bx (car pts)))))
             (let ((flat (vconcat (nreverse (pop pts)))))
+              (when (and tol2 polygon (< (length flat) 8) (< nall 16) (> (length all) (length flat)))
+                (setq flat (vconcat (nreverse all))))
+              (setq all nil)
               (when (> (length flat) 0) (push (cons polygon flat) paths))))
           (eas-geo-stream-polygon-start s) (lambda () (setq polygon t))
           (eas-geo-stream-polygon-end s) (lambda () (setq polygon nil npoly (1+ npoly)))

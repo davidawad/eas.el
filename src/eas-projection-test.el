@@ -132,19 +132,19 @@ separates concatenated views."
 ;;; Geo first render (eas-gzi): faster, the same numbers
 
 (ert-deftest eas-projection-path-numbers-print-as-format ()
-  "Path numbers from tables are what \"%.2f\", trimmed, writes."
+  "Path numbers from tables are what \"%.1f\", trimmed, writes."
   (require 'eas-geoshape-render)
   (let ((print (lambda (v) (let (l) (eas-geoshape--push-n v l) (apply #'concat (nreverse l)))))
-        (eas-svg--n-cache (make-hash-table :test 'eql))
+        (ref (lambda (v) (let ((s (format "%.1f" v))) (if (string-suffix-p ".0" s) (substring s 0 -2) s))))
         (state (vector 12345)))
-    (dolist (v (list 0.0 -0.0 0.005 -0.005 0.015 0.125 -0.125 1.005 2.675 -0.004 -0.006 99.995
-                     8190.995 8191.994 8191.995 -8191.996 1e10 -1e10 0.0e+NaN 1.0e+INF -1.0e+INF))
-      (should (equal (funcall print v) (eas-svg--n v))))
+    (dolist (v (list 0.0 -0.0 0.05 -0.05 0.15 0.25 -0.25 1.05 2.675 -0.04 -0.06 99.95
+                     8190.95 8191.04 8191.05 -8191.06 1e10 -1e10 0.0e+NaN 1.0e+INF -1.0e+INF))
+      (should (equal (funcall print v) (funcall ref v))))
     (dotimes (_ 20000)
       (aset state 0 (% (+ (* (aref state 0) 1103515245) 12345) 2147483648))
       (let ((v (- (/ (aref state 0) 131072.0) 8192.0)))
-        (should (equal (funcall print v) (eas-svg--n v)))
-        (should (equal (funcall print (/ (fround (* v 200)) 200)) (eas-svg--n (/ (fround (* v 200)) 200))))))))
+        (should (equal (funcall print v) (funcall ref v)))
+        (should (equal (funcall print (/ (fround (* v 20)) 20)) (funcall ref (/ (fround (* v 20)) 20))))))))
 
 (ert-deftest eas-projection-elliptic-and-mollweide-memos-change-nothing ()
   "The AGM steps and the Mollweide latitude memo give d3's numbers."

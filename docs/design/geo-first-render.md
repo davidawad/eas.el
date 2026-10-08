@@ -134,3 +134,86 @@ architecture:
   very projection it would save.
 - A persistent cache of projected paths, which eas-gzi rules out, or a
   dynamic module.
+
+## Third pass: output allowed to change, visually lossless
+
+eas-gzi was reopened with the output allowed to change, as long as it
+stays visually lossless.  Two changes, both precision or
+simplification only:
+
+- Path numbers have one decimal, a tenth of a pixel
+  (`eas-geoshape--push-n`).  The error is at most 0.05 px, or a tenth
+  of a device pixel at 2x.  Circles and every non-map mark keep
+  `eas-svg--n`.
+- Geoshape items simplify their projected lines in the path sink
+  (`eas-geo-path-sink`, `eas-geoshape-tolerance` = 0.06 px).  A point
+  is dropped when it lies closer than the tolerance to the segment
+  from the last kept point to the point after it.  At most
+  `eas-geo--simplify-run` points are dropped in a row, and a line's
+  ends stay.  A ring of under 16 points that would be left with fewer
+  than four keeps them all.  The geo-measure transform still measures
+  every point.
+
+The bound is measured, not proved.  The full-precision render
+(hundredths, no simplification) and the new one are rasterized with
+rsvg-convert at 1x and 2x, and pixels are compared with the oracle's
+pixelmatch threshold (`eas-png--count`, YIQ 0.1).  The projections
+grid is the worst case.
+
+| projections, tolerance | differing pixels 1x | 2x | SVG bytes |
+|---|---:|---:|---:|
+| none (one decimal only) | 0.000% | 0.008% | 4.04 MB |
+| 0.05 px | 0.0004% | 0.015% | 3.09 MB |
+| 0.06 px (chosen) | 0.0015% | 0.028% | 2.98 MB |
+| 0.08 px | 0.006% | 0.073% | 2.77 MB |
+| 0.1 px | 0.019% | 0.150% | 2.57 MB |
+| 0.125 px | 0.062% | 0.303% | 2.36 MB |
+
+`eas-vega-geo-gallery-simplified-paths-rasterize-as-the-full-paths`
+(:gallery, about a minute) asserts the 0.1% bound for every map
+template.  The Vega reference ratios
+(`eas-vega-geo-templates-match-their-references`) do not move beyond
+0.0001.  No text or SVG golden in the repository changed: none of
+them draws a projected geoshape path.
+
+### Time: the floor holds
+
+Halving the points saves less than it looks.  The points are dropped
+after they are projected, and the projection (recording, resampling,
+raw math) is two thirds of the time.  The drop test costs about as
+much per point as collecting the point did.  What gets cheaper is the
+anchor and relative copy, the SVG numbers and the SVG's size.
+
+First render, byte-compiled, fresh `emacs -Q --batch`, alternating
+old/new runs, minimum of 3 (timings vary 5-15% run to run):
+
+| template | before (ms) | after (ms) | SVG before | SVG after |
+|---|---:|---:|---:|---:|
+| projections | 2175 | 2087 | 4.72 MB | 2.98 MB |
+| county-unemployment | 1437 | 1453 | 583 KB | 473 KB |
+| map-with-tooltip | 813 | 863 | 596 KB | 485 KB |
+| world-map | 174 | 161 | 189 KB | 131 KB |
+
+The perf suite's alloc counts (`make bench-check`): cold/projections
+svg +4.8%, text -7.9%; render/projections svg -6.7%; the other cold
+maps +2.5 to +4.6%, inside the 10% gate.  The drop test boxes a few
+floats per point.  The 200 ms goal is not met.
+
+Points cannot be dropped before projection without a bound on the
+projection's local stretch.  For the projections grid the safe
+spherical tolerance (0.06 px over the scale, about 50 px per radian,
+with a stretch margin) is about 0.02 degrees.  world-110m's points are
+0.1 to 1 degree apart, so nothing would go.  The 300 x 200 maps
+really do have about one point per half pixel.
+
+Still out of reach without changing the architecture:
+
+- Lazy facets in live views.  The projections grid is a vconcat of
+  hconcats, not a facet, and the scene (scene/v1) must be complete for
+  hit testing, the text renderer and export.  Drawing only the visible
+  maps would need a scene with deferred views, which is not in
+  eas-gzi's file scope (eas-compile, eas-mode).
+- A disk cache per (projection, size).  The projections grid's paths
+  are about 3 MB of SVG per size, and the cache key would have to
+  cover the code, the data file and every projection parameter.  It
+  only helps a second first render, and it was not built.

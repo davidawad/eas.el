@@ -315,6 +315,15 @@ of it, not between the parts; a path without rings uses its centroid."
 
 ;;; Compile: projected shapes, retained
 
+(defvar eas-geoshape-tolerance 0.06
+  "Pixels within which a geoshape item's path drops points, or nil.
+A path point closer than this to the segment around it is not drawn
+\=(`eas-geo-path-sink').  Rasterized at 1x and 2x, the projections
+grid then differs from its full paths in under 0.1% of its pixels
+\=(`eas-vega-geo-gallery-simplified-paths-rasterize-as-the-full-paths')
+and its SVG is a third smaller.  The geo-measure transform measures
+every point.")
+
 (defvar eas-geoshape--projected nil
   "Projected shapes per projection: alist of (SPEC . TABLE), newest first.
 SPEC is a projection's plain values (its :spec); TABLE maps a geometry
@@ -370,7 +379,7 @@ compile of the same data."
          (hit (and id (gethash (car id) table)))
          (hit (and hit (equal (car hit) (cdr id)) (cdr hit))))
     (if hit (and (consp hit) hit)
-      (let* ((path (eas-geo-proj-path proj shape))
+      (let* ((path (eas-geo-proj-path proj shape nil eas-geoshape-tolerance))
              (value (if (and path (or (plist-get path :paths) (plist-get path :circles)))
                         (let ((c (or (eas-geoshape--anchor path) [0 0])))
                           (cons c (eas-geoshape--relative path (aref c 0) (aref c 1))))

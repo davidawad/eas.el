@@ -306,10 +306,11 @@ takes PROJ's :stream."
                         (funcall (plist-get proj :postclip) sink))
       (eas-geo-stream-object object (funcall (plist-get proj :stream) sink)))))
 
-(defun eas-geo-proj-path (proj object &optional radius)
+(defun eas-geo-proj-path (proj object &optional radius tolerance)
   "The projected path of GeoJSON OBJECT under PROJ (`eas-geo-path-sink').
-RADIUS is a Point's circle radius (4.5, d3's default)."
-  (let ((sink (eas-geo-path-sink (or radius 4.5))))
+RADIUS is a Point's circle radius (4.5, d3's default); TOLERANCE, in
+pixels, drops a line's points closer than it to the last one kept."
+  (let ((sink (eas-geo-path-sink (or radius 4.5) tolerance)))
     (eas-geo-proj-stream proj object sink)
     (funcall (eas-geo-stream-result sink))))
 

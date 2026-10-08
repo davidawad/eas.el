@@ -480,5 +480,53 @@ too slow interpreted for make test); here they render with less data."
         (should (null (eas-spec-unsupported spec)))
         (should (eas-vega-geo-marks scene "geoshape"))))))
 
+;;; Precision and simplification (eas-gzi): visually lossless
+
+(defun eas-vega-geo--full-rings (x y paths)
+  "PATHS moved by X Y as SVG path data, every number as `eas-svg--n' writes it."
+  (mapconcat (lambda (p)
+               (let ((flat (aref p 1)) (out nil))
+                 (dotimes (i (/ (length flat) 2))
+                   (push (format "%s%s,%s" (if (= i 0) "M" "L") (eas-svg--n (+ x (aref flat (* 2 i))))
+                                 (eas-svg--n (+ y (aref flat (1+ (* 2 i))))))
+                         out))
+                 (concat (apply #'concat (nreverse out)) (if (eq (aref p 0) t) "Z" ""))))
+             paths ""))
+
+(defun eas-vega-geo--png (svg zoom)
+  "SVG string rasterized by rsvg-convert at ZOOM, decoded (`eas-png-read')."
+  (let ((in (make-temp-file "eas-geo-raster" nil ".svg")) (out (make-temp-file "eas-geo-raster" nil ".png")))
+    (unwind-protect
+        (progn (with-temp-file in (insert svg))
+               (call-process "rsvg-convert" nil nil nil "-b" "white" "-z" (number-to-string zoom) "-o" out in)
+               (eas-png-read out))
+      (delete-file in) (delete-file out))))
+
+(ert-deftest eas-vega-geo-gallery-simplified-paths-rasterize-as-the-full-paths ()
+  "Each map template, drawn with sub-pixel simplified paths printed to
+a tenth of a pixel, differs from its full paths printed to hundredths
+in at most 0.1% of its pixels at 1x and 2x (needs rsvg-convert).
+About a minute byte-compiled, so it runs with the gallery."
+  :tags '(:gallery)
+  (unless (executable-find "rsvg-convert")
+    (eas-test-skip "rsvg-convert not on PATH; install librsvg to rasterize the map templates"))
+  (require 'eas-png)
+  (let (problems)
+    (dolist (entry eas-vega-geo-templates)
+      (let* ((name (car entry)) (spec (eas-vega-geo-resolve name))
+             (new (progn (eas-geoshape-forget) (eas-svg-render (eas-compile spec))))
+             (old (progn (eas-geoshape-forget)
+                         (cl-letf (((symbol-function 'eas-geoshape--svg-rings) #'eas-vega-geo--full-rings))
+                           (let ((eas-geoshape-tolerance nil)) (eas-svg-render (eas-compile spec)))))))
+        (eas-geoshape-forget)
+        (dolist (zoom '(1 2))
+          (let* ((a (eas-vega-geo--png old zoom)) (b (eas-vega-geo--png new zoom))
+                 (count (eas-png--count a b 0 0 (eas-png--background a)
+                                        (* 35215 eas-png-pixel-threshold eas-png-pixel-threshold)))
+                 (ratio (/ (car count) (float (cdr count)))))
+            (when (> ratio 0.001)
+              (push (format "%s at %dx: %.4f%% of pixels differ" name zoom (* 100 ratio)) problems))))))
+    (should (equal problems nil))))
+
 (provide 'eas-vega-geo-test)
 ;;; eas-vega-geo-test.el ends here

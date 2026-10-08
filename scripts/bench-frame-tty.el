@@ -35,10 +35,16 @@
 (defvar bench-frame-tty-frames 40 "Frames timed per workload.")
 
 (defun bench-frame-tty--frames (view step)
-  "Mean ms of STEP, a redraw of VIEW and a redisplay; and whether it matched."
-  (let ((buffer (get-buffer-create "*bench-frame-tty*")) (total 0.0))
+  "Mean ms of STEP, a redraw of VIEW and a redisplay; whether it matched.
+Then the ms of 4 STEPs and one redraw and redisplay."
+  (let ((buffer (get-buffer-create "*bench-frame-tty*")) (total 0.0) (paced nil))
     (switch-to-buffer buffer)
     (delete-other-windows)
+    ;; The buffer is set up as `eas-show' sets it (undo, line numbers),
+    ;; but keeps the size the bench gave the view.
+    (eas-view-mode)
+    (remove-hook 'window-size-change-functions #'eas-mode--follow-window t)
+    (remove-hook 'window-buffer-change-functions #'eas-mode--follow-window t)
     (setq-local eas-mode--view view)
     (funcall step 0) (eas-mode-redraw buffer) (redisplay t)
     (garbage-collect)
@@ -48,12 +54,20 @@
         (eas-mode-redraw buffer)
         (redisplay t)
         (cl-incf total (- (float-time) t0))))
+    ;; Pacing: updates arriving 4 times faster than the terminal
+    ;; redisplays coalesce into one redraw (the glue's idle timer).
+    (let ((t0 (float-time)) (n (max 1 (/ bench-frame-tty-frames 4))))
+      (dotimes (i n)
+        (dotimes (k 4) (funcall step (+ 1000 (* 4 i) k)))
+        (eas-mode-redraw buffer)
+        (redisplay t))
+      (setq paced (/ (* 1000 (- (float-time) t0)) n)))
     (let* ((full (let ((eas-render-cache-enabled nil))
                    (concat (eas-text-render (eas-view-scene view)) "\n" (eas-mode-strip-string view))))
            (same (equal-including-properties
                   full (let ((s (buffer-string))) (remove-list-of-text-properties 0 (length s) '(fontified) s) s))))
       (kill-buffer buffer)
-      (list (/ (* 1000 total) bench-frame-tty-frames) same))))
+      (list (/ (* 1000 total) bench-frame-tty-frames) same paced))))
 
 (defun bench-frame-tty-run ()
   "Time the text workloads with redisplay; write the table and exit."
@@ -67,9 +81,11 @@
     (with-temp-file bench-frame-tty-out
       (insert (format "terminal %sx%s, %s, eas-text-render %s\n\n" (frame-width) (frame-height) (getenv "TERM")
                       (if (byte-code-function-p (symbol-function 'eas-text-render)) "byte-compiled" "not byte-compiled")))
-      (insert "| workload | ms/frame with redisplay | buffer equals a full render |\n|---|---|---|\n")
+      (insert "| workload | ms/frame with redisplay | buffer equals a full render"
+              " | ms per redisplay, 4 updates each |\n|---|---|---|---|\n")
       (dolist (r (nreverse rows))
-        (insert (format "| %s | %s | %s |\n" (car r) (if (nth 1 r) (format "%.2f" (nth 1 r)) "n/a") (nth 2 r)))))
+        (insert (format "| %s | %s | %s | %s |\n" (car r) (if (nth 1 r) (format "%.2f" (nth 1 r)) "n/a") (nth 2 r)
+                        (if (nth 3 r) (format "%.2f" (nth 3 r)) "n/a")))))
     (kill-emacs 0)))
 
 (provide 'bench-frame-tty)

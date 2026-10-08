@@ -460,3 +460,73 @@ the per-mark `equal` walk to be the only comparison left.
 `make bench-check` passes byte and native (228 of 228 each; the text
 `render/*` workloads, which render an unchanged scene repeatedly, now
 reuse the retained frame and allocate 7-70% less).
+
+## Phase 4 (eas-b2s.9): strip and readout, direct buffer diff, area arithmetic
+
+The three items Phase 3 left: pacman's values strip, depth's area paint
+and composing changed rows only to diff them against the buffer.
+
+### What changed
+
+| change | file | effect |
+|---|---|---|
+| a repainted row may stay an `eas-text-row` record (`eas-text-render-rows`); the patch reads its cells from the grid and writes the runs that differ straight into the buffer: chars by `insert-char`, one `set-text-properties` per run of `eq` props, one modification-hook call per run (`combine-change-calls`) | eas-text.el, eas-mode-patch.el, eas-mode.el | no row string, no substring per run |
+| `eas-text-render-lines` composes the records, so its callers see strings as before | eas-text.el | same lines, `eq` across frames |
+| eas buffers keep no undo list | eas-mode.el | a frame records no undo entries |
+| the strip line the redraw just wrote is not patched again by the readout | eas-mode-patch.el | one write per frame |
+| `eas-strip` memoized per (scene plan state) by `eq`: the inspect result, the redraw and the readout share one strip | eas-strip.el | 3 strips a frame → 1 |
+| readout atoms make their short and shorter variants lazily (only when the fit needs them); no number string for an unformatted value; prop paths interned; spans joined once | eas-component.el, eas-component-builtins.el | pacman patch 228 → 181 KB |
+| areas: a cell the slice covers whole skips the edge arithmetic, column centers from a vector, props once per column; a lone slice that meets no neighbour skips the band resolver's lists; a braille step's props once per dot column | eas-text.el | depth render+patch 393 → 169 KB |
+
+Modification hooks still run (`eas-crosshair-point-motion-moves-the-column`
+counts the cells a crosshair move writes through `after-change-functions`;
+binding `inhibit-modification-hooks`, as a first cut did, hid every write
+from it and from any other hook). Output is unchanged: goldens untouched,
+`src/eas-text-frames-test.el` now patches two frames in three from
+records and checks the buffer against a fresh render.
+
+### Batch frames (same run, base d13d020 vs this tree, 3x40 frames, gc-cons-percentage 0.1)
+
+The base's render column is `eas-text-render-lines` (paint and compose);
+this tree's glue calls `eas-text-render-rows`, so composing moves into
+the patch column. Compare render+patch.
+
+| workload | mode | total base → now | render+patch base → now | GC base → now | KB/frame base → now |
+|---|---|---|---|---|---|
+| order-book ladder push | byte | 9.98 → 9.99 | 1.58 → 1.71 | 6.76 (40) → 6.72 (40) | 274 → 267 |
+| depth-live push | byte | 23.03 → **18.05** | 5.96 → 5.66 | 15.11 (94) → 10.31 (60) | 675 → 452 |
+| clock tick | byte | 7.86 → **6.38** | 1.87 → 2.02 | 5.20 (28) → 3.70 (22) | 191 → 149 |
+| pacman tick | byte | 19.80 → **14.18** | 3.89 → 3.10 | 13.49 (65) → 9.37 (48) | 568 → 402 |
+| airport-connections hover | byte | 12.99 → **10.35** | 4.64 → 4.88 | 7.31 (22) → 4.54 (14) | 437 → 281 |
+| order-book ladder push | native | 8.72 → 8.91 | 0.92 → 1.11 | 6.70 (40) → 6.67 (40) | 274 → 267 |
+| depth-live push | native | 24.43 → **14.81** | 4.66 → 3.26 | 18.16 (93) → 10.18 (60) | 675 → 452 |
+| clock tick | native | 6.86 → **5.71** | 1.22 → 1.25 | 5.02 (26) → 3.91 (20) | 191 → 149 |
+| pacman tick | native | 17.09 → **13.49** | 2.39 → 2.07 | 13.35 (61) → 10.06 (45) | 568 → 402 |
+| airport-connections hover | native | 12.33 → **8.69** | 3.51 → 3.25 | 8.00 (21) → 4.71 (14) | 437 → 281 |
+
+The win is allocation: 7 KB (ladder) to 223 KB (depth) less a frame,
+hence fewer collections. Instructions are flat; the ladder's and the
+clock's patch are a little dearer (cell-by-cell `insert-char` and
+property reads cost more than the string diff when most of a row's
+cells change).
+
+### In a real terminal
+
+`scripts/bench-frame-tty.el`, `emacs -nw` 110x45 in `tmux -L eas`,
+byte-compiled, two runs each, alternating order (ms per frame with
+redisplay; the buffer equalled a render from scratch in every run):
+
+| workload | base (run 1, run 2) | now (run 1, run 2) |
+|---|---|---|
+| order-book ladder push | 6.84, 6.25 | 6.26, 6.61 |
+| depth-live push | 13.89, 13.62 | 12.27, 12.93 |
+| clock tick | 6.17, 6.47 | 8.21, 7.42 |
+| pacman tick | 11.24, 13.15 | 10.17, 11.32 |
+| airport-connections hover | 14.55, 14.06 | 14.70, 16.91 |
+
+Depth and pacman gain about 1 ms; ladder is within noise; the clock
+loses about 1 ms and the airport hover up to 2 ms, the per-cell writes
+costing redisplay more than the strings they replaced. Next step there:
+write a changed run as one propertized `insert` when most of its cells
+change (the clock's hand and the airport's highlighted routes), and keep
+the per-cell path for the sparse runs it wins on.

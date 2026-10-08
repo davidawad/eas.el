@@ -76,13 +76,19 @@ The cached lines equal an uncached render, and a buffer patched with
       (dolist (step steps)
         (funcall step (cl-incf i))
         (let* ((scene (eas-view-scene view))
-               (lines (let ((eas-render-cache-dirty (eas-text-frames-test--hint view i)))
+               ;; Two frames in three the buffer gets the rows the terminal
+               ;; glue writes (`eas-text-render-rows', records left
+               ;; uncomposed); the lines then come from the same frame.
+               (rows (and (/= (% i 3) 2)
+                          (let ((eas-render-cache-dirty (eas-text-frames-test--hint view i)))
+                            (eas-text-render-rows scene))))
+               (lines (let ((eas-render-cache-dirty (if rows nil (eas-text-frames-test--hint view i))))
                         (eas-text-render-lines scene)))
                (full (eas-text-frames-test--fresh scene))
                (strip (propertize (format " frame %d" (% i 3)) 'face 'shadow)))
           (should (equal-including-properties (list i (mapconcat #'identity lines "\n")) (list i full)))
           (with-current-buffer patched
-            (eas-mode-patch-lines (append lines (list strip)))
+            (eas-mode-patch-lines (append (or rows lines) (list strip)))
             ;; A strip update between redraws goes through the model.
             (when (= (% i 4) 1) (eas-mode-patch-last-line (propertize " moved" 'face 'shadow)))
             ;; The next frame diffs against the model, not the buffer.

@@ -192,10 +192,15 @@ dot and skips the dot when it says nil."
   (let* ((sx (/ 2.0 (eas-text--grid-cw g))) (sy (/ 4.0 (eas-text--grid-ch g)))
          (a (floor (* x1 sx))) (b (floor (* y1 sy))) (c (floor (* x2 sx))) (d (floor (* y2 sy)))
          (dx (abs (- c a))) (dy (- (abs (- d b)))) (stepx (if (< a c) 1 -1)) (stepy (if (< b d) 1 -1))
-         (err (+ dx dy)) (done nil))
+         (err (+ dx dy)) (done nil)
+         ;; Dots of one dot column share props: look them up once
+         ;; (eas-b2s.9: a step's riser asked for every dot).
+         (last-a nil) (last-props nil))
     (while (not done)
       (when (or (null show-p) (funcall show-p))
-        (eas-text--dot g a b (or props (funcall props-fn (/ (+ a 0.5) sx))) clip))
+        (eas-text--dot g a b (or props (if (eql a last-a) last-props
+                                         (setq last-a a last-props (funcall props-fn (/ (+ a 0.5) sx)))))
+                       clip))
       (if (and (= a c) (= b d)) (setq done t)
         (let ((e2 (* 2 err)))
           (when (>= e2 dy) (setq err (+ err dy) a (+ a stepx)))
@@ -285,6 +290,43 @@ die when the mark's cells are resolved, so they go back here.")
       (setcar list nil) (setcdr list eas-text--free-conses)
       (setq eas-text--free-conses list list next))))
 
+(defvar eas-text--column-centers nil
+  "(CW COLS . CENTERS): pixel x of each column's center, for areas.")
+
+(defun eas-text--column-centers (g)
+  "A vector of the pixel x of each column center of grid G."
+  (let ((cw (eas-text--grid-cw g)) (cols (eas-text--grid-cols g)) (memo eas-text--column-centers))
+    (if (and memo (eql (car memo) cw) (eql (cadr memo) cols)) (cddr memo)
+      (let ((v (make-vector cols nil)))
+        (dotimes (col cols) (aset v col (* (+ col 0.5) cw)))
+        (setq eas-text--column-centers (cons cw (cons cols v)))
+        v))))
+
+(defun eas-text--area-edge (g col row y0 y1 top bottom props prio)
+  "Draw cell COL ROW of grid G (Y0 to Y1) an area slice TOP to BOTTOM cuts.
+PROPS color it at PRIO.  The slice was recorded when it covers the cell."
+  (let ((ch (eas-text--grid-ch g)) (covered (- (min y1 bottom) (max y0 top))))
+    (when (> covered 0)
+      (let ((i (+ col (* row (eas-text--grid-cols g)))) (bands (eas-text--grid-bands g)))
+        (puthash i (eas-text--cons (eas-text--cons top (eas-text--cons bottom (eas-text--cons props nil)))
+                                   (gethash i bands))
+                 bands)))
+    (cond
+     ((>= covered (- ch 0.01)) (eas-text--put g col row ?█ props prio))
+     ((and (> top y0) (> covered 0))
+      ;; At least an eighth: a thin stacked slice still lands in a cell.
+      (eas-text--put g col row (eas-glyph-lower (max 1 (round (* 8 (/ covered ch))))) props prio))
+     ((>= covered (/ ch 2.0)) (eas-text--put g col row ?█ props prio))
+     ;; A slice that is only a sliver against this cell's top edge (a
+     ;; stacked slice at the plot's top) still marks its place.
+     ((and (> covered 0) (>= top y0) (<= bottom y1)
+           (< (aref (eas-text--grid-prio g) (+ col (* row (eas-text--grid-cols g)))) prio))
+      (eas-text--put g col row (if (>= covered (* 0.375 ch)) ?▀ ?▔) props prio))
+     ;; Above the slice beneath's eighth block, the sliver colors the
+     ;; block's empty top.
+     ((and (> covered 0) (>= top y0) (<= bottom y1))
+      (eas-text--under g col row props prio)))))
+
 (defun eas-text--series (g view mark item clip prio)
   "Draw line or area ITEM of MARK in VIEW into G at PRIO inside CLIP."
   (let* ((points (plist-get item :points))
@@ -299,39 +341,30 @@ die when the mark's cells are resolved, so they go back here.")
          (ch (eas-text--grid-ch g)))
     (if-let* ((base (plist-get item :base)))
         (cl-loop with pxs = (eas-text--xs points) with bxs = (eas-text--xs base)
+                 with cxs = (eas-text--column-centers g)
+                 with cols = (eas-text--grid-cols g) with bands = (eas-text--grid-bands g)
                  for col from (aref clip 0) below (aref clip 2)
-                 for cx = (* (+ col 0.5) (eas-text--grid-cw g))
+                 for cx = (if (< -1 col (length cxs)) (aref cxs col) (* (+ col 0.5) (eas-text--grid-cw g)))
                  for p = (eas-text--interp points cx pxs)
                  for q = (eas-text--interp base cx bxs)
                  ;; A band (errorband, ranged area) may give its lower edge first.
                  for top = (and p q (min p q))
                  for bottom = (and p q (max p q))
+                 ;; The column's props, looked up at its first cell.
+                 for cp = nil
                  when (and top bottom)
                  do (cl-loop for row from (max (aref clip 1) (floor top ch)) below (min (aref clip 3) (ceiling bottom ch))
                              for y0 = (* row ch) for y1 = (* (1+ row) ch)
-                             for covered = (- (min y1 bottom) (max y0 top))
-                             when (> covered 0)
-                             do (let ((i (+ col (* row (eas-text--grid-cols g)))) (bands (eas-text--grid-bands g)))
-                                  (puthash i (eas-text--cons (eas-text--cons top (eas-text--cons bottom (eas-text--cons (funcall props-fn cx) nil)))
-                                                             (gethash i bands))
-                                           bands))
-                             do (cond
-                                 ((>= covered (- ch 0.01)) (eas-text--put g col row ?█ (funcall props-fn cx) prio))
-                                 ((and (> top y0) (> covered 0))
-                                  ;; At least an eighth: a thin stacked slice still lands in a cell.
-                                  (eas-text--put g col row (eas-glyph-lower (max 1 (round (* 8 (/ covered ch)))))
-                                                 (funcall props-fn cx) prio))
-                                 ((>= covered (/ ch 2.0)) (eas-text--put g col row ?█ (funcall props-fn cx) prio))
-                                 ;; A slice that is only a sliver against this cell's
-                                 ;; top edge (a stacked slice at the plot's top) still
-                                 ;; marks its place.
-                                 ((and (> covered 0) (>= top y0) (<= bottom y1)
-                                       (< (aref (eas-text--grid-prio g) (+ col (* row (eas-text--grid-cols g)))) prio))
-                                  (eas-text--put g col row (if (>= covered (* 0.375 ch)) ?▀ ?▔) (funcall props-fn cx) prio))
-                                 ;; Above the slice beneath's eighth block, the
-                                 ;; sliver colors the block's empty top.
-                                 ((and (> covered 0) (>= top y0) (<= bottom y1))
-                                  (eas-text--under g col row (funcall props-fn cx) prio)))))
+                             for props = (or cp (setq cp (funcall props-fn cx)))
+                             do (if (and (<= top y0) (>= bottom y1))
+                                    ;; The slice covers the whole cell: a full block,
+                                    ;; without an edge cell's float arithmetic (eas-b2s.9).
+                                    (let ((i (+ col (* row cols))))
+                                      (puthash i (eas-text--cons (eas-text--cons top (eas-text--cons bottom (eas-text--cons props nil)))
+                                                                 (gethash i bands))
+                                               bands)
+                                      (eas-text--put g col row ?█ props prio))
+                                  (eas-text--area-edge g col row y0 y1 top bottom props prio))))
       (let ((show-p (and (plist-get item :strokeDash) (eas-text--dasher (plist-get item :strokeDash))))
             (eas-text--dot-prio prio))
         (dotimes (k (max 0 (1- (length points))))
@@ -371,13 +404,18 @@ See `eas-text-band-resolve'.  Then forget the slices."
                                (eas-text--start-p (gethash (+ i cols) bands) (+ y0 ch slack)))
                        (aset (eas-text--grid-chars g) i ?█)
                        (aset (eas-text--grid-props g) i (nth 2 own)))
-                 (pcase (let ((y0 (* (/ i cols) ch)))
+                 (pcase (let* ((y0 (* (/ i cols) ch))
+                               (up (gethash (- i cols) bands)) (down (gethash (+ i cols) bands)))
                           ;; A slice ending just past the cell's edge meets this one.
-                          (eas-text-band-resolve
-                           (append segs
-                                   (seq-filter (lambda (s) (>= (cadr s) (- y0 slack))) (gethash (- i cols) bands))
-                                   (seq-filter (lambda (s) (<= (car s) (+ y0 ch slack))) (gethash (+ i cols) bands)))
-                           y0 ch))
+                          ;; A lone slice that meets none tiles nothing (eas-b2s.9:
+                          ;; no lists to find that out).
+                          (when (or (cdr segs) (eas-text--reach-p up (- y0 slack))
+                                    (eas-text--start-p down (+ y0 ch slack)))
+                            (eas-text-band-resolve
+                             (append segs
+                                     (cl-loop for s in up when (>= (cadr s) (- y0 slack)) collect s)
+                                     (cl-loop for s in down when (<= (car s) (+ y0 ch slack)) collect s))
+                             y0 ch)))
                    (`(,char ,props ,under)
                     (aset (eas-text--grid-chars g) i char)
                     (aset (eas-text--grid-props g) i
@@ -961,6 +999,64 @@ and its intervals only (eas-b2s.5)."
       (when (> k start) (eas-text--set-run string start k props))
       string)))
 
+(cl-defstruct (eas-text-row (:constructor eas-text--row-make (grid row shade strings)) (:copier nil))
+  "A row of a cached text frame left uncomposed (eas-b2s.9).
+The terminal glue writes it into its buffer cell by cell
+\(`eas-text-row-scan'); `eas-text-row-string' composes it.  STRINGS is
+the frame's row vector, where it stands until then."
+  grid row shade strings)
+
+(defvar eas-text--defer-rows nil
+  "Non-nil: cached frames leave repainted rows as `eas-text-row' records.")
+
+(defun eas-text--row-out (g row shade strings)
+  "Row ROW of grid G (SHADE colors a brush) for the frame's row vector STRINGS.
+A string, or a record when `eas-text--defer-rows'."
+  (if eas-text--defer-rows (eas-text--row-make g row shade strings) (eas-text--compose-row g row shade)))
+
+(defun eas-text-row-string (row)
+  "ROW as a propertized string: ROW itself, or its record composed.
+A record of the frame's row vector is replaced there by its string, so
+the next frame that keeps the row returns the same string."
+  (if (not (eas-text-row-p row)) row
+    (let ((string (eas-text--compose-row (eas-text-row-grid row) (eas-text-row-row row) (eas-text-row-shade row)))
+          (strings (eas-text-row-strings row)))
+      (when (and strings (eq (aref strings (eas-text-row-row row)) row))
+        (aset strings (eas-text-row-row row) string))
+      string)))
+
+(defun eas-text-row-cols (row)
+  "Most cells record ROW has."
+  (eas-text--grid-cols (eas-text-row-grid row)))
+
+(defun eas-text-row-scan (row fn)
+  "Call FN with J, CHAR and PROPS for each character J of record ROW.
+That is the string `eas-text-row-string' would give, without making
+it: PROPS is the plist character J's text properties `equal'.  Return
+the number of characters."
+  (let* ((g (eas-text-row-grid row)) (shade (eas-text-row-shade row))
+         (cols (eas-text--grid-cols g)) (base (* (eas-text-row-row row) cols))
+         (chars (eas-text--grid-chars g)) (dots (eas-text--grid-dots g))
+         (prio (eas-text--grid-prio g)) (dot-prio (eas-text--grid-dot-prio g))
+         (brush (eas-text--grid-brush g))
+         (end (let ((col (1- cols)))
+                (while (and (>= col 0)
+                            (let ((i (+ base col)))
+                              (and (eq (aref chars i) ?\s) (null (aref brush i))
+                                   (or (zerop (aref dots i)) (> (aref prio i) (aref dot-prio i))))))
+                  (setq col (1- col)))
+                (1+ col)))
+         (j 0))
+    (dotimes (col end)
+      (let* ((i (+ base col)) (d (aref dots i))
+             (char (if (and (> d 0) (<= (aref prio i) (aref dot-prio i))) (+ #x2800 d) (aref chars i))))
+        (unless (eq char 0)
+          (let ((p (eas-text--cell-props g i shade)))
+            (funcall fn j char (and p (or (gethash p eas-text--reversed)
+                                          (puthash p (eas-text--plist-reverse p) eas-text--reversed)))))
+          (setq j (1+ j)))))
+    j))
+
 (defun eas-text--set-run (string start end props)
   "Set PROPS on STRING from START to END, in `concat''s order."
   (unless (or (null props) (eq props :unset))
@@ -984,6 +1080,19 @@ and its intervals only (eas-b2s.5)."
   "Return SCENE drawn as a list of propertized rows, as `eas-text-render'.
 A row equal to the last render's on the same canvas is the same string,
 so `eas-mode-patch-lines' skips it with `eq'."
+  (let ((rows (let ((eas-text--defer-rows nil)) (eas-text--render-rows scene))))
+    (cl-loop for cell on rows do (setcar cell (eas-text-row-string (car cell))))
+    rows))
+
+(defun eas-text-render-rows (scene)
+  "SCENE's rows as `eas-text-render-lines', a repainted one left uncomposed.
+Such a row is an `eas-text-row' record, the same object while the row
+stays the same: `eas-mode-patch-lines' writes its cells straight into
+the buffer (eas-b2s.9), and `eas-text-row-string' gives its string."
+  (let ((eas-text--defer-rows t)) (eas-text--render-rows scene)))
+
+(defun eas-text--render-rows (scene)
+  "SCENE's rows, cached or not; see `eas-text-render-rows'."
   (eas-text-ink-with
    (let* ((g (eas-text--new scene t))
           ;; What every step depends on besides its key; nil caches nothing.
@@ -1259,7 +1368,7 @@ SHADE colors a brush."
   (let ((strings (aref old 2)))
     (dotimes (row (length rows))
       (if (aref rows row)
-          (aset strings row (eas-text--compose-row g row shade))
+          (aset strings row (eas-text--row-out g row shade strings))
         (eas-render-cache--count :row-hits)))
     (append strings nil)))
 
@@ -1288,7 +1397,8 @@ step, or the last frame's) for later frames to restart from."
                do (eas-text--run g step data nil t)))
     (when (>= j (length steps)) (eas-text--copy-rows g snap all))
     (let* ((shade (car (last env)))
-           (strings (vconcat (cl-loop for row below nrows collect (eas-text--compose-row g row shade)))))
+           (strings (make-vector nrows nil)))
+      (dotimes (row nrows) (aset strings row (eas-text--row-out g row shade strings)))
       (setq eas-render-cache--frames
             (cons (cons env (vector g datas strings labels snap j 0 nil))
                   (seq-take (delq entry eas-render-cache--frames) (max 0 (1- eas-render-cache-text-entries)))))

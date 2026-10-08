@@ -24,7 +24,10 @@
 ;;
 ;;   (:variants (SPANS SHORT SHORTER) :priority P :keep K :sep SPANS :role R)
 ;;
-;; SPANS is a list of (TEXT . STYLE), STYLE a plist of :color
+;; SHORT and SHORTER may be functions of no arguments that return the
+;; spans: the fit calls them only when the line does not fit without
+;; them (eas-b2s.9: a values strip formatted every number three ways
+;; on every frame).  SPANS is a list of (TEXT . STYLE), STYLE a plist of :color
 ;; :background :bold :italic :dim :underline.  `eas-component-fit'
 ;; lays atoms out on at most N lines of W columns: first it drops the
 ;; lowest-priority atoms, then abbreviates labels, then shortens
@@ -105,9 +108,11 @@ Defining NAME again replaces it."
 (cl-defun eas-component-atom (spans &key short shorter (priority 50) keep role)
   "Return an atom of SPANS: the unit the fit drops whole.
 SHORT is SPANS with abbreviated labels, SHORTER with shortened numbers
-too.  PRIORITY ranks atoms: the lowest is dropped first.  KEEP non-nil
-means never drop.  ROLE `sep' marks a separator, dropped when it would
-start or end a line or sit next to another."
+too; either may be a function of no arguments returning them, called
+only when the fit needs them.  PRIORITY ranks atoms: the lowest is
+dropped first.  KEEP non-nil means never drop.  ROLE `sep' marks a
+separator, dropped when it would start or end a line or sit next to
+another."
   (list :variants (list spans (or short spans) (or shorter short spans))
         :priority priority :keep keep :role role))
 
@@ -128,20 +133,53 @@ start or end a line or sit next to another."
 (defun eas-component-restyle (atoms style)
   "ATOMS with STYLE laid over every span's own style."
   (if (null style) atoms
-    (mapcar (lambda (atom)
-              (let ((a (copy-sequence atom)))
-                (plist-put a :variants
-                           (mapcar (lambda (spans)
-                                     (mapcar (lambda (s) (cons (car s) (eas-component--merge-style style (cdr s))))
-                                             spans))
-                                   (plist-get atom :variants)))))
-            atoms)))
+    (let ((restyle (lambda (spans)
+                     (mapcar (lambda (s) (cons (car s) (eas-component--merge-style style (cdr s)))) spans))))
+      (mapcar (lambda (atom)
+                (let ((a (copy-sequence atom)))
+                  (plist-put a :variants
+                             (mapcar (lambda (spans)
+                                       (if (eas-component--lazy-p spans)
+                                           (lambda () (funcall restyle (funcall spans)))
+                                         (funcall restyle spans)))
+                                     (plist-get atom :variants)))))
+              atoms))))
 
 ;;; Props
 
 (defun eas-component--invalid (path message &rest props)
   "Signal INVALID_INPUT at PATH with MESSAGE and PROPS."
   (apply #'eas-signal "INVALID_INPUT" message :path path props))
+
+(defvar eas-component--paths (make-hash-table :test 'equal)
+  "PATH -> PART -> PATH/PART (eas-b2s.9).
+A readout renders on every frame and names every prop's path: joined
+once, the paths are shared.")
+
+(defvar eas-component--subpaths (make-hash-table :test 'equal)
+  "PATH -> PART -> SUB -> PATH/PART/SUB.")
+
+(defun eas-component--path-name (x)
+  "X, a string, keyword or integer, as a part of a JSON path."
+  (cond ((keywordp x) (eas-key-name x)) ((integerp x) (number-to-string x)) (t x)))
+
+(defun eas-component--table (table key)
+  "The table under KEY in TABLE, made when missing."
+  (or (gethash key table)
+      (progn (when (> (hash-table-count table) 1024) (clrhash table))
+             (puthash key (make-hash-table :test 'equal) table))))
+
+(defun eas-component--path (path part &optional sub)
+  "PATH/PART, or PATH/PART/SUB when SUB is given; remembered, so shared.
+PART and SUB are strings, keywords (their key names) or integers."
+  (if (null sub)
+      (let ((parts (eas-component--table eas-component--paths path)))
+        (or (gethash part parts)
+            (puthash part (concat path "/" (eas-component--path-name part)) parts)))
+    (let ((subs (eas-component--table (eas-component--table eas-component--subpaths path) part)))
+      (or (gethash sub subs)
+          (puthash sub (concat path "/" (eas-component--path-name part) "/" (eas-component--path-name sub))
+                   subs)))))
 
 (defun eas-component--expr-p (value)
   "Non-nil when VALUE is an {\"expr\": E} object."
@@ -203,7 +241,7 @@ datum (unless CTX is nil: validation only); defaults fill the rest."
       (eas-component--invalid path (format "Component %s: props is an object" name)))
     (cl-loop for (k v) on props by #'cddr
              for spec = (assq k schema)
-             for ppath = (format "%s/%s" path (eas-key-name k))
+             for ppath = (eas-component--path path k)
              do (unless spec
                   (eas-component--invalid ppath (format "Component %s has no prop %s; props: %s" name (eas-key-name k)
                                                         (mapconcat (lambda (e) (eas-key-name (car e))) schema ", "))
@@ -290,7 +328,8 @@ PATH (default \"\") prefixes the JSON paths in errors.  Return t."
 CTX's :path is NODE's JSON path."
   (let* ((path (or (plist-get ctx :path) ""))
          (got (eas-component--node node path)) (n (car got)) (def (cdr got))
-         (props (eas-component--props (plist-get n :component) def (plist-get n :props) ctx (concat path "/props")))
+         (props (eas-component--props (plist-get n :component) def (plist-get n :props) ctx
+                                      (eas-component--path path "props")))
          (ctx (append (list :children (eas-component--children-list (plist-get n :children))
                             :else (eas-component--children-list (plist-get n :else))
                             :given (plist-get n :props) :path path)
@@ -302,15 +341,21 @@ CTX's :path is NODE's JSON path."
 Return a list with one list of atoms per child."
   (cl-loop for child in (plist-get ctx (or which :children)) for i from 0
            collect (eas-component-render
-                    child (append (list :path (format "%s/%s/%d" (plist-get ctx :path)
-                                                      (if (eq which :else) "else" "children") i))
+                    child (append (list :path (eas-component--path (plist-get ctx :path)
+                                                                   (if (eq which :else) "else" "children") i))
                                   ctx))))
 
 ;;; Fit
 
+(defsubst eas-component--lazy-p (variant)
+  "Non-nil when VARIANT is a function that computes an atom's spans."
+  (and variant (not (consp variant)) (functionp variant)))
+
 (defun eas-component--variant (atom level)
-  "ATOM's spans at abbreviation LEVEL (0 full, 1 short, 2 shorter)."
-  (nth level (plist-get atom :variants)))
+  "ATOM's spans at abbreviation LEVEL (0 full, 1 short, 2 shorter).
+A variant given as a function is called once and replaced by its spans."
+  (let* ((cell (nthcdr level (plist-get atom :variants))) (v (car cell)))
+    (if (eas-component--lazy-p v) (setcar cell (funcall v)) v)))
 
 (defun eas-component--clean (atoms)
   "ATOMS without separators at either end or next to another separator."
@@ -398,10 +443,15 @@ then shorten numbers, then elide the last line with an ellipsis."
           face))))
 
 (defun eas-component-propertize (spans)
-  "SPANS as one propertized string: the terminal backend."
-  (mapconcat (lambda (s) (let ((face (eas-component--face (cdr s))))
-                           (if face (propertize (car s) 'face face) (copy-sequence (car s)))))
-             spans ""))
+  "SPANS as one propertized string: the terminal backend.
+The spans are joined once and each styled one gets its face in place
+\(eas-b2s.9: a string per span was copied twice)."
+  (let ((string (mapconcat #'car spans "")) (pos 0))
+    (dolist (s spans string)
+      (let ((end (+ pos (length (car s)))))
+        (when-let* (((< pos end)) (face (eas-component--face (cdr s))))
+          (put-text-property pos end 'face face string))
+        (setq pos end)))))
 
 (defun eas-component--svg-color (color)
   "COLOR (a name or #hex, or an Emacs face symbol) as an SVG color."

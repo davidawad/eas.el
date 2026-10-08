@@ -12,8 +12,10 @@
 ;; airport-connections hover.  A frame is the update (push, tick or
 ;; pointermove) and the redraw the terminal glue does
 ;; (`eas-mode-redraw': render, values strip, cell patch, readout).  The
-;; table splits a frame into update, render (`eas-text-render-lines',
-;; or `eas-text-render' before it existed), patch (the rest of the
+;; table splits a frame into update, render (`eas-text-render-rows',
+;; `eas-text-render-lines' or `eas-text-render', whichever the glue
+;; calls; rows written straight into the buffer are composed in the
+;; patch), patch (the rest of the
 ;; redraw) and garbage collection (GC, with the number of collections),
 ;; and gives the KB allocated per frame.
 ;;
@@ -92,7 +94,9 @@
 (require 'eas-template)
 
 (defvar bench-frame-text--render
-  (if (fboundp 'eas-text-render-lines) 'eas-text-render-lines 'eas-text-render)
+  (cond ((fboundp 'eas-text-render-rows) 'eas-text-render-rows)
+        ((fboundp 'eas-text-render-lines) 'eas-text-render-lines)
+        (t 'eas-text-render))
   "The function the glue renders text with.")
 
 (defvar bench-frame-text--render-time 0.0 "Seconds spent in `eas-text-render' this frame.")

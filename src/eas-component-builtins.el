@@ -52,7 +52,8 @@
 
 (defun eas-component-format (value format &optional short)
   "VALUE as text per FORMAT (see the commentary), SHORT for the shorter form."
-  (let ((n (eas-component--number-string value)))
+  ;; Without a format the full form needs no number (eas-b2s.9).
+  (let ((n (and (or short format) (eas-component--number-string value))))
     (cond
      ((memq value '(nil :null)) "null")
      ((null format)
@@ -165,12 +166,12 @@ Return nil when a rule hides it."
                    (append (and l (not (equal l ""))
                                 (list (eas-component-span l lstyle) (eas-component-span sep lstyle)))
                            (list (eas-component-span v)))))
-             (full (eas-component-format value fmt))
-             (shorter (eas-component-format value fmt t)))
+             (full (eas-component-format value fmt)))
+        ;; The short forms are made only when the fit needs them.
         (car (eas-component-restyle
               (list (eas-component--atom-of (funcall mk label full) props
-                                            (funcall mk short-label full)
-                                            (funcall mk short-label shorter)))
+                                            (lambda () (funcall mk short-label full))
+                                            (lambda () (funcall mk short-label (eas-component-format value fmt t)))))
               (and (consp rules) rules)))))))
 
 (eas-define-component

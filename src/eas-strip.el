@@ -109,10 +109,27 @@ COL-FN maps the key channel to the column pixel or nil."
                                :value (eas-encode-format-value value-def (eas-encode-raw value-def row))))
                        rows)))))))
 
+(defvar eas-strip--memo (make-hash-table :test 'eq :weakness 'key)
+  "Scene -> [PLAN STATE STRIP] of its last strip (eas-b2s.9).
+A frame asks for the strip up to three times (the inspect result of the
+update, the redraw, the readout); scenes and states are replaced, never
+changed in place, so the same three objects give the same strip.")
+
 (defun eas-strip (scene plan state)
   "The values strip of SCENE (compiled from PLAN) under view STATE, or nil.
 Returns (:at AT :fields [(:title T :value V) ...]); AT is \"cursor\"
-when the fields are read at the pointer's column, else \"latest\"."
+when the fields are read at the pointer's column, else \"latest\".
+The result is shared by later calls with the same arguments: do not
+change it."
+  (let ((memo (and scene (gethash scene eas-strip--memo))))
+    (if (and memo (eq (aref memo 0) plan) (eq (aref memo 1) state))
+        (aref memo 2)
+      (let ((strip (eas-strip--read scene plan state)))
+        (when scene (puthash scene (vector plan state strip) eas-strip--memo))
+        strip))))
+
+(defun eas-strip--read (scene plan state)
+  "The values strip of SCENE (compiled from PLAN) under STATE; see `eas-strip'."
   (let ((pointer (plist-get state :pointer)) fields cursor)
     (seq-doseq (view (plist-get scene :views))
       (seq-doseq (mark (plist-get view :marks))

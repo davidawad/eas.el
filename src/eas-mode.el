@@ -186,7 +186,7 @@ Both must have the same SVG data and the same :map hot spots."
          ;; every other frame, most of each frame's time (eas-b2s.5).
          (t (eas-gc-defer)
             (eas-mode--flush-replaced old nil)
-            (eas-mode-patch-lines (nconc (eas-text-render-lines scene) (list (eas-mode-strip-string view)))))))
+            (eas-mode-patch-lines (nconc (eas-text-render-rows scene) (list (eas-mode-strip-string view)))))))
       (if (eas-mode--gui-p) (goto-char (min pos (point-max)))
         (goto-char (point-min))
         (forward-line (1- line))
@@ -418,6 +418,8 @@ with another buffer current."
   "Major mode for a live eas chart.  See `eas-view-mode-map'."
   (setq-local track-mouse t)
   (setq truncate-lines t)
+  ;; Frames rewrite cells many times a second: nothing to undo (eas-b2s.9).
+  (buffer-disable-undo)
   ;; Line numbers would take columns from the chart.
   (when (bound-and-true-p display-line-numbers-mode) (display-line-numbers-mode -1))
   (setq-local display-line-numbers nil)

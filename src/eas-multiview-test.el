@@ -273,7 +273,11 @@
          (legends (plist-get (aref (plist-get scene :views) 0) :legends)))
     (should (= (length legends) 1))
     (should (equal (mapcar (lambda (e) (plist-get e :label)) (plist-get (aref legends 0) :entries))
-                   '("< 44" "44 – 60" "60 – 75" "≥ 75")))))
+                   '("< 44" "44 – 60" "60 – 75" "≥ 75")))
+    ;; Fitting the size range to the plot keeps one size per bucket.
+    (let ((sizes (mapcar (lambda (e) (plist-get e :size)) (plist-get (aref legends 0) :entries))))
+      (should (= (length (delete-dups (copy-sequence sizes))) 4))
+      (should (equal sizes (sort (copy-sequence sizes) #'<))))))
 
 (ert-deftest eas-multiview-shared-legend-at-the-bottom ()
   (let* ((scene (eas-compile (eas-multiview-test--spec

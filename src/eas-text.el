@@ -629,13 +629,24 @@ rect less than opaque shades its full cells (`eas-text--translucent')."
                                 (aset (eas-text--grid-brush g) (+ col (* row (eas-text--grid-cols g))) props)))))))))
 
 (defun eas-text--brush-props (props brush shade)
-  "PROPS of a cell under BRUSH (its props), shaded with color SHADE."
+  "PROPS of a cell under BRUSH (its props), shaded with color SHADE.
+The glyph's color is made legible on SHADE, the background it now has."
   (let ((face (plist-get props 'face)))
     (append brush
             (plist-put (copy-sequence props) 'face
                        (cond ((null face) (list :background shade))
-                             ((keywordp (car-safe face)) (append (list :background shade) face))
+                             ((keywordp (car-safe face)) (eas-text--shade-face face shade))
+                             ((consp face)
+                              (cons (list :background shade)
+                                    (mapcar (lambda (f) (if (keywordp (car-safe f)) (eas-text--shade-face f shade) f))
+                                            face)))
                              (t (list (list :background shade) face)))))))
+
+(defun eas-text--shade-face (face shade)
+  "Face plist FACE on the brush's SHADE, its foreground legible there."
+  (let ((fg (plist-get face :foreground)))
+    (append (list :background shade)
+            (if (stringp fg) (plist-put (copy-sequence face) :foreground (eas-text-ink-legible-on fg shade)) face))))
 
 (defun eas-text--segment (g seg props clip prio)
   "Draw segment SEG [x1 y1 x2 y2] into G with box glyphs.
@@ -662,9 +673,12 @@ Braille draws it when diagonal.  PROPS, CLIP and PRIO apply to its cells."
   "Marks that fill a region; strokes drawn before one sit under it.")
 
 (defun eas-text--translucent-p (mark)
-  "Non-nil when MARK's first item is mostly see-through."
-  (let ((item (and (> (length (plist-get mark :items)) 0) (aref (plist-get mark :items) 0))))
-    (and item (< (* (or (plist-get item :opacity) 1) (or (plist-get item :fillOpacity) 1)) 0.5))))
+  "Non-nil when every item of MARK is mostly see-through.
+One opaque item (a hovered series' label) keeps the mark on top."
+  (let ((items (plist-get mark :items)))
+    (and (> (length items) 0)
+         (seq-every-p (lambda (item) (< (* (or (plist-get item :opacity) 1) (or (plist-get item :fillOpacity) 1)) 0.5))
+                      items))))
 
 (defun eas-text--mark-prios (view)
   "Cell priority of each mark of VIEW, a list in mark order.

@@ -124,9 +124,19 @@ round them to a batch terminal's palette."
   "COLOR as the text renderer draws it for MODE (default `eas-text-ink-mode').
 Nil for \"transparent\" (the cell keeps the default face); other unknown
 color names are returned as they are."
-  (let* ((colors (if (and eas-text-ink--colors (null mode)) eas-text-ink--colors
-                   (cons (eas-text-ink-background mode) (eas-text-ink-foreground mode))))
-         ;; One table per (BACKGROUND . INK): a hit parses nothing (eas-b2s.1).
+  (eas-text-ink--legible color (if (and eas-text-ink--colors (null mode)) eas-text-ink--colors
+                                 (cons (eas-text-ink-background mode) (eas-text-ink-foreground mode)))))
+
+(defun eas-text-ink-legible-on (color background)
+  "COLOR as the text renderer draws it on a cell's own BACKGROUND.
+A glyph under the brush is read against the brush's shade, not the
+frame's background; see `eas-text-ink-legible'."
+  (eas-text-ink--legible color (cons background (if eas-text-ink--colors (cdr eas-text-ink--colors)
+                                                  (eas-text-ink-foreground)))))
+
+(defun eas-text-ink--legible (color colors)
+  "COLOR made legible on the (BACKGROUND . INK) of COLORS, memoized."
+  (let* (;; One table per (BACKGROUND . INK): a hit parses nothing (eas-b2s.1).
          (table (or (gethash colors eas-text-ink--memo)
                     (puthash (cons (car colors) (cdr colors)) (make-hash-table :test 'equal)
                              eas-text-ink--memo)))

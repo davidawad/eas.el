@@ -28,6 +28,7 @@
 (require 'eas-legend)
 (require 'eas-legend-fit)
 (require 'eas-compile-scales)
+(require 'eas-scale-discretize)
 (require 'eas-bins)
 (require 'eas-facet)
 (require 'eas-title)
@@ -188,7 +189,11 @@ wins."
   "Compute GROUP's axis and legend models and its chrome under METRICS."
   (when-let* ((range (eas-bins-size-range group (lambda (ch) (eas-place--local-scale group ch)))))
     (plist-put (plist-get group :scales) :size
-               (eas-compile-set-range (plist-get (plist-get group :scales) :size) range))
+               (let ((size (plist-get (plist-get group :scales) :size)))
+                 ;; A quantize size keeps one step per bucket.
+                 (if (member (plist-get size :type) eas-scale-discretize-types)
+                     (eas-scale-discretize-with-range size (aref range 0) (aref range 1))
+                   (eas-compile-set-range size range))))
     ;; A size legend shows the marks' sizes: it reads the re-ranged scale.
     (plist-put group :legend-specs
                (mapcar (lambda (ls) (cond ((eq (plist-get ls :channel) :size)

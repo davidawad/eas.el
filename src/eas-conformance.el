@@ -126,13 +126,61 @@ Return (:name :ok :features :svg :text :error)."
                                       (list :status "unverified" :detail "oracle not run"))))))
           (eas-conformance-gallery)))
 
+(defconst eas-conformance-template-families '("mark/geoshape" "projection/")
+  "Feature prefixes bin/chart cannot draw, so no conformance spec proves them.
+The Vega gallery templates using them prove them instead: each is held
+to its Vega reference by the eas-vega-* gallery tests.  A projection no
+template uses is proven by eas-vega-geo-test, against d3's paths.")
+
+(declare-function eas-geo-raw-names "eas-geo-raw")
+
+(defun eas-conformance--template-proofs ()
+  "Alist of (FEATURE . NAMES) for `eas-conformance-template-families'.
+NAMES are the Vega gallery templates (test/vega-examples/manifest.json,
+status pass or partial) whose example, or the example with one of a
+slot's enum values, resolves to a spec with FEATURE."
+  (let* ((manifest (expand-file-name "test/vega-examples/manifest.json" eas-template--root))
+         (proofs nil)
+         (eas-spec-supported-function nil))
+    (seq-doseq (example (and (file-exists-p manifest) (plist-get (eas-json-read-file manifest) :examples)))
+      (when-let* ((name (plist-get example :template))
+                  ((member (plist-get example :status) '("pass" "partial")))
+                  (template (eas-template-get name))
+                  ;; Resolving is slow: only a template naming a family is.
+                  ((let ((text (prin1-to-string (plist-get template :spec))))
+                     (seq-some (lambda (p) (string-search (car (last (split-string p "/" t))) text))
+                               eas-conformance-template-families))))
+        (let* ((bindings (eas-template-example name))
+               (variants (cons bindings
+                               (cl-loop for (slot def) on (plist-get (plist-get template :meta) :slots) by #'cddr
+                                        when (vectorp (plist-get def :enum))
+                                        append (mapcar (lambda (v) (plist-put (copy-sequence bindings) slot v))
+                                                       (plist-get def :enum))))))
+          (dolist (b variants)
+            (let ((spec (eas-resolve template b)))
+              (dolist (f (eas-spec-features (eas-spec-parse spec)))
+                (let ((id (plist-get f :feature)))
+                  (when (and (not (plist-get f :invalid))
+                             (seq-some (lambda (p) (string-prefix-p p id)) eas-conformance-template-families))
+                    (let ((cell (or (assoc id proofs) (car (push (list id) proofs)))))
+                      (unless (member name (cdr cell)) (setcdr cell (append (cdr cell) (list name)))))))))))))
+    (when (fboundp 'eas-geo-raw-names)
+      (dolist (type (eas-geo-raw-names))
+        (let ((id (concat "projection/" type)))
+          (unless (assoc id proofs) (push (list id "eas-vega-geo-test") proofs)))))
+    proofs))
+
 (defun eas-conformance-supported-data (results)
-  "The supported.json content for gallery RESULTS."
+  "The supported.json content for gallery RESULTS.
+Features of `eas-conformance-template-families' list the templates that
+prove them after the gallery's specs."
   (let ((features (make-hash-table :test 'equal)))
     (dolist (r results)
       (when (and (plist-get r :ok) (not (equal (plist-get (plist-get r :oracle) :status) "fail")))
         (dolist (f (plist-get r :features))
           (puthash f (cons r (gethash f features)) features))))
+    (pcase-dolist (`(,f . ,names) (eas-conformance--template-proofs))
+      (dolist (n names) (puthash f (cons (list :name n) (gethash f features)) features)))
     (list :contract "eas-supported/v1"
           :vega-lite eas-spec-vega-lite-version
           :gallery "test/conformance"

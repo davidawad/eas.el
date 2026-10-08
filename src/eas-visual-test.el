@@ -106,6 +106,16 @@
           (dolist (c colors)
             (should (>= (eas-text-ink-contrast c (eas-text-ink-background mode)) 3))))))))
 
+(ert-deftest eas-visual-ink-is-legible-on-the-brush ()
+  ;; interactive_brush opens brushed: its points draw on the shade.
+  (let ((scene (eas-visual-test--gallery-scene "interactive" "interactive_brush" '(:cols 60 :rows 16))))
+    (dolist (mode '(light dark))
+      (should-not (eas-text-check-contrast scene mode))))
+  (dolist (mode '(light dark))
+    (let* ((eas-text-ink--colors (cons (eas-text-ink-background mode) (eas-text-ink-foreground mode)))
+           (shade (eas-text-ink-shade)))
+      (should (>= (eas-text-ink-contrast (eas-text-ink-legible-on "#4c78a8" shade) shade) 3)))))
+
 (ert-deftest eas-visual-ink-keeps-legible-spec-colors ()
   (should (equal (eas-text-ink-legible "#e34948" 'dark) "#e34948"))
   (should (equal (eas-text-ink-legible "#e34948" 'light) "#e34948"))

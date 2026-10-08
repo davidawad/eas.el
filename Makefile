@@ -60,12 +60,6 @@ $(GALLERY_TARGETS): test-gallery-%:
 test-gallery-conformance:
 	$(call run-tests,(and (tag :gallery) (or "^eas-conformance-" "^eas-text-gallery-templates-" "^eas-vega-.*gallery")))
 
-test-gallery-vega:
-	$(call run-tests,(and (tag :gallery) "^eas-vega-"))
-
-test-gallery-vega:
-	$(call run-tests,(and (tag :gallery) "^eas-vega-"))
-
 # The Vega gallery templates (templates/vega/) against test/vega-examples/ref.
 test-gallery-vega:
 	$(call run-tests,(and (tag :gallery) "^eas-vega-"))

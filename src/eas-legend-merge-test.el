@@ -45,6 +45,23 @@
                     (size (field . "a") (type . "quantitative") (legend))))))
     (should (equal (mapcar #'car legends) '("gradient")))))
 
+(ert-deftest eas-legend-merge-keeps-layers-of-other-rows-apart ()
+  "A size of the color's field in a layer that filters its rows keeps
+its own legend: Vega-Lite merges only legends of one domain."
+  (let* ((layer (lambda (transform channel)
+                  `((transform . ,transform) (mark . "point")
+                    (encoding (x (field . "a") (type . "quantitative"))
+                              (,channel (field . "a") (type . "quantitative"))))))
+         (legends (lambda (transform)
+                    (let ((spec (eas-json-parse
+                                 (json-encode `((data (values . [((a . 1)) ((a . 5)) ((a . 9))]))
+                                                (layer . [,(funcall layer [] 'color)
+                                                          ,(funcall layer transform 'size)]))))))
+                      (mapcar (lambda (l) (plist-get l :type))
+                              (plist-get (aref (plist-get (eas-compile spec) :views) 0) :legends))))))
+    (should (equal (funcall legends []) '("symbol")))
+    (should (equal (funcall legends [((filter . "datum.a > 2"))]) '("gradient" "symbol")))))
+
 (ert-deftest eas-legend-merge-legend-values-pick-the-entries ()
   "The color legend's values pick the merged legend's entries."
   (let ((legends (eas-legend-merge-test--legends

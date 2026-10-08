@@ -102,6 +102,12 @@ the mark, for the size range's ends."
             :thresholds thresholds :range range :field (plist-get def :field)
             :values (and (equal type "quantile") nums)))))
 
+(defun eas-scale-discretize-with-range (scale lo hi)
+  "Return discretizing size SCALE with its range spread from LO to HI.
+It keeps one size per bucket while the ends follow the plot, as
+`eas-bins-size-range' gives them."
+  (plist-put (copy-sequence scale) :range (eas-scale-discretize--steps lo hi (length (plist-get scale :range)))))
+
 (defun eas-scale-discretize-apply (scale value)
   "The output of discretizing SCALE for VALUE, or nil."
   (when (numberp value)

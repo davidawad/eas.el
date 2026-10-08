@@ -251,11 +251,12 @@ METRICS supplies the config."
          (shape (let ((type (plist-get (plist-get unit :mark) :type)))
                   (cond ((member type '("bar" "rect" "area" "square")) "square")
                         ((member type '("line" "rule" "trail")) "stroke") (t "circle"))))
-         ;; Vega-Lite merges a size legend of the color's field into it:
+         ;; Vega-Lite merges a size legend of the color's field and rows into it:
          ;; discretized (eas-scale-discretize.el) or continuous
          ;; (eas-legend-merge.el).
-         (merge-size (and color (or (eas-scale-discretize-merge-p (nth 1 color) (funcall first-def :size) size)
-                                    (eas-legend-merge-p (nth 1 color) (funcall first-def :size) (nth 2 color) size))))
+         (merge-size (and color (eas-compile--one-domain-p units (nth 0 color) :size)
+                          (or (eas-scale-discretize-merge-p (nth 1 color) (funcall first-def :size) size)
+                              (eas-legend-merge-p (nth 1 color) (funcall first-def :size) (nth 2 color) size))))
          (spec (lambda (channel def scale)
                  ;; Symbols copy the look of the layer that encodes the channel.
                  (let ((owner (or (caar (eas-compile--defs units channel)) unit)))
@@ -293,6 +294,16 @@ METRICS supplies the config."
                                 collect (let ((owner (caar (eas-compile--defs units ch))))
                                           (append (list :shape (eas-compile--legend-shape owner) :extra t)
                                                   (funcall spec ch def scale))))))))
+
+(defun eas-compile--one-domain-p (units a b)
+  "Non-nil when channels A and B of UNITS read their field from the same rows.
+Vega-Lite merges two channels' legends only when their scales share a
+domain: a count in a layer that filters its rows keeps its own legend."
+  (let ((ua (caar (eas-compile--defs units a))) (ub (caar (eas-compile--defs units b))))
+    (or (eq ua ub)
+        (and ua ub
+             (eq (plist-get (plist-get ua :ctx) :rows) (plist-get (plist-get ub :ctx) :rows))
+             (equal (plist-get (plist-get ua :ctx) :transforms) (plist-get (plist-get ub :ctx) :transforms))))))
 
 (defun eas-compile--legend-shape (unit)
   "The legend symbol shape of UNIT's mark: square, stroke or circle."

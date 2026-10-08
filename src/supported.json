@@ -4,24 +4,24 @@
     "mark/slot": "Template slot placeholders are substituted by resolve (ERT: eas-template-enum-and-array-items).",
     "transform/x-eas": "Domain transforms are materialized by resolve (ERT: eas-resolve-materializes-domain-transforms).",
     "transform/x-eas/countpattern": "Vega's countpattern: regexp matches counted into text/count rows (ERT: eas-vega-wordcloud-countpattern-counts-words).",
-    "transform/x-eas/wordcloud": "Vega's wordcloud: seeded spiral placement of measured, rotated words (ERT: eas-vega-wordcloud-places-without-overlap).",
-    "transform/x-eas:hierarchy": "stratify, nest, tree (tidy, cluster), treemap, partition, pack, treelinks, treepath and formula match Vega's layouts (ERT: eas-vega-hierarchy-*).",
-    "transform/x-eas:linkpath": "linkpath draws Vega's line, arc, curve, diagonal and orthogonal links, radial too (ERT: eas-vega-hierarchy-linkpath-*).",
-    "x-eas/on": "x-eas.on handlers turn timer ticks and keys into param events (ERT: eas-vega-interaction-keys-drive-params).",
-    "x-eas/timer": "x-eas.timer ticks a shown view's timer handlers every interval while its buffer is visible (ERT: eas-vega-interaction-timer-drives-params).",
     "transform/x-eas/dotbin": "Vega's dotbin (Wilkinson dot plot bins) as a domain transform (ERT: eas-vega-distributions-dotbin-matches-vega).",
-    "transform/x-eas:force": "Vega's force transform, d3-force's simulation and forces (ERT: eas-vega-network-force-matches-d3).",
-    "transform/x-eas:graph": "Nodes joined to links: order, degree, link and pair rows (ERT: eas-vega-network-graph-joins-nodes-and-links).",
-    "transform/x-eas:voronoi": "Vega's voronoi transform: cell paths and vertices (ERT: eas-vega-network-voronoi-cells).",
-    "transform/x-eas:arc-label": "Pie label layout, materialized by resolve (ERT: eas-vega-std-basic-arc-label-separates-each-side).",
-    "transform/x-eas:label": "Point label layout, materialized by resolve (ERT: eas-vega-std-basic-label-keeps-labels-apart).",
     "transform/x-eas/parallel-coordinates": "Fields folded and scaled on their own niced domains, with axis tick rows (ERT: eas-vega-other-custom-parallel-coordinates-scales-each-field).",
     "transform/x-eas/serpentine": "A domain laid along a serpentine path, in pixels (ERT: eas-vega-other-custom-serpentine-lays-out-the-path).",
+    "transform/x-eas/wordcloud": "Vega's wordcloud: seeded spiral placement of measured, rotated words (ERT: eas-vega-wordcloud-places-without-overlap).",
+    "transform/x-eas:arc-label": "Pie label layout, materialized by resolve (ERT: eas-vega-std-basic-arc-label-separates-each-side).",
+    "transform/x-eas:force": "Vega's force transform, d3-force's simulation and forces (ERT: eas-vega-network-force-matches-d3).",
     "transform/x-eas:geopath": "Vega's geopath: GeoJSON to SVG path data in pixels, identity or naturalEarth1/equalEarth/mercator/equirectangular (ERT: eas-vega-contour-geopath-writes-svg-path-data).",
     "transform/x-eas:geopoints": "GeoJSON vertices as line rows, cut to a box (ERT: eas-vega-contour-geopoints-cut-lines-to-the-box).",
+    "transform/x-eas:graph": "Nodes joined to links: order, degree, link and pair rows (ERT: eas-vega-network-graph-joins-nodes-and-links).",
     "transform/x-eas:heatmap": "Vega's heatmap: a value grid as a PNG data: URL for the image mark (ERT: eas-vega-contour-heatmap-colors-and-opacity).",
+    "transform/x-eas:hierarchy": "stratify, nest, tree (tidy, cluster), treemap, partition, pack, treelinks, treepath and formula match Vega's layouts (ERT: eas-vega-hierarchy-*).",
     "transform/x-eas:isocontour": "Vega's isocontour: d3-contour marching squares, smoothing, thresholds and levels (ERT: eas-vega-contour-marching-squares-match-d3).",
-    "transform/x-eas:kde2d": "Vega's kde2d: 2D kernel density grids on the chart's nice zero domains (ERT: eas-vega-contour-kde2d-matches-vega)."
+    "transform/x-eas:kde2d": "Vega's kde2d: 2D kernel density grids on the chart's nice zero domains (ERT: eas-vega-contour-kde2d-matches-vega).",
+    "transform/x-eas:label": "Point label layout, materialized by resolve (ERT: eas-vega-std-basic-label-keeps-labels-apart).",
+    "transform/x-eas:linkpath": "linkpath draws Vega's line, arc, curve, diagonal and orthogonal links, radial too (ERT: eas-vega-hierarchy-linkpath-*).",
+    "transform/x-eas:voronoi": "Vega's voronoi transform: cell paths and vertices (ERT: eas-vega-network-voronoi-cells).",
+    "x-eas/on": "x-eas.on handlers turn timer ticks and keys into param events (ERT: eas-vega-interaction-keys-drive-params).",
+    "x-eas/timer": "x-eas.timer ticks a shown view's timer handlers every interval while its buffer is visible (ERT: eas-vega-interaction-timer-drives-params)."
   },
   "features": {
     "bind/input": {
@@ -222,7 +222,7 @@
     },
     "mark/geoshape": {
       "oracle": "unverified",
-      "specs": ["world-map", "county-unemployment", "earthquakes", "projections", "zoomable-world-map", "distortion-comparison", "map-with-tooltip", "earthquakes-globe"]
+      "specs": ["county-unemployment", "world-map", "earthquakes", "projections", "zoomable-world-map", "distortion-comparison", "airport-connections", "earthquakes-globe", "map-with-tooltip"]
     },
     "mark/image": {
       "oracle": "verified",
@@ -282,11 +282,11 @@
     },
     "projection/albers": {
       "oracle": "unverified",
-      "specs": ["world-map"]
+      "specs": ["distortion-comparison"]
     },
     "projection/albersUsa": {
       "oracle": "verified",
-      "specs": ["multiview/geo_circle"]
+      "specs": ["multiview/geo_circle", "county-unemployment", "distortion-comparison", "airport-connections"]
     },
     "projection/armadillo": {
       "oracle": "unverified",
@@ -294,11 +294,11 @@
     },
     "projection/azimuthalEqualArea": {
       "oracle": "unverified",
-      "specs": ["world-map", "distortion-comparison"]
+      "specs": ["distortion-comparison"]
     },
     "projection/azimuthalEquidistant": {
       "oracle": "unverified",
-      "specs": ["world-map", "projections"]
+      "specs": ["projections", "distortion-comparison"]
     },
     "projection/baker": {
       "oracle": "unverified",
@@ -318,15 +318,15 @@
     },
     "projection/conicConformal": {
       "oracle": "unverified",
-      "specs": ["world-map", "projections"]
+      "specs": ["projections", "distortion-comparison"]
     },
     "projection/conicEqualArea": {
       "oracle": "unverified",
-      "specs": ["world-map"]
+      "specs": ["distortion-comparison"]
     },
     "projection/conicEquidistant": {
       "oracle": "unverified",
-      "specs": ["world-map"]
+      "specs": ["distortion-comparison"]
     },
     "projection/eckert1": {
       "oracle": "unverified",
@@ -334,15 +334,15 @@
     },
     "projection/equalEarth": {
       "oracle": "verified",
-      "specs": ["scatter-table/point_angle_windvector"]
+      "specs": ["scatter-table/point_angle_windvector", "zoomable-world-map", "distortion-comparison"]
     },
     "projection/equirectangular": {
       "oracle": "unverified",
-      "specs": ["world-map"]
+      "specs": ["zoomable-world-map", "distortion-comparison"]
     },
     "projection/gnomonic": {
       "oracle": "unverified",
-      "specs": ["world-map", "projections"]
+      "specs": ["projections", "distortion-comparison"]
     },
     "projection/guyou": {
       "oracle": "unverified",
@@ -370,7 +370,7 @@
     },
     "projection/mercator": {
       "oracle": "unverified",
-      "specs": ["world-map", "projections", "zoomable-world-map", "map-with-tooltip", "distortion-comparison"]
+      "specs": ["projections", "zoomable-world-map", "distortion-comparison", "map-with-tooltip"]
     },
     "projection/mollweide": {
       "oracle": "unverified",
@@ -378,11 +378,11 @@
     },
     "projection/naturalEarth1": {
       "oracle": "unverified",
-      "specs": ["world-map"]
+      "specs": ["zoomable-world-map", "distortion-comparison"]
     },
     "projection/orthographic": {
       "oracle": "unverified",
-      "specs": ["world-map", "earthquakes", "earthquakes-globe"]
+      "specs": ["earthquakes", "distortion-comparison", "earthquakes-globe"]
     },
     "projection/peirceQuincuncial": {
       "oracle": "unverified",
@@ -398,11 +398,11 @@
     },
     "projection/stereographic": {
       "oracle": "unverified",
-      "specs": ["world-map", "projections"]
+      "specs": ["projections", "distortion-comparison"]
     },
     "projection/transverseMercator": {
       "oracle": "unverified",
-      "specs": ["world-map"]
+      "specs": ["zoomable-world-map", "distortion-comparison"]
     },
     "projection/wagner6": {
       "oracle": "unverified",

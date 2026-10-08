@@ -7,16 +7,34 @@ on:
 
 jobs:
   test:
+    # geo_backend: lisp is eas as it ships (no Rust anywhere); native
+    # builds the optional module (make module) and runs the same suite on it.
+    name: test (emacs ${{ matrix.emacs_version }}, geo ${{ matrix.geo_backend }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         emacs_version: ['30.1']
+        geo_backend: [lisp, native]
+    env:
+      EAS_GEO_BACKEND: ${{ matrix.geo_backend }}
     steps:
       - uses: actions/checkout@v4
       - uses: purcell/setup-emacs@master
         with:
           version: ${{ matrix.emacs_version }}
+      - name: Install Rust
+        if: matrix.geo_backend == 'native'
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build the geo module
+        if: matrix.geo_backend == 'native'
+        run: make module
+      - name: Active geo backend
+        if: matrix.geo_backend == 'native'
+        run: |
+          active=$(emacs -Q --batch -L src -l eas --eval '(princ (eas-geo-backend-active))')
+          echo "eas-geo-backend-active: $active"
+          test "$active" = native
       - name: Compile (checkdoc, byte-compile with warnings as errors)
         run: make compile
       - name: Test

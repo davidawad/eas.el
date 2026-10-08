@@ -1,0 +1,59 @@
+# Draft of the Homebrew tap formula for eas (not the tap itself).
+# The release step fills @VERSION@ and @SHA256@ (the tag's source tarball).
+#
+# eas has no dependencies; the formula builds the optional Rust geo module
+# (module/, `make module`) so map projections draw natively.  Without it eas
+# uses pure Elisp and everything works.
+#
+# Layout: eas finds templates/, examples/ and lib/ one level above src/, so
+# the formula keeps the repository layout under libexec and puts a wrapper
+# (not a symlink: bin/eas finds the root from its own path) on PATH.
+class Eas < Formula
+  desc "Interactive, agent-drivable charts for Emacs, from declarative JSON"
+  homepage "https://github.com/davidawad/eas.el"
+  url "https://github.com/davidawad/eas.el/archive/refs/tags/v@VERSION@.tar.gz"
+  sha256 "@SHA256@"
+  license "GPL-3.0-or-later"
+
+  depends_on "rust" => :build
+  # emacs-module.h and module-file-suffix at build time, a test Emacs after.
+  # Not a runtime dependency: any Emacs 30 with module support loads lib/.
+  depends_on "emacs" => [:build, :test]
+
+  def install
+    emacs = Formula["emacs"].opt_bin/"emacs"
+    system "make", "module", "EMACS=#{emacs}"
+    # Emacs 30 on macOS may ask for .dylib or .so (Emacs.app builds differ);
+    # dlopen does not care, so install the library under both names.
+    lib_dir = buildpath/"lib"
+    %w[.dylib .so].each do |suffix|
+      other = lib_dir/"eas-geo-module#{suffix}"
+      next if other.exist?
+
+      built = Dir[lib_dir/"eas-geo-module.*"].first
+      cp built, other if built
+    end
+    system "make", "compile", "EMACS=#{emacs}"
+    libexec.install "src", "templates", "examples", "lib", "bin"
+    bin.write_exec_script libexec/"bin/eas"
+  end
+
+  def caveats
+    <<~EOS
+      Add eas to your Emacs load-path:
+        (add-to-list 'load-path "#{opt_libexec}/src")
+        (require 'eas)
+      The Rust geo module is in #{opt_libexec}/lib.  Check the backend with
+        M-: (eas-geo-backend-active)   ; native, or lisp without the module
+      Set `eas-geo-backend' to lisp to never load it.
+    EOS
+  end
+
+  test do
+    emacs = Formula["emacs"].opt_bin/"emacs"
+    active = shell_output("#{emacs} -Q --batch -L #{libexec}/src -l eas " \
+                          "--eval '(princ (eas-geo-backend-active))'")
+    assert_equal "native", active.lines.last.strip
+    assert_match "\"ok\": true", shell_output("#{bin}/eas doctor")
+  end
+end

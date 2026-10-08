@@ -3,6 +3,7 @@
 #   eas describe [verbs|templates|...]    eas example line
 #   eas check|explain|render|export|bench SOURCE [--data B] [options] [--raw]
 #   eas doctor
+#   eas module                            build the optional Rust geo module
 # SOURCE is a template name or a chart/v1 spec (file, inline JSON, - for stdin).
 # Exit 0 when ok, 1 otherwise.  Live verbs (views, inspect, dispatch, ...) go
 # through emacsclient --eval '(eas-agent-json "VERB" ...)'.  Set EMACS to pick
@@ -12,5 +13,9 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # load-prefer-newer: a stale .elc beside a newer .el would otherwise load,
 # and its warning would land in the JSON output.
+if [ "${1:-}" = module ]; then
+  exec "${EMACS:-emacs}" -Q --batch --eval '(setq load-prefer-newer t)' -L "$here/src" -l eas-geo-build \
+    -f eas-geo-build-batch
+fi
 exec "${EMACS:-emacs}" -Q --batch --eval '(setq load-prefer-newer t)' -L "$here/src" -l eas-agent-cli \
   -f eas-agent-cli-main -- "$@"

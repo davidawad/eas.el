@@ -159,6 +159,63 @@ from where `src/` is: next to the libraries in a flat install (MELPA,
 recipe in `recipes/eas`), else one level up. To add your own, push directories onto
 `eas-template-directories`.
 
+## Optional: the geo accelerator
+
+eas has no dependencies. The Rust module is an optional accelerator for
+map projections. Without it eas uses pure Elisp and everything works:
+the same maps, byte for byte. Pure Elisp stays the source of truth;
+the module only speeds up the projection math (project, resample,
+clip and path printing), which is most of a map's first render
+(`docs/design/geo-first-render.md`).
+
+Building it needs [Rust](https://rustup.rs) (cargo) and the Emacs
+module header `emacs-module.h`, which comes with your Emacs's
+development files. eas finds the header beside the running Emacs or
+under the usual prefixes; set `EMACS_MODULE_HEADER` to point at it
+otherwise. Any one of these builds it:
+
+```sh
+make module                # in a checkout; EMACS=... picks the Emacs
+bin/eas module             # the same, from the shell entry point
+make module-clean          # remove it again
+```
+
+- `M-x eas-geo-build-module` builds it from inside Emacs, in a
+  compilation buffer, then offers to load it. For an install without
+  the crate (MELPA), set `eas-geo-build-source-directory` to the
+  `module/` directory of a checkout first.
+- Homebrew: the tap formula (draft in `packaging/eas.rb.in`) builds it
+  at install time.
+- Each release attaches prebuilt modules for macOS (arm64, x86_64) and
+  Linux (x86_64, arm64) as `eas-geo-module-<os>-<arch><suffix>`, with a
+  `SHA256SUMS` file. Save one as `lib/eas-geo-module<suffix>` under the
+  eas root.
+
+The module installs as `lib/eas-geo-module<suffix>` under the eas root
+(beside the libraries in a flat install), where `<suffix>` is the
+running Emacs's `module-file-suffix` (`.so` on Linux, `.dylib` or `.so`
+on macOS). eas loads it lazily, the first time a map needs it.
+
+`eas-geo-backend` picks the backend:
+
+| value | behaviour |
+|---|---|
+| `auto` (default) | use the module if it loads, else Elisp |
+| `native` | use the module; a clear `user-error` if it is missing or fails to load |
+| `lisp` | never load the module |
+
+`M-: (eas-geo-backend-active)` returns `native` or `lisp`, the backend
+in use.
+
+Measured first renders (fresh `emacs -Q --batch`, byte-compiled, Linux,
+Emacs 30.1; the Elisp column is from `docs/design/geo-first-render.md`):
+
+<!-- The release step replaces the next line with the measured table:
+     template | Elisp (ms) | module (ms) | speedup.  Elisp before:
+     projections 2035, county-unemployment 1380, map-with-tooltip 820,
+     world-map 173. -->
+MODULE_NUMBERS
+
 ## Quick start
 
 ### Lisp
@@ -608,6 +665,7 @@ make test-gallery-conformance
 make test-gallery          # every group, one after another
 make bench                 # latency ladder against src/bench-budget.json
 make tty-check             # real-terminal check in tmux (private server -L eas)
+make module                # optional: build the Rust geo module (needs cargo)
 make clean
 ```
 

@@ -1,0 +1,74 @@
+name: Release module
+
+# On a v* tag: build the optional Rust geo module on each platform and
+# attach eas-geo-module-<os>-<arch><suffix> plus SHA256SUMS to the
+# GitHub release.  SUFFIX is the building Emacs's module-file-suffix.
+# eas itself needs none of these; they save building from source.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: module ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: macos-14, os: macos, arch: arm64}
+          - {runner: macos-15-intel, os: macos, arch: x86_64}
+          - {runner: ubuntu-latest, os: linux, arch: x86_64}
+          - {runner: ubuntu-24.04-arm, os: linux, arch: arm64}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Emacs (for emacs-module.h and module-file-suffix)
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            brew install emacs
+          else
+            sudo apt-get update && sudo apt-get install -y emacs-nox
+          fi
+          emacs --version | head -1
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build
+        run: make module
+      - name: Name the asset
+        run: |
+          suffix=$(emacs -Q --batch --eval '(princ module-file-suffix)')
+          mkdir dist
+          cp "lib/eas-geo-module$suffix" "dist/eas-geo-module-${{ matrix.os }}-${{ matrix.arch }}$suffix"
+          ls -l dist
+      - name: Load it
+        run: |
+          emacs -Q --batch --eval "(progn (module-load \"$(ls "$PWD"/dist/*)\") \
+            (unless (featurep 'eas-geo-module) (kill-emacs 1)))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: module-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: module-*
+          merge-multiple: true
+          path: dist
+      - name: Checksums
+        run: cd dist && sha256sum eas-geo-module-* > SHA256SUMS && cat SHA256SUMS
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --notes "eas $TAG"
+          gh release upload "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber

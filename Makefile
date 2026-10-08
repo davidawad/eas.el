@@ -16,6 +16,8 @@
 #   make tty-check        real-terminal check in tmux (private server -L eas)
 #   make melpa-check      recipes/eas installed flat: compile, doctor, package-lint
 #   make clean            remove byte-compiled files
+#   make module           optional: build the Rust geo module into lib/ (needs cargo)
+#   make module-clean     remove lib/eas-geo-module* and module/target
 #
 # EAS_UPDATE_GOLDEN=1 rewrites goldens; TEST_SKIP_LOG=FILE logs skips.
 
@@ -38,7 +40,8 @@ endef
 
 .PHONY: all test compile checkdoc test-gallery $(GALLERY_TARGETS) \
         test-gallery-conformance test-gallery-vega bench bench-check bench-record bench-report \
-        bench-ladder bench-budget tty-check melpa-check clean
+        bench-ladder bench-budget tty-check melpa-check clean \
+        module module-clean
 
 all: compile test
 
@@ -93,3 +96,14 @@ melpa-check:
 
 clean:
 	rm -f src/*.elc test/eas/*.elc scripts/*.elc
+
+# Optional: the Rust geo accelerator (src/eas-geo-build.el).  cargo build
+# --release in module/, then lib/eas-geo-module<SUFFIX>, SUFFIX being
+# $(EMACS)'s module-file-suffix.  Fails, saying why, without cargo, the
+# crate or emacs-module.h.  No other target needs cargo or the module.
+module:
+	$(BATCH) -l eas-geo-build -f eas-geo-build-batch
+
+module-clean:
+	rm -rf module/target lib/eas-geo-module.so lib/eas-geo-module.dylib lib/eas-geo-module.dll
+	rmdir lib 2>/dev/null || true

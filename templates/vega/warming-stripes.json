@@ -42,8 +42,8 @@
     "example": "../examples/vega/warming-stripes.data.json",
     "vega": {
       "status": "pass",
-      "note": "axes, base-period bracket, legend tick and credit drawn as marks; an invisible point stands in for the legend's padded box, which eas does not model; hover and the stripe tick are static. Against the vg2png (node-canvas) reference, re-measured in eas-7r1.12 with rsvg-convert and Arimo: ratio 0.0285 (was 0.022 against vg2svg); the comparison no longer emulates vg2svg's text widths.",
-      "ratio": 0.0285
+      "note": "axes, base-period bracket, legend tick and credit drawn as marks; an invisible point stands in for the legend's padded box, which eas does not model: its bounds reach y = -40, where Vega's legendY puts the box top, padding 20 above the gradient, so the plot sits where Vega's does; hover and the stripe tick are static. Against the vg2png (node-canvas) reference, re-measured in eas-oes with rsvg-convert and Liberation Sans: ratio 0.0258; with the box top at -37.5, which raised the plot 2px, it was 0.0320 here and 0.0285 with Arimo (eas-7r1.12).",
+      "ratio": 0.0258
     }
   },
   "title": {
@@ -194,7 +194,7 @@
       "encoding": {"x": {"value": 650}, "text": {"value": {"x-eas:slot": "source"}}}
     },
     {
-      "transform": [{"aggregate": []}, {"calculate": "-35", "as": "_y"}],
+      "transform": [{"aggregate": []}, {"calculate": "-37.5", "as": "_y"}],
       "mark": {"type": "point", "opacity": 0, "size": 1},
       "encoding": {"x": {"value": 690}}
     }

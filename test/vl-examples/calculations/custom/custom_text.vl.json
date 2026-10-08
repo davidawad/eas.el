@@ -15,5 +15,6 @@
     "x": {"field": "x", "type": "quantitative", "scale": {"domain": [0, 12]}, "axis": {"title": "Month", "grid": false}},
     "y": {"field": "y", "type": "quantitative", "scale": {"domain": [0, 9]}, "axis": {"title": "Score", "gridOpacity": 0.4}},
     "text": {"field": "name", "type": "nominal"}
-  }
+  },
+  "usermeta": {"eas": {"note": "eas-oes: bin/chart drew the reference in MS Courier New. The check measures against TeX Gyre Cursor, Courier's metrics and shapes, which the oracle's fonts.conf (scripts/eas-spikes/vega-oracle) maps Courier New to: ratio 0.0115 on rsvg-convert 2.60. With Liberation Mono it is 0.0245; unmapped, with whatever face fontconfig falls back to, 0.0646."}}
 }

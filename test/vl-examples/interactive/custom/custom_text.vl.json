@@ -12,5 +12,6 @@
   "x": {"datum": 0, "type": "quantitative", "scale": {"domain": [0, 1]}, "axis": null},
   "text": {"field": "Name", "type": "nominal"}
  },
- "config": {"view": {"stroke": "#ddd", "step": 16}, "text": {"fontSize": 11}}
+ "config": {"view": {"stroke": "#ddd", "step": 16}, "text": {"fontSize": 11}},
+ "usermeta": {"eas": {"note": "eas-oes: bin/chart drew the reference's monospace in MS Courier New. The check measures against TeX Gyre Cursor, Courier's metrics and shapes, which the oracle's fonts.conf (scripts/eas-spikes/vega-oracle) maps monospace and Courier New to: ratio 0.0149 on rsvg-convert 2.60, 0.0657 with Liberation Mono's sans-serif shapes."}}
 }

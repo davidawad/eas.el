@@ -176,9 +176,13 @@
          (cp2 (sqrt (max 0 (- 1 (* sp sp))))))
     (eas-geo--xy (- (* sl cp2) (* cl s1)) (- (- (* cl cp2)) (* sl s1)))))
 
+(defconst eas-geo--airy-b
+  (let* ((beta eas-geo-half-pi) (tb (tan (/ beta 2)))) (/ (* 2 (log (cos (/ beta 2)))) (* tb tb)))
+  "D3's airyRaw constant B for beta pi/2.")
+
 (defun eas-geo-raw-airy (x y)
   "D3's airyRaw with beta pi/2 of X Y."
-  (let* ((beta eas-geo-half-pi) (tb (tan (/ beta 2))) (b (/ (* 2 (log (cos (/ beta 2)))) (* tb tb)))
+  (let* ((b eas-geo--airy-b)
          (cosz (* (cos y) (cos x)))
          (k (- (+ (if (/= (- 1 cosz) 0) (/ (log (/ (+ 1 cosz) 2)) (- 1 cosz)) -0.5) (/ b (+ 1 cosz))))))
     (eas-geo--xy (* k (cos y) (sin x)) (* k (sin y)))))
@@ -224,17 +228,21 @@
                   (* (eas-geo-elliptic-f (atan (sqrt (max 0 (/ (- (/ cotl2 cot2) 1) m)))) (- 1 m)) (eas-geo-sign psi))))
       (vector 0 (* (eas-geo-elliptic-f (atan sh) (- 1 m)) (eas-geo-sign psi))))))
 
+(defconst eas-geo--guyou
+  (let* ((s2 (sqrt 2)) (k_ (/ (- s2 1) (+ s2 1))) (k (sqrt (- 1 (* k_ k_)))))
+    (vector k_ k (eas-geo-elliptic-f eas-geo-half-pi (* k k)) (sqrt k_) (* k k)))
+  "D3's guyouRaw constants: [K_ K F(pi/2|K^2) sqrt(K_) K^2].")
+
 (defun eas-geo-raw-guyou (l p)
   "D3's guyouRaw of L P."
-  (let* ((s2 (sqrt 2)) (k_ (/ (- s2 1) (+ s2 1))) (k (sqrt (- 1 (* k_ k_))))
-         (kk (eas-geo-elliptic-f eas-geo-half-pi (* k k)))
+  (let* ((kk (aref eas-geo--guyou 2))
          (psi (log (tan (+ (/ float-pi 4) (/ (abs p) 2)))))
-         (r (/ (exp (- psi)) (sqrt k_)))
+         (r (/ (exp (- psi)) (aref eas-geo--guyou 3)))
          (x (* r (cos (- l)))) (y (* r (sin (- l))))
          (x2 (* x x)) (y1 (+ y 1)) (tt (- 1 x2 (* y y)))
          (at (vector (* 0.5 (- (if (>= x 0) eas-geo-half-pi (- eas-geo-half-pi)) (atan tt (* 2 x))))
                      (+ (* -0.25 (log (+ (* tt tt) (* 4 x2)))) (* 0.5 (log (+ (* y1 y1) x2))))))
-         (fi (eas-geo-elliptic-fi (aref at 0) (aref at 1) (* k k))))
+         (fi (eas-geo-elliptic-fi (aref at 0) (aref at 1) (aref eas-geo--guyou 4))))
     (eas-geo--xy (- (aref fi 1)) (* (if (>= p 0) 1 -1) (- (* 0.5 kk) (aref fi 0))))))
 
 (defun eas-geo-raw-square (raw)
@@ -256,10 +264,15 @@
           (let ((d (* dx r)) (s (if (not (eq (> x 0) (> y 0))) -1 1)))
             (eas-geo--xy (- (* s x) (* (eas-geo-sign y) d)) (- (* s y) (* (eas-geo-sign x) d)))))))))
 
+(defconst eas-geo--armadillo
+  (let* ((phi0 (* 20 eas-geo-rad)) (s0 (sin phi0)) (c0 (cos phi0)))
+    (vector s0 c0 (tan phi0) (/ (- (+ 1 s0) c0) 2)))
+  "D3's armadilloRaw constants at parallel 20 degrees: [S0 C0 TAN0 K].")
+
 (defun eas-geo-raw-armadillo (l p)
   "D3's armadilloRaw with parallel 20 degrees of L P."
-  (let* ((phi0 (* 20 eas-geo-rad)) (s0 (sin phi0)) (c0 (cos phi0)) (tan0 (tan phi0))
-         (k (/ (- (+ 1 s0) c0) 2)) (cp (cos p)) (l (/ l 2.0)) (cl (cos l)))
+  (let* ((s0 (aref eas-geo--armadillo 0)) (c0 (aref eas-geo--armadillo 1))
+         (tan0 (aref eas-geo--armadillo 2)) (k (aref eas-geo--armadillo 3)) (cp (cos p)) (l (/ l 2.0)) (cl (cos l)))
     (eas-geo--xy (* (+ 1 cp) (sin l))
                  (+ (if (> p (- (- (atan cl tan0)) 1e-3)) 0 -10)
                     k (* (sin p) c0) (- (* (+ 1 cp) s0 cl))))))

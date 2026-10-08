@@ -104,6 +104,41 @@ a hole, a resampled meridian, the sphere and a point."
     (should (equal problems nil))
     (should (= (length (eas-plist-keys (plist-get golden :paths))) (length (eas-geo-raw-names))))))
 
+;; eas-gzi: shapes' spherical streams are recorded once per rotation
+;; and clip and replayed into each projection's resampler.
+(ert-deftest eas-vega-geo-replayed-paths-equal-streamed ()
+  "A replayed path is the path d3's stream draws, number for number:
+every projection, a rotation, a clip angle and a clip extent, over the
+d3 test geometries, a graticule and countries that cross the
+antimeridian or hold a pole."
+  (let* ((topo (eas-json-read-file (eas-test-file "examples" "data" "vega" "world-110m.json")))
+         (countries (seq-filter (lambda (f) (memq (plist-get f :id) '(10 242 643)))
+                                (eas-topojson-features topo "countries")))
+         (golden (eas-json-read-file (eas-test-file "test" "eas" "golden" "vega-geo-d3.json")))
+         (small (cl-loop for (_ g) on (plist-get golden :geometries) by #'cddr
+                         unless (equal (plist-get g :type) "Sphere") collect g))
+         (some '("equalEarth" "guyou" "interruptedMollweide" "polyhedralButterfly" "stereographic"))
+         (specs (append (mapcar (lambda (ty) (list :type ty :scale 60 :translate [200 150])) (eas-geo-raw-names))
+                        '((:type "orthographic" :scale 80 :translate [100 90] :rotate [30 -20 10])
+                          (:type "equirectangular" :scale 60 :translate [200 150] :clipAngle 70 :rotate [-40 0])
+                          (:type "mercator" :scale 60 :translate [200 150]
+                                 :clipExtent [[20 30] [300 200]] :precision 0.3))))
+         (problems nil))
+    (should (= (length countries) 3))
+    (dolist (spec specs)
+      (let ((proj (eas-geo-proj spec)))
+        (dolist (o (if (or (member (plist-get spec :type) some) (plist-get spec :rotate))
+                       (append countries (list (eas-geo-graticule)) small)
+                     small))
+          (let ((want (let ((sink (eas-geo-path-sink 4.5)))
+                        (eas-geo-stream-object o (funcall (plist-get proj :stream) sink))
+                        (funcall (eas-geo-stream-result sink)))))
+            ;; Twice: recorded, then replayed from the record.
+            (dotimes (_ 2)
+              (unless (equal (eas-geo-proj-path proj o) want)
+                (push (format "%s %s" (plist-get spec :type) (or (plist-get o :id) (plist-get o :type))) problems)))))))
+    (should (equal problems nil))))
+
 (ert-deftest eas-vega-geo-graticule-is-d3s ()
   (let* ((g (eas-geo-graticule)) (lines (plist-get g :coordinates)))
     (should (equal (plist-get g :type) "MultiLineString"))

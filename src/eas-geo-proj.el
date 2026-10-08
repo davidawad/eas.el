@@ -89,7 +89,11 @@ rotation, degrees) as in d3."
                                    (vector (+ (- (* ca rx) (* sa ry)) dx) (- dy (* sa rx) (* ca ry)))))))
          (c (funcall st (funcall raw lam phi) 0 0))
          (dx (- x (aref c 0))) (dy (- y (aref c 1)))
-         (project (lambda (l p) (funcall st (funcall raw l p) dx dy)))
+         (project (if (= alpha 0)
+                      ;; st inlined: the same arithmetic, a call fewer per point.
+                      (lambda (l p) (let ((r (funcall raw l p)))
+                                      (vector (+ dx (* k sx (aref r 0))) (- dy (* k sy (aref r 1))))))
+                    (lambda (l p) (funcall st (funcall raw l p) dx dy))))
          (point (lambda (lon lat) (let ((r (funcall (car rot) (* lon eas-geo-rad) (* lat eas-geo-rad))))
                                     (funcall project (aref r 0) (aref r 1)))))
          (extent
@@ -113,7 +117,13 @@ rotation, degrees) as in d3."
          (resample (eas-geo-resample project (* precision precision))))
     (list :point point
           :stream (lambda (sink)
-                    (eas-geo-radians-rotate (car rot) (funcall preclip (funcall resample (funcall postclip sink))))))))
+                    (eas-geo-radians-rotate (car rot) (funcall preclip (funcall resample (funcall postclip sink)))))
+          ;; The halves `eas-geo-proj-stream' records and replays.
+          :front (lambda (sink) (eas-geo-radians-rotate (car rot) (funcall preclip sink)))
+          :front-key (list (float (eas-geo-rem (nth 0 rotate) 360)) (float (eas-geo-rem (or (nth 1 rotate) 0) 360))
+                           (float (eas-geo-rem (or (nth 2 rotate) 0) 360))
+                           (and (numberp clip-angle) (> clip-angle 0) (float clip-angle)))
+          :project project :delta2 (* precision precision) :postclip postclip)))
 
 (defun eas-geo-proj--albers-usa (k x y precision)
   "D3's albersUsa at scale K, translate X Y and PRECISION."
@@ -224,8 +234,12 @@ UNSUPPORTED_FEATURE for a type not drawn natively."
 SPEC is the Vega-Lite projection (plain values); OBJECTS GeoJSON."
   (let* ((p (eas-geo-proj (eas--plist-without spec :clipExtent) 150 '(0 0)))
          (sink (eas-geo-bounds-sink))
-         (stream (funcall (plist-get p :stream) sink)))
-    (dolist (o objects) (eas-geo-stream-object o stream))
+         (stream nil))
+    ;; A shared stream is d3's: one resampler's state runs on across objects.
+    (dolist (o objects)
+      (if (eas-geo-proj--sphere-free-p o)
+          (eas-geo-proj-stream p o sink)
+        (eas-geo-stream-object o (or stream (setq stream (funcall (plist-get p :stream) sink))))))
     (let* ((b (funcall (eas-geo-stream-result sink)))
            (w (- (aref extent 2) (aref extent 0))) (h (- (aref extent 3) (aref extent 1)))
            (bw (- (aref b 2) (aref b 0))) (bh (- (aref b 3) (aref b 1))))
@@ -236,11 +250,65 @@ SPEC is the Vega-Lite projection (plain values); OBJECTS GeoJSON."
                 (list (+ (aref extent 0) (/ (- w (* k (+ (aref b 2) (aref b 0)))) 2))
                       (+ (aref extent 1) (/ (- h (* k (+ (aref b 3) (aref b 1)))) 2)))))))))
 
+(defvar eas-geo-proj--recorded (make-hash-table :test 'eq :weakness 'key)
+  "Spherical streams recorded per GeoJSON object, by identity and weakly.
+Keys are `eas-geo-proj--identity's; each value is an alist of
+\((TYPE . FRONT-KEY) . EVENTS): what the object sends the resampler
+under a rotation and preclip (`eas-geo-recorder').")
+
+(defun eas-geo-proj--sphere-free-p (o)
+  "Return non-nil when GeoJSON O has no Sphere (its outline may be special)."
+  (and (eas-object-p o)
+       (pcase (plist-get o :type)
+         ("Sphere" nil)
+         ("Feature" (eas-geo-proj--sphere-free-p (plist-get o :geometry)))
+         ("FeatureCollection" (seq-every-p (lambda (f) (eas-geo-proj--sphere-free-p (plist-get f :geometry)))
+                                           (plist-get o :features)))
+         ("GeometryCollection" (seq-every-p #'eas-geo-proj--sphere-free-p (plist-get o :geometries)))
+         (_ t))))
+
+(defun eas-geo-proj--identity (o)
+  "(KEY . TYPE): what GeoJSON O streams depends on, by identity.
+A feature is its geometry, and a geometry its coordinates (rows copied
+per view of a grid of maps share them); TYPE tells apart geometries
+sharing coordinates."
+  (let ((type (plist-get o :type)))
+    (cond ((and (equal type "Feature") (eas-object-p (plist-get o :geometry)))
+           (eas-geo-proj--identity (plist-get o :geometry)))
+          ((vectorp (plist-get o :coordinates)) (cons (plist-get o :coordinates) type))
+          (t (cons o type)))))
+
+(defun eas-geo-proj--events (proj object)
+  "OBJECT's recorded spherical stream under PROJ's front half, or nil."
+  (let* ((id (eas-geo-proj--identity object))
+         (key (cons (cdr id) (plist-get proj :front-key)))
+         (known (gethash (car id) eas-geo-proj--recorded))
+         (hit (assoc key known)))
+    (if hit (cdr hit)
+      (let ((rec (eas-geo-recorder)))
+        (eas-geo-stream-object object (funcall (plist-get proj :front) rec))
+        (let ((events (funcall (eas-geo-stream-result rec))))
+          (puthash (car id) (cons (cons key events) known) eas-geo-proj--recorded)
+          events)))))
+
+(defun eas-geo-proj-stream (proj object sink)
+  "Stream GeoJSON OBJECT under PROJ into SINK.
+A shape's spherical half (rotation, preclip) is recorded once per
+rotation and clip and replayed into PROJ's resampler; anything else
+takes PROJ's :stream."
+  (let ((events (and (plist-get proj :front) (> (plist-get proj :delta2) 0)
+                     (eas-geo-proj--sphere-free-p object)
+                     (eas-geo-proj--events proj object))))
+    (if events
+        (eas-geo-replay events (plist-get proj :project) (plist-get proj :delta2)
+                        (funcall (plist-get proj :postclip) sink))
+      (eas-geo-stream-object object (funcall (plist-get proj :stream) sink)))))
+
 (defun eas-geo-proj-path (proj object &optional radius)
   "The projected path of GeoJSON OBJECT under PROJ (`eas-geo-path-sink').
 RADIUS is a Point's circle radius (4.5, d3's default)."
   (let ((sink (eas-geo-path-sink (or radius 4.5))))
-    (eas-geo-stream-object object (funcall (plist-get proj :stream) sink))
+    (eas-geo-proj-stream proj object sink)
     (funcall (eas-geo-stream-result sink))))
 
 (provide 'eas-geo-proj)

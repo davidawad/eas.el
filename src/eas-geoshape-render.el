@@ -50,16 +50,38 @@
 
 ;;; SVG
 
+(defun eas-geoshape--svg-rings (x y paths)
+  "SVG path data of PATHS ([CLOSED XY...] vectors) moved by X Y.
+Each number as `eas-svg--n' writes it, \"%.2f\" without a trailing
+\".00\" or \"0\", but one `format' per path and one pass to trim them
+all: a world map's thousands of points are most of its SVG's cost."
+  (let (parts)
+    (seq-doseq (p paths)
+      (let* ((flat (aref p 1)) (n (length flat)) (args nil) (i n))
+        (if (= n 0) (when (eq (aref p 0) t) (push "Z" parts))
+          (while (> i 0)
+            (setq i (- i 2))
+            (push (+ y (aref flat (1+ i))) args)
+            (push (+ x (aref flat i)) args))
+          (push (apply #'format
+                       (concat "M%.2f,%.2f" (apply #'concat (make-list (1- (/ n 2)) "L%.2f,%.2f"))
+                               (if (eq (aref p 0) t) "Z" ""))
+                       args)
+                parts))))
+    (if (null parts) ""
+      (with-temp-buffer
+        (apply #'insert (nreverse parts))
+        ;; "%.2f" puts exactly two digits after each point.
+        (goto-char (point-min))
+        (while (search-forward ".00" nil t) (delete-char -3))
+        (goto-char (point-min))
+        (while (re-search-forward "\\.[1-9]0" nil t) (delete-char -1))
+        (buffer-string)))))
+
 (defun eas-geoshape-svg-d (item)
   "The SVG path data of geoshape ITEM, in absolute pixels."
-  (let ((x (plist-get item :x)) (y (plist-get item :y)) parts)
-    (seq-doseq (p (plist-get item :paths))
-      (let ((flat (aref p 1)))
-        (cl-loop for i from 0 below (length flat) by 2
-                 do (push (concat (if (= i 0) "M" "L") (eas-svg--n (+ x (aref flat i))) ","
-                                  (eas-svg--n (+ y (aref flat (1+ i)))))
-                          parts))
-        (when (eq (aref p 0) t) (push "Z" parts))))
+  (let* ((x (plist-get item :x)) (y (plist-get item :y))
+         (parts (list (eas-geoshape--svg-rings x y (plist-get item :paths)))))
     (seq-doseq (c (plist-get item :circles))
       (let* ((cx (+ x (aref c 0))) (cy (+ y (aref c 1))) (r (aref c 2)) (rs (eas-svg--n r)))
         (push (format "M%s,%sA%s,%s,0,1,1,%s,%sA%s,%s,0,1,1,%s,%sZ"

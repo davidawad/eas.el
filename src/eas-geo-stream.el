@@ -211,6 +211,74 @@ PROJECT and DELTA2 as in `eas-geo-resample'; DEPTH is what remains."
             (eas-geo-stream-sphere s) (lambda () (eas-geo--call sphere sink)))
       s)))
 
+;;; Recorded spherical streams
+
+;; What reaches the resampler depends on the geometry, the rotation and
+;; the preclip only, never on the raw projection, its scale or its
+;; translate.  A grid of maps (24 projections of one world) records it
+;; once per rotation and clip and replays it into each projection's
+;; resampler: the same calls with the same numbers, so the same paths.
+
+(defun eas-geo-recorder ()
+  "A sink recording what it receives as events for `eas-geo-replay'.
+Its result is a vector of events in order, or nil when a line was left
+open: the symbols `polygon-start', `polygon-end' and `sphere'; a point
+\[L P]; a line (L . FLAT), FLAT holding [L P A B C] per point, A B C
+its unit vector (`eas-geo-cartesian')."
+  (let ((events nil) (line nil) (open nil))
+    (eas-geo-stream--make
+     :point (lambda (l p &optional _m)
+              (if open (push (cons l p) line) (push (vector l p) events)))
+     :line-start (lambda () (setq open t line nil))
+     :line-end (lambda ()
+                 (let* ((n (length line)) (flat (make-vector (* 5 n) 0.0)) (i (* 5 n)))
+                   (dolist (pt line)
+                     (let* ((l (car pt)) (p (cdr pt)) (c (cos p)))
+                       (setq i (- i 5))
+                       (aset flat i l) (aset flat (+ i 1) p)
+                       (aset flat (+ i 2) (* c (cos l))) (aset flat (+ i 3) (* c (sin l)))
+                       (aset flat (+ i 4) (sin p))))
+                   (push (cons 'line flat) events)
+                   (setq open nil line nil)))
+     :polygon-start (lambda () (push 'polygon-start events))
+     :polygon-end (lambda () (push 'polygon-end events))
+     :sphere (lambda () (push 'sphere events))
+     :result (lambda () (and (not open) (vconcat (nreverse events)))))))
+
+(defun eas-geo-replay (events project delta2 sink)
+  "Replay recorded EVENTS through d3's resampling of PROJECT into SINK.
+The stream `eas-geo-resample' makes of PROJECT at DELTA2 (> 0), fed
+EVENTS (`eas-geo-recorder'), in one loop: the same calls into SINK with
+the same numbers, without a closure call per point."
+  (let ((l00 0) (x00 0) (y00 0) (a00 0) (b00 0) (c00 0)
+        (l0 0) (x0 eas-geo-nan) (y0 eas-geo-nan) (a0 0) (b0 0) (c0 0)
+        (ring nil))
+    (dotimes (e (length events))
+      (let ((ev (aref events e)))
+        (cond
+         ((consp ev)
+          (let* ((flat (cdr ev)) (n (length flat)) (i 0))
+            (setq x0 eas-geo-nan)
+            (eas-geo--call line-start sink)
+            (while (< i n)
+              (let* ((l (aref flat i)) (a (aref flat (+ i 2))) (b (aref flat (+ i 3))) (c (aref flat (+ i 4)))
+                     (pr (funcall project l (aref flat (1+ i)))) (x (aref pr 0)) (y (aref pr 1)))
+                (eas-geo--resample-line project delta2 x0 y0 l0 a0 b0 c0 x y l a b c eas-geo--max-depth sink)
+                (setq x0 x y0 y l0 l a0 a b0 b c0 c)
+                (eas-geo-point sink x0 y0)
+                (when (and ring (= i 0))
+                  (setq l00 l x00 x0 y00 y0 a00 a0 b00 b0 c00 c0)))
+              (setq i (+ i 5)))
+            (when ring
+              (eas-geo--resample-line project delta2 x0 y0 l0 a0 b0 c0 x00 y00 l00 a00 b00 c00
+                                      eas-geo--max-depth sink))
+            (eas-geo--call line-end sink)))
+         ((vectorp ev)
+          (let ((p (funcall project (aref ev 0) (aref ev 1)))) (eas-geo-point sink (aref p 0) (aref p 1))))
+         ((eq ev 'polygon-start) (eas-geo--call polygon-start sink) (setq ring t))
+         ((eq ev 'polygon-end) (eas-geo--call polygon-end sink) (setq ring nil))
+         ((eq ev 'sphere) (eas-geo--call sphere sink)))))))
+
 ;;; GeoJSON into a stream (d3 stream.js)
 
 (defun eas-geo--line (coords s closed)
@@ -275,13 +343,13 @@ of [CX CY R]."
 
 (defun eas-geo-ring-area (flat)
   "Signed shoelace area of closed ring FLAT [x0 y0 x1 y1 ...], as d3 sums it."
-  (let ((n (/ (length flat) 2)) (sum 0.0))
-    (when (> n 0)
-      (dotimes (i n)
-        (let* ((j (mod (1+ i) n))
-               (x0 (aref flat (* 2 i))) (y0 (aref flat (1+ (* 2 i))))
-               (x1 (aref flat (* 2 j))) (y1 (aref flat (1+ (* 2 j)))))
-          (setq sum (+ sum (- (* x0 y1) (* y0 x1)))))))
+  (let ((m (length flat)) (sum 0.0) (i 0))
+    (when (> m 1)
+      (let ((x0 (aref flat 0)) (y0 (aref flat 1)) x1 y1)
+        (while (< i m)
+          (setq i (+ i 2))
+          (if (< i m) (setq x1 (aref flat i) y1 (aref flat (1+ i))) (setq x1 (aref flat 0) y1 (aref flat 1)))
+          (setq sum (+ sum (- (* x0 y1) (* y0 x1))) x0 x1 y0 y1))))
     (/ sum 2)))
 
 (defun eas-geo-path-area (result)
@@ -302,13 +370,14 @@ map's shapes skip measuring their lines (eas-b2s.8)."
   (let ((x2 0.0) (y2 0.0) (z2 0.0))
     (dolist (p (plist-get result :paths))
       (when (car p)
-        (let* ((flat (cdr p)) (n (/ (length flat) 2)))
-          (dotimes (i n)
-            (let* ((j (mod (1+ i) n))
-                   (ax (aref flat (* 2 i))) (ay (aref flat (1+ (* 2 i))))
-                   (bx (aref flat (* 2 j))) (by (aref flat (1+ (* 2 j))))
-                   (z (- (* ay bx) (* ax by))))
-              (setq x2 (+ x2 (* z (+ ax bx))) y2 (+ y2 (* z (+ ay by))) z2 (+ z2 (* 3 z))))))))
+        (let* ((flat (cdr p)) (m (length flat)) (i 0))
+          (when (> m 1)
+            (let ((ax (aref flat 0)) (ay (aref flat 1)) bx by)
+              (while (< i m)
+                (setq i (+ i 2))
+                (if (< i m) (setq bx (aref flat i) by (aref flat (1+ i))) (setq bx (aref flat 0) by (aref flat 1)))
+                (let ((z (- (* ay bx) (* ax by))))
+                  (setq x2 (+ x2 (* z (+ ax bx))) y2 (+ y2 (* z (+ ay by))) z2 (+ z2 (* 3 z)) ax bx ay by))))))))
     (and (/= z2 0) (vector (/ x2 z2) (/ y2 z2)))))
 
 (defun eas-geo--path-centroid-1 (result)

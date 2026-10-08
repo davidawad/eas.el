@@ -32,6 +32,12 @@
 ;;                          `eas-perf-cold', every cache emptied first
 ;;                          (files read, shapes projected, memos, SVG
 ;;                          fragments), as in a fresh Emacs
+;;   cold-native/NAME       cold/NAME with the native geo backend
+;;                          (eas-geo-native.el); left out, not failed,
+;;                          when the module is not built
+;;
+;; Every workload but cold-native/ draws maps with the Elisp backend
+;; (`eas-geo-backend' is `lisp'), so a built module changes no baseline.
 ;;
 ;; Every workload runs on both targets.  Per frame it reports three
 ;; kinds of metric:
@@ -64,6 +70,7 @@
 (require 'eas-mode-patch)
 (require 'eas-slice)
 (require 'eas-template)
+(require 'eas-geo-native)
 (require 'eas-bench)
 
 (defvar eas-perf-frames 20 "Frames measured per live workload.")
@@ -390,13 +397,22 @@ The result is a function of a target, as `eas-perf--play'."
   (eas-memo-clear)
   (eas-render-cache-clear))
 
-(defun eas-perf--cold (template)
-  "Setup of the cold first render of TEMPLATE, as a function of a target."
+(defun eas-perf--cold (template &optional backend)
+  "Setup of the cold first render of TEMPLATE, as a function of a target.
+BACKEND, when non-nil, is the `eas-geo-backend' the frames draw with."
   (let ((render (eas-perf--render template)))
     (lambda (target)
       (let ((pair (funcall render target)))
-        (cons (lambda (i buffer) (eas-perf--forget) (funcall (car pair) i buffer))
+        (cons (lambda (i buffer)
+                (let ((eas-geo-backend (or backend eas-geo-backend)))
+                  (eas-perf--forget)
+                  (funcall (car pair) i buffer)))
               (cdr pair))))))
+
+(defun eas-perf-native-p ()
+  "Return non-nil when the native geo module can be loaded.
+The cold-native/ workloads run only then."
+  (let ((eas-geo-backend 'auto)) (eq (eas-geo-backend-active) 'native)))
 
 (defun eas-perf-live-workloads ()
   "The live workloads: alist of (NAME . SETUP), SETUP a function of a target.
@@ -429,12 +445,15 @@ SETUP returns (STEP . CLOSE)."
           (mapcar (lambda (name) (cons (concat "render/" name) (eas-perf--render name)))
                   (eas-template-names))
           (mapcar (lambda (name) (cons (concat "cold/" name) (eas-perf--cold name)))
-                  eas-perf-cold)))
+                  eas-perf-cold)
+          (and (eas-perf-native-p)
+               (mapcar (lambda (name) (cons (concat "cold-native/" name) (eas-perf--cold name 'native)))
+                       eas-perf-cold))))
 
 (defun eas-perf-measure (name setup target)
   "Measure workload NAME (SETUP as in `eas-perf-live-workloads') on TARGET.
 Return its metrics plist; a workload that fails gives (:error MESSAGE)."
-  (let ((render (string-match-p "\\`\\(render\\|cold\\)/" name)))
+  (let ((render (string-match-p "\\`\\(render\\|cold\\|cold-native\\)/" name)))
     (condition-case err
         (let ((pair (funcall setup target)))
           (unwind-protect
@@ -452,6 +471,7 @@ Return its metrics plist; a workload that fails gives (:error MESSAGE)."
 With PROGRESS, report each workload on stderr.  Return the run plist:
 \(:mode MODE :emacs V :workloads ((NAME :svg M :text M) ...))."
   (let ((eas-views (make-hash-table :test 'equal))
+        (eas-geo-backend 'lisp)
         (gc-cons-threshold (max gc-cons-threshold (or eas-gc-cons-threshold 0)))
         (out nil))
     (dolist (w (eas-perf-workloads))

@@ -98,10 +98,17 @@ a world map's thousands of points are most of its SVG's cost."
         (when (eq (aref p 0) t) (push "Z" parts))))
     (if parts (apply #'concat (nreverse parts)) "")))
 
+(defvar eas-geoshape--svg-d (make-hash-table :test 'eq :weakness 'key)
+  "Path data the native backend printed, by an item's paths vector.
+Each value is (X Y . D): D is `eas-geoshape--svg-rings' of the paths at
+X Y, the same string.  An item moved elsewhere prints its own.")
+
 (defun eas-geoshape-svg-d (item)
   "The SVG path data of geoshape ITEM, in absolute pixels."
-  (let* ((x (plist-get item :x)) (y (plist-get item :y))
-         (parts (list (eas-geoshape--svg-rings x y (plist-get item :paths)))))
+  (let* ((x (plist-get item :x)) (y (plist-get item :y)) (paths (plist-get item :paths))
+         (hit (gethash paths eas-geoshape--svg-d))
+         (parts (list (if (and hit (eql (car hit) x) (eql (cadr hit) y)) (cddr hit)
+                        (eas-geoshape--svg-rings x y paths)))))
     (seq-doseq (c (plist-get item :circles))
       (let* ((cx (+ x (aref c 0))) (cy (+ y (aref c 1))) (r (aref c 2)) (rs (eas-svg--n r)))
         (push (format "M%s,%sA%s,%s,0,1,1,%s,%sA%s,%s,0,1,1,%s,%sZ"

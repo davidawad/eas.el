@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[package]
+name = "eas-geo-module"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Optional native accelerator for eas.el's geo projections (an Emacs dynamic module)"
+publish = false
+
+[lib]
+name = "eas_geo"
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+debug = false
+panic = "abort"
+codegen-units = 1
+lto = true

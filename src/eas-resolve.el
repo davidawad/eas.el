@@ -242,11 +242,22 @@ is VIEW's JSON pointer, for findings."
   "Large array -> its stripped form, during one `eas-resolve--strip'.
 A grid of maps holds one map's data in every cell: it is walked once.")
 
+(defun eas-resolve--atoms-p (vector)
+  "Return non-nil if no element of VECTOR is a vector or a cons.
+Such a vector strips to itself; a map's coordinates are hundreds of
+thousands of such pairs."
+  (let ((i 0) (n (length vector)) (atoms t))
+    (while (and atoms (< i n))
+      (let ((x (aref vector i))) (when (or (consp x) (vectorp x)) (setq atoms nil)))
+      (setq i (1+ i)))
+    atoms))
+
 (defun eas-resolve--strip (node)
   "Return NODE without x-eas keys, recursively.
 A part with none is returned as it is, not copied: data arrays stay the
 objects their source made (`eas-resolve-hash' encodes each once)."
   (cond
+   ((and (vectorp node) (eas-resolve--atoms-p node)) node)
    ((vectorp node)
     (let ((hit (and eas-resolve--stripped (gethash node eas-resolve--stripped))))
       (or hit

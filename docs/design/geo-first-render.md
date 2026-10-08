@@ -5,7 +5,10 @@ projections template (24 world maps) and for every map template, with
 SVG and text output byte-identical and no on-disk cache.  The first
 render of the projections template takes about 2 s byte-compiled in a
 fresh Emacs.  This note says where that time goes, what was cut, and
-why 200 ms cannot be reached without changing the output.
+why 200 ms cannot be reached without changing the output.  The last
+section is the decision that followed: an optional native module
+(module/, src/eas-geo-native.el) for the geo hot path, Elisp kept as
+the source of truth.
 
 ## Measuring
 
@@ -217,3 +220,199 @@ Still out of reach without changing the architecture:
   are about 3 MB of SVG per size, and the cache key would have to
   cover the code, the data file and every projection parameter.  It
   only helps a second first render, and it was not built.
+
+## Fourth pass: the optional native module
+
+The decision recorded in eas-gzi: reach the target with an optional
+compiled module for the projection math, keeping pure Elisp as the
+source of truth and as a fully supported fallback.  eas keeps no
+dependencies; the module only accelerates.
+
+### What it is
+
+- `module/` is a Rust crate (package eas-geo-module, library eas_geo,
+  a cdylib).  It ports eas-geo-stream.el (rotation, adaptive resampling,
+  the recorded spherical streams and their replay, the path and bounds
+  sinks, the planar measures), eas-geo-clip.el (antimeridian, small
+  circle and rectangle clips, rejoin, spherical point-in-polygon),
+  eas-geo-raw.el and eas-geo-polyhedral.el (all 35 raw projections: the
+  24 of the projections gallery, the d3-geo ones, the interrupted ones,
+  their outlines), eas-geo-proj.el (scale, translate, centre, three-axis
+  rotation, angle, reflection, clipAngle, clipExtent, mercator's own
+  extent, albersUsa's three insets, fitting) and the path printer of
+  eas-geoshape-render.el (one-decimal numbers, the 0.06 px
+  simplification).
+- It has no crates at all.  Its binding to emacs-module.h is
+  hand-written (module/src/ffi.rs, about 200 lines): the 27 function
+  pointers of `struct emacs_env_25`, which every later environment
+  (26 to 30) begins with in the same order, so one layout serves every
+  Emacs with modules.  emacs-module-rs was the alternative; it is not
+  smaller (its macros pull in syn, quote, proc-macro2, ctor and more, a
+  dozen crates and their version churn) and not stabler (the module
+  ABI is what is stable, and the hand binding uses only it).  The
+  module checks the runtime and environment sizes before using them.
+- src/eas-geo-native.el loads it lazily, on the first map, from
+  `<root>/lib/eas-geo-module<suffix>`, `<root>/module/`, or beside the
+  library (a flat install), the suffix being the running Emacs's
+  `module-file-suffix`; a cargo build in place
+  (`module/target/release/libeas_geo.so` or `.dylib`) is found too.
+- `eas-geo-backend` (group eas): `auto` (default) uses the module when
+  it loads, else Elisp; `native` requires it (a `user-error` saying why
+  when it is missing or fails to load, and module errors are signalled);
+  `lisp` never loads it.  `eas-geo-backend-active` returns `lisp` or
+  `native`.  Under `auto`, a module error at run time drops the module
+  with one message, and Elisp draws on (and draws the same).
+
+### Its interface: batches, not points
+
+A geometry is read once into a handle (`eas-geo-module-geometry`, kept
+weakly per coordinates object, as the Elisp keeps its recordings), and
+then one call per map unit, `eas-geo-module-shapes`, takes the
+projection's resolved parameters (`:native`, which `eas-geo-proj` now
+adds to every projection) and every shape of the unit.  For each shape
+it returns what `eas-geoshape--project` makes, the anchor and the paths,
+circles and box relative to it, plus the SVG path data of the paths at
+the item's position, which `eas-geoshape-svg-d` uses when the item has
+not moved.  `eas-geo-module-fit` returns a fit's bounds.  So a map costs
+one crossing per unit, not one per point, and the scene (scene/v1)
+holds the same float vectors as before: the text renderer and hit
+testing read them unchanged.
+
+### Exact, not approximately equal
+
+The goal was byte-identical SVG between backends, and that is what the
+module achieves: every map template draws byte-identical SVG with both
+backends (`eas-geo-native-map-templates-svg-is-identical`, :gallery),
+so the 0.1%-of-pixels fallback bound is not needed.  The projected
+values themselves are compared bit for bit
+(`eas-geo-native-projections-match-lisp`: every projection type, and
+rotation, clipAngle, clipExtent, reflection with angle, precision 0 and
+large rotations on ten of them, over sphere, graticule, points, lines,
+a geometry collection and countries, plus fit bounds).  What it took:
+
+- Each expression keeps the Elisp's order: `(* a b c)` is `(a*b)*c`,
+  integers convert as Elisp converts them, nothing is simplified.
+- Elisp's `min` and `max` let a NaN win and keep the first argument on
+  ties (`(max 0 -0.0)` is 0); `eql` on floats compares bits.  The port
+  has helpers with those semantics.
+- Transcendental functions are glibc's libm, as Emacs's.  One trap:
+  `(expt x 2)` calls `pow`, which glibc does not always round
+  correctly, while LLVM folds `x.powf(2.0)` into `x*x`; the module calls
+  `pow` with an exponent the optimizer cannot see.
+- Path numbers take the same fast path as `eas-geoshape--push-n` and,
+  for ties, NaNs and large values, the C library's `snprintf("%.1f")`,
+  which is what Emacs's `format` calls.
+
+Rust unit tests (`cargo test` in module/) compare the raw projections
+(3,010 points), the sphere outlines and the clips (about 300k stream
+events, the rotated world-110m under ten clips) with values Emacs
+prints, by bits.
+
+### First render
+
+A fresh `emacs -Q --batch` per run, best of 6, alternating
+configurations; "before" is the engine before this pass, "after lisp"
+this pass with `eas-geo-backend` `lisp`.  Total is what a fresh Emacs
+spends: the template registry and example bindings (about 80-100 ms,
+the same for every template and paid once per session), opening the
+view and printing its SVG.  Render is opening and printing alone.  GC
+runs at the default threshold.  Timings on this shared 8-core box vary
+by 20-40% from run to run.
+
+| template | compiled | before (lisp) total / render | after, lisp | after, native | native render vs before |
+|---|---|---:|---:|---:|---:|
+| projections | byte | 2480 / 2379 | 2484 / 2421 | 537 / 453 | 5.3x |
+| projections | native | 1848 / 1787 | 1880 / 1832 | 300 / 251 | 7.1x |
+| county-unemployment | byte | 1560 / 1502 | 1605 / 1526 | 505 / 421 | 3.6x |
+| county-unemployment | native | 1285 / 1240 | 1217 / 1164 | 263 / 219 | 5.7x |
+| map-with-tooltip | byte | 976 / 919 | 772 / 714 | 315 / 263 | 3.5x |
+| map-with-tooltip | native | 898 / 828 | 626 / 578 | 338 / 273 | 3.0x |
+| world-map | byte | 225 / 172 | 201 / 143 | 89 / 27 | 6.4x |
+| world-map | native | 235 / 173 | 164 / 114 | 71 / 20 | 8.7x |
+
+The SVG md5 is the same in every column.
+
+### Where the native first render's time goes now
+
+The perf suite's `cold-native/NAME` (every cache emptied, 64 MB GC
+threshold as `eas-gc-defer` gives an interactive session), against
+`cold/NAME` with the Elisp backend, ms, median of 2 frames, from the
+`make bench-check` run of this pass:
+
+| template, SVG | cold/ byte | cold-native/ byte | cold/ native-comp | cold-native/ native-comp | allocated, lisp / native |
+|---|---:|---:|---:|---:|---:|
+| projections | 1814 | 325 | 1400 | 201 | 552 MB / 40 MB |
+| county-unemployment | 1550 | 215 | 1027 | 159 | 314 MB / 30 MB |
+| map-with-tooltip | 571 | 206 | 533 | 141 | 132 MB / 28 MB |
+| world-map | 101 | 43 | 107 | 25 | 32 MB / 5 MB |
+
+A CPU profile of the projections template's native first render (fresh
+Emacs, byte-compiled), in shares of its render:
+
+- the module call, about 30%: projecting, resampling, clipping and
+  printing 24 x 178 shapes is about 70-120 ms in Rust, and building
+  their Lisp float vectors for the scene about 45 ms (400k floats);
+  reading world-110m into handles once is about 14 ms;
+- the SVG document, about 25-30% (`eas-svg-render`: retained item
+  printing, `eas-svg--node`, the mark styles; not geo code);
+- the rest of the compile, about 20% (layout, scales, styles of 4,300
+  items; not geo code);
+- GC, 50-90 ms at the default threshold in batch, which an interactive
+  session defers.
+
+county-unemployment and map-with-tooltip spend most of what is left
+outside geo code: resolving their data (TopoJSON decode, the CSV join,
+`eas-resolve`), per-row styles and tooltips of 3,200 counties, and the
+SVG document.
+
+### Also in this pass
+
+- The view's spec hash (`eas-resolve-hash`, the sha256 of the resolved
+  spec's canonical JSON, geometry included: 24 copies of world-110m for
+  the projections grid) is made on first use (`eas-view-spec-hash`),
+  not when a view opens.  It was 70-330 ms of every map's first render.
+- `eas-resolve--strip` returns a vector of atoms (a coordinate pair) as
+  it is, without copying it into a list first.
+
+### What would still be needed for 200 ms
+
+Where the target is met, with the native backend:
+
+- world-map, everywhere: 20-27 ms to open and draw in a fresh Emacs
+  (71-89 ms counting the template registry), 25-43 ms in the perf suite.
+- With native-compiled Lisp and GC deferred (the perf suite, as an
+  interactive session runs): projections 201 ms, county-unemployment
+  159 ms, map-with-tooltip 141 ms.
+- Byte-compiled with GC deferred: county-unemployment 215 ms and
+  map-with-tooltip 206 ms are at the target, projections (325 ms) is
+  not.
+- In a fresh batch Emacs, where GC runs at the default threshold
+  (50-90 ms of collections), projections (251 ms native-compiled, 453
+  ms byte), county-unemployment (219 / 421 ms) and map-with-tooltip
+  (263-273 ms) are not under 200 ms.
+- projections at 201 ms (p95 212 ms) is at the target, not under it.
+
+The other map templates (annual-precipitation, airport-connections,
+dorling-cartogram, volcano-contours, distortion-comparison) spend their
+time in contours, Voronoi cells, force layouts and data, not in
+projection; the module leaves them about where they were, and they draw
+the same SVG with it.
+
+The geo work itself is no longer where the time goes: what remains is
+the non-geo pipeline that every chart pays per item (the scene's
+styles, the SVG document, data resolution) and GC.  Getting the
+projections grid under 200 ms everywhere would need, besides the
+module:
+
+- a cheaper scene build per item (styles, tooltips and SVG nodes are
+  computed per item in Elisp: 4,300 for the grid, 3,200 counties);
+- the SVG document printed without the retained-fragment bookkeeping
+  on a first render;
+- fewer Lisp floats: the scene holds every path point as a boxed float
+  (400k for the grid), which the module must allocate and GC must
+  trace.  A packed representation would change scene/v1.
+
+Threads in the module were tried (one shape per task over 8 cores) and
+did not pay on the measured box: the batch per map is a few
+milliseconds and the first render got slower.  They stay available
+behind EAS_GEO_MODULE_THREADS, off by default.

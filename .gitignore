@@ -18,3 +18,6 @@ node_modules/
 
 # Local task store (not published)
 .beads/
+
+# The built native geo module (module/, eas-geo-native.el)
+/lib/

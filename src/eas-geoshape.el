@@ -46,6 +46,7 @@
 (require 'eas-geo)
 (require 'eas-projection)
 (require 'eas-geoshape-render)
+(require 'eas-geo-native)
 (require 'eas-gc)
 
 (defconst eas-geoshape-x "eas_geo_x" "Field holding a projected point's x.")
@@ -334,7 +335,9 @@ VALUE as `eas-geoshape--project' returns it.")
   "Forget every projected shape and recorded spherical stream.
 The next compile of a map projects it as a fresh Emacs would."
   (setq eas-geoshape--projected nil)
-  (clrhash eas-geo-proj--recorded))
+  (clrhash eas-geo-proj--recorded)
+  (clrhash eas-geoshape--svg-d)
+  (eas-geo-native-forget))
 
 (defvar eas-geoshape-projected-max 32
   "Projections whose shapes `eas-geoshape--projected' keeps.
@@ -387,11 +390,44 @@ compile of the same data."
         (when id (puthash (car id) (cons (cdr id) value) table))
         (and (consp value) value)))))
 
-(defun eas-geoshape-row-fn (unit scales bounds)
+(defun eas-geoshape--prefill (proj table rows geo ox oy)
+  "Project ROWS' shapes missing from TABLE under PROJ in one native call.
+GEO is the unit's x-eas.geo; items are placed at OX OY.  Each value
+goes into TABLE as `eas-geoshape--project' would have made it, and its
+SVG path data into `eas-geoshape--svg-d'.  Do nothing unless the
+native backend is in use (`eas-geo-native-p')."
+  (when (and table (plist-get proj :native) (eas-geo-native-p))
+    (let ((seen (make-hash-table :test 'eq)) ids shapes)
+      (seq-doseq (row rows)
+        (let ((shape (eas-geoshape--shape geo row)))
+          (when (and (eas-object-p shape) shape)
+            (let* ((id (eas-geoshape--identity shape))
+                   (hit (gethash (car id) table)))
+              (unless (or (and hit (equal (car hit) (cdr id))) (gethash (car id) seen))
+                (puthash (car id) t seen)
+                (push id ids) (push shape shapes))))))
+      (when shapes
+        (let ((out (eas-geo-native-shapes (plist-get proj :native) (nreverse shapes) ox oy
+                                          eas-geoshape-tolerance)))
+          (when out
+            (cl-loop for id in (nreverse ids) for r across out
+                     do (puthash (car id) (cons (cdr id) (if r (eas-geoshape--native-value r ox oy) 'none))
+                                 table))))))))
+
+(defun eas-geoshape--native-value (r ox oy)
+  "The `eas-geoshape--project' value of native result R placed at OX OY.
+R is [AX AY PATHS CIRCLES BOX D]; D is kept for `eas-geoshape-svg-d'."
+  (let ((paths (aref r 2)))
+    (when (> (length paths) 0)
+      (puthash paths (cons (+ ox (aref r 0)) (cons (+ oy (aref r 1)) (aref r 5))) eas-geoshape--svg-d))
+    (cons (vector (aref r 0) (aref r 1)) (list paths (aref r 3) (aref r 4)))))
+
+(defun eas-geoshape-row-fn (unit scales bounds &optional prefill)
   "Return the function (ROW I) -> item or nil for geoshape UNIT.
 It draws with SCALES in plot BOUNDS [X Y W H]; a hover patches one
 item through it (`eas-patch--items').  Call it inside
-`eas-marks-with-cache'."
+`eas-marks-with-cache'.  With PREFILL, the unit's shapes are first
+projected in one batch by the native backend when it is in use."
   (let* ((geo (eas-geoshape--geo unit))
          (proj (or (plist-get unit :geo-proj)
                    (eas-geoshape-resolve (eas-geoshape--eval (plist-get geo :projection) (plist-get unit :env))
@@ -401,6 +437,7 @@ item through it (`eas-patch--items').  Call it inside
          (sw (plist-get mark :strokeWidth))
          (table (and (plist-get proj :spec) (eas-geoshape--projected-table proj)))
          (ox (aref bounds 0)) (oy (aref bounds 1)))
+    (when prefill (eas-geoshape--prefill proj table (plist-get unit :rows) geo ox oy))
     (lambda (row i)
       (let* ((shape (eas-geoshape--shape geo row))
              (projected (and (eas-object-p shape) shape (eas-geoshape--project proj shape table))))
@@ -424,7 +461,7 @@ A map's first compile conses hundreds of megabytes of floats (the
 projections grid about 550 MB), so collection waits until Emacs is
 idle (`eas-gc-defer'), as during an interaction."
   (eas-gc-defer)
-  (let ((row-fn (eas-geoshape-row-fn unit scales bounds)) out)
+  (let ((row-fn (eas-geoshape-row-fn unit scales bounds t)) out)
     (seq-do-indexed (lambda (row i) (let ((item (funcall row-fn row i))) (when item (push item out))))
                     (plist-get unit :rows))
     (vconcat (nreverse out))))

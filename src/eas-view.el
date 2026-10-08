@@ -56,10 +56,19 @@ When non-nil, `eas-push' calls it instead of dispatching a push now.
 eas-stream sets it to coalesce live data.")
 
 (cl-defstruct (eas-view (:constructor eas-view--make) (:copier nil))
-  id template subject spec spec-hash bindings data size target cell
+  id template subject spec spec-hash-cache bindings data size target cell
   state log (seq 0) scene plan buffer (interactive t) fallback warnings
   ;; What the last compile changed: `eas-scene-dirty' of the scenes.
   (dirty t))
+
+(defun eas-view-spec-hash (view)
+  "Return VIEW's spec hash, `eas-resolve-hash' of its spec.
+It is made on first use: a map's resolved spec holds its geometry,
+megabytes of JSON to hash, and opening the view need not wait for it."
+  (or (eas-view-spec-hash-cache view)
+      (setf (eas-view-spec-hash-cache view) (eas-resolve-hash (eas-view-spec view)))))
+
+(gv-define-setter eas-view-spec-hash (value view) `(setf (eas-view-spec-hash-cache ,view) ,value))
 
 (defun eas-view--unique-id (base)
   "BASE, or BASE<N> when BASE is taken."
@@ -126,7 +135,7 @@ TARGET and CELL are as in `eas-compile'."
          (view (eas-view--make
                 :id (eas-view--unique-id (or id (if subject (format "%s:%s" (or template "chart") subject)
                                                     (or template "chart"))))
-                :template template :subject subject :spec spec :spec-hash (eas-resolve-hash spec)
+                :template template :subject subject :spec spec
                 :bindings bindings :data data :size size :target (or target 'svg) :cell cell
                 :state nil :log nil)))
     (condition-case err

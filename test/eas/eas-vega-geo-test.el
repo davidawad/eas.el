@@ -516,8 +516,10 @@ About a minute byte-compiled, so it runs with the gallery."
       (let* ((name (car entry)) (spec (eas-vega-geo-resolve name))
              (new (progn (eas-geoshape-forget) (eas-svg-render (eas-compile spec))))
              (old (progn (eas-geoshape-forget)
+                         ;; The Elisp backend: the native one prints its own path data.
                          (cl-letf (((symbol-function 'eas-geoshape--svg-rings) #'eas-vega-geo--full-rings))
-                           (let ((eas-geoshape-tolerance nil)) (eas-svg-render (eas-compile spec)))))))
+                           (let ((eas-geoshape-tolerance nil) (eas-geo-backend 'lisp))
+                             (eas-svg-render (eas-compile spec)))))))
         (eas-geoshape-forget)
         (dolist (zoom '(1 2))
           (let* ((a (eas-vega-geo--png old zoom)) (b (eas-vega-geo--png new zoom))

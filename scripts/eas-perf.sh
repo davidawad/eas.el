@@ -48,6 +48,8 @@ for mode in $modes; do
   # The engine finds templates/ and examples/ one level above its files.
   ln -s "$root/templates" "$build/templates"
   ln -s "$root/examples" "$build/examples"
+  # The native geo module, when built, is found under the root (cold-native/).
+  for d in lib module; do if [ -e "$root/$d" ]; then ln -s "$root/$d" "$build/$d"; fi; done
   (cd "$build/src" && "$emacs" -Q --batch -L . -f batch-byte-compile ./*.el > "$build/compile.log" 2>&1)
   # No JIT: a byte run must not turn native halfway through.
   eln=(--eval "(when (boundp 'native-comp-jit-compilation) (setq native-comp-jit-compilation nil))")

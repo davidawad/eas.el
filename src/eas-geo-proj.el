@@ -26,6 +26,7 @@
 (require 'eas-geo-stream)
 (require 'eas-geo-clip)
 (require 'eas-geo-raw)
+(require 'eas-geo-native)
 
 (defun eas-geo-proj--num (v default)
   "V when a number, else DEFAULT."
@@ -194,7 +195,8 @@ UNSUPPORTED_FEATURE for a type not drawn natively."
            (tr (or translate (eas-geo-proj--vec (plist-get spec :translate) (or (plist-get entry :translate) [480 250])))))
       (if (equal type "albersUsa")
           (append (eas-geo-proj--albers-usa (float k) (float (nth 0 tr)) (float (nth 1 tr)) precision)
-                  (list :type type :spec (eas-geo-proj--plain spec k tr)))
+                  (list :type type :spec (eas-geo-proj--plain spec k tr)
+                        :native (vector type (float k) (float (nth 0 tr)) (float (nth 1 tr)) precision)))
         (let* ((transverse (eq (plist-get entry :reclip) 'transverse))
                (center (eas-geo-proj--vec (plist-get spec :center) (or (plist-get entry :center) [0 0])))
                (center (if transverse (list (- (nth 1 center)) (nth 0 center)) center))
@@ -229,21 +231,37 @@ UNSUPPORTED_FEATURE for a type not drawn natively."
                                      (setf (eas-geo-stream-sphere s)
                                            (lambda () (funcall outline (funcall (plist-get flat :stream) sink))))
                                      s))))))
-          (append p (list :type type :spec (eas-geo-proj--plain spec k tr))))))))
+          (append p (list :type type :spec (eas-geo-proj--plain spec k tr)
+                          :native (eas-geo-proj--native type entry spec k tr center rotate clip-angle extent
+                                                        precision))))))))
+
+(defun eas-geo-proj--native (type entry spec k tr center rotate clip-angle extent precision)
+  "The parameters the native module builds projection TYPE from.
+ENTRY is TYPE's registry entry and SPEC the projection; K, TR, CENTER,
+ROTATE, CLIP-ANGLE, EXTENT and PRECISION as `eas-geo-proj' resolved
+them for `eas-geo-proj--simple'."
+  (let ((par (eas-geo-proj--vec (plist-get spec :parallels) (or (plist-get entry :parallels) [0 0]))))
+    (vector type (nth 0 par) (nth 1 par) k (nth 0 tr) (nth 1 tr) (nth 0 center) (nth 1 center)
+            (nth 0 rotate) (nth 1 rotate) (nth 2 rotate) (and (numberp clip-angle) clip-angle)
+            (and extent (vector (aref (aref extent 0) 0) (aref (aref extent 0) 1)
+                                (aref (aref extent 1) 0) (aref (aref extent 1) 1)))
+            (pcase (plist-get entry :reclip) ('mercator 1) ('transverse 2) (_ 0))
+            precision (eas-geo-proj--num (plist-get spec :angle) (or (plist-get entry :angle) 0))
+            (eas-true-p (plist-get spec :reflectX)) (eas-true-p (plist-get spec :reflectY)))))
 
 (defun eas-geo-proj-fit (spec objects extent)
   "D3's fitExtent: (SCALE . [X Y]) fitting OBJECTS into EXTENT [X0 Y0 X1 Y1].
 SPEC is the Vega-Lite projection (plain values); OBJECTS GeoJSON."
   (let* ((p (eas-geo-proj (eas--plist-without spec :clipExtent) 150 '(0 0)))
-         (sink (eas-geo-bounds-sink))
-         (stream nil))
-    ;; A shared stream is d3's: one resampler's state runs on across objects.
-    (dolist (o objects)
-      (if (eas-geo-proj--sphere-free-p o)
-          (eas-geo-proj-stream p o sink)
-        (eas-geo-stream-object o (or stream (setq stream (funcall (plist-get p :stream) sink))))))
-    (let* ((b (funcall (eas-geo-stream-result sink)))
-           (w (- (aref extent 2) (aref extent 0))) (h (- (aref extent 3) (aref extent 1)))
+         (b (or (eas-geo-native-fit (plist-get p :native) objects)
+                (let ((sink (eas-geo-bounds-sink)) (stream nil))
+                  ;; A shared stream is d3's: one resampler's state runs on across objects.
+                  (dolist (o objects)
+                    (if (eas-geo-proj--sphere-free-p o)
+                        (eas-geo-proj-stream p o sink)
+                      (eas-geo-stream-object o (or stream (setq stream (funcall (plist-get p :stream) sink))))))
+                  (funcall (eas-geo-stream-result sink))))))
+    (let* ((w (- (aref extent 2) (aref extent 0))) (h (- (aref extent 3) (aref extent 1)))
            (bw (- (aref b 2) (aref b 0))) (bh (- (aref b 3) (aref b 1))))
       (if (not (and (> bw 0) (> bh 0) (< bw 1.0e+INF)))
           (cons 150 (list (+ (aref extent 0) (/ w 2.0)) (+ (aref extent 1) (/ h 2.0))))

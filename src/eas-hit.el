@@ -90,13 +90,25 @@
     (let ((dx (- px (car p))) (dy (- py (cdr p))))
       (if x-only (abs dx) (sqrt (+ (* dx dx) (* dy dy)))))))
 
+(defun eas-hit--in-band-p (item k py)
+  "Non-nil when PY lies between band ITEM's edges at its point K.
+A band is an area with a :base edge (a ranged area, a stacked slice);
+a pointer inside it is on it, however far from its top edge."
+  (when-let* ((base (and (integerp k) (not (plist-get item :anchors)) (plist-get item :base)))
+              ((< k (length base))))
+    (let* ((p (aref (plist-get item :points) k)) (q (aref base k))
+           (top (aref p 1)) (bottom (aref q 1)))
+      (and (= (aref p 0) (aref q 0)) (<= (min top bottom) py (max top bottom))))))
+
 (defun eas-hit--candidate (mark item-index k px py x-only)
   "Return the hit candidate for MARK's item ITEM-INDEX (point K) at PX PY.
-X-ONLY measures the horizontal distance alone."
+X-ONLY measures the horizontal distance alone; inside a band (an area
+with a base) the distance is horizontal too."
   (let* ((item (aref (plist-get mark :items) item-index))
          (p (eas-hit--item-point item (if (eq k :null) nil k))))
     (list :mark (plist-get mark :id) :item item-index :datum (eas-hit--datum item (if (eq k :null) 0 k))
-          :distance (eas-hit--distance item p px py x-only) :x (car p) :y (cdr p))))
+          :distance (eas-hit--distance item p px py (or x-only (eas-hit--in-band-p item k py)))
+          :x (car p) :y (cdr p))))
 
 ;;; Grid search (fc-qx1.9: a linear scan was 13 ms a query at 10k points)
 

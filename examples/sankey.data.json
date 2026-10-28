@@ -1,0 +1,28 @@
+{
+  "title": "Energy flow (illustrative units)",
+  "nodes": [
+    {"name": "Solar", "kind": "source", "renewable": true},
+    {"name": "Wind", "kind": "source", "renewable": true},
+    {"name": "Gas", "kind": "source", "renewable": false},
+    {"name": "Coal", "kind": "source", "renewable": false},
+    {"name": "Electricity", "kind": "carrier", "efficiency": 0.62},
+    {"name": "Heat", "kind": "carrier", "efficiency": 0.85},
+    {"name": "Homes", "kind": "use"},
+    {"name": "Industry", "kind": "use"},
+    {"name": "Losses", "kind": "loss"}
+  ],
+  "links": [
+    {"source": "Solar", "target": "Electricity", "value": 12},
+    {"source": "Wind", "target": "Electricity", "value": 18},
+    {"source": "Gas", "target": "Electricity", "value": 20},
+    {"source": "Gas", "target": "Heat", "value": 25},
+    {"source": "Coal", "target": "Electricity", "value": 15},
+    {"source": "Coal", "target": "Industry", "value": 10},
+    {"source": "Electricity", "target": "Homes", "value": 24},
+    {"source": "Electricity", "target": "Industry", "value": 16},
+    {"source": "Electricity", "target": "Losses", "value": 25},
+    {"source": "Heat", "target": "Homes", "value": 15},
+    {"source": "Heat", "target": "Industry", "value": 6},
+    {"source": "Heat", "target": "Losses", "value": 4}
+  ]
+}

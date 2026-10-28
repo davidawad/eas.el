@@ -250,29 +250,55 @@ CONFIG's countTitle names a count of records."
       (eas-time-format (eas-time-parse value) "%b %d, %Y")))
    (t (eas-expr--string value))))
 
+(defun eas-encode-internal-field-p (key)
+  "Non-nil when field KEY (a keyword) is the engine's own.
+Transforms name their working columns eas_*, the runtime its row
+bookkeeping _eas_*; a data tooltip hides both."
+  (let ((name (eas-key-name key)))
+    (or (string-prefix-p "eas_" name) (string-prefix-p "_eas" name))))
+
+(defun eas-encode--data-tooltip (row)
+  "Every field of ROW but the engine's own, as tooltip pairs in row order.
+Vega-Lite's mark tooltip {\"content\": \"data\"}: nested values show
+as JSON."
+  (vconcat
+   (cl-loop for (k v) on row by #'cddr
+            unless (eas-encode-internal-field-p k)
+            collect (list :title (eas-key-name k)
+                          :value (if (or (vectorp v) (and (consp v) (eas-object-p v))) (eas-json-encode v)
+                                   (eas-encode-format-value nil v))))))
+
 (defun eas-encode-tooltip-defs (encoding mark)
   "The tooltip of ENCODING and MARK as a list of (DEF . TITLE), or nil.
-What `eas-encode-tooltip' shows for every row: a unit makes it once."
+What `eas-encode-tooltip' shows for every row: a unit makes it once.
+A mark tooltip {\"content\": \"data\"} with no encoding.tooltip gives
+the symbol `data': every field of the row."
   (let* ((tip (plist-get encoding :tooltip))
+         (mark-tip (plist-get mark :tooltip))
          (defs (cond ((vectorp tip) (append tip nil))
                      ((and tip (eas-object-p tip) (plist-get tip :field)) (list tip))
-                     ((eas-true-p (plist-get mark :tooltip))
+                     ((and (null tip) (eas-object-p mark-tip) (equal (plist-get mark-tip :content) "data"))
+                      'data)
+                     ((eas-true-p mark-tip)
                       (cl-loop for (ch d) on encoding by #'cddr
                                when (and (memq ch '(:x :y :x2 :y2 :color :fill :stroke :size :text :theta :radius))
                                          (eas-object-p d) (plist-get d :field))
                                collect d)))))
-    (mapcar (lambda (d)
-              ;; A stacked channel shows its own value, not the stack's end.
-              (when (plist-get d :stack-field)
-                (setq d (plist-put (copy-sequence d) :field (plist-get d :stack-field))))
-              (cons d (or (eas-encode-title d) (plist-get d :field))))
-            defs)))
+    (if (eq defs 'data) defs
+      (mapcar (lambda (d)
+                ;; A stacked channel shows its own value, not the stack's end.
+                (when (plist-get d :stack-field)
+                  (setq d (plist-put (copy-sequence d) :field (plist-get d :stack-field))))
+                (cons d (or (eas-encode-title d) (plist-get d :field))))
+              defs))))
 
 (defun eas-encode-tooltip-row (defs row)
   "ROW's tooltip under DEFS from `eas-encode-tooltip-defs', or nil."
-  (when defs
+  (cond
+   ((eq defs 'data) (eas-encode--data-tooltip row))
+   (defs
     (vconcat (mapcar (lambda (dt) (list :title (cdr dt) :value (eas-encode-format-value (car dt) (eas-encode-raw (car dt) row))))
-                     defs))))
+                     defs)))))
 
 (defun eas-encode-tooltip (encoding mark row)
   "Return ROW's tooltip under ENCODING and MARK, or nil.

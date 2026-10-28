@@ -338,7 +338,7 @@ verb.
 A template is a chart/v1 spec with declared, typed slots. It lives in
 `templates/NAME.json`, and `examples/NAME.data.json` holds bindings that
 render as-is. This package ships `line`, `series-line`, `multi`, `area`,
-`bars`, `histogram`, `heatmap`, `sparkline` and the animated
+`bars`, `histogram`, `heatmap`, `sparkline`, `sankey` and the animated
 `air-traffic`. A domain package, such
 
 `bars`, `histogram`, `heatmap` and `sparkline`, plus the gallery
@@ -371,6 +371,47 @@ still load. Inside a template body:
 
 A template may hold a facet, and a wrapped `concat` (`"columns"`) whose
 views an `x-eas:each` expands.
+
+### Sankey (flow) diagrams
+
+`sankey` (alias `flow`) draws flows between nodes: nodes are bars in
+columns, and each link is a band from its source to its target, as wide
+as its value. Bind two tables, `nodes` and `links`:
+
+```elisp
+(eas-show
+ (eas-view-open "sankey" :bindings
+   '(:nodes [(:name "Visits" :p 1.0) (:name "Signed up" :p 0.4 :grade "B")
+             (:name "Left" :p 0.6)]
+     :links [(:source "Visits" :target "Signed up" :value 40)
+             (:source "Visits" :target "Left" :value 60)])))
+```
+
+| slot | default | meaning |
+|---|---|---|
+| `nodes`, `links` | required | node rows; link rows with `source`, `target` and a nonnegative value |
+| `id` | `name` | node field links name (`null`: a node's position in `nodes`) |
+| `label` | `name` | node field written beside each node; it colors the node and the links leaving it |
+| `value` | `value` | link field holding the flow |
+| `align` | `justify` | node columns: `justify` (sinks last), `left`, `right`, `center` |
+| `nodeWidth`, `nodePadding` | 16, 10 | pixels |
+| `iterations` | 6 | relaxation passes; 0 keeps each column in data order |
+| `width`, `height`, `linkOpacity`, `scheme`, `title` | | |
+
+The layout is the `sankey` domain transform (`src/eas-sankey.el`), a
+port of d3-sankey 0.12.3 held to its numbers: a node's value is the
+larger of its in- and outflow, its column the longest path reaching it,
+one scale turns values into pixels, and relaxation passes reorder each
+column to uncross the bands. Links must not form a cycle; one that does
+fails with `SHAPE_INVALID` naming it (`a -> b -> a`). The chart renders
+as SVG and as text (bands in block glyphs, node labels beside the bars).
+
+Hover on a node or a band shows every field it has, so extra columns
+(a probability, a grade, a note) appear without the template naming
+them. That is Vega-Lite's mark tooltip `{"content": "data"}`, which
+works on any mark; it leaves out the engine's own `eas_*` fields.
+`examples/sankey.data.json` is the template's example and
+`examples/eas-sankey.el` opens it, alone and on a vui page.
 
 ## Interaction
 
@@ -586,6 +627,40 @@ entries for any view; the `:when`-first order applies inside each of
 these, so a template's catch-all still beats a global `:when` entry. `eas-inspect` shows the last click with the
 action it ran.
 
+## vui.el components (optional)
+
+[vui.el](https://github.com/d12frosted/vui.el) builds declarative,
+component-based buffer UIs. eas does not depend on it: `eas` never loads
+`src/eas-vui.el`, and that file loads, compiles and works without vui.
+Require it and, once vui is loaded too, two components exist:
+
+```elisp
+(require 'eas-vui)
+
+(vui-component 'eas-vui-chart
+  :source "sankey" :bindings BINDINGS   ; a template name, or a chart/v1 spec
+  :size '(:cols 80 :rows 20)            ; text cells, or (W . H) pixels for SVG
+  :on-click (lambda (row click) ...))   ; the clicked datum's row
+
+(vui-component 'eas-vui-card :title "Selected" :row ROW)
+```
+
+The chart is a live eas view drawn as its SVG image in graphic frames
+and as its text rendering in terminals, with the hover text and colors
+the engine gives either. On the chart, `RET` or mouse-1 clicks the datum
+there (its tooltip goes to the echo area, its row to `:on-click`) and
+`o` opens the chart in its own eas buffer with every interaction. A
+click that changes the chart (a selection) redraws the component, and
+unmounting closes the view. The card lists a row's fields as the data
+tooltip does, or `:fields` in that order. Without vui, the functions
+beneath them work in any buffer: `eas-vui-chart-open`,
+`eas-vui-chart-string` and `eas-vui-card-lines`.
+
+`make test` checks that eas-vui loads and works without vui, and skips
+the mounted-component test unless `EAS_VUI_DIR` names a vui.el checkout.
+`make test-vui` runs those tests against vui, cloning it when
+`EAS_VUI_DIR` is unset.
+
 ## Fonts
 
 The SVG backend honours Vega-Lite's font properties: `config.font`,
@@ -672,6 +747,7 @@ make test-gallery-conformance
 make test-gallery          # every group, one after another
 make bench                 # latency ladder against src/bench-budget.json
 make tty-check             # real-terminal check in tmux (private server -L eas)
+make test-vui              # the optional vui.el components with vui (EAS_VUI_DIR or a clone)
 make module                # optional: build the Rust geo module (needs cargo)
 make clean
 ```

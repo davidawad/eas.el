@@ -296,6 +296,7 @@
     "regression": {"status": "pass"},
     "reorderable-matrix": {"status": "pass"},
     "rug-histogram": {"status": "pass"},
+    "sankey": {"status": "pass"},
     "scatter-plot": {"status": "pass"},
     "scatter-plot-null-values": {"status": "pass"},
     "series-line": {"status": "pass"},

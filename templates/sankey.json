@@ -1,0 +1,133 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "sankey",
+    "aliases": ["flow"],
+    "version": "1.0.0",
+    "doc": "A sankey (flow) diagram: nodes as bars in columns, each link a band from its source to its target as wide as its value; hover shows every field of a node or link.",
+    "slots": {
+      "nodes": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per node; any extra field shows in the node's hover"
+      },
+      "links": {
+        "shape": "plist",
+        "required": true,
+        "doc": "one row per link: source, target (node ids) and a nonnegative value; extra fields show in its hover"
+      },
+      "id": {
+        "type": "field",
+        "of": "nodes",
+        "default": "name",
+        "doc": "node field that links name as source and target; null means the node's position in nodes"
+      },
+      "label": {
+        "type": "field",
+        "of": "nodes",
+        "default": "name",
+        "doc": "node field written beside each node, coloring it and the links leaving it"
+      },
+      "value": {
+        "type": "field",
+        "of": "links",
+        "default": "value",
+        "doc": "link field holding the flow"
+      },
+      "align": {
+        "type": "string",
+        "default": "justify",
+        "doc": "column of a node: justify (sinks last), left, right or center"
+      },
+      "nodeWidth": {"type": "number", "default": 16, "doc": "node bar width in pixels"},
+      "nodePadding": {"type": "number", "default": 10, "doc": "vertical gap between the nodes of a column"},
+      "iterations": {"type": "number", "default": 6, "doc": "relaxation passes; 0 keeps each column in data order"},
+      "linkOpacity": {"type": "number", "default": 0.45, "doc": "opacity of the link bands"},
+      "width": {"type": "number", "default": 600},
+      "height": {"type": "number", "default": 360},
+      "scheme": {"type": "string", "default": "tableau10"},
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "A sankey diagram: flows between nodes, each band as wide as its value.",
+        "doc": "the takeaway; alt text and table-view fallback"
+      }
+    },
+    "example": "examples/sankey.data.json"
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "padding": 5,
+  "config": {"view": {"stroke": null}},
+  "data": {"name": "nodes"},
+  "transform": [
+    {
+      "x-eas:transform": "sankey",
+      "links": {"x-eas:slot": "links"},
+      "id": {"x-eas:slot": "id"},
+      "label": {"x-eas:slot": "label"},
+      "value": {"x-eas:slot": "value"},
+      "width": {"x-eas:slot": "width"},
+      "height": {"x-eas:slot": "height"},
+      "nodeWidth": {"x-eas:slot": "nodeWidth"},
+      "nodePadding": {"x-eas:slot": "nodePadding"},
+      "align": {"x-eas:slot": "align"},
+      "iterations": {"x-eas:slot": "iterations"}
+    }
+  ],
+  "layer": [
+    {
+      "transform": [{"filter": "datum.eas_kind === 'link'"}],
+      "mark": {"type": "area", "opacity": {"x-eas:slot": "linkOpacity"}, "tooltip": {"content": "data"}},
+      "encoding": {
+        "x": {"field": "eas_x", "type": "quantitative", "axis": null, "stack": null,
+              "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+        "y": {"field": "eas_y0", "type": "quantitative", "axis": null, "stack": null,
+              "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}},
+        "y2": {"field": "eas_y1"},
+        "detail": {"field": "eas_link", "type": "nominal"},
+        "order": {"field": "eas_step", "type": "quantitative"},
+        "color": {"field": "source", "type": "nominal", "sort": null, "legend": null,
+                  "scale": {"scheme": {"x-eas:slot": "scheme"}}}
+      }
+    },
+    {
+      "transform": [{"filter": "datum.eas_kind === 'node'"}],
+      "mark": {"type": "rect", "strokeWidth": 0, "tooltip": {"content": "data"}},
+      "encoding": {
+        "x": {"field": "eas_x0", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+        "x2": {"field": "eas_x1"},
+        "y": {"field": "eas_y0", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}},
+        "y2": {"field": "eas_y1"},
+        "color": {"field": {"x-eas:slot": "label"}, "type": "nominal", "sort": null, "legend": null,
+                  "scale": {"scheme": {"x-eas:slot": "scheme"}}}
+      }
+    },
+    {
+      "transform": [{"filter": "datum.eas_kind === 'node' && datum.eas_label_side === 'right'"}],
+      "mark": {"type": "text", "align": "left", "baseline": "middle", "fontSize": 11, "tooltip": {"content": "data"}},
+      "encoding": {
+        "x": {"field": "eas_label_x", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+        "y": {"field": "eas_label_y", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}},
+        "text": {"field": {"x-eas:slot": "label"}, "type": "nominal"}
+      }
+    },
+    {
+      "transform": [{"filter": "datum.eas_kind === 'node' && datum.eas_label_side === 'left'"}],
+      "mark": {"type": "text", "align": "right", "baseline": "middle", "fontSize": 11, "tooltip": {"content": "data"}},
+      "encoding": {
+        "x": {"field": "eas_label_x", "type": "quantitative", "axis": null,
+              "scale": {"domain": [0, {"x-eas:slot": "width"}], "nice": false, "zero": false}},
+        "y": {"field": "eas_label_y", "type": "quantitative", "axis": null,
+              "scale": {"domain": [{"x-eas:slot": "height"}, 0], "nice": false, "zero": false}},
+        "text": {"field": {"x-eas:slot": "label"}, "type": "nominal"}
+      }
+    }
+  ]
+}

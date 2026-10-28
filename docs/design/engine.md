@@ -221,6 +221,20 @@ natively and deterministically:
 
 Each takes `"transform": [...]`, Vega-Lite transforms run on its rows
 first, because a template's domain transforms precede its native ones.
+
+`sankey` (eas-sankey.el) lays out a flow diagram, a port of d3-sankey
+0.12.3 that matches its numbers: the rows are nodes, `links` names
+them by `id` (or position) with a nonnegative `value`, and links that
+form a cycle fail as `SHAPE_INVALID` naming the cycle. Each node row
+gets its bar (`eas_x0`..`eas_y1`, pixels, y down), `eas_depth`,
+`eas_layer`, its `value` and a label anchor; each link becomes the
+vertex rows of its band (`eas_x`, `eas_y0`, `eas_y1`, `eas_width`), d3's
+`sankeyLinkHorizontal` curve sampled on one x grid per column gap, so
+bands over a gap share their x and hover compares them there. The
+`sankey` template draws bands as ranged areas (detail by link) and nodes
+as rects on identity scales; its marks take Vega-Lite's
+`"tooltip": {"content": "data"}`, which shows every field of the row
+except the engine's `eas_*` and `_eas*` columns.
 `project` (eas-geo.el) takes `"fit": false` to keep the projection's
 own scale and translate, as a Vega projection does.
 

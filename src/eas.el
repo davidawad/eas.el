@@ -57,6 +57,7 @@
 (require 'eas-dotbin)
 (require 'eas-force)
 (require 'eas-force-graph)
+(require 'eas-sankey)
 (require 'eas-voronoi)
 (require 'eas-label)
 (require 'eas-parallel)

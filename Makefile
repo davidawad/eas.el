@@ -15,6 +15,7 @@
 #   make bench-budget     re-measure the budget's references (review the diff)
 #   make tty-check        real-terminal check in tmux (private server -L eas)
 #   make melpa-check      recipes/eas installed flat: compile, doctor, package-lint
+#   make test-vui         the optional vui.el components against vui (EAS_VUI_DIR, else cloned)
 #   make clean            remove byte-compiled files
 #   make module           optional: build the Rust geo module into lib/ (needs cargo)
 #   make module-clean     remove lib/eas-geo-module* and module/target
@@ -40,7 +41,7 @@ endef
 
 .PHONY: all test compile checkdoc test-gallery $(GALLERY_TARGETS) \
         test-gallery-conformance test-gallery-vega bench bench-check bench-record bench-report \
-        bench-ladder bench-budget tty-check melpa-check clean \
+        bench-ladder bench-budget tty-check melpa-check test-vui clean \
         module module-clean
 
 all: compile test
@@ -93,6 +94,15 @@ tty-check:
 # Needs the network: package-build and package-lint come from MELPA.
 melpa-check:
 	scripts/melpa-layout-check
+
+# src/eas-vui.el with vui.el present (it is never a dependency: make test
+# runs the vui-absent tests and skips the rest).  EAS_VUI_DIR names a
+# vui.el checkout; without it one is cloned (network) into a temp dir.
+VUI_REPO ?= https://github.com/d12frosted/vui.el
+test-vui:
+	@dir="$${EAS_VUI_DIR:-$$(mktemp -d)/vui.el}"; \
+	  [ -f "$$dir/vui.el" ] || git clone --quiet --depth 1 $(VUI_REPO) "$$dir" || exit 1; \
+	  EAS_VUI_DIR="$$dir" $(call run-tests,"^eas-vui-")
 
 clean:
 	rm -f src/*.elc test/eas/*.elc scripts/*.elc

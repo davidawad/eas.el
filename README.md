@@ -6,7 +6,8 @@ A chart in eas is a JSON document: a subset of
 [Vega-Lite](https://vega.github.io/vega-lite/) 6, plus an `x-eas`
 extension namespace for templates, slots and domain transforms. Emacs
 feeds data into it and eas draws it in a buffer. A GUI frame gets an SVG
-image and a terminal gets text. Everything is Emacs Lisp; there is no
+image and a terminal gets text, or, if you ask, pixels (Kitty graphics
+or sixel). Everything is Emacs Lisp; there is no
 Vega, browser or external process. Charts stay interactive where they
 are drawn: hover tooltips, crosshair, zoom and pan, brush, click
 actions, linked views, and live streaming data. The same verbs let an
@@ -162,7 +163,8 @@ recipe in `recipes/eas`), else one level up. To add your own, push directories o
 ## Optional: the geo accelerator
 
 eas has no dependencies. The Rust module is an optional accelerator for
-map projections. Without it eas uses pure Elisp and everything works:
+map projections (and, built with its `raster` feature, the rasterizer
+for terminal pixels: see the next section). Without it eas uses pure Elisp and everything works:
 the same maps, byte for byte. Pure Elisp stays the source of truth;
 the module only speeds up the projection math (project, resample,
 clip and path printing), which is most of a map's first render
@@ -222,6 +224,45 @@ Linux box (4 CPUs of quota) with Emacs 30.1, in ms
 | world-map | 141 | 27 | 118 | 22 |
 
 Both backends draw byte-identical SVG.
+
+## Pixels in terminals: Kitty graphics and sixel
+
+By default a terminal frame draws the text backend. In a terminal that
+can show images, any eas chart can show its SVG rendering as pixels
+instead. You opt in with `eas-output`:
+
+```elisp
+(setq eas-output 'auto)              ; GUI: svg; Kitty/WezTerm/Ghostty: kitty; DA1 4: sixel; else text
+(setq eas-output '(kitty sixel text)) ; a preference list: the first the window can show
+(setq-local eas-output 'kitty)        ; this buffer only; strict
+```
+
+A spec can ask too: `"x-eas": {"output": ["kitty", "text"]}`.
+Precedence is spec > buffer > global. The values are `svg`, `text`,
+`kitty`, `sixel` and `auto`, or a list of them. The default, `(svg
+text)`, keeps eas's existing behaviour.
+
+A mode you ask for explicitly that the window cannot show signals
+`eas-output-unsupported`, a `user-error`, and no bytes are written. The
+chart buffer then says why: the chart, the mode you asked for and where
+you asked for it, the terminal facts (TERM, TERM_PROGRAM, tmux,
+allow-passthrough), the reason, and the exact fix. `auto`, and lists
+ending in `text` or `auto`, never fail. `M-x eas-output-describe`
+explains what the selected window supports.
+
+Requirements:
+- **A rasterizer.** Either build the optional module with resvg (`make
+  module FEATURES=raster`, which fetches crates from crates.io), or
+  install `rsvg-convert` (plus `img2sixel` for sixel).
+- **Under tmux:** `tmux set -g allow-passthrough on`. Only a tty that
+  really is a pane of that tmux server counts as being in tmux.
+
+Hover, `n`/`p`, click, brush, zoom and pan, and live frames all work as
+in text buffers. The image sits over blank cells and is re-sent only
+when it changes. At 200×60 cells (2000×1200 px), a Kitty frame takes
+about 30 ms to rasterize and encode. See
+[`docs/design/output-modes.md`](docs/design/output-modes.md) and
+`bench/output-frames.md`.
 
 ## Quick start
 

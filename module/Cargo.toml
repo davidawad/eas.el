@@ -4,7 +4,7 @@ name = "eas-geo-module"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
-description = "Optional native accelerator for eas.el's geo projections (an Emacs dynamic module)"
+description = "Optional native accelerator for eas.el's geo projections and, with the raster feature, terminal pixel output (an Emacs dynamic module)"
 publish = false
 
 [lib]
@@ -12,7 +12,16 @@ name = "eas_geo"
 crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
+[features]
+default = []
+# Pixel output in terminals (src/eas-output.el): SVG -> RGBA with resvg,
+# then Kitty graphics (zlib RGBA or PNG) and sixel encoders.  The geo
+# code needs no crates; only this feature does.
+raster = ["dep:resvg", "dep:miniz_oxide"]
+
 [dependencies]
+resvg = { version = "0.49", default-features = false, features = ["text", "system-fonts", "memmap-fonts"], optional = true }
+miniz_oxide = { version = "0.9", optional = true }
 
 [profile.release]
 opt-level = 3

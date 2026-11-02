@@ -120,7 +120,7 @@ the first view).  Stops at either end; nil when there is no data."
 
 (defun eas-tty--goto-px (px)
   "Move point to the text cell holding scene pixel PX."
-  (let* ((cell (plist-get (plist-get (eas-view-scene eas-mode--view) :size) :cell))
+  (let* ((cell (eas-mode--cell))
          (col (floor (aref px 0) (aref cell 0))) (row (floor (aref px 1) (aref cell 1))))
     (goto-char (point-min))
     (forward-line (max 0 row))
@@ -134,7 +134,7 @@ text buffers point moves onto the datum's cell."
   (let* ((view eas-mode--view)
          (px (eas-tty-step-px (eas-view-scene view) (plist-get (eas-view-state view) :hover) (or n 1))))
     (if (null px) (message "eas: no data to step through")
-      (unless (eq (eas-view-target view) 'svg)
+      (unless (eas-mode--gui-p)
         (eas-tty--goto-px px)
         ;; Point now sits on the datum's cell: post-command must not
         ;; re-hover the cell centre, which may be a neighbouring datum.

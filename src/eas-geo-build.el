@@ -43,6 +43,16 @@ nil tries $CARGO, then cargo on the variable `exec-path', then
 ~/.cargo/bin/cargo."
   :type '(choice (const :tag "Find it" nil) file))
 
+(defcustom eas-geo-build-features
+  (split-string (or (getenv "EAS_MODULE_FEATURES") "") "[ ,]+" t)
+  "Cargo features to build the module with, a list of strings.
+The feature \"raster\" adds terminal pixel output (`eas-output': the
+kitty and sixel modes draw SVG with resvg); it needs crates from
+crates.io, which the geo code alone does not.  The initial value comes
+from the environment variable EAS_MODULE_FEATURES (`make module
+FEATURES=raster' sets it)."
+  :type '(repeat string))
+
 (defcustom eas-geo-build-source-directory nil
   "The crate directory (holding Cargo.toml), or nil for module/ under the root.
 Set it to the module/ directory of an eas checkout when this install
@@ -156,10 +166,13 @@ Emacs's development files or set EMACS_MODULE_HEADER"))
 (defun eas-geo-build-command (plan)
   "The cargo command line for PLAN, a plist from `eas-geo-build-check'."
   (let ((source (plist-get plan :source)))
-    (list (plist-get plan :cargo) "build" "--release"
-          "--manifest-path" (expand-file-name "Cargo.toml" source)
-          ;; Explicit, so $CARGO_TARGET_DIR cannot send the output elsewhere.
-          "--target-dir" (expand-file-name "target" source))))
+    (append
+     (list (plist-get plan :cargo) "build" "--release"
+           "--manifest-path" (expand-file-name "Cargo.toml" source)
+           ;; Explicit, so $CARGO_TARGET_DIR cannot send the output elsewhere.
+           "--target-dir" (expand-file-name "target" source))
+     (and eas-geo-build-features
+          (list "--features" (mapconcat #'identity eas-geo-build-features ","))))))
 
 (defun eas-geo-build-install (plan)
   "Copy the library cargo built for PLAN to its target; return the target.

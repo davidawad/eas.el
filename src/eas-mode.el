@@ -24,6 +24,12 @@
 ;; Redraws are idle-coalesced (spikes 8.8) while the header-line readout
 ;; updates on every move; text redraws rewrite only the changed cells
 ;; (`eas-mode-patch-text').
+;;
+;; Which of svg, text, kitty and sixel a buffer draws with comes from
+;; `eas-output' (eas-output.el): the spec's x-eas.output, else the
+;; buffer's, else the global value.  The pixel modes draw the SVG over
+;; blank cells and handle input exactly as text buffers do: point is
+;; the pointer, a cell maps to scene pixels by the terminal's cell size.
 
 ;;; Code:
 
@@ -38,6 +44,7 @@
 (require 'eas-readout)
 (require 'eas-gc)
 (require 'eas-live)
+(require 'eas-output)
 
 (defvar-local eas-mode--view nil "The view this buffer shows.")
 (defvar-local eas-mode--timer nil "Pending idle redraw.")
@@ -45,14 +52,33 @@
 (defvar-local eas-mode--last-cell nil "Point's (LINE . COLUMN) when it last hovered.")
 (defvar-local eas-mode--pinch nil "Last pinch scale of the current gesture.")
 (defvar-local eas-mode--stale nil "Non-nil when the view changed while hidden.")
+(defvar-local eas-mode--output nil
+  "The `eas-output' mode this buffer draws with, or nil for its target.
+nil when `eas-show' was given a target (svg or text) explicitly.")
+(put 'eas-mode--output 'permanent-local t)
+(defvar-local eas-mode--output-source nil
+  "Where this buffer's output mode was asked for, e.g. \"eas-output (global)\".")
+(defvar-local eas-mode--caller nil
+  "The buffer `eas-show' was called from; its local `eas-output' counts.")
+;; A chart buffer's own eas-output survives `eas-view-mode' (g reads it).
+(put 'eas-output 'permanent-local t)
+(defvar-local eas-mode--pixel-cells nil
+  "(COLS . ROWS) of the blank cells a pixel-mode buffer holds now.")
+
+(defun eas-mode--pixel-p ()
+  "Non-nil when this buffer draws its SVG as terminal pixels."
+  (memq eas-mode--output '(kitty sixel)))
 
 (defun eas-mode--gui-p ()
-  "Non-nil when this buffer draws an image."
-  (eq (eas-view-target eas-mode--view) 'svg))
+  "Non-nil when this buffer draws an Emacs image."
+  (and (eq (eas-view-target eas-mode--view) 'svg) (not (eas-mode--pixel-p))))
 
 (defun eas-mode--cell ()
-  "The scene's cell size [W H]."
-  (plist-get (plist-get (eas-view-scene eas-mode--view) :size) :cell))
+  "The cell size [W H]: the scene's, or the terminal's in pixel modes."
+  (if (eas-mode--pixel-p)
+      (let ((cell (eas-output-cell (eas-output-surface-caps (eas-output-surface (current-buffer))))))
+        (vector (car cell) (cdr cell)))
+    (plist-get (plist-get (eas-view-scene eas-mode--view) :size) :cell)))
 
 (defun eas-mode-event-px (event &optional snap)
   "Scene pixels of mouse EVENT, or nil when it is not over the chart.
@@ -116,11 +142,19 @@ Collection waits until Emacs is idle (`eas-gc-defer')."
   "Size to compile for WINDOW and TARGET, leaving the readout's lines.
 A text chart is as wide as WINDOW shows a line whole: its body less
 line numbers and, in a terminal, the column the truncation glyph takes
-\(`window-max-chars-per-line'), so no line ends in `$' (fc-qx1.52)."
-  (if (eq target 'svg)
-      (cons (window-body-width window t)
-            (- (window-body-height window t) 4
-               (* (eas-mode--readout-lines) (with-selected-window window (default-line-height)))))
+\(`window-max-chars-per-line'), so no line ends in `$' (fc-qx1.52).
+A pixel-mode chart (target svg) is as many pixels as those cells."
+  (cond
+   ((and (eq target 'svg) (with-current-buffer (window-buffer window) (eas-mode--pixel-p)))
+    ;; Pixel modes fill the cells a text chart would, at the cell size.
+    (let* ((cells (eas-mode--window-size window 'text))
+           (cell (with-current-buffer (window-buffer window) (eas-mode--cell))))
+      (cons (* (plist-get cells :cols) (aref cell 0)) (* (plist-get cells :rows) (aref cell 1)))))
+   ((eq target 'svg)
+    (cons (window-body-width window t)
+          (- (window-body-height window t) 4
+             (* (eas-mode--readout-lines) (with-selected-window window (default-line-height))))))
+   (t
     ;; A terminal window with a neighbour to its right also loses the
     ;; vertical-border column: `window-max-chars-per-line' still counts it,
     ;; so a full-width line ends in `$' (seen in neomacs -nw, 2026-10-05).
@@ -130,7 +164,7 @@ line numbers and, in a terminal, the column the truncation glyph takes
                                1 0)))
           ;; The header line counts once: the body excludes it when it is set.
           :rows (max 6 (- (window-body-height window) (eas-mode--readout-lines)
-                          (if (buffer-local-value 'header-line-format (window-buffer window)) 0 1))))))
+                          (if (buffer-local-value 'header-line-format (window-buffer window)) 0 1)))))))
 
 (defun eas-mode--readout-lines ()
   "Lines this buffer's view reserves for its readout (eas-anj)."
@@ -173,6 +207,11 @@ Both must have the same SVG data and the same :map hot spots."
          ((not (eas-view-interactive view))
           (eas-slice-forget)
           (eas-mode--flush-replaced old nil) (erase-buffer) (eas-mode--insert-static view))
+         ;; Pixels over blank cells: only the strip's line changes (eas-rhy).
+         ((eas-mode--pixel-p)
+          (eas-slice-forget)
+          (eas-mode--flush-replaced old nil)
+          (eas-mode--pixel-redraw view scene))
          ;; Tiles: only those the frame changed rasterize again (eas-e3s).
          ((and (eas-mode--gui-p) (eas-slice-p))
           (let ((map (eas-svg-hot-spots scene)))
@@ -207,6 +246,29 @@ Both must have the same SVG data and the same :map hot spots."
         (forward-line (1- line))
         (move-to-column col))
       (eas-mode--readout))))
+
+(defun eas-mode--pixel-theme ()
+  "The SVG theme in a pixel mode: the faces' colours when the terminal has them."
+  (when (eas-output--background)
+    (plist-put (eas-svg-theme-from-faces) :font "sans-serif")))
+
+(defun eas-mode--pixel-redraw (view scene)
+  "Draw VIEW's SCENE as pixels over blank cells, the strip on the line after.
+The blank cells are rewritten only when their size changes, so
+redisplay paints nothing under the image."
+  (let* ((size (eas-view-size view))
+         (cell (eas-mode--cell))
+         (cells (cons (max 1 (/ (car size) (aref cell 0))) (max 1 (/ (cdr size) (aref cell 1)))))
+         (blank (eas-output-cells (car cells) (cdr cells))))
+    (if (and (equal cells eas-mode--pixel-cells) (> (buffer-size) (length blank)))
+        (delete-region (1+ (length blank)) (point-max))
+      (erase-buffer)
+      (insert blank)
+      (setq eas-mode--pixel-cells cells))
+    (goto-char (point-max))
+    (insert (eas-mode-strip-string view))
+    (eas-output-set-image (current-buffer) (eas-svg-render scene (eas-mode--pixel-theme))
+                          (car cells) (cdr cells))))
 
 (defun eas-mode--insert-static (view)
   "Insert why VIEW is static, after bin/chart's image if one was drawn.
@@ -380,8 +442,12 @@ their own pointer, and a key pressed after them keeps the mouse's hover."
                  (eas-mode--readout))))))))
 
 (defun eas-mode-refresh ()
-  "Recompile at the window's size and redraw."
+  "Recompile at the window's size and redraw.
+The output mode is resolved again (`eas-output'), so a changed setting
+or terminal takes effect."
   (interactive)
+  (when eas-mode--output
+    (eas-mode--apply-output eas-mode--view (current-buffer) (get-buffer-window) eas-mode--caller))
   (eas-view-resize eas-mode--view
                      (eas-mode--window-size (get-buffer-window) (eas-view-target eas-mode--view)))
   (eas-mode-redraw))
@@ -447,19 +513,85 @@ with another buffer current."
 Runtime extensions start there what needs a shown view (eas-play's
 timer and keys).")
 
+(defvar eas-mode--declared-output (make-hash-table :test 'eq :weakness 'key)
+  "View -> the x-eas.output its source spec declared (resolving strips it).")
+
+(defun eas-mode--remember-output (view source)
+  "Keep the x-eas.output SOURCE declares for VIEW."
+  (unless (eas-view-template view)
+    (let* ((spec (cond ((eas-object-p source) source)
+                       ((stringp source) (ignore-errors (eas-spec-parse source)))))
+           (output (and (eas-object-p spec) (plist-get (plist-get spec :x-eas) :output))))
+      (when output (puthash view output eas-mode--declared-output)))))
+
+(add-hook 'eas-view-open-functions #'eas-mode--remember-output)
+
+(defun eas-mode-output-setting (&optional view buffer caller)
+  "The `eas-output' value for VIEW and where it comes from: (VALUE . SOURCE).
+Precedence: VIEW's spec (or template) x-eas.output, then a buffer-local
+`eas-output' in BUFFER (the chart's, default current) or CALLER (the
+buffer `eas-show' was called from), then the global value."
+  (let* ((view (or view eas-mode--view))
+         (buffer (or buffer (current-buffer)))
+         (caller (or caller (buffer-local-value 'eas-mode--caller buffer)))
+         (template (and view (eas-view-template view) (eas-template-get (eas-view-template view))))
+         (spec (and view (gethash view eas-mode--declared-output)))
+         (meta (plist-get (plist-get template :meta) :output)))
+    (cond (spec (cons spec "x-eas.output of the spec"))
+          (meta (cons meta (format "x-eas.output of template %s" (eas-view-template view))))
+          ((local-variable-p 'eas-output buffer)
+           (cons (buffer-local-value 'eas-output buffer)
+                 (format "buffer-local eas-output in %s" (buffer-name buffer))))
+          ((and caller (buffer-live-p caller) (local-variable-p 'eas-output caller))
+           (cons (buffer-local-value 'eas-output caller)
+                 (format "buffer-local eas-output in %s" (buffer-name caller))))
+          (t (cons (default-value 'eas-output) "eas-output (global)")))))
+
+(defun eas-mode--apply-output (view buffer window caller)
+  "Resolve VIEW's output mode for BUFFER in WINDOW (`eas-output').
+CALLER is the buffer `eas-show' was called from.  Set the buffer's
+mode and attach or detach its pixel surface; return the target to
+compile for.  When the mode cannot show, write why into BUFFER and
+signal `eas-output-unsupported' (or `eas-output-invalid'); nothing
+reaches the terminal."
+  (with-current-buffer buffer
+    (pcase-let* ((`(,value . ,source) (eas-mode-output-setting view buffer caller))
+                 (resolved
+                  (condition-case err
+                      (eas-output-resolve value :source source :window window :id (eas-view-id view))
+                    (eas-error
+                     (eas-output-detach buffer)
+                     (let ((inhibit-read-only t))
+                       (erase-buffer)
+                       (insert (eas-output-error-text err)))
+                     (goto-char (point-min))
+                     (signal (car err) (cdr err)))))
+                 (mode (plist-get resolved :mode)))
+      (setq eas-mode--output mode eas-mode--output-source source eas-mode--caller caller)
+      (if (memq mode '(kitty sixel))
+          (eas-output-attach buffer mode (plist-get resolved :caps))
+        (eas-output-detach buffer))
+      (if (eq mode 'text) 'text 'svg))))
+
 (defun eas-show (view &optional target)
   "Show VIEW (an id or view) in its buffer; TARGET overrides svg/text.
-The target defaults to svg in graphic frames with SVG support, else text."
+Without TARGET the output mode follows `eas-output' (svg in graphic
+frames with SVG support and text elsewhere by default; kitty or sixel
+pixels in terminals that can show them when asked).  A mode asked for
+that the window cannot show signals `eas-output-unsupported', after
+writing why into the chart's buffer."
   (let* ((view (eas-view-get view))
-         (buffer (get-buffer-create (format "*eas %s*" (eas-view-id view))))
-         (target (or target (if (and (display-graphic-p) (image-type-available-p 'svg)) 'svg 'text))))
+         (caller (current-buffer))
+         (buffer (get-buffer-create (format "*eas %s*" (eas-view-id view)))))
     (with-current-buffer buffer
       (eas-view-mode)
-      (setq eas-mode--view view)
+      (setq eas-mode--view view eas-mode--output nil eas-mode--pixel-cells nil)
       (setf (eas-view-buffer view) buffer))
     (pop-to-buffer buffer)
     (with-current-buffer buffer
-      (eas-view-resize view (eas-mode--window-size (get-buffer-window buffer) target) target)
+      (let ((target (or target
+                        (eas-mode--apply-output view buffer (get-buffer-window buffer) caller))))
+        (eas-view-resize view (eas-mode--window-size (get-buffer-window buffer) target) target))
       (eas-mode-redraw buffer))
     (run-hook-with-args 'eas-show-functions view buffer)
     buffer))

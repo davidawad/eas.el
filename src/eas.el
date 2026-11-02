@@ -92,6 +92,7 @@
 (require 'eas-component)
 (require 'eas-component-builtins)
 (require 'eas-readout)
+(require 'eas-output)
 (require 'eas-mode)
 (require 'eas-mode-tip)
 (require 'eas-crosshair)

@@ -41,6 +41,8 @@ make bench-check                  # the same, fails on an alloc/call-count regre
 make bench-record                 # re-record bench/baseline.json, bench/history.json, docs/perf.md
 make bench-report                 # regenerate docs/perf.md from the committed baseline
 make bench-ladder                 # latency ladder vs src/bench-budget.json
+make module FEATURES=raster       # optional Rust module with terminal pixel output (crates.io)
+make bench-output                 # ms per kitty/sixel frame (bench/output-frames.md)
 make tty-check                    # real emacs -nw inside tmux -L eas
 make melpa-check                  # recipe installed flat: compile, doctor, package-lint (network)
 ```

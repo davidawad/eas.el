@@ -37,12 +37,17 @@
     ("VIEW_NOT_FOUND" eas-view-not-found "View not found")
     ("EVENT_INVALID" eas-event-invalid "Invalid event")
     ("ENGINE_FAILED" eas-engine-failed "Engine failed")
-    ("BUDGET_EXCEEDED" eas-budget-exceeded "Benchmark over its regression budget"))
-  "Stable reason codes: (CODE ERROR-SYMBOL TITLE).
-Codes shared with bin/chart mean the same thing in both.")
+    ("BUDGET_EXCEEDED" eas-budget-exceeded "Benchmark over its regression budget")
+    ("OUTPUT_UNSUPPORTED" eas-output-unsupported "Output mode unsupported in this window"
+     (user-error eas-error))
+    ("OUTPUT_INVALID" eas-output-invalid "Invalid output mode" (user-error eas-error)))
+  "Stable reason codes: (CODE ERROR-SYMBOL TITLE [PARENTS]).
+PARENTS defaults to `eas-error'; the output errors are also a
+`user-error' (eas-output.el).  Codes shared with bin/chart mean the
+same thing in both.")
 
 (dolist (entry eas-reason-codes)
-  (define-error (nth 1 entry) (nth 2 entry) 'eas-error))
+  (define-error (nth 1 entry) (nth 2 entry) (or (nth 3 entry) 'eas-error)))
 
 (defun eas-signal (code message &rest props)
   "Signal the `eas-error' child for CODE with MESSAGE and PROPS.

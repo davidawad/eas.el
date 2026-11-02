@@ -12,12 +12,14 @@
 #   make bench-record     re-record bench/baseline.json, history and docs/perf.md
 #   make bench-report     regenerate docs/perf.md from the committed baseline
 #   make bench-ladder     the 1k/10k/100k latency ladder against bench-budget.json
+#   make bench-output     ms per kitty/sixel frame at 200x60 cells (needs FEATURES=raster)
 #   make bench-budget     re-measure the budget's references (review the diff)
 #   make tty-check        real-terminal check in tmux (private server -L eas)
 #   make melpa-check      recipes/eas installed flat: compile, doctor, package-lint
 #   make test-vui         the optional vui.el components against vui (EAS_VUI_DIR, else cloned)
 #   make clean            remove byte-compiled files
-#   make module           optional: build the Rust geo module into lib/ (needs cargo)
+#   make module           optional: build the Rust geo module into lib/ (needs cargo);
+#                         FEATURES=raster adds terminal pixel output (kitty, sixel)
 #   make module-clean     remove lib/eas-geo-module* and module/target
 #
 # EAS_UPDATE_GOLDEN=1 rewrites goldens; TEST_SKIP_LOG=FILE logs skips.
@@ -41,7 +43,7 @@ endef
 
 .PHONY: all test compile checkdoc test-gallery $(GALLERY_TARGETS) \
         test-gallery-conformance test-gallery-vega bench bench-check bench-record bench-report \
-        bench-ladder bench-budget tty-check melpa-check test-vui clean \
+        bench-ladder bench-budget bench-output tty-check melpa-check test-vui clean \
         module module-clean
 
 all: compile test
@@ -88,6 +90,10 @@ bench-ladder:
 bench-budget:
 	scripts/eas-bench.sh --update
 
+# Terminal pixel frames (src/eas-output.el); needs `make module FEATURES=raster'.
+bench-output: compile
+	$(BATCH) -l scripts/bench-frame-output.el
+
 tty-check:
 	scripts/eas-tty-check.sh
 
@@ -112,7 +118,7 @@ clean:
 # $(EMACS)'s module-file-suffix.  Fails, saying why, without cargo, the
 # crate or emacs-module.h.  No other target needs cargo or the module.
 module:
-	$(BATCH) -l eas-geo-build -f eas-geo-build-batch
+	EAS_MODULE_FEATURES="$(FEATURES)" $(BATCH) -l eas-geo-build -f eas-geo-build-batch
 
 module-clean:
 	rm -rf module/target lib/eas-geo-module.so lib/eas-geo-module.dylib lib/eas-geo-module.dll

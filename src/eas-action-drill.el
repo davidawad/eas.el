@@ -51,9 +51,13 @@ returns a vector (or list) of row plists.  DOC is one line."
   name)
 
 (defun eas-action--drill-show (detail parent)
-  "Show DETAIL in a buffer when PARENT is shown in one."
+  "Show DETAIL in a buffer when PARENT is shown in one.
+DETAIL resolves its output mode as PARENT did, or takes PARENT's target
+when PARENT was shown with one."
   (when (and (fboundp 'eas-show) (buffer-live-p (eas-view-buffer parent)))
-    (eas-show detail (eas-view-target parent))))
+    (let ((buffer (eas-view-buffer parent)))
+      (with-current-buffer buffer
+        (eas-show detail (and (not (bound-and-true-p eas-mode--output)) (eas-view-target parent)))))))
 
 (defun eas-action--strip (row)
   "ROW without the engine's row identity."

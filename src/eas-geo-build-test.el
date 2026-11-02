@@ -101,8 +101,11 @@ holding $EMACS_MODULE_HEADER, so a test sees what cargo was given."
         (should (equal (plist-get plan :cargo) cargo))
         (should (equal (plist-get plan :header) header))
         (should (equal (plist-get plan :target) (eas-geo-build-target)))
-        (should (equal (last (eas-geo-build-command plan) 2)
-                       (list "--target-dir" (expand-file-name "target" crate)))))
+        (let ((eas-geo-build-features nil))
+          (should (equal (last (eas-geo-build-command plan) 2)
+                         (list "--target-dir" (expand-file-name "target" crate)))))
+        (let ((eas-geo-build-features '("raster")))
+          (should (equal (last (eas-geo-build-command plan) 2) '("--features" "raster")))))
       (let ((eas-geo-build-cargo nil) (exec-path nil)
             (process-environment (append '("CARGO" "HOME=/nonexistent") process-environment)))
         (should (string-match-p "Cargo not found"

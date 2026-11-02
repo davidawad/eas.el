@@ -730,7 +730,9 @@ Vega itself does with no interaction.
 `SLOT_TYPE`, `SHAPE_INVALID` (with `index`), `FIELD_MISSING`,
 `UNSUPPORTED_FEATURE` (with path), `TRANSFORM_UNKNOWN`,
 `VIEW_NOT_FOUND`, `EVENT_INVALID`, `ENGINE_FAILED`, `BUDGET_EXCEEDED`
-(a benchmark stage over its regression limit). Codes shared with
+(a benchmark stage over its regression limit), `OUTPUT_UNSUPPORTED` and
+`OUTPUT_INVALID` (an `eas-output` mode the window cannot show, or not a
+mode at all; also `user-error`s, see `output-modes.md`). Codes shared with
 `bin/chart` mean the same thing in both. Every failure carries at least
 one `next` command. In Lisp they map to `define-error` children of
 `eas-error` with data `(MESSAGE :code CODE ...)`, the convention

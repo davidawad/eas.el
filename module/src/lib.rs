@@ -6,16 +6,28 @@
 //! returns, number for number, and prints SVG path data as
 //! eas-geoshape-render.el does.  Pure Elisp stays the source of truth.
 //! The binding to emacs-module.h is hand-written (ffi.rs): no crates.
+//!
+//! With the `raster' feature (resvg, miniz_oxide) it also draws SVG to
+//! pixels and encodes them for terminals (raster.rs, encode.rs) for
+//! eas-output.el's kitty and sixel modes.
 
 pub mod api;
+#[cfg(feature = "raster")]
+pub mod api_raster;
 pub mod clip;
 pub mod clip_circle;
 pub mod clip_rect;
+#[cfg(feature = "raster")]
+pub mod encode;
 pub mod ffi;
 pub mod geom;
 pub mod math;
 pub mod polyhedral;
 pub mod proj;
+#[cfg(feature = "raster")]
+pub mod raster;
+#[cfg(all(test, feature = "raster"))]
+mod raster_tests;
 pub mod raw;
 pub mod raw_extra;
 pub mod resample;
@@ -47,5 +59,7 @@ pub unsafe extern "C" fn emacs_module_init(runtime: *mut ffi::Runtime) -> i32 {
         return 2;
     }
     api::init(ffi::E(env));
+    #[cfg(feature = "raster")]
+    api_raster::init(ffi::E(env));
     0
 }

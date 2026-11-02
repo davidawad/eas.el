@@ -98,8 +98,9 @@ falls back to `eas-output-default-cell-size'."
 (defcustom eas-output-query-terminal t
   "Non-nil asks the terminal what it supports when a pixel mode is considered.
 The query sends a Kitty graphics query, CSI 16t, CSI 14t and DA1, and
-reads the replies for up to `eas-output-query-timeout' seconds.  It runs
-once per terminal, only for `auto', `kitty' or `sixel'."
+reads every reply up to DA1's (`eas-output-query-timeout').  It runs
+once per terminal, only for `auto', `kitty' or `sixel', and never when
+the environment says Kitty graphics, from a timer or with input pending."
   :type 'boolean
   :group 'eas)
 
@@ -191,19 +192,59 @@ sync: panes move."
       (concat "\ePtmux;" (replace-regexp-in-string "\e" "\e\e" string t t) "\e\\")
     string))
 
+(defconst eas-output-query-drain 2.0
+  "Seconds to keep reading once the terminal began to answer the query.
+A terminal that answered anything answers DA1 too; reading on to it
+leaves no reply byte behind as input.")
+
+(defvar eas-output--querying nil
+  "Non-nil while the capability query reads the terminal's replies.")
+
+(defun eas-output--in-timer-p ()
+  "Non-nil when running from a timer, where a command may be reading keys."
+  (catch 'found
+    (mapbacktrace (lambda (_evald fn _args _flags)
+                    (when (eq fn 'timer-event-handler) (throw 'found t))))
+    nil))
+
+(defun eas-output--query-blocker (caps)
+  "Why the terminal of CAPS (level `env') must not be queried now, or nil.
+The environment may already answer (Kitty graphics); a query may never
+run nested, from a timer (a command may be reading a key sequence, the
+replies would become its keys) or with input pending (it would be
+swallowed with the replies).  Only the first reason is permanent."
+  (let ((tmux (plist-get caps :tmux)))
+    (cond ((eas-output-kitty-p caps) 'env)
+          ((or (not eas-output-query-terminal) noninteractive) 'off)
+          ((and (plist-get tmux :pane) (not (eas-output--passthrough-p tmux))) 'tmux)
+          (eas-output--querying 'nested)
+          ((eas-output--in-timer-p) 'timer)
+          ((input-pending-p) 'input))))
+
 (defun eas-output--read-replies (timeout)
-  "Characters the terminal sends until the DA1 reply ends, or TIMEOUT."
-  (let ((deadline (+ (float-time) timeout)) (chars nil) (done nil))
+  "Characters the terminal sends until the DA1 reply ends, or a deadline.
+The deadline is TIMEOUT seconds when nothing arrives, else
+`eas-output-query-drain' from the first byte: DA1 was asked last, so
+its reply means every reply was read.  Characters are read raw
+\(`read-event' skips `input-decode-map'; keyboard translation is off);
+other events are queued again in order."
+  (let* ((start (float-time)) (deadline (+ start timeout))
+         (chars nil) (others nil) (done nil)
+         (keyboard-translate-table nil) (extra-keyboard-modifiers 0)
+         (inhibit-quit t))
     (while (and (not done) (< (float-time) deadline))
       (let ((ev (read-event nil nil (max 0.01 (- deadline (float-time))))))
         (cond ((null ev))
               ((characterp ev)
+               (unless chars (setq deadline (max deadline (+ (float-time) eas-output-query-drain))))
                (push ev chars)
                ;; DA1's reply, CSI ? ... c, comes last: it ends the read.
                (setq done (and (eq ev ?c)
                                (string-match-p "\e\\[\\?[0-9;]*c\\'" (concat (reverse chars))))))
-              (t (push ev unread-command-events)))))
-    (concat (nreverse chars))))
+              (t (push ev others)))))
+    (setq unread-command-events (append unread-command-events (nreverse others)))
+    ;; Without the DA1 reply the bytes are a partial answer: discarded.
+    (if done (concat (nreverse chars)) "")))
 
 (defun eas-output-parse-replies (string)
   "The facts in the terminal's query replies STRING, as a plist.
@@ -226,9 +267,13 @@ from CSI 14t, the text area's pixel size."
 
 (defun eas-output--query (frame caps)
   "Ask FRAME's terminal (CAPS so far) what it supports; return the reply facts."
-  (let ((terminal (frame-terminal frame)))
+  (let ((terminal (frame-terminal frame)) (eas-output--querying t))
     (send-string-to-terminal
-     (concat (eas-output-wrap "\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\" caps)
+     ;; One query, DA1 last as its sentinel.  The Kitty query is not
+     ;; sent through tmux: the outer terminal's reply would come after
+     ;; tmux's own DA1 and reach Emacs as keys.
+     (concat (unless (plist-get (plist-get caps :tmux) :pane)
+               "\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\")
              "\e[16t\e[14t\e[c")
      terminal)
     (eas-output-parse-replies (eas-output--read-replies eas-output-query-timeout))))
@@ -258,18 +303,20 @@ terminal and is cached until `eas-output-forget'.  At level `query'
         (setq caps (append (list :level 'env :tty tty :tmux (eas-output--tmux frame tty))
                            (eas--plist-without caps :level)))))
     (when (and (not gui) (eq level 'query) (< (funcall rank (plist-get caps :level)) 2))
-      (let* ((tmux (plist-get caps :tmux))
-             (reply (and eas-output-query-terminal (not noninteractive)
-                         (or (null (plist-get tmux :pane)) (eas-output--passthrough-p tmux))
-                         (eas-output--query frame caps))))
-        (setq caps (append (list :level 'query :queried (and reply t)
+      (let* ((blocker (eas-output--query-blocker caps))
+             (reply (and (null blocker) (eas-output--query frame caps))))
+        ;; Not now is not never: a later chart asks again.
+        (when (memq blocker '(nested timer input))
+          (puthash terminal caps eas-output--cache))
+        (setq caps (append (list :level 'query :queried (and reply t) :blocker blocker
                                  :kitty-reply (plist-get reply :kitty) :da1 (plist-get reply :da1)
                                  :cell (or (plist-get reply :cell)
                                            (when-let* ((text (plist-get reply :text)))
                                              (cons (/ (car text) (frame-width frame))
                                                    (/ (cdr text) (frame-height frame))))))
                            (eas--plist-without caps :level)))))
-    (puthash terminal caps eas-output--cache)
+    (unless (memq (plist-get caps :blocker) '(nested timer input))
+      (puthash terminal caps eas-output--cache))
     ;; Finding the rasterizer may load the module: only for pixels.
     (append (list :rasterizer (and (eq level 'query) (eas-output-rasterizer-find))) caps)))
 
@@ -433,8 +480,11 @@ Signal `eas-output-invalid' naming SOURCE for anything that is not a mode."
           (and (stringp type) (string-match-p "\\`\\(kitty\\|WezTerm\\|ghostty\\)" type))))))
 
 (defun eas-output-sixel-p (caps)
-  "Non-nil when CAPS describe a terminal that reported sixel in DA1."
-  (memq 4 (plist-get caps :da1)))
+  "Non-nil when CAPS describe a terminal that speaks sixel.
+It reported sixel in DA1, or it is WezTerm (which is not queried)."
+  (or (memq 4 (plist-get caps :da1))
+      (and (equal (plist-get caps :term-program) "WezTerm")
+           (not (plist-get (plist-get caps :tmux) :pane)))))
 
 (defun eas-output--auto (caps)
   "The mode auto picks under CAPS."
@@ -758,7 +808,12 @@ mode's verdict and the mode an eas chart would draw with."
                      (if (plist-get caps :queried)
                          (format " (kitty reply %s, DA1 %s)" (if (plist-get caps :kitty-reply) "OK" "none")
                                  (or (plist-get caps :da1) "none"))
-                       "")))
+                       (pcase (plist-get caps :blocker)
+                         ('env " (the environment says Kitty graphics)")
+                         ('nested " (another query was reading)")
+                         ('timer " (not from a timer; the next chart asks)")
+                         ('input " (input was pending; the next chart asks)")
+                         (_ "")))))
       (princ (format "Cell:       %s x %s pixels\n" (car (eas-output-cell caps)) (cdr (eas-output-cell caps))))
       (princ (format "Rasterizer: %s\n\n" (or (plist-get caps :rasterizer) "none")))
       (dolist (m '(svg text kitty sixel))

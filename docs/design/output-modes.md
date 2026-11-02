@@ -68,7 +68,7 @@ parent) bypasses `eas-output`, as before.
   - `TERM` is `xterm-kitty`, `xterm-ghostty` or `wezterm*`;
   - `KITTY_WINDOW_ID` is set (outside tmux);
   - the terminal answers the graphics query (`a=q`) with `OK`.
-- **sixel**: DA1's reply includes 4.
+- **sixel**: DA1's reply includes 4, or `TERM_PROGRAM` is `WezTerm`.
 - **Otherwise**: text.
 
 The query sends a Kitty graphics query, `CSI 16t` (cell size), `CSI 14t`
@@ -76,6 +76,23 @@ The query sends a Kitty graphics query, `CSI 16t` (cell size), `CSI 14t`
 runs once per terminal, and only when `auto`, `kitty` or `sixel` is
 under consideration, so the default `(svg text)` never writes a byte.
 Set `eas-output-query-terminal` to nil to skip it.
+
+A reply that is not read becomes keys: bytes such as `[6;28;14t` run
+commands (eas-o3c). So the query never leaks:
+
+- It is not sent when the environment already says Kitty graphics (the
+  list above). Kitty places images by cells (`c=`, `r=`), so the cell
+  size there only sets the resolution: `eas-output-cell-size`, else
+  the default.
+- It is not sent from a timer (a command may be reading a key
+  sequence), with input pending, or while another query reads. A later
+  chart asks again.
+- DA1 goes last as the sentinel. Replies are read raw (`read-event`,
+  keyboard translation off) until DA1's reply; once the first byte
+  arrived the read waits up to `eas-output-query-drain` (2 s) for it.
+  Without it the partial reply is discarded, never queued.
+- Under tmux the Kitty query is not sent: the outer terminal's reply
+  would come after tmux's own DA1.
 
 **tmux** counts only when the frame's tty really is a tmux pane. The
 device of the frame's terminal must be the `#{pane_tty}` of a pane of

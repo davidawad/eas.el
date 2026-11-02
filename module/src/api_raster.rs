@@ -28,8 +28,16 @@ fn encode_svg(e: E, args: &[Value]) -> Result<Value> {
     let w = e.int(args[1])?.clamp(1, 1 << 15) as u32;
     let h = e.int(args[2])?.clamp(1, 1 << 15) as u32;
     let format = e.get_string(args[3])?;
-    let id = if args.len() > 4 && e.is_not_nil(args[4]) { e.int(args[4])? as u32 } else { 1 };
-    let bg = if args.len() > 5 { bg_of(e, args[5])? } else { [255, 255, 255] };
+    let id = if args.len() > 4 && e.is_not_nil(args[4]) {
+        e.int(args[4])? as u32
+    } else {
+        1
+    };
+    let bg = if args.len() > 5 {
+        bg_of(e, args[5])?
+    } else {
+        [255, 255, 255]
+    };
     let px = raster::rgba(&svg, w, h).map_err(Error)?;
     let out = match format.as_str() {
         "kitty" => encode::kitty_rgba(&px, w, h, id),
@@ -41,20 +49,38 @@ fn encode_svg(e: E, args: &[Value]) -> Result<Value> {
     Ok(e.string(&out))
 }
 
-fn call(env: *mut crate::ffi::Env, nargs: isize, args: *mut Value, f: fn(E, &[Value]) -> Result<Value>) -> Value {
+fn call(
+    env: *mut crate::ffi::Env,
+    nargs: isize,
+    args: *mut Value,
+    f: fn(E, &[Value]) -> Result<Value>,
+) -> Value {
     let e = E(env);
     // SAFETY: Emacs passes NARGS values.
-    let args: &[Value] = if nargs > 0 { unsafe { std::slice::from_raw_parts(args, nargs as usize) } } else { &[] };
+    let args: &[Value] = if nargs > 0 {
+        unsafe { std::slice::from_raw_parts(args, nargs as usize) }
+    } else {
+        &[]
+    };
     match f(e, args) {
         Ok(v) => v,
         Err(Error(msg)) => {
-            e.signal(if msg.is_empty() { "eas-raster-module: bad argument" } else { &msg });
+            e.signal(if msg.is_empty() {
+                "eas-raster-module: bad argument"
+            } else {
+                &msg
+            });
             e.intern("nil")
         }
     }
 }
 
-unsafe extern "C" fn fn_encode(env: *mut crate::ffi::Env, n: isize, a: *mut Value, _d: *mut c_void) -> Value {
+unsafe extern "C" fn fn_encode(
+    env: *mut crate::ffi::Env,
+    n: isize,
+    a: *mut Value,
+    _d: *mut c_void,
+) -> Value {
     call(env, n, a, encode_svg)
 }
 

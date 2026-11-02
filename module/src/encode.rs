@@ -19,11 +19,21 @@ const B64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
 pub fn base64(data: &[u8]) -> String {
     let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
     for c in data.chunks(3) {
-        let n = (c[0] as u32) << 16 | (*c.get(1).unwrap_or(&0) as u32) << 8 | *c.get(2).unwrap_or(&0) as u32;
+        let n = (c[0] as u32) << 16
+            | (*c.get(1).unwrap_or(&0) as u32) << 8
+            | *c.get(2).unwrap_or(&0) as u32;
         out.push(B64[(n >> 18) as usize & 63] as char);
         out.push(B64[(n >> 12) as usize & 63] as char);
-        out.push(if c.len() > 1 { B64[(n >> 6) as usize & 63] as char } else { '=' });
-        out.push(if c.len() > 2 { B64[n as usize & 63] as char } else { '=' });
+        out.push(if c.len() > 1 {
+            B64[(n >> 6) as usize & 63] as char
+        } else {
+            '='
+        });
+        out.push(if c.len() > 2 {
+            B64[n as usize & 63] as char
+        } else {
+            '='
+        });
     }
     out
 }
@@ -32,7 +42,11 @@ pub fn base64(data: &[u8]) -> String {
 /// PAYLOAD the raw bytes, sent base64 in chunks of `KITTY_CHUNK'.
 pub fn kitty_chunks(control: &str, id: u32, payload: &[u8]) -> String {
     let b = base64(payload);
-    let chunks: Vec<&[u8]> = if b.is_empty() { vec![&[][..]] } else { b.as_bytes().chunks(KITTY_CHUNK).collect() };
+    let chunks: Vec<&[u8]> = if b.is_empty() {
+        vec![&[][..]]
+    } else {
+        b.as_bytes().chunks(KITTY_CHUNK).collect()
+    };
     let mut out = String::with_capacity(b.len() + chunks.len() * 16 + 64);
     for (i, c) in chunks.iter().enumerate() {
         let more = if i + 1 < chunks.len() { 1 } else { 0 };
@@ -65,7 +79,11 @@ pub fn crc32(data: &[u8]) -> u32 {
     for (n, t) in table.iter_mut().enumerate() {
         let mut c = n as u32;
         for _ in 0..8 {
-            c = if c & 1 != 0 { 0xedb8_8320 ^ (c >> 1) } else { c >> 1 };
+            c = if c & 1 != 0 {
+                0xedb8_8320 ^ (c >> 1)
+            } else {
+                c >> 1
+            };
         }
         *t = c;
     }
@@ -108,7 +126,11 @@ pub fn png(rgba: &[u8], w: u32, h: u32) -> Vec<u8> {
 fn over(rgba: &[u8], i: usize, bg: [u8; 3]) -> [u8; 3] {
     let a = rgba[i + 3] as u32;
     let mix = |c: u8, b: u8| ((c as u32 * a + b as u32 * (255 - a) + 127) / 255) as u8;
-    [mix(rgba[i], bg[0]), mix(rgba[i + 1], bg[1]), mix(rgba[i + 2], bg[2])]
+    [
+        mix(rgba[i], bg[0]),
+        mix(rgba[i + 1], bg[1]),
+        mix(rgba[i + 2], bg[2]),
+    ]
 }
 
 /// A palette of at most MAX colours for RGB pixels PX: the most common
@@ -116,7 +138,9 @@ fn over(rgba: &[u8], i: usize, bg: [u8; 3]) -> [u8; 3] {
 /// the palette and the 32768-entry map from a 15-bit colour to its
 /// palette index (nearest by squared distance).
 pub fn palette(px: &[[u8; 3]], max: usize) -> (Vec<[u8; 3]>, Vec<u16>) {
-    let key = |p: &[u8; 3]| ((p[0] as usize >> 3) << 10) | ((p[1] as usize >> 3) << 5) | (p[2] as usize >> 3);
+    let key = |p: &[u8; 3]| {
+        ((p[0] as usize >> 3) << 10) | ((p[1] as usize >> 3) << 5) | (p[2] as usize >> 3)
+    };
     let mut count = vec![0u32; 32768];
     let mut sum = vec![[0u64; 3]; 32768];
     for p in px {
@@ -134,7 +158,11 @@ pub fn palette(px: &[[u8; 3]], max: usize) -> (Vec<[u8; 3]>, Vec<u16>) {
         .iter()
         .map(|&k| {
             let n = count[k] as u64;
-            [(sum[k][0] / n) as u8, (sum[k][1] / n) as u8, (sum[k][2] / n) as u8]
+            [
+                (sum[k][0] / n) as u8,
+                (sum[k][1] / n) as u8,
+                (sum[k][2] / n) as u8,
+            ]
         })
         .collect();
     let mut map = vec![u16::MAX; 32768];
@@ -143,7 +171,11 @@ pub fn palette(px: &[[u8; 3]], max: usize) -> (Vec<[u8; 3]>, Vec<u16>) {
     }
     for k in 0..32768 {
         if count[k] > 0 && map[k] == u16::MAX {
-            let c = [((k >> 10) << 3 | 4) as i32, (((k >> 5) & 31) << 3 | 4) as i32, ((k & 31) << 3 | 4) as i32];
+            let c = [
+                ((k >> 10) << 3 | 4) as i32,
+                (((k >> 5) & 31) << 3 | 4) as i32,
+                ((k & 31) << 3 | 4) as i32,
+            ];
             let best = pal
                 .iter()
                 .enumerate()
@@ -174,7 +206,9 @@ pub fn sixel(rgba: &[u8], w: u32, h: u32, bg: [u8; 3]) -> String {
     let (w, h) = (w as usize, h as usize);
     let px: Vec<[u8; 3]> = (0..w * h).map(|i| over(rgba, i * 4, bg)).collect();
     let (pal, map) = palette(&px, 256);
-    let key = |p: &[u8; 3]| ((p[0] as usize >> 3) << 10) | ((p[1] as usize >> 3) << 5) | (p[2] as usize >> 3);
+    let key = |p: &[u8; 3]| {
+        ((p[0] as usize >> 3) << 10) | ((p[1] as usize >> 3) << 5) | (p[2] as usize >> 3)
+    };
     let idx: Vec<u16> = px.iter().map(|p| map[key(p)]).collect();
     let mut out = String::with_capacity(w * h / 2);
     // P2=1: pixels a band leaves 0 keep what is there (none here).

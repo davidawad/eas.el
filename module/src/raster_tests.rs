@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //! Tests for raster.rs and encode.rs (cargo test --release --features raster).
 
-use crate::encode::{base64, crc32, kitty_chunks, kitty_png, kitty_rgba, palette, png, sixel, KITTY_CHUNK};
+use crate::encode::{
+    base64, crc32, kitty_chunks, kitty_png, kitty_rgba, palette, png, sixel, KITTY_CHUNK,
+};
 use crate::raster::rgba;
 use miniz_oxide::inflate::decompress_to_vec_zlib;
 
@@ -16,7 +18,10 @@ fn unbase64(s: &str) -> Vec<u8> {
     };
     let mut out = Vec::new();
     for q in s.as_bytes().chunks(4) {
-        let n = q.iter().filter(|&&c| c != b'=').fold(0u32, |a, &c| a << 6 | val(c) as u32)
+        let n = q
+            .iter()
+            .filter(|&&c| c != b'=')
+            .fold(0u32, |a, &c| a << 6 | val(c) as u32)
             << (6 * q.iter().filter(|&&c| c == b'=').count());
         let bytes = [(n >> 16) as u8, (n >> 8) as u8, n as u8];
         out.extend_from_slice(&bytes[..3 - q.iter().filter(|&&c| c == b'=').count()]);
@@ -45,7 +50,15 @@ fn kitty_payload(seq: &str) -> (String, Vec<u8>, usize) {
 
 #[test]
 fn base64_matches_rfc4648_vectors() {
-    for (i, o) in [("", ""), ("f", "Zg=="), ("fo", "Zm8="), ("foo", "Zm9v"), ("foob", "Zm9vYg=="), ("fooba", "Zm9vYmE="), ("foobar", "Zm9vYmFy")] {
+    for (i, o) in [
+        ("", ""),
+        ("f", "Zg=="),
+        ("fo", "Zm8="),
+        ("foo", "Zm9v"),
+        ("foob", "Zm9vYg=="),
+        ("fooba", "Zm9vYmE="),
+        ("foobar", "Zm9vYmFy"),
+    ] {
         assert_eq!(base64(i.as_bytes()), o);
         assert_eq!(unbase64(o), i.as_bytes());
     }
@@ -68,7 +81,11 @@ fn kitty_transmit_chunks_and_round_trips() {
     let (control, z, n) = kitty_payload(&seq);
     assert_eq!(control, "a=t,f=32,o=z,s=97,v=53,i=42,q=2,m=1");
     assert!(n > 1, "a large payload takes several chunks");
-    assert_eq!(seq.matches("m=0;").count(), 1, "only the last chunk ends the transmit");
+    assert_eq!(
+        seq.matches("m=0;").count(),
+        1,
+        "only the last chunk ends the transmit"
+    );
     assert_eq!(decompress_to_vec_zlib(&z).unwrap(), px);
     let one = kitty_chunks("f=100", 3, b"x");
     assert_eq!(one, "\x1b_Ga=t,f=100,i=3,q=2,m=0;eA==\x1b\\");
@@ -83,7 +100,10 @@ fn png_is_valid_and_round_trips() {
     assert_eq!(&p[12..16], b"IHDR");
     assert_eq!(u32::from_be_bytes(p[16..20].try_into().unwrap()), w);
     // The IHDR CRC covers its type and data; "IEND" has zlib's known CRC.
-    assert_eq!(u32::from_be_bytes(p[29..33].try_into().unwrap()), crc32(&p[12..29]));
+    assert_eq!(
+        u32::from_be_bytes(p[29..33].try_into().unwrap()),
+        crc32(&p[12..29])
+    );
     assert_eq!(&p[33 + 4..33 + 8], b"IDAT");
     let idat_len = u32::from_be_bytes(p[33..37].try_into().unwrap()) as usize;
     let raw = decompress_to_vec_zlib(&p[41..41 + idat_len]).unwrap();
@@ -103,11 +123,18 @@ fn sixel_encodes_a_two_colour_image_exactly() {
     let mut px = Vec::new();
     for _ in 0..h {
         for x in 0..w {
-            px.extend_from_slice(if x < 2 { &[255, 0, 0, 255] } else { &[0, 0, 255, 255] });
+            px.extend_from_slice(if x < 2 {
+                &[255, 0, 0, 255]
+            } else {
+                &[0, 0, 255, 255]
+            });
         }
     }
     let s = sixel(&px, w, h, [255, 255, 255]);
-    assert_eq!(s, "\x1bP0;1;0q\"1;1;4;7#0;2;0;0;100#1;2;100;0;0#0??~~$#1~~??-#0??@@$#1@@??\x1b\\");
+    assert_eq!(
+        s,
+        "\x1bP0;1;0q\"1;1;4;7#0;2;0;0;100#1;2;100;0;0#0??~~$#1~~??-#0??@@$#1@@??\x1b\\"
+    );
 }
 
 #[test]
@@ -120,7 +147,9 @@ fn sixel_composites_transparency_and_run_length_encodes() {
 
 #[test]
 fn palette_keeps_at_most_max_colours_and_maps_every_pixel() {
-    let px: Vec<[u8; 3]> = (0..4096).map(|i| [(i % 256) as u8, (i / 16) as u8, (i * 3 % 256) as u8]).collect();
+    let px: Vec<[u8; 3]> = (0..4096)
+        .map(|i| [(i % 256) as u8, (i / 16) as u8, (i * 3 % 256) as u8])
+        .collect();
     let (pal, map) = palette(&px, 16);
     assert_eq!(pal.len(), 16);
     for p in &px {

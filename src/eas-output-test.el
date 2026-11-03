@@ -239,6 +239,7 @@ bound to the strings sent."
   (let* ((script (list nil ?\e ?\[ nil nil ?? ?6 ?c ?x))
          (clock 0.0) (unread-command-events nil) (eas-output-query-drain 1.0))
     (cl-letf (((symbol-function 'float-time) (lambda (&rest _) clock))
+              ((symbol-function 'input-pending-p) (lambda (&rest _) t))
               ((symbol-function 'read-event)
                (lambda (&rest _) (setq clock (+ clock 0.1)) (pop script))))
       (should (equal (eas-output--read-replies 0.15) "\e[?6c"))
@@ -254,7 +255,10 @@ bound to the strings sent."
     (should (eq (eas-output-test--resolve 'auto wez) 'kitty))
     (should (eq (eas-output-test--resolve 'sixel wez) 'sixel)))
   (let ((noninteractive nil) (eas-output-query-terminal t))
-    (should-not (eas-output--query-blocker (eas-output-test--caps :da1 nil)))
+    (should-not (command-execute
+                 (lambda () (interactive) (eas-output--query-blocker (eas-output-test--caps :da1 nil)))))
+    ;; Outside a command (a timer, the server's filter) it never asks.
+    (should (eq (eas-output--query-blocker (eas-output-test--caps :da1 nil)) 'timer))
     (let ((eas-output--querying t))
       (should (eq (eas-output--query-blocker (eas-output-test--caps)) 'nested)))))
 
@@ -287,8 +291,65 @@ bound to the strings sent."
       (should (eq (plist-get caps :blocker) 'timer))
       (should (= queried 0))
       ;; Not cached: the next chart, run from a command, asks.
-      (should (eq (plist-get (eas-output-detect nil 'query) :blocker) nil))
+      (should (eq (plist-get (command-execute (lambda () (interactive) (eas-output-detect nil 'query)))
+                             :blocker)
+                  nil))
       (should (= queried 1)))))
+
+;;; No query or probe blocks without a wall-clock bound (eas-6u2)
+
+(ert-deftest eas-output-query-never-waits-on-a-silent-terminal ()
+  ;; An Emacs whose `read-event' ignores its timeout: it is never called
+  ;; without input pending, and the read ends on the wall clock.
+  (let ((called nil) (unread-command-events nil) (eas-output-query-drain 0.2))
+    (cl-letf (((symbol-function 'input-pending-p) #'ignore)
+              ((symbol-function 'read-event)
+               (lambda (&rest _) (setq called t) (while t (sleep-for 0.05)))))
+      (let ((start (float-time)))
+        (should (equal (eas-output--read-replies 0.1) ""))
+        (should (< (- (float-time) start) 1.0))
+        (should-not called)))))
+
+(ert-deftest eas-output-query-backstop-ends-a-read-event-that-never-returns ()
+  ;; Input claimed pending, `read-event' blocks for ever: `with-timeout'
+  ;; ends the read within the timeout and the drain.
+  (let ((unread-command-events nil) (eas-output-query-drain 0.2))
+    (cl-letf (((symbol-function 'input-pending-p) (lambda (&rest _) t))
+              ((symbol-function 'read-event) (lambda (&rest _) (while t (sleep-for 0.05)))))
+      (let ((start (float-time)))
+        (should (equal (eas-output--read-replies 0.1) ""))
+        (should (< (- (float-time) start) 1.0))))))
+
+(ert-deftest eas-output-query-endless-bytes-end-at-the-hard-bound ()
+  ;; A terminal that sends bytes for ever without DA1's reply.
+  (let ((unread-command-events nil) (eas-output-query-drain 0.2))
+    (cl-letf (((symbol-function 'input-pending-p) (lambda (&rest _) t))
+              ((symbol-function 'read-event) (lambda (&rest _) (sleep-for 0.001) ?x)))
+      (let ((start (float-time)))
+        (should (equal (eas-output--read-replies 0.1) ""))
+        (should (< (- (float-time) start) 1.0))))))
+
+(ert-deftest eas-output-detect-never-queries-from-the-server ()
+  ;; Not a command (e.g. emacsclient --eval in the server's filter), not
+  ;; a timer either: still no query.
+  (let ((eas-output--cache (make-hash-table :test 'eq :weakness 'key))
+        (noninteractive nil) (eas-output-query-terminal t) (queried 0))
+    (cl-letf (((symbol-function 'display-graphic-p) #'ignore)
+              ((symbol-function 'getenv)
+               (lambda (var &optional _frame) (and (equal var "TERM") "xterm-256color")))
+              ((symbol-function 'eas-output--frame-tty) (lambda (_f) "/dev/pts/9"))
+              ((symbol-function 'eas-output--in-timer-p) #'ignore)
+              ((symbol-function 'eas-output--query) (lambda (&rest _) (cl-incf queried) nil)))
+      (should (eq (plist-get (eas-output-detect nil 'query) :blocker) 'timer))
+      (should (= queried 0)))))
+
+(ert-deftest eas-output-call-kills-a-hung-program ()
+  (let ((eas-output-call-timeout 0.3) (start (float-time)))
+    (should-not (eas-output--call "sleep" "30"))
+    (should (< (- (float-time) start) 2.0)))
+  (should (equal (eas-output--call "echo" "a") '("a")))
+  (should-not (eas-output--call "false"))
+  (should-not (eas-output--call "eas-no-such-program")))
 
 (ert-deftest eas-output-kitty-transmit-chunks-like-the-module ()
   (should (equal (eas-output-kitty-transmit "f=100" 3 "x") "\e_Ga=t,f=100,i=3,q=2,m=0;eA==\e\\"))

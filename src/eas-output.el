@@ -129,11 +129,34 @@ See `eas-output-detect'.  Tests stub it.")
   (interactive)
   (clrhash eas-output--cache))
 
+(defconst eas-output-call-timeout 1.0
+  "Seconds `eas-output--call' waits for a program (tmux, ps) to exit.
+A hung tmux server must not hang Emacs: past this the program is killed.")
+
 (defun eas-output--call (program &rest args)
-  "Output lines of PROGRAM with ARGS, or nil when it fails."
-  (with-temp-buffer
-    (when (eql 0 (ignore-errors (apply #'call-process program nil '(t nil) nil args)))
-      (split-string (buffer-string) "\n" t))))
+  "Output lines of PROGRAM with ARGS, or nil when it fails.
+PROGRAM is killed, and nil returned, after `eas-output-call-timeout'."
+  (when (executable-find program)
+    (with-temp-buffer
+      (let* ((err (generate-new-buffer " *eas-output-stderr*"))
+             (proc (ignore-errors
+                     (make-process :name "eas-output" :buffer (current-buffer)
+                                   :command (cons program args) :connection-type 'pipe
+                                   :noquery t :stderr err :sentinel #'ignore)))
+             (deadline (+ (float-time) eas-output-call-timeout)))
+        (unwind-protect
+            (when proc
+              (ignore-errors (process-send-eof proc))
+              (while (and (process-live-p proc) (< (float-time) deadline))
+                (accept-process-output proc 0.05 nil t))
+              (if (process-live-p proc)
+                  (progn (delete-process proc) nil)
+                (while (accept-process-output proc 0 nil t))
+                (when (eql 0 (process-exit-status proc))
+                  (split-string (buffer-string) "\n" t))))
+          (when (process-live-p proc) (delete-process proc))
+          (let ((p (get-buffer-process err))) (when p (delete-process p)))
+          (kill-buffer err))))))
 
 (defun eas-output--frame-tty (frame)
   "The tty device FRAME's terminal is on, e.g. \"/dev/pts/3\", or nil.
@@ -207,18 +230,30 @@ leaves no reply byte behind as input.")
                     (when (eq fn 'timer-event-handler) (throw 'found t))))
     nil))
 
+(defun eas-output--in-command-p ()
+  "Non-nil when running inside a command of the command loop.
+Elsewhere (a timer, a process filter such as the server's, or an Emacs
+whose timers do not show `timer-event-handler') the query is not sent:
+a command may be reading keys, the server is waiting on the reply."
+  (catch 'found
+    (mapbacktrace (lambda (_evald fn _args _flags)
+                    (when (memq fn '(command-execute call-interactively)) (throw 'found t))))
+    nil))
+
 (defun eas-output--query-blocker (caps)
   "Why the terminal of CAPS (level `env') must not be queried now, or nil.
 The environment may already answer (Kitty graphics); a query may never
-run nested, from a timer (a command may be reading a key sequence, the
-replies would become its keys) or with input pending (it would be
-swallowed with the replies).  Only the first reason is permanent."
+run nested, from a timer or outside a command (a command may be reading
+a key sequence, the replies would become its keys; a process filter
+such as the server's must not wait on the terminal) or with input
+pending (it would be swallowed with the replies).  Only the first
+reason is permanent."
   (let ((tmux (plist-get caps :tmux)))
     (cond ((eas-output-kitty-p caps) 'env)
           ((or (not eas-output-query-terminal) noninteractive) 'off)
           ((and (plist-get tmux :pane) (not (eas-output--passthrough-p tmux))) 'tmux)
           (eas-output--querying 'nested)
-          ((eas-output--in-timer-p) 'timer)
+          ((or (eas-output--in-timer-p) (not (eas-output--in-command-p))) 'timer)
           ((input-pending-p) 'input))))
 
 (defun eas-output--read-replies (timeout)
@@ -227,21 +262,30 @@ The deadline is TIMEOUT seconds when nothing arrives, else
 `eas-output-query-drain' from the first byte: DA1 was asked last, so
 its reply means every reply was read.  Characters are read raw
 \(`read-event' skips `input-decode-map'; keyboard translation is off);
-other events are queued again in order."
+other events are queued again in order.
+
+The bound is wall-clock and never `read-event''s own timeout (an Emacs
+may ignore it and wait for a key): `read-event' runs only with input
+pending, the loop checks `float-time', and `with-timeout' backs it up.
+Nothing waits longer than TIMEOUT plus `eas-output-query-drain'."
   (let* ((start (float-time)) (deadline (+ start timeout))
+         (hard (+ start timeout eas-output-query-drain))
          (chars nil) (others nil) (done nil)
          (keyboard-translate-table nil) (extra-keyboard-modifiers 0)
          (inhibit-quit t))
-    (while (and (not done) (< (float-time) deadline))
-      (let ((ev (read-event nil nil (max 0.01 (- deadline (float-time))))))
-        (cond ((null ev))
-              ((characterp ev)
-               (unless chars (setq deadline (max deadline (+ (float-time) eas-output-query-drain))))
-               (push ev chars)
-               ;; DA1's reply, CSI ? ... c, comes last: it ends the read.
-               (setq done (and (eq ev ?c)
-                               (string-match-p "\e\\[\\?[0-9;]*c\\'" (concat (reverse chars))))))
-              (t (push ev others)))))
+    (with-timeout ((+ timeout eas-output-query-drain 0.1))
+      (while (and (not done) (< (float-time) (min deadline hard)))
+        (if (not (input-pending-p))
+            (sleep-for 0.01)
+          (let ((ev (read-event nil nil 0.01)))
+            (cond ((null ev))
+                  ((characterp ev)
+                   (unless chars (setq deadline (max deadline (+ (float-time) eas-output-query-drain))))
+                   (push ev chars)
+                   ;; DA1's reply, CSI ? ... c, comes last: it ends the read.
+                   (setq done (and (eq ev ?c)
+                                   (string-match-p "\e\\[\\?[0-9;]*c\\'" (concat (reverse chars))))))
+                  (t (push ev others)))))))
     (setq unread-command-events (append unread-command-events (nreverse others)))
     ;; Without the DA1 reply the bytes are a partial answer: discarded.
     (if done (concat (nreverse chars)) "")))
@@ -811,7 +855,7 @@ mode's verdict and the mode an eas chart would draw with."
                        (pcase (plist-get caps :blocker)
                          ('env " (the environment says Kitty graphics)")
                          ('nested " (another query was reading)")
-                         ('timer " (not from a timer; the next chart asks)")
+                         ('timer " (only from a command, not a timer or the server; the next chart asks)")
                          ('input " (input was pending; the next chart asks)")
                          (_ "")))))
       (princ (format "Cell:       %s x %s pixels\n" (car (eas-output-cell caps)) (cdr (eas-output-cell caps))))

@@ -1,0 +1,10 @@
+{
+  "title": "Stated vs coherent credence",
+  "data": [
+    {"claim": "Rain tomorrow", "stated": 0.72, "coherent": 0.48},
+    {"claim": "New treatment works", "stated": 0.65, "coherent": 0.61},
+    {"claim": "Team wins final", "stated": 0.35, "coherent": 0.68},
+    {"claim": "Train is delayed", "stated": 0.54, "coherent": 0.50},
+    {"claim": "Candidate wins", "stated": 0.81, "coherent": 0.63}
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "dumbbell",
+    "version": "1.0.0",
+    "doc": "Compare two values for each row, ordered by their absolute gap.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with a label and two numeric values"},
+      "label": {"type": "field", "of": "data", "default": "claim"},
+      "stated": {"type": "field", "of": "data", "default": "stated"},
+      "coherent": {"type": "field", "of": "data", "default": "coherent"},
+      "stated_title": {"type": "string", "default": "Stated"},
+      "coherent_title": {"type": "string", "default": "Coherent"},
+      "value_title": {"type": "string", "default": "Credence"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "Stated and coherent credence for each claim, sorted by the size of their gap.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 420},
+      "height": {"type": "number", "default": 240}
+    },
+    "example": "examples/dumbbell.data.json"
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "data": {"name": "data"},
+  "transform": [
+    {"calculate": {"x-eas:expr": "abs(datum[{{stated}}] - datum[{{coherent}}])"}, "as": "gap"}
+  ],
+  "layer": [
+    {
+      "mark": {"type": "rule", "color": "#999", "strokeWidth": 2},
+      "encoding": {
+        "x": {"field": {"x-eas:slot": "stated"}, "type": "quantitative", "scale": {"domain": [0, 1]}, "axis": {"title": {"x-eas:slot": "value_title"}}},
+        "x2": {"field": {"x-eas:slot": "coherent"}},
+        "y": {"field": {"x-eas:slot": "label"}, "type": "nominal", "sort": {"field": "gap", "op": "max", "order": "descending"}, "axis": {"title": null}}
+      }
+    },
+    {
+      "mark": {"type": "point", "filled": true, "color": "#4c78a8", "size": 75},
+      "encoding": {
+        "x": {"field": {"x-eas:slot": "stated"}, "type": "quantitative"},
+        "y": {"field": {"x-eas:slot": "label"}, "type": "nominal", "sort": {"field": "gap", "op": "max", "order": "descending"}},
+        "tooltip": [{"field": {"x-eas:slot": "label"}, "type": "nominal"}, {"field": {"x-eas:slot": "stated"}, "type": "quantitative", "title": {"x-eas:slot": "stated_title"}, "format": ".2f"}, {"field": {"x-eas:slot": "coherent"}, "type": "quantitative", "title": {"x-eas:slot": "coherent_title"}, "format": ".2f"}, {"field": "gap", "type": "quantitative", "format": ".2f"}]
+      }
+    },
+    {
+      "mark": {"type": "point", "filled": true, "color": "#f58518", "size": 75},
+      "encoding": {
+        "x": {"field": {"x-eas:slot": "coherent"}, "type": "quantitative"},
+        "y": {"field": {"x-eas:slot": "label"}, "type": "nominal", "sort": {"field": "gap", "op": "max", "order": "descending"}},
+        "tooltip": [{"field": {"x-eas:slot": "label"}, "type": "nominal"}, {"field": {"x-eas:slot": "stated"}, "type": "quantitative", "title": {"x-eas:slot": "stated_title"}, "format": ".2f"}, {"field": {"x-eas:slot": "coherent"}, "type": "quantitative", "title": {"x-eas:slot": "coherent_title"}, "format": ".2f"}, {"field": "gap", "type": "quantitative", "format": ".2f"}]
+      }
+    }
+  ],
+  "config": {
+    "background": "transparent",
+    "view": {"stroke": null},
+    "font": "sans-serif",
+    "axis": {"grid": false, "labelAngle": 0, "domainColor": "#888", "tickColor": "#888", "labelColor": "#000", "labelFontSize": 10, "labelPadding": 3, "tickSize": 4, "titleColor": "#000", "titleFontSize": 11},
+    "title": {"anchor": "middle", "fontSize": 13, "fontWeight": "bold", "color": "#000"}
+  }
+}

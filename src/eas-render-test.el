@@ -11,6 +11,7 @@
   `(("line" . ,(lambda () (eas-resolve "line" (plist-put (eas-template-example "line") :points t))))
     ("bars" . ,(lambda () (eas-resolve "bars" (eas-template-example "bars"))))
     ("frontier" . ,(lambda () (eas-resolve "frontier" (eas-template-example "frontier"))))
+    ("fan-chart" . ,(lambda () (eas-resolve "fan-chart" (eas-template-example "fan-chart"))))
     ("stacked" . ,(lambda ()
                     '(:data (:values [(:k "a" :c "x" :v 1) (:k "a" :c "y" :v 2) (:k "b" :c "x" :v 3) (:k "b" :c "y" :v 1)])
                       :vconcat [(:mark "bar" :encoding (:x (:field "k" :type "nominal") :y (:field "v" :type "quantitative")

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "fan-chart",
+    "aliases": ["vega/fan-chart"],
+    "version": "1.0.0",
+    "doc": "Fan chart: quantile bands over time with a median line, colored by series.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with time, series and 5th, 25th, 50th, 75th and 95th percentile columns"},
+      "time": {"type": "field", "of": "data", "default": "time"},
+      "series": {"type": "field", "of": "data", "default": "series"},
+      "q05": {"type": "field", "of": "data", "default": "q05"},
+      "q25": {"type": "field", "of": "data", "default": "q25"},
+      "q50": {"type": "field", "of": "data", "default": "q50"},
+      "q75": {"type": "field", "of": "data", "default": "q75"},
+      "q95": {"type": "field", "of": "data", "default": "q95"},
+      "title": {"type": "string", "default": ""},
+      "description": {"type": "string", "default": "5th to 95th percentile range, inner quartile range and median over time, for each series.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 500},
+      "height": {"type": "number", "default": 300}
+    },
+    "example": "../examples/vega/fan-chart.data.json"
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "data": {"name": "data"},
+  "encoding": {
+    "x": {"field": {"x-eas:slot": "time"}, "type": "temporal", "title": null},
+    "color": {"field": {"x-eas:slot": "series"}, "type": "nominal", "title": null},
+    "detail": {"field": {"x-eas:slot": "series"}, "type": "nominal"},
+    "tooltip": [
+      {"field": {"x-eas:slot": "series"}, "type": "nominal"},
+      {"field": {"x-eas:slot": "time"}, "type": "temporal"},
+      {"field": {"x-eas:slot": "q05"}, "type": "quantitative", "title": "5th percentile"},
+      {"field": {"x-eas:slot": "q25"}, "type": "quantitative", "title": "25th percentile"},
+      {"field": {"x-eas:slot": "q50"}, "type": "quantitative", "title": "Median"},
+      {"field": {"x-eas:slot": "q75"}, "type": "quantitative", "title": "75th percentile"},
+      {"field": {"x-eas:slot": "q95"}, "type": "quantitative", "title": "95th percentile"}
+    ]
+  },
+  "layer": [
+    {"name": "outer-band", "mark": {"type": "area", "opacity": 0.2},
+     "encoding": {"y": {"field": {"x-eas:slot": "q05"}, "type": "quantitative", "title": null},
+                  "y2": {"field": {"x-eas:slot": "q95"}}}},
+    {"name": "inner-band", "mark": {"type": "area", "opacity": 0.4},
+     "encoding": {"y": {"field": {"x-eas:slot": "q25"}, "type": "quantitative"},
+                  "y2": {"field": {"x-eas:slot": "q75"}}}},
+    {"name": "median", "mark": {"type": "line", "strokeWidth": 2},
+     "encoding": {"y": {"field": {"x-eas:slot": "q50"}, "type": "quantitative"}}}
+  ],
+  "config": {
+    "background": "white", "font": "sans-serif", "view": {"stroke": null},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": false, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "labelFlush": false, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "legend": {"labelColor": "#000", "labelFontSize": 10, "symbolSize": 100, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4},
+    "range": {"category": ["#4c78a8", "#f58518", "#e45756", "#72b7b2", "#54a24b", "#eeca3b", "#b279a2", "#ff9da6", "#9d755d", "#bab0ac"]}
+  }
+}

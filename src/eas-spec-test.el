@@ -118,7 +118,7 @@
 ;;; Resolve
 
 (ert-deftest eas-resolve-template-goldens ()
-  (dolist (name '("line" "bars"))
+  (dolist (name '("line" "bars" "frontier"))
     (eas-test-golden (format "resolve-%s.json" name)
                        (eas-json-pretty (eas-resolve name (eas-template-example name))))))
 

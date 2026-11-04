@@ -1,0 +1,63 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data": {
+    "values": [
+      {"hull_order": 0, "selected": false, "x": 1, "y": 2},
+      {"hull_order": 1, "selected": true, "x": 2, "y": 5},
+      {"hull_order": null, "selected": false, "x": 3, "y": 3},
+      {"hull_order": 2, "selected": true, "x": 4, "y": 7},
+      {"hull_order": null, "selected": false, "x": 5, "y": 4},
+      {"hull_order": 3, "selected": false, "x": 6, "y": 6},
+      {"hull_order": 4, "selected": false, "x": 7, "y": 1}
+    ]
+  },
+  "description": "A cost-versus-value scatter plot with a supplied convex hull and selected points highlighted.",
+  "height": 240,
+  "layer": [
+    {
+      "encoding": {
+        "order": {"field": "hull_order", "type": "quantitative"},
+        "x": {"field": "x", "title": "Cost", "type": "quantitative"},
+        "y": {"field": "y", "title": "Value", "type": "quantitative"}
+      },
+      "mark": {"color": "#4c78a8", "strokeWidth": 2, "type": "line"},
+      "name": "hull",
+      "transform": [
+        {
+          "filter": {"field": "hull_order", "valid": true}
+        }
+      ]
+    },
+    {
+      "encoding": {
+        "tooltip": [
+          {"field": "x", "title": "Cost", "type": "quantitative"},
+          {"field": "y", "title": "Value", "type": "quantitative"}
+        ],
+        "x": {"field": "x", "title": "Cost", "type": "quantitative"},
+        "y": {"field": "y", "title": "Value", "type": "quantitative"}
+      },
+      "mark": {"color": "#9aa5b1", "filled": true, "opacity": 0.65, "size": 50, "type": "point"},
+      "name": "points"
+    },
+    {
+      "encoding": {
+        "tooltip": [
+          {"field": "x", "title": "Cost", "type": "quantitative"},
+          {"field": "y", "title": "Value", "type": "quantitative"}
+        ],
+        "x": {"field": "x", "title": "Cost", "type": "quantitative"},
+        "y": {"field": "y", "title": "Value", "type": "quantitative"}
+      },
+      "mark": {"color": "#e45756", "filled": true, "size": 110, "stroke": "#ffffff", "strokeWidth": 1, "type": "point"},
+      "name": "selected",
+      "transform": [
+        {
+          "filter": {"equal": true, "field": "selected"}
+        }
+      ]
+    }
+  ],
+  "title": "Cost and value frontier",
+  "width": "container"
+}

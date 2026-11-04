@@ -1,0 +1,66 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "frontier",
+    "version": "1.0.0",
+    "doc": "A cost-versus-value scatter plot with a supplied convex hull and selected points highlighted.",
+    "slots": {
+      "data": {
+        "shape": "plist",
+        "required": true,
+        "doc": "rows {x, y, selected, hull_order}; selected is boolean, hull_order numbers the convex-hull vertices in drawing order and is null for other points"
+      },
+      "title": {"type": "string", "default": ""},
+      "description": {
+        "type": "string",
+        "default": "A cost-versus-value scatter plot with a supplied convex hull and selected points highlighted.",
+        "doc": "the takeaway; alt text and table-view fallback (bin/chart check requires it)"
+      },
+      "x_title": {"type": "string", "default": "cost"},
+      "y_title": {"type": "string", "default": "value"}
+    },
+    "example": "examples/frontier.data.json"
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "width": "container",
+  "height": 240,
+  "data": {"name": "data"},
+  "layer": [
+    {
+      "name": "hull",
+      "transform": [{"filter": {"field": "hull_order", "valid": true}}],
+      "mark": {"type": "line", "color": "#4c78a8", "strokeWidth": 2},
+      "encoding": {
+        "x": {"field": "x", "type": "quantitative", "title": {"x-eas:slot": "x_title"}},
+        "y": {"field": "y", "type": "quantitative", "title": {"x-eas:slot": "y_title"}},
+        "order": {"field": "hull_order", "type": "quantitative"}
+      }
+    },
+    {
+      "name": "points",
+      "mark": {"type": "point", "filled": true, "color": "#9aa5b1", "opacity": 0.65, "size": 50},
+      "encoding": {
+        "x": {"field": "x", "type": "quantitative", "title": {"x-eas:slot": "x_title"}},
+        "y": {"field": "y", "type": "quantitative", "title": {"x-eas:slot": "y_title"}},
+        "tooltip": [
+          {"field": "x", "type": "quantitative", "title": {"x-eas:slot": "x_title"}},
+          {"field": "y", "type": "quantitative", "title": {"x-eas:slot": "y_title"}}
+        ]
+      }
+    },
+    {
+      "name": "selected",
+      "transform": [{"filter": {"field": "selected", "equal": true}}],
+      "mark": {"type": "point", "filled": true, "color": "#e45756", "stroke": "#ffffff", "strokeWidth": 1, "size": 110},
+      "encoding": {
+        "x": {"field": "x", "type": "quantitative", "title": {"x-eas:slot": "x_title"}},
+        "y": {"field": "y", "type": "quantitative", "title": {"x-eas:slot": "y_title"}},
+        "tooltip": [
+          {"field": "x", "type": "quantitative", "title": {"x-eas:slot": "x_title"}},
+          {"field": "y", "type": "quantitative", "title": {"x-eas:slot": "y_title"}}
+        ]
+      }
+    }
+  ]
+}

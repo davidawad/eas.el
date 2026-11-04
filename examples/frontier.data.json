@@ -1,0 +1,14 @@
+{
+  "title": "Cost and value frontier",
+  "x_title": "Cost",
+  "y_title": "Value",
+  "data": [
+    {"x": 1, "y": 2, "selected": false, "hull_order": 0},
+    {"x": 2, "y": 5, "selected": true, "hull_order": 1},
+    {"x": 3, "y": 3, "selected": false, "hull_order": null},
+    {"x": 4, "y": 7, "selected": true, "hull_order": 2},
+    {"x": 5, "y": 4, "selected": false, "hull_order": null},
+    {"x": 6, "y": 6, "selected": false, "hull_order": 3},
+    {"x": 7, "y": 1, "selected": false, "hull_order": 4}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "data": [
+    {"predicted": 0.05, "observed": 0}, {"predicted": 0.08, "observed": 0},
+    {"predicted": 0.12, "observed": 0}, {"predicted": 0.16, "observed": 0},
+    {"predicted": 0.22, "observed": 0}, {"predicted": 0.26, "observed": 1},
+    {"predicted": 0.32, "observed": 0}, {"predicted": 0.36, "observed": 1},
+    {"predicted": 0.44, "observed": 0}, {"predicted": 0.48, "observed": 1},
+    {"predicted": 0.55, "observed": 1}, {"predicted": 0.61, "observed": 0},
+    {"predicted": 0.66, "observed": 1}, {"predicted": 0.72, "observed": 1},
+    {"predicted": 0.79, "observed": 1}, {"predicted": 0.84, "observed": 1},
+    {"predicted": 0.91, "observed": 1}, {"predicted": 0.96, "observed": 1}
+  ]
+}

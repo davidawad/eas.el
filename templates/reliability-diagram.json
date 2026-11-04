@@ -1,0 +1,75 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "x-eas": {
+    "template": "reliability-diagram",
+    "version": "1.0.0",
+    "doc": "Calibration plot of predicted probabilities against observed frequencies, with point size showing bin counts and an optional Brier score decomposition caption.",
+    "slots": {
+      "data": {"shape": "plist", "required": true, "doc": "rows with predicted probabilities and binary outcomes"},
+      "predicted": {"type": "field", "of": "data", "default": "predicted"},
+      "observed": {"type": "field", "of": "data", "default": "observed"},
+      "bins": {"type": "number", "default": 10, "doc": "maximum number of probability bins"},
+      "show_brier_parts": {"type": "boolean", "default": true, "doc": "show Brier score, reliability, resolution and uncertainty below the plot"},
+      "title": {"type": "string", "default": "Reliability diagram"},
+      "description": {"type": "string", "default": "Predicted probabilities against observed event frequencies; the diagonal represents perfect calibration.", "doc": "the takeaway; alt text and table-view fallback"},
+      "width": {"type": "number", "default": 420},
+      "height": {"type": "number", "default": 420},
+      "color": {"type": "string", "default": "#4c78a8"}
+    },
+    "example": "examples/reliability-diagram.data.json"
+  },
+  "title": {"x-eas:slot": "title"},
+  "description": {"x-eas:slot": "description"},
+  "data": {"name": "data"},
+  "transform": [
+    {"filter": {"x-eas:expr": "isValid(datum[{{predicted}}]) && isValid(datum[{{observed}}])"}},
+    {"calculate": {"x-eas:expr": "datum[{{observed}}] === 1 ? (1 - datum[{{predicted}}]) * (1 - datum[{{predicted}}]) : datum[{{predicted}}] * datum[{{predicted}}]"}, "as": "_brier"},
+    {"joinaggregate": [{"op": "mean", "field": {"x-eas:slot": "observed"}, "as": "_prevalence"}]},
+    {"bin": {"maxbins": {"x-eas:slot": "bins"}, "extent": [0, 1]}, "field": {"x-eas:slot": "predicted"}, "as": ["_prob_start", "_prob_end"]},
+    {"aggregate": [
+      {"op": "mean", "field": {"x-eas:slot": "predicted"}, "as": "mean_predicted"},
+      {"op": "mean", "field": {"x-eas:slot": "observed"}, "as": "observed_rate"},
+      {"op": "mean", "field": "_brier", "as": "_bin_brier"},
+      {"op": "mean", "field": "_prevalence", "as": "_prevalence"},
+      {"op": "count", "as": "count"}
+    ], "groupby": ["_prob_start", "_prob_end"]},
+    {"calculate": "datum.count * datum._bin_brier", "as": "_brier_weighted"},
+    {"calculate": "datum.count * pow(datum.observed_rate - datum._prevalence, 2)", "as": "_resolution_part"},
+    {"calculate": "datum.count * pow(datum.mean_predicted - datum.observed_rate, 2)", "as": "_reliability_part"},
+    {"joinaggregate": [{"op": "sum", "field": "count", "as": "_n"},
+                        {"op": "sum", "field": "_brier_weighted", "as": "_brier_total"},
+                        {"op": "sum", "field": "_reliability_part", "as": "_reliability"},
+                        {"op": "sum", "field": "_resolution_part", "as": "_resolution"},
+                        {"op": "mean", "field": "_prevalence", "as": "_prevalence"}]},
+    {"calculate": "datum._reliability / datum._n", "as": "_reliability"},
+    {"calculate": "datum._resolution / datum._n", "as": "_resolution"},
+    {"calculate": "datum._brier_total / datum._n", "as": "_brier_score"},
+    {"calculate": "datum._prevalence * (1 - datum._prevalence)", "as": "_uncertainty"},
+    {"calculate": "'Brier ' + format(datum._brier_score, '.3f') + ' | Rel ' + format(datum._reliability, '.3f') + ' | Res ' + format(datum._resolution, '.3f') + ' | Unc ' + format(datum._uncertainty, '.3f')", "as": "brier_caption"}
+  ],
+  "width": {"x-eas:slot": "width"},
+  "height": {"x-eas:slot": "height"},
+  "layer": [
+    {"name": "perfect-calibration", "transform": [{"window": [{"op": "row_number", "as": "_calibration_row"}]},
+                                                        {"filter": {"x-eas:expr": "datum._calibration_row === 1"}}],
+     "mark": {"type": "rule", "color": "#888", "strokeDash": [5, 4], "strokeWidth": 1},
+     "encoding": {"x": {"datum": 0, "type": "quantitative", "scale": {"domain": [0, 1]}, "axis": null},
+                  "x2": {"datum": 1}, "y": {"datum": 0, "type": "quantitative", "scale": {"domain": [0, 1]}, "axis": null}, "y2": {"datum": 1}}},
+    {"name": "calibration-bins", "mark": {"type": "point", "filled": true, "opacity": 0.8, "color": {"x-eas:slot": "color"}},
+     "encoding": {"x": {"field": "mean_predicted", "type": "quantitative", "title": "Mean predicted probability", "scale": {"domain": [0, 1]}},
+                  "y": {"field": "observed_rate", "type": "quantitative", "title": "Observed frequency", "scale": {"domain": [0, 1]}},
+                  "size": {"field": "count", "type": "quantitative", "title": "Observations", "scale": {"range": [30, 500]}},
+                  "tooltip": [{"field": "mean_predicted", "type": "quantitative", "title": "Mean predicted", "format": ".3f"},
+                              {"field": "observed_rate", "type": "quantitative", "title": "Observed frequency", "format": ".3f"},
+                              {"field": "count", "type": "quantitative", "title": "Count"}] }},
+    {"name": "brier-parts-caption", "transform": [{"window": [{"op": "row_number", "as": "_caption_row"}]},
+                                                     {"filter": {"x-eas:expr": "datum._caption_row === 1 && {{show_brier_parts}}"}}],
+     "mark": {"type": "text", "align": "left", "baseline": "top", "fontSize": 10, "color": "#444"},
+     "encoding": {"x": {"value": 0}, "y": {"value": 12}, "text": {"field": "brier_caption", "type": "nominal"}}}
+  ],
+  "config": {
+    "background": "white", "font": "sans-serif", "view": {"stroke": null},
+    "axis": {"domainColor": "#888", "tickColor": "#888", "gridColor": "#ddd", "grid": true, "labelColor": "#000", "labelFontSize": 10, "labelPadding": 2, "tickSize": 5, "titleColor": "#000", "titleFontSize": 11, "titleFontWeight": "bold"},
+    "title": {"anchor": "middle", "color": "#000", "fontSize": 13, "fontWeight": "bold", "offset": 4}
+  }
+}

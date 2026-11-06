@@ -506,7 +506,48 @@ with another buffer current."
   (setq-local display-line-numbers nil)
   (add-hook 'post-command-hook #'eas-mode--post-command nil t)
   (add-hook 'window-size-change-functions #'eas-mode--follow-window nil t)
-  (add-hook 'window-buffer-change-functions #'eas-mode--follow-window nil t))
+  (add-hook 'window-buffer-change-functions #'eas-mode--follow-window nil t)
+  (add-hook 'kill-buffer-hook #'eas-mode--close-view nil t)
+  (eas-mode--reaper-start))
+
+(defun eas-mode--close-view ()
+  "Close the view shown in the current buffer, which is being killed.
+The view holds the spec, data, plan and scene; once its buffer is gone
+nothing draws it, so keeping it in `eas-views' only leaks them."
+  (let ((view eas-mode--view))
+    (when (and (eas-view-p view) (eq (eas-view-buffer view) (current-buffer))
+               (eq (gethash (eas-view-id view) eas-views) view))
+      (remhash (eas-view-id view) eas-views))))
+
+(defcustom eas-reap-hidden-after 1800
+  "Seconds a chart buffer may stay out of every window before it is killed.
+Killing it closes its view (see `eas-mode--close-view').  nil keeps
+hidden chart buffers forever."
+  :type '(choice (const :tag "Never" nil) (integer :tag "Seconds"))
+  :group 'eas)
+
+(defvar eas-mode--reaper nil
+  "Timer that kills chart buffers hidden longer than `eas-reap-hidden-after'.")
+
+(defun eas-mode--reaper-start ()
+  "Start the hidden chart buffer reaper unless it is running."
+  (unless (or noninteractive (timerp eas-mode--reaper))
+    (setq eas-mode--reaper (run-with-idle-timer 60 t #'eas-mode-reap-hidden))))
+
+(defun eas-mode-reap-hidden (&optional now)
+  "Kill chart buffers no window has shown for `eas-reap-hidden-after'.
+NOW (a float time) defaults to the current time.  Return the names of
+the buffers killed."
+  (when eas-reap-hidden-after
+    (let ((now (or now (float-time))) killed)
+      (dolist (buffer (buffer-list))
+        (when (and (eq (buffer-local-value 'major-mode buffer) 'eas-view-mode)
+                   (not (get-buffer-window buffer t)))
+          (let ((shown (buffer-local-value 'buffer-display-time buffer)))
+            (when (> (- now (if shown (float-time shown) 0)) eas-reap-hidden-after)
+              (push (buffer-name buffer) killed)
+              (kill-buffer buffer)))))
+      (nreverse killed))))
 
 (defvar eas-show-functions nil
   "Hook run with VIEW and its BUFFER after `eas-show' drew VIEW.

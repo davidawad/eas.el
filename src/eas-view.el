@@ -71,11 +71,22 @@ megabytes of JSON to hash, and opening the view need not wait for it."
 
 (gv-define-setter eas-view-spec-hash (value view) `(setf (eas-view-spec-hash-cache ,view) ,value))
 
+(defun eas-view--orphan-p (view)
+  "Non-nil when VIEW was shown in a buffer that has since been killed."
+  (let ((buffer (eas-view-buffer view)))
+    (and (bufferp buffer) (not (buffer-live-p buffer)))))
+
 (defun eas-view--unique-id (base)
-  "BASE, or BASE<N> when BASE is taken."
-  (if (not (gethash base eas-views)) base
-    (cl-loop for n from 2 for id = (format "%s<%d>" base n)
-             unless (gethash id eas-views) return id)))
+  "BASE, or BASE<N> when BASE is taken.
+A view whose buffer was killed does not hold its id: it is closed and
+its id reused, so reopening a chart does not leave the old one behind."
+  (let ((free (lambda (id)
+                (let ((view (gethash id eas-views)))
+                  (or (not view)
+                      (and (eas-view--orphan-p view) (progn (remhash id eas-views) t)))))))
+    (if (funcall free base) base
+      (cl-loop for n from 2 for id = (format "%s<%d>" base n)
+               when (funcall free id) return id))))
 
 (defun eas-view-get (view)
   "Return VIEW (an id or view) or signal VIEW_NOT_FOUND."

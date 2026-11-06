@@ -1,0 +1,495 @@
+{
+  "x-eas": {
+    "timer": {
+      "interval": 800
+    },
+    "on": [
+      {
+        "events": "timer",
+        "param": "draw",
+        "update": "draw % 20 + 1"
+      }
+    ]
+  },
+  "params": [
+    {
+      "name": "draw",
+      "value": 1
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "draw": 1,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 1,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 1,
+        "variable": "recession",
+        "state": "none"
+      },
+      {
+        "draw": 1,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 2,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 2,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 2,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 2,
+        "variable": "scenario",
+        "state": "Credit event, mild recession"
+      },
+      {
+        "draw": 3,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 3,
+        "variable": "fed",
+        "state": "late"
+      },
+      {
+        "draw": 3,
+        "variable": "recession",
+        "state": "severe"
+      },
+      {
+        "draw": 3,
+        "variable": "scenario",
+        "state": "Credit event, late cuts"
+      },
+      {
+        "draw": 4,
+        "variable": "credit",
+        "state": "none"
+      },
+      {
+        "draw": 4,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 4,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 4,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 5,
+        "variable": "credit",
+        "state": "none"
+      },
+      {
+        "draw": 5,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 5,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 5,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 6,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 6,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 6,
+        "variable": "recession",
+        "state": "severe"
+      },
+      {
+        "draw": 6,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 7,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 7,
+        "variable": "fed",
+        "state": "late"
+      },
+      {
+        "draw": 7,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 7,
+        "variable": "scenario",
+        "state": "Credit event, mild recession"
+      },
+      {
+        "draw": 8,
+        "variable": "credit",
+        "state": "none"
+      },
+      {
+        "draw": 8,
+        "variable": "fed",
+        "state": "late"
+      },
+      {
+        "draw": 8,
+        "variable": "recession",
+        "state": "severe"
+      },
+      {
+        "draw": 8,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 9,
+        "variable": "credit",
+        "state": "none"
+      },
+      {
+        "draw": 9,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 9,
+        "variable": "recession",
+        "state": "none"
+      },
+      {
+        "draw": 9,
+        "variable": "scenario",
+        "state": "Soft landing"
+      },
+      {
+        "draw": 10,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 10,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 10,
+        "variable": "recession",
+        "state": "severe"
+      },
+      {
+        "draw": 10,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 11,
+        "variable": "credit",
+        "state": "none"
+      },
+      {
+        "draw": 11,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 11,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 11,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 12,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 12,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 12,
+        "variable": "recession",
+        "state": "none"
+      },
+      {
+        "draw": 12,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 13,
+        "variable": "credit",
+        "state": "none"
+      },
+      {
+        "draw": 13,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 13,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 13,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 14,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 14,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 14,
+        "variable": "recession",
+        "state": "none"
+      },
+      {
+        "draw": 14,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 15,
+        "variable": "credit",
+        "state": "none"
+      },
+      {
+        "draw": 15,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 15,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 15,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 16,
+        "variable": "credit",
+        "state": "none"
+      },
+      {
+        "draw": 16,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 16,
+        "variable": "recession",
+        "state": "none"
+      },
+      {
+        "draw": 16,
+        "variable": "scenario",
+        "state": "Soft landing"
+      },
+      {
+        "draw": 17,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 17,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 17,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 17,
+        "variable": "scenario",
+        "state": "Credit event, mild recession"
+      },
+      {
+        "draw": 18,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 18,
+        "variable": "fed",
+        "state": "late"
+      },
+      {
+        "draw": 18,
+        "variable": "recession",
+        "state": "none"
+      },
+      {
+        "draw": 18,
+        "variable": "scenario",
+        "state": "no listed scenario"
+      },
+      {
+        "draw": 19,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 19,
+        "variable": "fed",
+        "state": "on-time"
+      },
+      {
+        "draw": 19,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 19,
+        "variable": "scenario",
+        "state": "Credit event, mild recession"
+      },
+      {
+        "draw": 20,
+        "variable": "credit",
+        "state": "event"
+      },
+      {
+        "draw": 20,
+        "variable": "fed",
+        "state": "late"
+      },
+      {
+        "draw": 20,
+        "variable": "recession",
+        "state": "mild"
+      },
+      {
+        "draw": 20,
+        "variable": "scenario",
+        "state": "Credit event, mild recession"
+      }
+    ]
+  },
+  "transform": [
+    {
+      "filter": "datum.draw == draw"
+    }
+  ],
+  "encoding": {
+    "tooltip": [
+      {
+        "field": "draw"
+      },
+      {
+        "field": "variable"
+      },
+      {
+        "field": "state"
+      }
+    ],
+    "y": {
+      "field": "variable",
+      "type": "nominal",
+      "title": null,
+      "sort": [
+        "credit",
+        "fed",
+        "recession",
+        "scenario"
+      ]
+    },
+    "x": {
+      "field": "state",
+      "type": "nominal",
+      "title": null,
+      "scale": {
+        "domain": [
+          "event",
+          "on-time",
+          "none",
+          "no listed scenario",
+          "mild",
+          "Credit event, mild recession",
+          "late",
+          "severe",
+          "Credit event, late cuts",
+          "Soft landing"
+        ]
+      }
+    }
+  },
+  "mark": {
+    "type": "square",
+    "size": 160,
+    "color": "#1f77b4"
+  },
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Hypothetical outcomes: us-recession-2027",
+    "subtitle": "Sources: scenario model us-recession-2027 · as of 2026-11-05"
+  },
+  "description": "Will the US enter a recession that starts before 2027-12-31? 20 joint draws (seed 1) from the scenario tree, unlisted mass included, shown one draw per frame so states that move together stay together. Sources: scenario model us-recession-2027 · as of 2026-11-05.",
+  "width": "container",
+  "height": 120,
+  "usermeta": {
+    "chart": "hops",
+    "object_id": "us-recession-2027",
+    "schema": "scenario-model/v1",
+    "source": [
+      "scenario model us-recession-2027"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: scenario model us-recession-2027 · as of 2026-11-05"
+  }
+}

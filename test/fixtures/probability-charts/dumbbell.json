@@ -1,0 +1,179 @@
+{
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "node_id": "recession",
+            "stated": 0.35,
+            "coherent": 0.4000000000095107,
+            "adjustment": 0.050000000009510714
+          },
+          {
+            "node_id": "no-recession",
+            "stated": 0.55,
+            "coherent": 0.5999999999904894,
+            "adjustment": 0.04999999999048932
+          },
+          {
+            "node_id": "recession-and-cut",
+            "stated": 0.32,
+            "coherent": 0.3099999997379146,
+            "adjustment": -0.010000000262085418
+          },
+          {
+            "node_id": "rate-cut",
+            "stated": 0.3,
+            "coherent": 0.3100000002474014,
+            "adjustment": 0.010000000247401386
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "color": "#888"
+      },
+      "encoding": {
+        "y": {
+          "field": "node_id",
+          "type": "nominal",
+          "title": null,
+          "sort": [
+            "recession",
+            "no-recession",
+            "recession-and-cut",
+            "rate-cut"
+          ]
+        },
+        "x": {
+          "field": "stated",
+          "type": "quantitative",
+          "title": "P",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ]
+          }
+        },
+        "x2": {
+          "field": "coherent"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "node_id": "recession",
+            "end": "stated",
+            "p": 0.35
+          },
+          {
+            "node_id": "recession",
+            "end": "coherent",
+            "p": 0.4000000000095107
+          },
+          {
+            "node_id": "no-recession",
+            "end": "stated",
+            "p": 0.55
+          },
+          {
+            "node_id": "no-recession",
+            "end": "coherent",
+            "p": 0.5999999999904894
+          },
+          {
+            "node_id": "recession-and-cut",
+            "end": "stated",
+            "p": 0.32
+          },
+          {
+            "node_id": "recession-and-cut",
+            "end": "coherent",
+            "p": 0.3099999997379146
+          },
+          {
+            "node_id": "rate-cut",
+            "end": "stated",
+            "p": 0.3
+          },
+          {
+            "node_id": "rate-cut",
+            "end": "coherent",
+            "p": 0.3100000002474014
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 80
+      },
+      "encoding": {
+        "y": {
+          "field": "node_id",
+          "type": "nominal",
+          "title": null,
+          "sort": [
+            "recession",
+            "no-recession",
+            "recession-and-cut",
+            "rate-cut"
+          ]
+        },
+        "x": {
+          "field": "p",
+          "type": "quantitative"
+        },
+        "color": {
+          "field": "end",
+          "type": "nominal",
+          "title": null,
+          "scale": {
+            "domain": [
+              "stated",
+              "coherent"
+            ],
+            "range": [
+              "#d62728",
+              "#1f77b4"
+            ]
+          }
+        },
+        "tooltip": [
+          {
+            "field": "node_id"
+          },
+          {
+            "field": "end"
+          },
+          {
+            "field": "p",
+            "type": "quantitative",
+            "format": ".1%"
+          }
+        ]
+      }
+    }
+  ],
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Stated vs coherent credence: us-recession-2027",
+    "subtitle": "Sources: stated credences of us-recession-2027 · as of 2026-11-05"
+  },
+  "description": "Each node's stated credence and its nearest coherent value, largest adjustment first; most strained constraint complement. Sources: stated credences of us-recession-2027 · as of 2026-11-05.",
+  "width": "container",
+  "height": 118,
+  "usermeta": {
+    "chart": "dumbbell",
+    "object_id": "us-recession-2027",
+    "schema": "belief.coherent/1",
+    "source": [
+      "stated credences of us-recession-2027"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: stated credences of us-recession-2027 · as of 2026-11-05"
+  }
+}

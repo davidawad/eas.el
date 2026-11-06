@@ -1,0 +1,244 @@
+{
+  "data": {
+    "values": [
+      {
+        "id": "all",
+        "name": "all paths",
+        "depth": 0,
+        "x0": 0.0,
+        "x1": 1.0,
+        "p": 1.0000000000000002
+      },
+      {
+        "id": "credit=none",
+        "name": "credit=none",
+        "depth": 1,
+        "x0": 0.0,
+        "x1": 0.5249999999999999,
+        "p": 0.525
+      },
+      {
+        "id": "credit=event",
+        "name": "credit=event",
+        "depth": 1,
+        "x0": 0.5249999999999999,
+        "x1": 0.9999999999999999,
+        "p": 0.4750000000000001
+      },
+      {
+        "id": "credit=none › fed=on-time",
+        "name": "fed=on-time",
+        "depth": 2,
+        "x0": 0.0,
+        "x1": 0.47249999999999986,
+        "p": 0.4725
+      },
+      {
+        "id": "credit=none › fed=late",
+        "name": "fed=late",
+        "depth": 2,
+        "x0": 0.47249999999999986,
+        "x1": 0.5249999999999999,
+        "p": 0.052500000000000005
+      },
+      {
+        "id": "credit=event › fed=on-time",
+        "name": "fed=on-time",
+        "depth": 2,
+        "x0": 0.5249999999999999,
+        "x1": 0.8099999999999998,
+        "p": 0.28500000000000003
+      },
+      {
+        "id": "credit=event › fed=late",
+        "name": "fed=late",
+        "depth": 2,
+        "x0": 0.8099999999999998,
+        "x1": 0.9999999999999998,
+        "p": 0.19000000000000006
+      },
+      {
+        "id": "credit=none › fed=on-time › recession=none",
+        "name": "recession=none",
+        "depth": 3,
+        "x0": 0.0,
+        "x1": 0.4016249999999999,
+        "p": 0.401625
+      },
+      {
+        "id": "credit=none › fed=on-time › recession=mild",
+        "name": "recession=mild",
+        "depth": 3,
+        "x0": 0.4016249999999999,
+        "x1": 0.45832499999999987,
+        "p": 0.0567
+      },
+      {
+        "id": "credit=none › fed=on-time › recession=severe",
+        "name": "recession=severe",
+        "depth": 3,
+        "x0": 0.45832499999999987,
+        "x1": 0.47249999999999986,
+        "p": 0.014175
+      },
+      {
+        "id": "credit=none › fed=late › recession=none",
+        "name": "recession=none",
+        "depth": 3,
+        "x0": 0.47249999999999986,
+        "x1": 0.5039999999999999,
+        "p": 0.0315
+      },
+      {
+        "id": "credit=none › fed=late › recession=mild",
+        "name": "recession=mild",
+        "depth": 3,
+        "x0": 0.5039999999999999,
+        "x1": 0.5197499999999999,
+        "p": 0.01575
+      },
+      {
+        "id": "credit=none › fed=late › recession=severe",
+        "name": "recession=severe",
+        "depth": 3,
+        "x0": 0.5197499999999999,
+        "x1": 0.5249999999999999,
+        "p": 0.005250000000000001
+      },
+      {
+        "id": "credit=event › fed=on-time › recession=none",
+        "name": "recession=none",
+        "depth": 3,
+        "x0": 0.5249999999999999,
+        "x1": 0.6104999999999999,
+        "p": 0.0855
+      },
+      {
+        "id": "credit=event › fed=on-time › recession=mild",
+        "name": "recession=mild",
+        "depth": 3,
+        "x0": 0.6104999999999999,
+        "x1": 0.7529999999999999,
+        "p": 0.14250000000000002
+      },
+      {
+        "id": "credit=event › fed=on-time › recession=severe",
+        "name": "recession=severe",
+        "depth": 3,
+        "x0": 0.7529999999999999,
+        "x1": 0.8099999999999998,
+        "p": 0.057
+      },
+      {
+        "id": "credit=event › fed=late › recession=none",
+        "name": "recession=none",
+        "depth": 3,
+        "x0": 0.8099999999999998,
+        "x1": 0.8289999999999998,
+        "p": 0.019000000000000006
+      },
+      {
+        "id": "credit=event › fed=late › recession=mild",
+        "name": "recession=mild",
+        "depth": 3,
+        "x0": 0.8289999999999998,
+        "x1": 0.9049999999999998,
+        "p": 0.07600000000000003
+      },
+      {
+        "id": "credit=event › fed=late › recession=severe",
+        "name": "recession=severe",
+        "depth": 3,
+        "x0": 0.9049999999999998,
+        "x1": 0.9999999999999998,
+        "p": 0.09500000000000001
+      }
+    ]
+  },
+  "encoding": {
+    "y": {
+      "field": "depth",
+      "type": "ordinal",
+      "title": "step"
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "stroke": "white"
+      },
+      "encoding": {
+        "x": {
+          "field": "x0",
+          "type": "quantitative",
+          "title": "share of mass",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ]
+          }
+        },
+        "x2": {
+          "field": "x1"
+        },
+        "color": {
+          "field": "p",
+          "type": "quantitative",
+          "title": "P",
+          "scale": {
+            "scheme": "blues"
+          }
+        },
+        "tooltip": [
+          {
+            "field": "id",
+            "type": "nominal",
+            "title": "path"
+          },
+          {
+            "field": "p",
+            "type": "quantitative",
+            "format": ".1%"
+          }
+        ]
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "dx": 2
+      },
+      "encoding": {
+        "x": {
+          "field": "x0",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "name",
+          "type": "nominal"
+        }
+      }
+    }
+  ],
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Scenario tree: us-recession-2027",
+    "subtitle": "Sources: scenario model us-recession-2027 · as of 2026-11-05"
+  },
+  "description": "Will the US enter a recession that starts before 2027-12-31? Each row is a step of the tree, each cell's width its share of the listed path mass; unlisted mass 0.0%. Sources: scenario model us-recession-2027 · as of 2026-11-05.",
+  "width": "container",
+  "height": 120,
+  "usermeta": {
+    "chart": "tree",
+    "object_id": "us-recession-2027",
+    "schema": "scenario-model/v1",
+    "source": [
+      "scenario model us-recession-2027"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: scenario model us-recession-2027 · as of 2026-11-05"
+  }
+}

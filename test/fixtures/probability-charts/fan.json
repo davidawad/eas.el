@@ -1,0 +1,182 @@
+{
+  "data": {
+    "values": [
+      {
+        "source_id": "fitted",
+        "as_of": "2026-12-31",
+        "q05": 150.0,
+        "q25": 158.5214446952596,
+        "q50": 181.97064989517818,
+        "q75": 205.5327868852459,
+        "q95": 225.0,
+        "clamped": true
+      },
+      {
+        "source_id": "fitted",
+        "as_of": "2027-03-31",
+        "q05": 150.0,
+        "q25": 153.74681520707398,
+        "q50": 184.99850172301853,
+        "q75": 216.24625374625376,
+        "q95": 225.0,
+        "clamped": true
+      },
+      {
+        "source_id": "kalshi",
+        "as_of": "2026-12-31",
+        "q05": 150.0,
+        "q25": 156.48148148148147,
+        "q50": 202.90697674418604,
+        "q75": 217.4418604651163,
+        "q95": 225.0,
+        "clamped": true
+      },
+      {
+        "source_id": "options",
+        "as_of": "2026-12-31",
+        "q05": 150.0,
+        "q25": 158.65384615384616,
+        "q50": 181.66666666666666,
+        "q75": 203.75,
+        "q95": 225.0,
+        "clamped": true
+      },
+      {
+        "source_id": "options",
+        "as_of": "2027-03-31",
+        "q05": 150.0,
+        "q25": 153.75,
+        "q50": 185.0,
+        "q75": 216.25,
+        "q95": 225.0,
+        "clamped": true
+      },
+      {
+        "source_id": "ours",
+        "as_of": "2027-03-31",
+        "q05": 150.0,
+        "q25": 150.0,
+        "q50": 181.25,
+        "q75": 212.5,
+        "q95": 225.0,
+        "clamped": true
+      }
+    ]
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "area",
+        "opacity": 0.15
+      },
+      "encoding": {
+        "x": {
+          "field": "as_of",
+          "type": "temporal",
+          "title": "date"
+        },
+        "y": {
+          "field": "q05",
+          "type": "quantitative",
+          "title": "quantity"
+        },
+        "y2": {
+          "field": "q95"
+        },
+        "color": {
+          "field": "source_id",
+          "type": "nominal",
+          "title": "series"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "area",
+        "opacity": 0.3
+      },
+      "encoding": {
+        "x": {
+          "field": "as_of",
+          "type": "temporal",
+          "title": "date"
+        },
+        "y": {
+          "field": "q25",
+          "type": "quantitative",
+          "title": "quantity"
+        },
+        "y2": {
+          "field": "q75"
+        },
+        "color": {
+          "field": "source_id",
+          "type": "nominal",
+          "title": "series"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "line",
+        "point": true
+      },
+      "encoding": {
+        "x": {
+          "field": "as_of",
+          "type": "temporal",
+          "title": "date"
+        },
+        "y": {
+          "field": "q50",
+          "type": "quantitative"
+        },
+        "color": {
+          "field": "source_id",
+          "type": "nominal",
+          "title": "series"
+        },
+        "tooltip": [
+          {
+            "field": "source_id"
+          },
+          {
+            "field": "as_of"
+          },
+          {
+            "field": "q05",
+            "type": "quantitative"
+          },
+          {
+            "field": "q50",
+            "type": "quantitative"
+          },
+          {
+            "field": "q95",
+            "type": "quantitative"
+          }
+        ]
+      }
+    }
+  ],
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Outcome fan: nvda-close-2026",
+    "subtitle": "Sources: kalshi, options, ours · as of 2026-11-05"
+  },
+  "description": "Quantile bands 5/25/50/75/95 of the quantity by date, fitted and per source; 6 band(s) clamped to the quoted thresholds. Sources: kalshi, options, ours · as of 2026-11-05.",
+  "width": "container",
+  "height": 240,
+  "usermeta": {
+    "chart": "fan",
+    "object_id": "nvda-close-2026",
+    "schema": "prob.surface/1",
+    "source": [
+      "kalshi",
+      "options",
+      "ours"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: kalshi, options, ours · as of 2026-11-05"
+  }
+}

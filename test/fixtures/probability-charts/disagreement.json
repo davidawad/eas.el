@@ -1,0 +1,132 @@
+{
+  "data": {
+    "values": [
+      {
+        "pair": "kalshi − options",
+        "row": "kalshi − options @ 2026-12-31",
+        "threshold": 150.0,
+        "as_of": "2026-12-31",
+        "left_source": "kalshi",
+        "right_source": "options",
+        "gap": -0.020000000000000018
+      },
+      {
+        "pair": "options − ours",
+        "row": "options − ours @ 2027-03-31",
+        "threshold": 150.0,
+        "as_of": "2027-03-31",
+        "left_source": "options",
+        "right_source": "ours",
+        "gap": 0.030000000000000027
+      },
+      {
+        "pair": "kalshi − options",
+        "row": "kalshi − options @ 2026-12-31",
+        "threshold": 175.0,
+        "as_of": "2026-12-31",
+        "left_source": "kalshi",
+        "right_source": "options",
+        "gap": -0.029999999999999916
+      },
+      {
+        "pair": "kalshi − options",
+        "row": "kalshi − options @ 2026-12-31",
+        "threshold": 200.0,
+        "as_of": "2026-12-31",
+        "left_source": "kalshi",
+        "right_source": "options",
+        "gap": 0.3
+      },
+      {
+        "pair": "options − ours",
+        "row": "options − ours @ 2027-03-31",
+        "threshold": 200.0,
+        "as_of": "2027-03-31",
+        "left_source": "options",
+        "right_source": "ours",
+        "gap": 0.030000000000000027
+      },
+      {
+        "pair": "kalshi − options",
+        "row": "kalshi − options @ 2026-12-31",
+        "threshold": 225.0,
+        "as_of": "2026-12-31",
+        "left_source": "kalshi",
+        "right_source": "options",
+        "gap": 0.039999999999999994
+      },
+      {
+        "pair": "options − ours",
+        "row": "options − ours @ 2027-03-31",
+        "threshold": 225.0,
+        "as_of": "2027-03-31",
+        "left_source": "options",
+        "right_source": "ours",
+        "gap": 0.030000000000000027
+      }
+    ]
+  },
+  "mark": "rect",
+  "encoding": {
+    "x": {
+      "field": "threshold",
+      "type": "ordinal",
+      "title": "threshold k"
+    },
+    "y": {
+      "field": "row",
+      "type": "nominal",
+      "title": null
+    },
+    "color": {
+      "field": "gap",
+      "type": "quantitative",
+      "title": "gap",
+      "scale": {
+        "domain": [
+          -0.3,
+          0,
+          0.3
+        ],
+        "range": [
+          "#2166ac",
+          "#f7f7f7",
+          "#b2182b"
+        ]
+      }
+    },
+    "tooltip": [
+      {
+        "field": "pair"
+      },
+      {
+        "field": "as_of"
+      },
+      {
+        "field": "gap",
+        "type": "quantitative",
+        "format": "+.3f"
+      }
+    ]
+  },
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Source disagreement: nvda-close-2026",
+    "subtitle": "Sources: kalshi, options, ours · as of 2026-11-05"
+  },
+  "description": "Signed probability gap per cell between source pairs after offsets; widest |gap| 0.300. Sources: kalshi, options, ours · as of 2026-11-05.",
+  "width": "container",
+  "height": 208,
+  "usermeta": {
+    "chart": "disagreement",
+    "object_id": "nvda-close-2026",
+    "schema": "prob.surface/1",
+    "source": [
+      "kalshi",
+      "options",
+      "ours"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: kalshi, options, ours · as of 2026-11-05"
+  }
+}

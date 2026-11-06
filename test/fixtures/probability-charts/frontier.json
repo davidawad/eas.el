@@ -1,0 +1,219 @@
+{
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "question_id": "capex-cycle",
+            "voi": 1.4,
+            "tokens": 10000.0,
+            "minutes": 5.0,
+            "status": "chosen",
+            "hull": "on frontier"
+          },
+          {
+            "question_id": "fed-path",
+            "voi": 3.4,
+            "tokens": 20000.0,
+            "minutes": 10.0,
+            "status": "chosen",
+            "hull": "on frontier"
+          }
+        ]
+      },
+      "mark": {
+        "type": "line",
+        "color": "#888"
+      },
+      "encoding": {
+        "x": {
+          "field": "tokens",
+          "type": "quantitative",
+          "title": "token cost"
+        },
+        "y": {
+          "field": "voi",
+          "type": "quantitative",
+          "title": "value of information"
+        },
+        "order": {
+          "field": "tokens",
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "question_id": "fed-path",
+            "voi": 3.4,
+            "tokens": 20000.0,
+            "minutes": 10.0,
+            "status": "chosen",
+            "hull": "on frontier"
+          },
+          {
+            "question_id": "credit-spreads",
+            "voi": 2.8,
+            "tokens": 30000.0,
+            "minutes": 20.0,
+            "status": "chosen",
+            "hull": "dominated"
+          },
+          {
+            "question_id": "capex-cycle",
+            "voi": 1.4,
+            "tokens": 10000.0,
+            "minutes": 5.0,
+            "status": "chosen",
+            "hull": "on frontier"
+          },
+          {
+            "question_id": "china-demand",
+            "voi": 0.6,
+            "tokens": 40000.0,
+            "minutes": 30.0,
+            "status": "not chosen",
+            "hull": "dominated"
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 80
+      },
+      "encoding": {
+        "x": {
+          "field": "tokens",
+          "type": "quantitative",
+          "title": "token cost"
+        },
+        "y": {
+          "field": "voi",
+          "type": "quantitative",
+          "title": "value of information"
+        },
+        "color": {
+          "field": "status",
+          "type": "nominal",
+          "title": null,
+          "scale": {
+            "domain": [
+              "chosen",
+              "not chosen"
+            ],
+            "range": [
+              "#1f77b4",
+              "#aaaaaa"
+            ]
+          }
+        },
+        "shape": {
+          "field": "hull",
+          "type": "nominal",
+          "title": null
+        },
+        "tooltip": [
+          {
+            "field": "question_id"
+          },
+          {
+            "field": "voi",
+            "type": "quantitative",
+            "format": ".3f"
+          },
+          {
+            "field": "tokens",
+            "type": "quantitative"
+          },
+          {
+            "field": "minutes",
+            "type": "quantitative"
+          }
+        ]
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "question_id": "fed-path",
+            "voi": 3.4,
+            "tokens": 20000.0,
+            "minutes": 10.0,
+            "status": "chosen",
+            "hull": "on frontier"
+          },
+          {
+            "question_id": "credit-spreads",
+            "voi": 2.8,
+            "tokens": 30000.0,
+            "minutes": 20.0,
+            "status": "chosen",
+            "hull": "dominated"
+          },
+          {
+            "question_id": "capex-cycle",
+            "voi": 1.4,
+            "tokens": 10000.0,
+            "minutes": 5.0,
+            "status": "chosen",
+            "hull": "on frontier"
+          },
+          {
+            "question_id": "china-demand",
+            "voi": 0.6,
+            "tokens": 40000.0,
+            "minutes": 30.0,
+            "status": "not chosen",
+            "hull": "dominated"
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "dy": -10
+      },
+      "encoding": {
+        "x": {
+          "field": "tokens",
+          "type": "quantitative",
+          "title": "token cost"
+        },
+        "y": {
+          "field": "voi",
+          "type": "quantitative",
+          "title": "value of information"
+        },
+        "text": {
+          "field": "question_id"
+        }
+      }
+    }
+  ],
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Research frontier: research-allocation",
+    "subtitle": "Sources: fed-path-signpost, credit-spreads-signpost, china-demand-signpost, capex-cycle-signpost, research-graph VOI, acquisition history · as of 2026-11-05"
+  },
+  "description": "Value of information vs token cost per open question; 3 chosen of 4 within 60000 tokens and 45 minutes, the frontier line through undominated candidates. Sources: fed-path-signpost, credit-spreads-signpost, china-demand-signpost, capex-cycle-signpost, research-graph VOI, acquisition history · as of 2026-11-05.",
+  "width": "container",
+  "height": 260,
+  "usermeta": {
+    "chart": "frontier",
+    "object_id": "research-allocation",
+    "schema": "research.allocate/1",
+    "source": [
+      "fed-path-signpost",
+      "credit-spreads-signpost",
+      "china-demand-signpost",
+      "capex-cycle-signpost",
+      "research-graph VOI",
+      "acquisition history"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: fed-path-signpost, credit-spreads-signpost, china-demand-signpost, capex-cycle-signpost, research-graph VOI, acquisition history · as of 2026-11-05"
+  }
+}

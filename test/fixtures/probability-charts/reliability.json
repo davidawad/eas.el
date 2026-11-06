@@ -1,0 +1,213 @@
+{
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "mean_p": 0,
+            "observed": 0
+          },
+          {
+            "mean_p": 1,
+            "observed": 1
+          }
+        ]
+      },
+      "mark": {
+        "type": "line",
+        "color": "#aaa",
+        "strokeDash": [
+          4,
+          4
+        ]
+      },
+      "encoding": {
+        "x": {
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ]
+          },
+          "field": "mean_p",
+          "title": "forecast probability"
+        },
+        "y": {
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ]
+          },
+          "field": "observed",
+          "title": "observed frequency"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "source_id": "analyst",
+            "bin": 1,
+            "lower": 0.1,
+            "upper": 0.2,
+            "mean_p": 0.135,
+            "observed": 0.5,
+            "count": 2
+          },
+          {
+            "source_id": "analyst",
+            "bin": 3,
+            "lower": 0.3,
+            "upper": 0.4,
+            "mean_p": 0.35,
+            "observed": 0.0,
+            "count": 1
+          },
+          {
+            "source_id": "analyst",
+            "bin": 6,
+            "lower": 0.6,
+            "upper": 0.7,
+            "mean_p": 0.65,
+            "observed": 0.5,
+            "count": 2
+          },
+          {
+            "source_id": "analyst",
+            "bin": 8,
+            "lower": 0.8,
+            "upper": 0.9,
+            "mean_p": 0.845,
+            "observed": 1.0,
+            "count": 2
+          },
+          {
+            "source_id": "model",
+            "bin": 2,
+            "lower": 0.2,
+            "upper": 0.30000000000000004,
+            "mean_p": 0.22,
+            "observed": 0.0,
+            "count": 1
+          },
+          {
+            "source_id": "model",
+            "bin": 4,
+            "lower": 0.4,
+            "upper": 0.5,
+            "mean_p": 0.41,
+            "observed": 0.0,
+            "count": 1
+          },
+          {
+            "source_id": "model",
+            "bin": 5,
+            "lower": 0.5,
+            "upper": 0.6,
+            "mean_p": 0.55,
+            "observed": 1.0,
+            "count": 1
+          },
+          {
+            "source_id": "model",
+            "bin": 7,
+            "lower": 0.7,
+            "upper": 0.7999999999999999,
+            "mean_p": 0.72,
+            "observed": 1.0,
+            "count": 1
+          },
+          {
+            "source_id": "model",
+            "bin": 9,
+            "lower": 0.9,
+            "upper": 1.0,
+            "mean_p": 0.93,
+            "observed": 1.0,
+            "count": 1
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "filled": true
+      },
+      "encoding": {
+        "x": {
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ]
+          },
+          "field": "mean_p",
+          "title": "forecast probability"
+        },
+        "y": {
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ]
+          },
+          "field": "observed",
+          "title": "observed frequency"
+        },
+        "size": {
+          "field": "count",
+          "type": "quantitative",
+          "title": "forecasts"
+        },
+        "color": {
+          "field": "source_id",
+          "type": "nominal",
+          "title": "source"
+        },
+        "tooltip": [
+          {
+            "field": "source_id"
+          },
+          {
+            "field": "count"
+          },
+          {
+            "field": "mean_p",
+            "type": "quantitative",
+            "format": ".2f"
+          },
+          {
+            "field": "observed",
+            "type": "quantitative",
+            "format": ".2f"
+          }
+        ]
+      }
+    }
+  ],
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Forecast reliability: macro",
+    "subtitle": "Sources: analyst, model, timestamp-matched market prices · as of 2026-11-05"
+  },
+  "description": "Mean forecast vs observed frequency per ten-bin bucket, point size the count; analyst: Brier 0.225 = reliability 0.070 − resolution 0.102 + uncertainty 0.245, skill vs market +0.10; model: Brier 0.100 = reliability 0.100 − resolution 0.240 + uncertainty 0.240, skill vs market +0.60. Sources: analyst, model, timestamp-matched market prices · as of 2026-11-05.",
+  "width": "container",
+  "height": 260,
+  "usermeta": {
+    "chart": "reliability",
+    "object_id": "macro",
+    "schema": "belief.skill/1",
+    "source": [
+      "analyst",
+      "model",
+      "timestamp-matched market prices"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: analyst, model, timestamp-matched market prices · as of 2026-11-05"
+  }
+}

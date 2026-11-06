@@ -1,0 +1,385 @@
+{
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "source": "0:credit=none",
+            "target": "1:fed=on-time",
+            "mass": 0.4725,
+            "x": 0,
+            "x2": 1,
+            "y": 0.26249999999999996,
+            "y2": 0.37874999999999986,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "1:fed=on-time",
+            "target": "2:recession=none",
+            "mass": 0.48712500000000003,
+            "x": 1,
+            "x2": 2,
+            "y": 0.37874999999999986,
+            "y2": 0.26881249999999995,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "2:recession=none",
+            "target": "outcome:soft",
+            "mass": 0.433125,
+            "x": 2,
+            "x2": 3,
+            "y": 0.26881249999999995,
+            "y2": 0.21656249999999994,
+            "signpost": "sahm",
+            "expected_kl": 0.2058491157694176
+          },
+          {
+            "source": "1:fed=on-time",
+            "target": "2:recession=mild",
+            "mass": 0.19920000000000002,
+            "x": 1,
+            "x2": 2,
+            "y": 0.37874999999999986,
+            "y2": 0.6830999999999998,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "2:recession=mild",
+            "target": "outcome:unmatched",
+            "mass": 0.07245,
+            "x": 2,
+            "x2": 3,
+            "y": 0.6830999999999998,
+            "y2": 0.5598124999999998,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "1:fed=on-time",
+            "target": "2:recession=severe",
+            "mass": 0.071175,
+            "x": 1,
+            "x2": 2,
+            "y": 0.37874999999999986,
+            "y2": 0.9142874999999998,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "2:recession=severe",
+            "target": "outcome:unmatched",
+            "mass": 0.076425,
+            "x": 2,
+            "x2": 3,
+            "y": 0.9142874999999998,
+            "y2": 0.5598124999999998,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "0:credit=none",
+            "target": "1:fed=late",
+            "mass": 0.052500000000000005,
+            "x": 0,
+            "x2": 1,
+            "y": 0.26249999999999996,
+            "y2": 0.8787499999999997,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "1:fed=late",
+            "target": "2:recession=none",
+            "mass": 0.0505,
+            "x": 1,
+            "x2": 2,
+            "y": 0.8787499999999997,
+            "y2": 0.26881249999999995,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "1:fed=late",
+            "target": "2:recession=mild",
+            "mass": 0.09175000000000003,
+            "x": 1,
+            "x2": 2,
+            "y": 0.8787499999999997,
+            "y2": 0.6830999999999998,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "1:fed=late",
+            "target": "2:recession=severe",
+            "mass": 0.10025000000000002,
+            "x": 1,
+            "x2": 2,
+            "y": 0.8787499999999997,
+            "y2": 0.9142874999999998,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "0:credit=event",
+            "target": "1:fed=on-time",
+            "mass": 0.28500000000000003,
+            "x": 0,
+            "x2": 1,
+            "y": 0.7624999999999998,
+            "y2": 0.37874999999999986,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "2:recession=none",
+            "target": "outcome:unmatched",
+            "mass": 0.10450000000000001,
+            "x": 2,
+            "x2": 3,
+            "y": 0.26881249999999995,
+            "y2": 0.5598124999999998,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "2:recession=mild",
+            "target": "outcome:credit-mild",
+            "mass": 0.21850000000000003,
+            "x": 2,
+            "x2": 3,
+            "y": 0.6830999999999998,
+            "y2": 0.7957499999999998,
+            "signpost": "sahm",
+            "expected_kl": 0.03938939954717181
+          },
+          {
+            "source": "0:credit=event",
+            "target": "1:fed=late",
+            "mass": 0.19000000000000006,
+            "x": 0,
+            "x2": 1,
+            "y": 0.7624999999999998,
+            "y2": 0.8787499999999997,
+            "signpost": "none",
+            "expected_kl": null
+          },
+          {
+            "source": "2:recession=severe",
+            "target": "outcome:credit-severe",
+            "mass": 0.09500000000000001,
+            "x": 2,
+            "x2": 3,
+            "y": 0.9142874999999998,
+            "y2": 0.9524999999999998,
+            "signpost": "sahm",
+            "expected_kl": 0.088881851502675
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "opacity": 0.6
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "title": "step",
+          "scale": {
+            "domain": [
+              -0.25,
+              3.75
+            ]
+          }
+        },
+        "x2": {
+          "field": "x2"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "title": null,
+          "scale": {
+            "domain": [
+              1,
+              0
+            ]
+          },
+          "axis": null
+        },
+        "y2": {
+          "field": "y2"
+        },
+        "strokeWidth": {
+          "field": "mass",
+          "type": "quantitative",
+          "title": "mass",
+          "scale": {
+            "range": [
+              1,
+              12
+            ]
+          }
+        },
+        "color": {
+          "field": "signpost",
+          "type": "nominal",
+          "title": "signpost"
+        },
+        "tooltip": [
+          {
+            "field": "source"
+          },
+          {
+            "field": "target"
+          },
+          {
+            "field": "mass",
+            "type": "quantitative",
+            "format": ".1%"
+          },
+          {
+            "field": "signpost"
+          }
+        ]
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "id": "0:credit=none",
+            "label": "credit=none",
+            "x": 0,
+            "y": 0.26249999999999996,
+            "mass": 0.525
+          },
+          {
+            "id": "1:fed=on-time",
+            "label": "fed=on-time",
+            "x": 1,
+            "y": 0.37874999999999986,
+            "mass": 0.7575
+          },
+          {
+            "id": "2:recession=none",
+            "label": "recession=none",
+            "x": 2,
+            "y": 0.26881249999999995,
+            "mass": 0.537625
+          },
+          {
+            "id": "outcome:soft",
+            "label": "Soft landing",
+            "x": 3,
+            "y": 0.21656249999999994,
+            "mass": 0.433125
+          },
+          {
+            "id": "2:recession=mild",
+            "label": "recession=mild",
+            "x": 2,
+            "y": 0.6830999999999998,
+            "mass": 0.29095000000000004
+          },
+          {
+            "id": "outcome:unmatched",
+            "label": "no listed scenario",
+            "x": 3,
+            "y": 0.5598124999999998,
+            "mass": 0.253375
+          },
+          {
+            "id": "2:recession=severe",
+            "label": "recession=severe",
+            "x": 2,
+            "y": 0.9142874999999998,
+            "mass": 0.17142500000000002
+          },
+          {
+            "id": "1:fed=late",
+            "label": "fed=late",
+            "x": 1,
+            "y": 0.8787499999999997,
+            "mass": 0.24250000000000005
+          },
+          {
+            "id": "0:credit=event",
+            "label": "credit=event",
+            "x": 0,
+            "y": 0.7624999999999998,
+            "mass": 0.4750000000000001
+          },
+          {
+            "id": "outcome:credit-mild",
+            "label": "Credit event, mild recession",
+            "x": 3,
+            "y": 0.7957499999999998,
+            "mass": 0.21850000000000003
+          },
+          {
+            "id": "outcome:credit-severe",
+            "label": "Credit event, late cuts",
+            "x": 3,
+            "y": 0.9524999999999998,
+            "mass": 0.09500000000000001
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "dx": 4
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -0.25,
+              3.75
+            ]
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              1,
+              0
+            ]
+          }
+        },
+        "text": {
+          "field": "label",
+          "type": "nominal"
+        }
+      }
+    }
+  ],
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Scenario flow: us-recession-2027",
+    "subtitle": "Sources: scenario model us-recession-2027 · as of 2026-11-05"
+  },
+  "description": "Will the US enter a recession that starts before 2027-12-31? Drivers to outcomes, line width the path mass; unlisted mass 0.0% drawn as its own flow; signposts on edges: sahm → soft (expected KL 0.21), sahm → credit-mild (expected KL 0.04), sahm → credit-severe (expected KL 0.09). Sources: scenario model us-recession-2027 · as of 2026-11-05.",
+  "width": "container",
+  "height": 440,
+  "usermeta": {
+    "chart": "flow",
+    "object_id": "us-recession-2027",
+    "schema": "scenario-model/v1",
+    "source": [
+      "scenario model us-recession-2027"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: scenario model us-recession-2027 · as of 2026-11-05"
+  }
+}

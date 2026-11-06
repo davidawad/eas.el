@@ -1,0 +1,281 @@
+{
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "threshold": 150.0,
+            "as_of": "2026-12-31",
+            "probability": 0.8388235294117647
+          },
+          {
+            "threshold": 150.0,
+            "as_of": "2027-03-31",
+            "probability": 0.77997002997003
+          },
+          {
+            "threshold": 175.0,
+            "as_of": "2026-12-31",
+            "probability": 0.5782352941176471
+          },
+          {
+            "threshold": 175.0,
+            "as_of": "2027-03-31",
+            "probability": 0.58
+          },
+          {
+            "threshold": 200.0,
+            "as_of": "2026-12-31",
+            "probability": 0.2976470588235294
+          },
+          {
+            "threshold": 200.0,
+            "as_of": "2027-03-31",
+            "probability": 0.37997002997003
+          },
+          {
+            "threshold": 225.0,
+            "as_of": "2026-12-31",
+            "probability": 0.08235294117647059
+          },
+          {
+            "threshold": 225.0,
+            "as_of": "2027-03-31",
+            "probability": 0.17997002997003
+          }
+        ]
+      },
+      "mark": "rect",
+      "encoding": {
+        "x": {
+          "field": "threshold",
+          "type": "ordinal",
+          "title": "threshold k"
+        },
+        "y": {
+          "field": "as_of",
+          "type": "ordinal",
+          "title": "date t"
+        },
+        "color": {
+          "field": "probability",
+          "type": "quantitative",
+          "title": "P(X ≥ k)",
+          "scale": {
+            "domain": [
+              0,
+              1
+            ],
+            "scheme": "blues"
+          }
+        },
+        "tooltip": [
+          {
+            "field": "threshold",
+            "type": "quantitative"
+          },
+          {
+            "field": "as_of",
+            "type": "nominal"
+          },
+          {
+            "field": "probability",
+            "type": "quantitative",
+            "format": ".1%"
+          }
+        ]
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "source_id": "kalshi",
+            "threshold": 150.0,
+            "as_of": "2026-12-31",
+            "probability": 0.82,
+            "weight": 1250000.0
+          },
+          {
+            "source_id": "kalshi",
+            "threshold": 175.0,
+            "as_of": "2026-12-31",
+            "probability": 0.55,
+            "weight": 1250000.0
+          },
+          {
+            "source_id": "kalshi",
+            "threshold": 200.0,
+            "as_of": "2026-12-31",
+            "probability": 0.58,
+            "weight": 1250000.0
+          },
+          {
+            "source_id": "kalshi",
+            "threshold": 225.0,
+            "as_of": "2026-12-31",
+            "probability": 0.12,
+            "weight": 1250000.0
+          },
+          {
+            "source_id": "options",
+            "threshold": 150.0,
+            "as_of": "2026-12-31",
+            "probability": 0.86,
+            "weight": 20000000.0
+          },
+          {
+            "source_id": "options",
+            "threshold": 175.0,
+            "as_of": "2026-12-31",
+            "probability": 0.6,
+            "weight": 20000000.0
+          },
+          {
+            "source_id": "options",
+            "threshold": 200.0,
+            "as_of": "2026-12-31",
+            "probability": 0.3,
+            "weight": 20000000.0
+          },
+          {
+            "source_id": "options",
+            "threshold": 225.0,
+            "as_of": "2026-12-31",
+            "probability": 0.1,
+            "weight": 20000000.0
+          },
+          {
+            "source_id": "options",
+            "threshold": 150.0,
+            "as_of": "2027-03-31",
+            "probability": 0.8,
+            "weight": 20000000.0
+          },
+          {
+            "source_id": "options",
+            "threshold": 175.0,
+            "as_of": "2027-03-31",
+            "probability": 0.6,
+            "weight": 20000000.0
+          },
+          {
+            "source_id": "options",
+            "threshold": 200.0,
+            "as_of": "2027-03-31",
+            "probability": 0.4,
+            "weight": 20000000.0
+          },
+          {
+            "source_id": "options",
+            "threshold": 225.0,
+            "as_of": "2027-03-31",
+            "probability": 0.2,
+            "weight": 20000000.0
+          },
+          {
+            "source_id": "ours",
+            "threshold": 150.0,
+            "as_of": "2027-03-31",
+            "probability": 0.75,
+            "weight": 19999.999999999996
+          },
+          {
+            "source_id": "ours",
+            "threshold": 200.0,
+            "as_of": "2027-03-31",
+            "probability": 0.35,
+            "weight": 19999.999999999996
+          },
+          {
+            "source_id": "ours",
+            "threshold": 225.0,
+            "as_of": "2027-03-31",
+            "probability": 0.15,
+            "weight": 19999.999999999996
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "filled": false,
+        "color": "black"
+      },
+      "encoding": {
+        "x": {
+          "field": "threshold",
+          "type": "ordinal",
+          "title": "threshold k"
+        },
+        "y": {
+          "field": "as_of",
+          "type": "ordinal",
+          "title": "date t"
+        },
+        "shape": {
+          "field": "source_id",
+          "type": "nominal",
+          "title": "source"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "source_id": "kalshi",
+            "threshold": 200.0,
+            "as_of": "2026-12-31",
+            "note": "P(200) 0.580 > P(175) 0.550"
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "shape": "cross",
+        "color": "#d62728",
+        "size": 120
+      },
+      "encoding": {
+        "x": {
+          "field": "threshold",
+          "type": "ordinal",
+          "title": "threshold k"
+        },
+        "y": {
+          "field": "as_of",
+          "type": "ordinal",
+          "title": "date t"
+        },
+        "tooltip": [
+          {
+            "field": "source_id"
+          },
+          {
+            "field": "note"
+          }
+        ]
+      }
+    }
+  ],
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Probability surface: nvda-close-2026",
+    "subtitle": "Sources: kalshi, options, ours · as of 2026-11-05"
+  },
+  "description": "Fitted P(X ≥ k at or by date t) over 8 cells with 15 source points overlaid; 1 raw arbitrage point(s) flagged. Sources: kalshi, options, ours · as of 2026-11-05.",
+  "width": "container",
+  "height": 220,
+  "usermeta": {
+    "chart": "surface",
+    "object_id": "nvda-close-2026",
+    "schema": "prob.surface/1",
+    "source": [
+      "kalshi",
+      "options",
+      "ours"
+    ],
+    "as_of": "2026-11-05",
+    "caption": "Sources: kalshi, options, ours · as of 2026-11-05"
+  }
+}

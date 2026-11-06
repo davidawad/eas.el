@@ -28,6 +28,11 @@
           (eas-stream-use-timers nil)
           (eas-stream-test--now 0.0)
           (eas-stream-clock (lambda () eas-stream-test--now))
+          ;; Frames are timed on the test clock too: a GC pause in a
+          ;; real frame must not stretch the frame interval.
+          (eas-live-clock eas-stream-clock)
+          (eas-live--costs (make-hash-table :test 'equal))
+          (eas-live--starts (make-hash-table :test 'equal))
           (,var (eas-stream-open eas-stream-test--spec :id "s" :stream ,config)))
      ,@body))
 

@@ -44,6 +44,9 @@ can render.")
 Streams flush their queue, plays restart their timer and the glue
 redraws a stale buffer.")
 
+(defvar eas-live-clock #'float-time
+  "Function of no arguments giving the time in seconds that frames are timed by.")
+
 (defvar eas-live--costs (make-hash-table :test 'equal)
   "View id -> seconds its last frame took.")
 
@@ -97,10 +100,10 @@ Called from window hooks with an ignored argument."
   "Run BODY, recording how long it took as VIEW's frame cost."
   (declare (indent 1) (debug t))
   (let ((t0 (make-symbol "t0")) (id (make-symbol "id")))
-    `(let ((,id (eas-live--id ,view)) (,t0 (float-time)))
+    `(let ((,id (eas-live--id ,view)) (,t0 (funcall eas-live-clock)))
        (puthash ,id ,t0 eas-live--starts)
        (prog1 (progn ,@body)
-         (puthash ,id (- (float-time) ,t0) eas-live--costs)))))
+         (puthash ,id (- (funcall eas-live-clock) ,t0) eas-live--costs)))))
 
 (defun eas-live--id (view)
   "VIEW's id; VIEW is an id or a view."

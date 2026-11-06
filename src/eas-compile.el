@@ -242,6 +242,8 @@ METRICS supplies the config."
          (extra-colors (eas-compile--extra-colors units config color))
          (size (eas-compile-aux-scale units :size [4 361]))
          (opacity (eas-compile-aux-scale units :opacity [0.3 0.8]))
+         ;; Vega-Lite's [minStrokeWidth, maxStrokeWidth].
+         (stroke-width (eas-compile-aux-scale units :strokeWidth [1 4]))
          (shape-scale (eas-bins-shape-scale units))
          (dash (eas-compile-dash-scale units config))
          (channels (eas-compile-channels-scales units))
@@ -272,6 +274,7 @@ METRICS supplies the config."
                        (cl-loop for (ch _ scale) in extra-colors append (list ch scale))
                        (when size (list :size size))
                        (when opacity (list :opacity opacity))
+                       (when stroke-width (list :strokeWidth stroke-width))
                        (when shape-scale (list :shape shape-scale))
                        (when dash (list :strokeDash dash))
                        channels))

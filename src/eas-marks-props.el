@@ -30,11 +30,13 @@
 
 (defun eas-marks-props-stroke-width (unit scales row fallback)
   "Return the stroke width of ROW in line or rule UNIT under SCALES.
-That is the size channel, the mark's size, then its strokeWidth, else
-FALLBACK."
-  (let ((mark (plist-get unit :mark))
-        (size (and (plist-get (plist-get unit :encoding) :size) (eas-marks--channel unit scales :size row))))
-    (cond ((numberp size) size)
+That is the strokeWidth channel, the size channel, the mark's size,
+then its strokeWidth, else FALLBACK."
+  (let* ((mark (plist-get unit :mark)) (enc (plist-get unit :encoding))
+         (width (and (plist-get enc :strokeWidth) (eas-marks--channel unit scales :strokeWidth row)))
+         (size (and (plist-get enc :size) (eas-marks--channel unit scales :size row))))
+    (cond ((numberp width) width)
+          ((numberp size) size)
           ((numberp (plist-get mark :size)) (plist-get mark :size))
           ((numberp (plist-get mark :strokeWidth)) (plist-get mark :strokeWidth))
           (t fallback))))

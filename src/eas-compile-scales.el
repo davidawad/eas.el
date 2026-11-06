@@ -357,7 +357,8 @@ gives its ramp stops."
              (eas-scheme-ramp (plist-get r :scheme)))))))
 
 (defun eas-compile-aux-scale (units channel range)
-  "Linear scale for CHANNEL (size or opacity) of UNITS onto RANGE, or nil.
+  "Linear scale for CHANNEL (size, opacity, strokeWidth) of UNITS onto RANGE.
+Nil when no unit maps a field to CHANNEL.
 The scale's own range wins; a trail's size is its width, onto
 Vega-Lite's [minStrokeWidth, maxStrokeWidth] = [1, 4]."
   (when-let* ((pairs (seq-filter (lambda (p) (and (plist-get (cdr p) :field)

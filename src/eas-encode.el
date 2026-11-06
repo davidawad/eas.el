@@ -20,6 +20,7 @@
 (require 'eas-expr)
 (require 'eas-transform)
 (require 'eas-bins)
+(require 'eas-format)
 
 (defvar eas-encode-param-test-function
   (lambda (_param _row empty) empty)
@@ -242,12 +243,20 @@ CONFIG's countTitle names a count of records."
      (t (plist-get def :field)))))
 
 (defun eas-encode-format-value (def value)
-  "Format VALUE for a tooltip per DEF (temporal as \"%b %d, %Y\")."
+  "Format VALUE for a tooltip per DEF (temporal as \"%b %d, %Y\").
+A quantitative number under a d3-format :format (\".1%\") shows
+formatted, as Vega-Lite's tooltip does."
   (cond
    ((memq value '(nil :null)) "null")
    ((and (equal (plist-get def :type) "temporal") (eas-time-parse value))
     (let ((system-time-locale "C"))
       (eas-time-format (eas-time-parse value) "%b %d, %Y")))
+   ((and (numberp value) (stringp (plist-get def :format))
+         (equal (plist-get def :type) "quantitative")
+         (member (plist-get def :formatType) '(nil "number"))
+         (not (equal (plist-get def :derived) "timeUnit"))
+         (string-match-p eas-format--spec-regexp (plist-get def :format)))
+    (eas-format-number (plist-get def :format) value))
    (t (eas-expr--string value))))
 
 (defun eas-encode-internal-field-p (key)

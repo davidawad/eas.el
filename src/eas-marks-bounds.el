@@ -39,8 +39,9 @@
 A plist (:fill :stroke :stroke-width :opacity :stroked :field-color
 :trail :mark-shape)."
   (let* ((mark (plist-get unit :mark)) (type (plist-get mark :type))
-         (stroked (or (member type '("line" "rule" "trail"))
-                      (and (equal type "point") (not (eq (plist-get mark :filled) t)))))
+         (stroked (and (or (member type '("line" "rule" "trail"))
+                           (and (equal type "point") (not (eq (plist-get mark :filled) t))))
+                       t))
          (enc (plist-get unit :encoding))
          (value (lambda (ch) (let* ((d (plist-get enc ch)) (c (plist-get d :condition)) (c (if (vectorp c) (aref c 0) c)))
                                ;; Symbols show a selection's empty state: its condition holds.

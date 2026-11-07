@@ -6,6 +6,7 @@ use crate::clip::clip_antimeridian;
 use crate::clip_circle::clip_circle;
 use crate::clip_rect::clip_rectangle;
 use crate::geom::{stream_geometry, stream_polygon, FrontKey, Node};
+use crate::math::Libm;
 use crate::math::{lmax, lmin, rem, Rotation, EPS, PI, RAD};
 use crate::raw::{self, RawFn};
 use crate::resample::{replay, Project, ProjectRc, RadiansRotate, Resample};
@@ -38,7 +39,10 @@ impl Project for ProjectFn {
         } else {
             let rx = self.sx * x;
             let ry = self.sy * y;
-            ((self.ca * rx - self.sa * ry) + self.dx, (self.dy - self.sa * rx) - self.ca * ry)
+            (
+                (self.ca * rx - self.sa * ry) + self.dx,
+                (self.dy - self.sa * rx) - self.ca * ry,
+            )
         }
     }
 }
@@ -84,11 +88,15 @@ impl Simple {
         let sy = if a.reflect.1 { -1.0 } else { 1.0 };
         let lam = rem(a.center.0, 360.0) * RAD;
         let phi = rem(a.center.1, 360.0) * RAD;
-        let r = [rem(a.rotate[0], 360.0), rem(a.rotate[1], 360.0), rem(a.rotate[2], 360.0)];
+        let r = [
+            rem(a.rotate[0], 360.0),
+            rem(a.rotate[1], 360.0),
+            rem(a.rotate[2], 360.0),
+        ];
         let rotation = Rotation::new(r[0] * RAD, r[1] * RAD, r[2] * RAD);
         let alpha = rem(a.angle, 360.0) * RAD;
-        let ca = alpha.cos() * k;
-        let sa = alpha.sin() * k;
+        let ca = alpha.lcos() * k;
+        let sa = alpha.lsin() * k;
         let alpha0 = alpha == 0.0;
         let (cx, cy) = {
             let (rx0, ry0) = raw(lam, phi);
@@ -150,13 +158,23 @@ impl Simple {
 
     /// The :stream of the projection (no outline).
     pub fn pipeline(&self, sink: BoxStream) -> BoxStream {
-        let resample = Box::new(Resample::new(self.project.clone(), self.delta2, self.postclip(sink)));
-        Box::new(RadiansRotate { rotation: self.rotation, sink: self.preclip(resample) })
+        let resample = Box::new(Resample::new(
+            self.project.clone(),
+            self.delta2,
+            self.postclip(sink),
+        ));
+        Box::new(RadiansRotate {
+            rotation: self.rotation,
+            sink: self.preclip(resample),
+        })
     }
 
     /// The :front half, recorded by `eas-geo-proj--events'.
     pub fn front(&self, sink: BoxStream) -> BoxStream {
-        Box::new(RadiansRotate { rotation: self.rotation, sink: self.preclip(sink) })
+        Box::new(RadiansRotate {
+            rotation: self.rotation,
+            sink: self.preclip(sink),
+        })
     }
 }
 
@@ -230,7 +248,9 @@ impl Proj {
         let raw = raw::make_raw(type_name, parallels)?;
         let main = Arc::new(Simple::new(raw, a));
         let outline = match type_name {
-            "interruptedSinusoidal" | "interruptedMollweide" | "interruptedMollweideHemispheres" => {
+            "interruptedSinusoidal"
+            | "interruptedMollweide"
+            | "interruptedMollweideHemispheres" => {
                 Some(Outline::Interrupt(raw::interrupt_sphere(type_name)?))
             }
             "berghaus" => Some(Outline::Berghaus),
@@ -257,7 +277,13 @@ impl Proj {
     /// `eas-geo-proj--albers-usa' at scale K, translate X Y, PRECISION.
     pub fn albers_usa(k: f64, x: f64, y: f64, precision: f64) -> Proj {
         let e = EPS;
-        let sub = |par: (f64, f64), rot: f64, center: (f64, f64), scale: f64, tx: f64, ty: f64, b: [f64; 4]| {
+        let sub = |par: (f64, f64),
+                   rot: f64,
+                   center: (f64, f64),
+                   scale: f64,
+                   tx: f64,
+                   ty: f64,
+                   b: [f64; 4]| {
             let a = Params {
                 scale,
                 translate: (tx, ty),
@@ -288,7 +314,12 @@ impl Proj {
             0.35 * k,
             x - 0.307 * k,
             y + 0.201 * k,
-            [(x - 0.425 * k) + e, (y + 0.120 * k) + e, (x - 0.214 * k) - e, (y + 0.234 * k) - e],
+            [
+                (x - 0.425 * k) + e,
+                (y + 0.120 * k) + e,
+                (x - 0.214 * k) - e,
+                (y + 0.234 * k) - e,
+            ],
         );
         let hawaii = sub(
             (8.0, 18.0),
@@ -297,7 +328,12 @@ impl Proj {
             k,
             x - 0.205 * k,
             y + 0.212 * k,
-            [(x - 0.214 * k) + e, (y + 0.166 * k) + e, (x - 0.115 * k) - e, (y + 0.234 * k) - e],
+            [
+                (x - 0.214 * k) + e,
+                (y + 0.166 * k) + e,
+                (x - 0.115 * k) - e,
+                (y + 0.234 * k) - e,
+            ],
         );
         Proj::AlbersUsa(vec![lower, alaska, hawaii])
     }
@@ -312,9 +348,11 @@ impl Proj {
                 flat: flat.clone(),
                 sink: sink.clone(),
             }),
-            Proj::AlbersUsa(subs) => {
-                Box::new(Multiplex(subs.iter().map(|s| s.pipeline(Box::new(sink.clone()))).collect()))
-            }
+            Proj::AlbersUsa(subs) => Box::new(Multiplex(
+                subs.iter()
+                    .map(|s| s.pipeline(Box::new(sink.clone())))
+                    .collect(),
+            )),
         }
     }
 
@@ -352,4 +390,3 @@ impl Proj {
         b
     }
 }
-

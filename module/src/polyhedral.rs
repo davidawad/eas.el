@@ -3,17 +3,33 @@
 //! eight faces, each a gnomonic projection about its centroid, unfolded
 //! into Cahill's butterfly, and the sphere's outline.
 
+use crate::math::Libm;
 use crate::math::{asin, cartesian, pow, rem, Rotation, EPS, HALF_PI, RAD};
 use crate::raw::{gnomonic, RawFn};
 use crate::stream::Stream;
 use std::sync::{Arc, OnceLock};
 
 /// The octahedron's six vertices, [LON LAT] degrees.
-const VERTS: [(f64, f64); 6] = [(0.0, 90.0), (-90.0, 0.0), (0.0, 0.0), (90.0, 0.0), (180.0, 0.0), (0.0, -90.0)];
+const VERTS: [(f64, f64); 6] = [
+    (0.0, 90.0),
+    (-90.0, 0.0),
+    (0.0, 0.0),
+    (90.0, 0.0),
+    (180.0, 0.0),
+    (0.0, -90.0),
+];
 
 /// The faces, clockwise vertex indices into `VERTS'.
-const FACES: [[usize; 3]; 8] =
-    [[0, 2, 1], [0, 3, 2], [5, 1, 2], [5, 2, 3], [0, 1, 4], [0, 4, 3], [5, 4, 1], [5, 3, 4]];
+const FACES: [[usize; 3]; 8] = [
+    [0, 2, 1],
+    [0, 3, 2],
+    [5, 1, 2],
+    [5, 2, 3],
+    [0, 1, 4],
+    [0, 4, 3],
+    [5, 4, 1],
+    [5, 3, 4],
+];
 
 /// The parent of each face in the unfolding (-1: the root).
 const PARENTS: [i32; 8] = [-1, 0, 0, 1, 0, 1, 4, 5];
@@ -47,7 +63,10 @@ fn centroid(face: &[usize; 3]) -> (f64, f64) {
         y += c[1];
         z += c[2];
     }
-    (y.atan2(x) / RAD, (z / (x * x + y * y + z * z).sqrt()).asin() / RAD)
+    (
+        y.atan2(x) / RAD,
+        (z / (x * x + y * y + z * z).sqrt()).asin() / RAD,
+    )
 }
 
 /// `eas-geo-polyhedral--interpolate' (A B TT), degrees.
@@ -56,26 +75,26 @@ fn interpolate(a: (f64, f64), b: (f64, f64), tt: f64) -> (f64, f64) {
     let y0 = a.1 * RAD;
     let x1 = b.0 * RAD;
     let y1 = b.1 * RAD;
-    let cy0 = y0.cos();
-    let sy0 = y0.sin();
-    let cy1 = y1.cos();
-    let sy1 = y1.sin();
-    let kx0 = cy0 * x0.cos();
-    let ky0 = cy0 * x0.sin();
-    let kx1 = cy1 * x1.cos();
-    let ky1 = cy1 * x1.sin();
+    let cy0 = y0.lcos();
+    let sy0 = y0.lsin();
+    let cy1 = y1.lcos();
+    let sy1 = y1.lsin();
+    let kx0 = cy0 * x0.lcos();
+    let ky0 = cy0 * x0.lsin();
+    let kx1 = cy1 * x1.lcos();
+    let ky1 = cy1 * x1.lsin();
     let hav = |v: f64| {
-        let s = (v / 2.0).sin();
+        let s = (v / 2.0).lsin();
         s * s
     };
     let d = 2.0 * asin((hav(y1 - y0) + cy0 * cy1 * hav(x1 - x0)).sqrt());
-    let k = d.sin();
+    let k = d.lsin();
     if d == 0.0 {
         return a;
     }
     let td = tt * d;
-    let bb = td.sin() / k;
-    let aa = (d - td).sin() / k;
+    let bb = td.lsin() / k;
+    let aa = (d - td).lsin() / k;
     let x = aa * kx0 + bb * kx1;
     let y = aa * ky0 + bb * ky1;
     let z = aa * sy0 + bb * sy1;
@@ -104,7 +123,7 @@ fn matrix(a: [(f64, f64); 2], b: [(f64, f64); 2]) -> [f64; 6] {
         &multiply(
             &[s, 0.0, 0.0, 0.0, s, 0.0],
             &multiply(
-                &[phi.cos(), phi.sin(), 0.0, -phi.sin(), phi.cos(), 0.0],
+                &[phi.lcos(), phi.lsin(), 0.0, -phi.lsin(), phi.lcos(), 0.0],
                 &[1.0, 0.0, -b[0].0, 0.0, 1.0, -b[0].1],
             ),
         ),
@@ -140,7 +159,11 @@ fn shared(a: &[usize; 3], b: &[usize; 3]) -> [usize; 2] {
 
 fn link(nodes: &mut Vec<Node>, node: usize, parent: Option<usize>) {
     let f = nodes[node].face;
-    nodes[node].edges = vec![Edge::Pair(f[2], f[0]), Edge::Pair(f[0], f[1]), Edge::Pair(f[1], f[2])];
+    nodes[node].edges = vec![
+        Edge::Pair(f[2], f[0]),
+        Edge::Pair(f[0], f[1]),
+        Edge::Pair(f[1], f[2]),
+    ];
     if let Some(par) = parent {
         let sh = shared(&nodes[node].face, &nodes[par].face);
         let on = |n: &Node| -> [(f64, f64); 2] {
@@ -181,8 +204,18 @@ impl Butterfly {
             .iter()
             .map(|f| {
                 let c = centroid(f);
-                let rot = Rotation::new(rem(-c.0, 360.0) * RAD, rem(-c.1, 360.0) * RAD, rem(0.0, 360.0) * RAD);
-                Node { face: *f, rot, transform: None, edges: Vec::new(), children: Vec::new() }
+                let rot = Rotation::new(
+                    rem(-c.0, 360.0) * RAD,
+                    rem(-c.1, 360.0) * RAD,
+                    rem(0.0, 360.0) * RAD,
+                );
+                Node {
+                    face: *f,
+                    rot,
+                    transform: None,
+                    edges: Vec::new(),
+                    children: Vec::new(),
+                }
             })
             .collect();
         for (i, &d) in PARENTS.iter().enumerate() {
@@ -197,11 +230,23 @@ impl Butterfly {
     /// The raw projection of L P (radians).
     pub fn raw(&self, l: f64, p: f64) -> (f64, f64) {
         let i = if l < -HALF_PI {
-            if p < 0.0 { 6 } else { 4 }
+            if p < 0.0 {
+                6
+            } else {
+                4
+            }
         } else if l < 0.0 {
-            if p < 0.0 { 2 } else { 0 }
+            if p < 0.0 {
+                2
+            } else {
+                0
+            }
         } else if l < HALF_PI {
-            if p < 0.0 { 3 } else { 1 }
+            if p < 0.0 {
+                3
+            } else {
+                1
+            }
         } else if p < 0.0 {
             7
         } else {
@@ -210,7 +255,10 @@ impl Butterfly {
         let node = &self.nodes[i];
         let pt = project(&node.rot, l / RAD, p / RAD);
         match node.transform {
-            Some(tm) => (tm[0] * pt.0 + tm[1] * pt.1 + tm[2], -(tm[3] * pt.0 + tm[4] * pt.1 + tm[5])),
+            Some(tm) => (
+                tm[0] * pt.0 + tm[1] * pt.1 + tm[2],
+                -(tm[3] * pt.0 + tm[4] * pt.1 + tm[5]),
+            ),
             None => (pt.0, -pt.1),
         }
     }

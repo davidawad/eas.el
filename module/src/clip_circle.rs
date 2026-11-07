@@ -6,7 +6,11 @@
 //! bit-identical.
 
 use crate::clip::{Clip, ClipSpec, LineCutter};
-use crate::math::{acos, add3, cartesian, cross, dot, normalize, point_equal, rem, scale3, spherical, EPS, PI, RAD, TAU};
+use crate::math::Libm;
+use crate::math::{
+    acos, add3, cartesian, cross, dot, normalize, point_equal, rem, scale3, spherical, EPS, PI,
+    RAD, TAU,
+};
 use crate::stream::{BoxStream, Stream};
 
 /// `eas-geo--circle-radius': the signed angle of POINT relative to
@@ -29,8 +33,8 @@ pub fn circle_stream(
     t0: Option<(f64, f64)>,
     t1: Option<(f64, f64)>,
 ) {
-    let cr = radius.cos();
-    let sr = radius.sin();
+    let cr = radius.lcos();
+    let sr = radius.lsin();
     let step = direction * delta;
     let (t0, t1) = match (t0, t1) {
         (Some(a), Some(b)) => {
@@ -45,7 +49,7 @@ pub fn circle_stream(
     };
     let mut tt = t0;
     while if direction > 0.0 { tt > t1 } else { tt < t1 } {
-        let pt = spherical([cr, (-sr) * tt.cos(), (-sr) * tt.sin()]);
+        let pt = spherical([cr, (-sr) * tt.lcos(), (-sr) * tt.lsin()]);
         sink.point(pt.0, pt.1, 0);
         tt -= step;
     }
@@ -64,11 +68,15 @@ struct Circle {
 
 impl Circle {
     fn visible(&self, l: f64, p: f64) -> bool {
-        l.cos() * p.cos() > self.cr
+        l.lcos() * p.lcos() > self.cr
     }
 
     fn code(&self, l: f64, p: f64) -> i32 {
-        let r = if self.small { self.radius } else { PI - self.radius };
+        let r = if self.small {
+            self.radius
+        } else {
+            PI - self.radius
+        };
         let mut c = 0;
         if l < -r {
             c |= 1;
@@ -251,9 +259,22 @@ impl ClipSpec for Circle {
         Circle::visible(self, l, p)
     }
     fn cutter(&self) -> CircleLine {
-        CircleLine { k: *self, point0: None, c0: 0, v0: false, v00: false, clean: 1 }
+        CircleLine {
+            k: *self,
+            point0: None,
+            c0: 0,
+            v0: false,
+            v00: false,
+            clean: 1,
+        }
     }
-    fn interpolate(&self, from: Option<(f64, f64)>, to: Option<(f64, f64)>, direction: f64, s: &mut dyn Stream) {
+    fn interpolate(
+        &self,
+        from: Option<(f64, f64)>,
+        to: Option<(f64, f64)>,
+        direction: f64,
+        s: &mut dyn Stream,
+    ) {
         circle_stream(s, self.radius, self.delta, direction, from, to);
     }
     fn start(&self) -> (f64, f64) {
@@ -267,7 +288,13 @@ impl ClipSpec for Circle {
 
 /// `eas-geo-clip-circle' of RADIUS (radians) into SINK.
 pub fn clip_circle(radius: f64, sink: BoxStream) -> BoxStream {
-    let cr = radius.cos();
-    let k = Circle { radius, cr, delta: 2.0 * RAD, small: cr > 0.0, not_hemisphere: cr.abs() > EPS };
+    let cr = radius.lcos();
+    let k = Circle {
+        radius,
+        cr,
+        delta: 2.0 * RAD,
+        small: cr > 0.0,
+        not_hemisphere: cr.abs() > EPS,
+    };
     Box::new(Clip::new(k, sink))
 }

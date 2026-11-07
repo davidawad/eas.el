@@ -45,6 +45,27 @@ pub fn pow(x: f64, y: f64) -> f64 {
     x.powf(std::hint::black_box(y))
 }
 
+/// `sin' and `cos' as libm computes them, one call each.
+///
+/// LLVM turns `x.sin()' and `x.cos()' of one x into one `__sincos_stret'
+/// call on Apple targets, whose sin is an ulp off libm's `sin' that
+/// Emacs calls.  Hiding the operand keeps the two calls apart.
+pub trait Libm {
+    fn lsin(self) -> f64;
+    fn lcos(self) -> f64;
+}
+
+impl Libm for f64 {
+    #[inline]
+    fn lsin(self) -> f64 {
+        std::hint::black_box(self).sin()
+    }
+    #[inline]
+    fn lcos(self) -> f64 {
+        std::hint::black_box(self).cos()
+    }
+}
+
 /// `eas-geo-asin': d3's clamped asin.
 #[inline]
 pub fn asin(x: f64) -> f64 {
@@ -96,8 +117,8 @@ pub fn fround(x: f64) -> f64 {
 /// `eas-geo-cartesian'.
 #[inline]
 pub fn cartesian(lam: f64, phi: f64) -> [f64; 3] {
-    let c = phi.cos();
-    [c * lam.cos(), c * lam.sin(), phi.sin()]
+    let c = phi.lcos();
+    [c * lam.lcos(), c * lam.lsin(), phi.lsin()]
 }
 
 /// `eas-geo-spherical'.
@@ -113,7 +134,11 @@ pub fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
 
 #[inline]
 pub fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
 }
 
 #[inline]
@@ -173,19 +198,19 @@ impl Rotation {
             dl,
             has_dl: dl != 0.0,
             has_pg: dp != 0.0 || dg != 0.0,
-            cdp: dp.cos(),
-            sdp: dp.sin(),
-            cdg: dg.cos(),
-            sdg: dg.sin(),
+            cdp: dp.lcos(),
+            sdp: dp.lsin(),
+            cdg: dg.lcos(),
+            sdg: dg.lsin(),
         }
     }
 
     #[inline]
     fn pg(&self, l: f64, p: f64) -> (f64, f64) {
-        let c = p.cos();
-        let x = l.cos() * c;
-        let y = l.sin() * c;
-        let z = p.sin();
+        let c = p.lcos();
+        let x = l.lcos() * c;
+        let y = l.lsin() * c;
+        let z = p.lsin();
         let k = z * self.cdp + x * self.sdp;
         (
             (y * self.cdg - k * self.sdg).atan2(x * self.cdp - z * self.sdp),

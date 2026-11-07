@@ -3,6 +3,7 @@
 //! integrals behind guyou, square() and quincuncial(), and the armadillo
 //! and Berghaus outlines.  Operand order follows the Elisp exactly.
 
+use crate::math::Libm;
 use crate::math::{acos, asin, fround, lmax, pow, sign, EPS, HALF_PI, PI, QUARTER_PI, RAD, TAU};
 use crate::raw::{azimuthal_equal_area, azimuthal_equidistant, RawFn};
 use crate::stream::Stream;
@@ -14,15 +15,15 @@ fn sinci(x: f64) -> f64 {
     if x == 0.0 {
         1.0
     } else {
-        x / x.sin()
+        x / x.lsin()
     }
 }
 
 pub fn aitoff(x: f64, y: f64) -> (f64, f64) {
-    let cy = y.cos();
+    let cy = y.lcos();
     let x = x / 2.0;
-    let s = sinci(acos(cy * x.cos()));
-    (2.0 * cy * x.sin() * s, y.sin() * s)
+    let s = sinci(acos(cy * x.lcos()));
+    (2.0 * cy * x.lsin() * s, y.lsin() * s)
 }
 
 pub fn winkel3(l: f64, p: f64) -> (f64, f64) {
@@ -38,22 +39,22 @@ pub fn hammer(l: f64, p: f64) -> (f64, f64) {
 pub fn mollweide(l: f64, p: f64) -> (f64, f64) {
     let mut p = p;
     let cp = PI;
-    let cps = cp * p.sin();
+    let cps = cp * p.lsin();
     let mut i = 30;
     let mut delta = 1.0f64;
     while delta.abs() > EPS && i > 0 {
-        delta = ((p + p.sin()) - cps) / (1.0 + p.cos());
+        delta = ((p + p.lsin()) - cps) / (1.0 + p.lcos());
         p -= delta;
         i -= 1;
     }
     let th = p / 2.0;
-    let cth = th.cos();
-    let y = 2.0f64.sqrt() * th.sin();
+    let cth = th.lcos();
+    let y = 2.0f64.sqrt() * th.lsin();
     (2.0f64.sqrt() / HALF_PI * l * cth, y)
 }
 
 pub fn sinusoidal(l: f64, p: f64) -> (f64, f64) {
-    (l * p.cos(), p)
+    (l * p.lcos(), p)
 }
 
 pub fn wagner6(l: f64, p: f64) -> (f64, f64) {
@@ -66,7 +67,7 @@ pub fn eckert1(l: f64, p: f64) -> (f64, f64) {
 }
 
 pub fn collignon(l: f64, p: f64) -> (f64, f64) {
-    let a = (1.0 - p.sin()).sqrt();
+    let a = (1.0 - p.lsin()).sqrt();
     let sp = PI.sqrt();
     (2.0 / sp * l * a, sp * (1.0 - a))
 }
@@ -78,7 +79,7 @@ pub fn baker(l: f64, p: f64) -> (f64, f64) {
         (l, (QUARTER_PI + p / 2.0).tan().ln())
     } else {
         (
-            l * p0.cos() * (2.0 * s2 - 1.0 / p0.sin()),
+            l * p0.lcos() * (2.0 * s2 - 1.0 / p0.lsin()),
             sign(p) * (2.0 * s2 * (p0 - QUARTER_PI) - (p0 / 2.0).tan().ln()),
         )
     }
@@ -87,21 +88,25 @@ pub fn baker(l: f64, p: f64) -> (f64, f64) {
 pub fn bottomley(l: f64, p: f64) -> (f64, f64) {
     let s = 0.5;
     let rho = HALF_PI - p;
-    let eta = if rho != 0.0 { (l * s * rho.sin()) / rho } else { rho };
-    ((rho * eta.sin()) / s, HALF_PI - rho * eta.cos())
+    let eta = if rho != 0.0 {
+        (l * s * rho.lsin()) / rho
+    } else {
+        rho
+    };
+    ((rho * eta.lsin()) / s, HALF_PI - rho * eta.lcos())
 }
 
 pub fn littrow(l: f64, p: f64) -> (f64, f64) {
-    (l.sin() / p.cos(), p.tan() * l.cos())
+    (l.lsin() / p.lcos(), p.tan() * l.lcos())
 }
 
 pub fn wiechel(l: f64, p: f64) -> (f64, f64) {
-    let cp = p.cos();
-    let sp = l.cos() * cp;
+    let cp = p.lcos();
+    let sp = l.lcos() * cp;
     let s1 = 1.0 - sp;
-    let l2 = (l.sin() * cp).atan2(-p.sin());
-    let cl = l2.cos();
-    let sl = l2.sin();
+    let l2 = (l.lsin() * cp).atan2(-p.lsin());
+    let cl = l2.lcos();
+    let sl = l2.lsin();
     let cp2 = lmax(0.0, 1.0 - sp * sp).sqrt();
     (sl * cp2 - cl * s1, -(cl * cp2) - sl * s1)
 }
@@ -109,16 +114,19 @@ pub fn wiechel(l: f64, p: f64) -> (f64, f64) {
 fn airy_b() -> f64 {
     let beta = HALF_PI;
     let tb = (beta / 2.0).tan();
-    (2.0 * (beta / 2.0).cos().ln()) / (tb * tb)
+    (2.0 * (beta / 2.0).lcos().ln()) / (tb * tb)
 }
 
 pub fn airy(x: f64, y: f64) -> (f64, f64) {
     static B: OnceLock<f64> = OnceLock::new();
     let b = *B.get_or_init(airy_b);
-    let cosz = y.cos() * x.cos();
-    let k = -((if 1.0 - cosz != 0.0 { ((1.0 + cosz) / 2.0).ln() / (1.0 - cosz) } else { -0.5 })
-        + b / (1.0 + cosz));
-    (k * y.cos() * x.sin(), k * y.sin())
+    let cosz = y.lcos() * x.lcos();
+    let k = -((if 1.0 - cosz != 0.0 {
+        ((1.0 + cosz) / 2.0).ln() / (1.0 - cosz)
+    } else {
+        -0.5
+    }) + b / (1.0 + cosz));
+    (k * y.lcos() * x.lsin(), k * y.lsin())
 }
 
 pub fn berghaus(l: f64, p: f64) -> (f64, f64) {
@@ -131,9 +139,9 @@ pub fn berghaus(l: f64, p: f64) -> (f64, f64) {
     let r = (pow(pt.0, 2.0) + pow(pt.1, 2.0)).sqrt();
     let theta0 = k * fround((theta - HALF_PI) / k) + HALF_PI;
     let d = theta - theta0;
-    let alpha = d.sin().atan2(2.0 - d.cos());
-    let theta = (theta0 + asin((PI / r) * alpha.sin())) - alpha;
-    (r * theta.cos(), r * theta.sin())
+    let alpha = d.lsin().atan2(2.0 - d.lcos());
+    let theta = (theta0 + asin((PI / r) * alpha.lsin())) - alpha;
+    (r * theta.lcos(), r * theta.lsin())
 }
 
 // Elliptic projections
@@ -189,7 +197,7 @@ pub fn elliptic_fi(phi: f64, psi: f64, m: f64) -> (f64, f64) {
     let a = psi.abs();
     let sh = (a.exp() - (-a).exp()) / 2.0;
     if r != 0.0 {
-        let csc = 1.0 / r.sin();
+        let csc = 1.0 / r.lsin();
         let cot2 = 1.0 / (r.tan() * r.tan());
         let b = -(cot2 + m * sh * sh * csc * csc + -1.0 + m);
         let c = (m - 1.0) * cot2;
@@ -219,15 +227,18 @@ pub fn guyou(l: f64, p: f64) -> (f64, f64) {
     let kk = g[2];
     let psi = (QUARTER_PI + p.abs() / 2.0).tan().ln();
     let r = (-psi).exp() / g[3];
-    let x = r * (-l).cos();
-    let y = r * (-l).sin();
+    let x = r * (-l).lcos();
+    let y = r * (-l).lsin();
     let x2 = x * x;
     let y1 = y + 1.0;
     let tt = 1.0 - x2 - y * y;
     let at0 = 0.5 * ((if x >= 0.0 { HALF_PI } else { -HALF_PI }) - tt.atan2(2.0 * x));
     let at1 = -0.25 * (tt * tt + 4.0 * x2).ln() + 0.5 * (y1 * y1 + x2).ln();
     let fi = elliptic_fi(at0, at1, g[4]);
-    (-fi.1, (if p >= 0.0 { 1.0 } else { -1.0 }) * (0.5 * kk - fi.0))
+    (
+        -fi.1,
+        (if p >= 0.0 { 1.0 } else { -1.0 }) * (0.5 * kk - fi.0),
+    )
 }
 
 /// `eas-geo-raw-square' of RAW.
@@ -271,20 +282,25 @@ pub fn quincuncial(raw: fn(f64, f64) -> (f64, f64)) -> RawFn {
 /// `eas-geo--armadillo': [S0 C0 TAN0 K].
 fn armadillo_consts() -> [f64; 4] {
     let phi0 = 20.0 * RAD;
-    let s0 = phi0.sin();
-    let c0 = phi0.cos();
+    let s0 = phi0.lsin();
+    let c0 = phi0.lcos();
     [s0, c0, phi0.tan(), ((1.0 + s0) - c0) / 2.0]
 }
 
 pub fn armadillo(l: f64, p: f64) -> (f64, f64) {
     static A: OnceLock<[f64; 4]> = OnceLock::new();
     let [s0, c0, tan0, k] = *A.get_or_init(armadillo_consts);
-    let cp = p.cos();
+    let cp = p.lcos();
     let l = l / 2.0;
-    let cl = l.cos();
+    let cl = l.lcos();
     (
-        (1.0 + cp) * l.sin(),
-        (if p > -cl.atan2(tan0) - 1e-3 { 0.0 } else { -10.0 }) + k + p.sin() * c0
+        (1.0 + cp) * l.lsin(),
+        (if p > -cl.atan2(tan0) - 1e-3 {
+            0.0
+        } else {
+            -10.0
+        }) + k
+            + p.lsin() * c0
             + -((1.0 + cp) * s0 * cl),
     )
 }
@@ -304,7 +320,7 @@ pub fn armadillo_sphere(sink: &mut dyn Stream) {
         if lam < -180.0 {
             break;
         }
-        sink.point(lam, -((lam * RAD) / 2.0).cos().atan2(tan0) / RAD, 0);
+        sink.point(lam, -((lam * RAD) / 2.0).lcos().atan2(tan0) / RAD, 0);
     }
     sink.line_end();
     sink.polygon_end();
@@ -314,8 +330,8 @@ pub fn armadillo_sphere(sink: &mut dyn Stream) {
 pub fn berghaus_sphere(sink: &mut dyn Stream) {
     let lobes = 5;
     let e = 1e-2;
-    let cr = -(e * RAD).cos();
-    let sr = (e * RAD).sin();
+    let cr = -(e * RAD).lcos();
+    let sr = (e * RAD).lsin();
     let delta = 360.0 / lobes as f64;
     let delta0 = TAU / lobes as f64;
     let mut phi = 90.0 - 180.0 / lobes as f64;
@@ -323,7 +339,11 @@ pub fn berghaus_sphere(sink: &mut dyn Stream) {
     sink.polygon_start();
     sink.line_start();
     for _ in 0..lobes {
-        sink.point((sr * phi0.cos()).atan2(cr) / RAD, asin(sr * phi0.sin()) / RAD, 0);
+        sink.point(
+            (sr * phi0.lcos()).atan2(cr) / RAD,
+            asin(sr * phi0.lsin()) / RAD,
+            0,
+        );
         if phi < -90.0 {
             sink.point(-90.0, -180.0 - phi - e, 0);
             sink.point(-90.0, (-180.0 - phi) + e, 0);

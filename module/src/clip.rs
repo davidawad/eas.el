@@ -7,7 +7,11 @@
 //! Every expression keeps the Elisp's operand order so the results are
 //! bit-identical.
 
-use crate::math::{asin, cartesian, cross, normalize, point_equal, rem, sign, EPS, EPS2, HALF_PI, PI, QUARTER_PI, TAU};
+use crate::math::Libm;
+use crate::math::{
+    asin, cartesian, cross, normalize, point_equal, rem, sign, EPS, EPS2, HALF_PI, PI, QUARTER_PI,
+    TAU,
+};
 use crate::stream::{BoxStream, Stream};
 
 /// A buffered point: X Y and its flag (0 for nil).
@@ -37,9 +41,13 @@ impl ClipBuffer {
 impl Stream for ClipBuffer {
     fn point(&mut self, x: f64, y: f64, m: u8) {
         // The Elisp signals on a point outside a line; drop it.
-        if let Some(line) = self.lines.last_mut() { line.push((x, y, m)) }
+        if let Some(line) = self.lines.last_mut() {
+            line.push((x, y, m))
+        }
     }
-    fn line_start(&mut self) { self.lines.push(Vec::new()) }
+    fn line_start(&mut self) {
+        self.lines.push(Vec::new())
+    }
     fn line_end(&mut self) {}
     fn polygon_start(&mut self) {}
     fn polygon_end(&mut self) {}
@@ -47,7 +55,8 @@ impl Stream for ClipBuffer {
 }
 
 /// An edge walk: FROM TO (None for the whole edge), DIRECTION, SINK.
-pub(crate) type Interp<'a> = dyn FnMut(Option<(f64, f64)>, Option<(f64, f64)>, f64, &mut dyn Stream) + 'a;
+pub(crate) type Interp<'a> =
+    dyn FnMut(Option<(f64, f64)>, Option<(f64, f64)>, f64, &mut dyn Stream) + 'a;
 
 /// A clip intersection (`eas-geo--ix'): point X, segment Z (an index
 /// into the segments, None on the clip edge), other O, entry E, then
@@ -67,14 +76,22 @@ struct Ix {
 /// every stable sort agrees; a NaN can make the order inconsistent, and
 /// then the result may differ from Emacs's timsort (never a panic).
 fn stable_sort(v: &mut Vec<usize>, lt: &dyn Fn(usize, usize) -> bool) {
-    if v.len() < 2 { return }
+    if v.len() < 2 {
+        return;
+    }
     let mut right = v.split_off(v.len() / 2);
     stable_sort(v, lt);
     stable_sort(&mut right, lt);
     let left = std::mem::take(v);
     let (mut i, mut j) = (0, 0);
     while i < left.len() && j < right.len() {
-        if lt(right[j], left[i]) { v.push(right[j]); j += 1 } else { v.push(left[i]); i += 1 }
+        if lt(right[j], left[i]) {
+            v.push(right[j]);
+            j += 1
+        } else {
+            v.push(left[i]);
+            i += 1
+        }
     }
     v.extend_from_slice(&left[i..]);
     v.extend_from_slice(&right[j..]);
@@ -92,19 +109,42 @@ fn link(nodes: &mut [Ix], ring: &[usize]) {
 /// `eas-geo-clip-rejoin' of SEGMENTS into SINK.  COMPARE orders the
 /// intersections along the clip edge, START-INSIDE says whether the clip
 /// region's start lies inside and INTERPOLATE walks the clip edge.
-pub(crate) fn rejoin(mut segments: Vec<Vec<P>>, compare: &dyn Fn(&P, &P) -> f64, mut start_inside: bool,
-                     interpolate: &mut Interp, sink: &mut dyn Stream) {
+pub(crate) fn rejoin(
+    mut segments: Vec<Vec<P>>,
+    compare: &dyn Fn(&P, &P) -> f64,
+    mut start_inside: bool,
+    interpolate: &mut Interp,
+    sink: &mut dyn Stream,
+) {
     let (mut nodes, mut subject, mut clip) = (Vec::<Ix>::new(), Vec::new(), Vec::new());
     // A subject node at X on segment Z (entry E) and its clip twin.
     let mut pair = |nodes: &mut Vec<Ix>, x: P, z: usize, e: bool| {
         let i = nodes.len();
-        nodes.push(Ix { x, z: Some(z), o: i + 1, e, visited: false, next: 0, prev: 0 });
-        nodes.push(Ix { x, z: None, o: i, e: !e, visited: false, next: 0, prev: 0 });
+        nodes.push(Ix {
+            x,
+            z: Some(z),
+            o: i + 1,
+            e,
+            visited: false,
+            next: 0,
+            prev: 0,
+        });
+        nodes.push(Ix {
+            x,
+            z: None,
+            o: i,
+            e: !e,
+            visited: false,
+            next: 0,
+            prev: 0,
+        });
         subject.push(i);
         clip.push(i + 1);
     };
     for si in 0..segments.len() {
-        if segments[si].len() < 2 { continue }
+        if segments[si].len() < 2 {
+            continue;
+        }
         let n = segments[si].len() - 1;
         let (p0, p1) = (segments[si][0], segments[si][n]);
         if point_equal((p0.0, p0.1), (p1.0, p1.1)) && p0.2 == 0 && p1.2 == 0 {
@@ -122,7 +162,9 @@ pub(crate) fn rejoin(mut segments: Vec<Vec<P>>, compare: &dyn Fn(&P, &P) -> f64,
         pair(&mut nodes, p0, si, true);
         pair(&mut nodes, segments[si][n], si, false);
     }
-    if subject.is_empty() { return }
+    if subject.is_empty() {
+        return;
+    }
     let nr = &nodes;
     stable_sort(&mut clip, &|a, b| compare(&nr[a].x, &nr[b].x) < 0.0);
     link(&mut nodes, &subject);
@@ -141,7 +183,9 @@ pub(crate) fn rejoin(mut segments: Vec<Vec<P>>, compare: &dyn Fn(&P, &P) -> f64,
             current = nodes[current].next;
             done = current == start;
         }
-        if done { break }
+        if done {
+            break;
+        }
         let mut points = nodes[current].z;
         sink.line_start();
         loop {
@@ -171,7 +215,9 @@ pub(crate) fn rejoin(mut segments: Vec<Vec<P>>, compare: &dyn Fn(&P, &P) -> f64,
             current = nodes[current].o;
             points = nodes[current].z;
             subj = !subj;
-            if nodes[current].visited { break }
+            if nodes[current].visited {
+                break;
+            }
         }
         sink.line_end();
     }
@@ -180,15 +226,19 @@ pub(crate) fn rejoin(mut segments: Vec<Vec<P>>, compare: &dyn Fn(&P, &P) -> f64,
 /// `eas-geo--longitude'.
 #[inline]
 fn longitude(l: f64) -> f64 {
-    if l.abs() <= PI { l } else { sign(l) * (rem(l.abs() + PI, TAU) - PI) }
+    if l.abs() <= PI {
+        l
+    } else {
+        sign(l) * (rem(l.abs() + PI, TAU) - PI)
+    }
 }
 
 /// `eas-geo-polygon-contains': non-nil if POINT is inside the spherical
 /// POLYGON (rings of (L P), radians).
 pub fn polygon_contains(polygon: &[Vec<(f64, f64)>], point: (f64, f64)) -> bool {
     let (lam, mut phi) = (longitude(point.0), point.1);
-    let sin_phi = phi.sin();
-    let normal = [lam.sin(), -(lam.cos()), 0.0];
+    let sin_phi = phi.lsin();
+    let normal = [lam.lsin(), -(lam.lcos()), 0.0];
     let (mut angle, mut winding, mut sum) = (0.0, 0i64, 0.0);
     if sin_phi == 1.0 {
         phi = HALF_PI + EPS;
@@ -197,21 +247,23 @@ pub fn polygon_contains(polygon: &[Vec<(f64, f64)>], point: (f64, f64)) -> bool 
     }
     for ring in polygon {
         let m = ring.len();
-        if m == 0 { continue }
+        if m == 0 {
+            continue;
+        }
         let mut p0 = ring[m - 1];
         let mut l0 = longitude(p0.0);
         let ph0 = p0.1 / 2.0 + QUARTER_PI;
-        let (mut s0, mut c0) = (ph0.sin(), ph0.cos());
+        let (mut s0, mut c0) = (ph0.lsin(), ph0.lcos());
         for &p1 in ring.iter() {
             let l1 = longitude(p1.0);
             let ph1 = p1.1 / 2.0 + QUARTER_PI;
-            let (s1, c1) = (ph1.sin(), ph1.cos());
+            let (s1, c1) = (ph1.lsin(), ph1.lcos());
             let delta = l1 - l0;
             let sgn = if delta >= 0.0 { 1.0 } else { -1.0 };
             let abs_delta = sgn * delta;
             let anti = abs_delta > PI;
             let k = s0 * s1;
-            sum += (k * sgn * abs_delta.sin()).atan2(c0 * c1 + k * abs_delta.cos());
+            sum += (k * sgn * abs_delta.lsin()).atan2(c0 * c1 + k * abs_delta.lcos());
             angle += if anti { delta + sgn * TAU } else { delta };
             if (anti != (l0 >= lam)) != (l1 >= lam) {
                 let arc = normalize(cross(cartesian(p0.0, p0.1), cartesian(p1.0, p1.1)));
@@ -242,18 +294,35 @@ pub(crate) trait ClipSpec {
     type Cutter: LineCutter;
     fn visible(&self, l: f64, p: f64) -> bool;
     fn cutter(&self) -> Self::Cutter;
-    fn interpolate(&self, from: Option<(f64, f64)>, to: Option<(f64, f64)>, direction: f64, sink: &mut dyn Stream);
+    fn interpolate(
+        &self,
+        from: Option<(f64, f64)>,
+        to: Option<(f64, f64)>,
+        direction: f64,
+        sink: &mut dyn Stream,
+    );
     fn start(&self) -> (f64, f64);
 }
 
 /// Which of the Elisp's point, point-line and point-ring is the point.
 #[derive(Clone, Copy, PartialEq)]
-enum PointMode { Point, Line, Ring }
+enum PointMode {
+    Point,
+    Line,
+    Ring,
+}
 
 /// `eas-geo--compare-intersection'.
 fn compare_intersection(a: &P, b: &P) -> f64 {
-    (if a.0 < 0.0 { a.1 - HALF_PI - EPS } else { HALF_PI - a.1 })
-        - (if b.0 < 0.0 { b.1 - HALF_PI - EPS } else { HALF_PI - b.1 })
+    (if a.0 < 0.0 {
+        a.1 - HALF_PI - EPS
+    } else {
+        HALF_PI - a.1
+    }) - (if b.0 < 0.0 {
+        b.1 - HALF_PI - EPS
+    } else {
+        HALF_PI - b.1
+    })
 }
 
 /// The stream `eas-geo-clip' makes of SPEC into SINK.
@@ -276,25 +345,44 @@ pub(crate) struct Clip<C: ClipSpec> {
 impl<C: ClipSpec> Clip<C> {
     pub(crate) fn new(spec: C, sink: BoxStream) -> Self {
         let (line, ring_sink) = (spec.cutter(), spec.cutter());
-        let (ring_buffer, polygon, segments, ring) = (ClipBuffer::default(), Vec::new(), Vec::new(), Vec::new());
+        let (ring_buffer, polygon, segments, ring) =
+            (ClipBuffer::default(), Vec::new(), Vec::new(), Vec::new());
         let (started, point_mode, ring_lines) = (false, PointMode::Point, false);
-        Clip { spec, sink, line, ring_buffer, ring_sink, started, polygon, segments, ring, point_mode, ring_lines }
+        Clip {
+            spec,
+            sink,
+            line,
+            ring_buffer,
+            ring_sink,
+            started,
+            polygon,
+            segments,
+            ring,
+            point_mode,
+            ring_lines,
+        }
     }
 
     fn start_polygon(&mut self) {
-        if !self.started { self.sink.polygon_start(); self.started = true }
+        if !self.started {
+            self.sink.polygon_start();
+            self.started = true
+        }
     }
 
     fn ring_end(&mut self) {
         if let Some(&first) = self.ring.first() {
-            self.ring_sink.point(&mut self.ring_buffer, first.0, first.1);
+            self.ring_sink
+                .point(&mut self.ring_buffer, first.0, first.1);
         }
         self.ring_sink.line_end(&mut self.ring_buffer);
         let clean = self.ring_sink.clean();
         let mut segs = self.ring_buffer.result();
         let n = segs.len();
         self.polygon.push(std::mem::take(&mut self.ring));
-        if n == 0 { return }
+        if n == 0 {
+            return;
+        }
         if clean & 1 == 1 {
             let seg = &segs[0];
             if seg.len() > 1 {
@@ -311,7 +399,8 @@ impl<C: ClipSpec> Clip<C> {
                 let first = segs.remove(0);
                 segs.last_mut().unwrap().extend(first);
             }
-            self.segments.extend(segs.into_iter().filter(|sg| sg.len() > 1));
+            self.segments
+                .extend(segs.into_iter().filter(|sg| sg.len() > 1));
         }
     }
 }
@@ -319,7 +408,11 @@ impl<C: ClipSpec> Clip<C> {
 impl<C: ClipSpec> Stream for Clip<C> {
     fn point(&mut self, l: f64, p: f64, _m: u8) {
         match self.point_mode {
-            PointMode::Point => if self.spec.visible(l, p) { self.sink.point(l, p, 0) },
+            PointMode::Point => {
+                if self.spec.visible(l, p) {
+                    self.sink.point(l, p, 0)
+                }
+            }
             PointMode::Line => self.line.point(&mut *self.sink, l, p),
             PointMode::Ring => {
                 self.ring.push((l, p));
@@ -358,17 +451,27 @@ impl<C: ClipSpec> Stream for Clip<C> {
         if !segs.is_empty() {
             self.start_polygon();
             let spec = &self.spec;
-            let mut interp = |f: Option<(f64, f64)>, t: Option<(f64, f64)>, d: f64, s: &mut dyn Stream| {
-                spec.interpolate(f, t, d, s)
-            };
-            rejoin(segs, &compare_intersection, inside, &mut interp, &mut *self.sink);
+            let mut interp =
+                |f: Option<(f64, f64)>, t: Option<(f64, f64)>, d: f64, s: &mut dyn Stream| {
+                    spec.interpolate(f, t, d, s)
+                };
+            rejoin(
+                segs,
+                &compare_intersection,
+                inside,
+                &mut interp,
+                &mut *self.sink,
+            );
         } else if inside {
             self.start_polygon();
             self.sink.line_start();
             self.spec.interpolate(None, None, 1.0, &mut *self.sink);
             self.sink.line_end();
         }
-        if self.started { self.sink.polygon_end(); self.started = false }
+        if self.started {
+            self.sink.polygon_end();
+            self.started = false
+        }
         self.segments.clear();
         self.polygon.clear();
     }
@@ -385,10 +488,10 @@ impl<C: ClipSpec> Stream for Clip<C> {
 
 /// `eas-geo--antimeridian-intersect'.
 fn antimeridian_intersect(l0: f64, p0: f64, l1: f64, p1: f64) -> f64 {
-    let s = (l0 - l1).sin();
+    let s = (l0 - l1).lsin();
     if s.abs() > EPS {
-        let (c0, c1) = (p0.cos(), p1.cos());
-        ((p0.sin() * c1 * l1.sin() - p1.sin() * c0 * l0.sin()) / (c0 * c1 * s)).atan()
+        let (c0, c1) = (p0.lcos(), p1.lcos());
+        ((p0.lsin() * c1 * l1.lsin() - p1.lsin() * c0 * l0.lsin()) / (c0 * c1 * s)).atan()
     } else {
         (p0 + p1) / 2.0
     }
@@ -413,7 +516,11 @@ impl LineCutter for AntimeridianLine {
         let delta = (l1 - self.l0).abs();
         if (delta - PI).abs() < EPS {
             // crosses a pole
-            self.p0 = if (self.p0 + p1) / 2.0 > 0.0 { HALF_PI } else { -HALF_PI };
+            self.p0 = if (self.p0 + p1) / 2.0 > 0.0 {
+                HALF_PI
+            } else {
+                -HALF_PI
+            };
             s.point(self.l0, self.p0, 0);
             s.point(self.sign0, self.p0, 0);
             s.line_end();
@@ -444,18 +551,33 @@ impl LineCutter for AntimeridianLine {
         s.line_end();
         (self.l0, self.p0) = (f64::NAN, f64::NAN);
     }
-    fn clean(&self) -> i32 { 2 - self.clean }
+    fn clean(&self) -> i32 {
+        2 - self.clean
+    }
 }
 
 struct Antimeridian;
 
 impl ClipSpec for Antimeridian {
     type Cutter = AntimeridianLine;
-    fn visible(&self, _l: f64, _p: f64) -> bool { true }
-    fn cutter(&self) -> AntimeridianLine {
-        AntimeridianLine { l0: f64::NAN, p0: f64::NAN, sign0: f64::NAN, clean: 1 }
+    fn visible(&self, _l: f64, _p: f64) -> bool {
+        true
     }
-    fn interpolate(&self, from: Option<(f64, f64)>, to: Option<(f64, f64)>, direction: f64, s: &mut dyn Stream) {
+    fn cutter(&self) -> AntimeridianLine {
+        AntimeridianLine {
+            l0: f64::NAN,
+            p0: f64::NAN,
+            sign0: f64::NAN,
+            clean: 1,
+        }
+    }
+    fn interpolate(
+        &self,
+        from: Option<(f64, f64)>,
+        to: Option<(f64, f64)>,
+        direction: f64,
+        s: &mut dyn Stream,
+    ) {
         match (from, to) {
             (Some(from), Some(to)) => {
                 if (from.0 - to.0).abs() > EPS {
@@ -470,14 +592,25 @@ impl ClipSpec for Antimeridian {
             }
             _ => {
                 let (phi, pi) = (direction * HALF_PI, PI);
-                for (x, y) in [(-pi, phi), (0.0, phi), (pi, phi), (pi, 0.0), (pi, -phi), (0.0, -phi),
-                               (-pi, -phi), (-pi, 0.0), (-pi, phi)] {
+                for (x, y) in [
+                    (-pi, phi),
+                    (0.0, phi),
+                    (pi, phi),
+                    (pi, 0.0),
+                    (pi, -phi),
+                    (0.0, -phi),
+                    (-pi, -phi),
+                    (-pi, 0.0),
+                    (-pi, phi),
+                ] {
                     s.point(x, y, 0);
                 }
             }
         }
     }
-    fn start(&self) -> (f64, f64) { (-PI, -HALF_PI) }
+    fn start(&self) -> (f64, f64) {
+        (-PI, -HALF_PI)
+    }
 }
 
 /// `eas-geo-clip-antimeridian' into SINK.

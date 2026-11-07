@@ -6,6 +6,7 @@
 //! Every expression keeps the Elisp's operand order (Elisp arithmetic is
 //! left-associative) so the results are bit-identical.
 
+use crate::math::Libm;
 use crate::math::{acos, lmax, EPS, HALF_PI, RAD};
 use crate::raw_extra as ex;
 use std::sync::Arc;
@@ -18,20 +19,26 @@ pub type RawFn = Box<dyn Fn(f64, f64) -> (f64, f64) + Send + Sync>;
 /// `eas-geo-raw-azimuthal' with radial SCALE.
 #[inline]
 fn azimuthal(scale: impl Fn(f64) -> f64, x: f64, y: f64) -> (f64, f64) {
-    let cx = x.cos();
-    let cy = y.cos();
+    let cx = x.lcos();
+    let cy = y.lcos();
     let k = scale(cx * cy);
     if k == f64::INFINITY {
         (2.0, 0.0)
     } else {
-        (k * cy * x.sin(), k * y.sin())
+        (k * cy * x.lsin(), k * y.lsin())
     }
 }
 
 /// `eas-geo-raw-azimuthal-equal-area'.
 pub fn azimuthal_equal_area(x: f64, y: f64) -> (f64, f64) {
     azimuthal(
-        |c| if c == -1.0 { f64::INFINITY } else { (2.0 / (1.0 + c)).sqrt() },
+        |c| {
+            if c == -1.0 {
+                f64::INFINITY
+            } else {
+                (2.0 / (1.0 + c)).sqrt()
+            }
+        },
         x,
         y,
     )
@@ -45,7 +52,7 @@ pub fn azimuthal_equidistant(x: f64, y: f64) -> (f64, f64) {
             if c == 0.0 {
                 0.0
             } else {
-                c / c.sin()
+                c / c.lsin()
             }
         },
         x,
@@ -66,19 +73,19 @@ pub fn transverse_mercator(l: f64, p: f64) -> (f64, f64) {
 }
 
 pub fn orthographic(x: f64, y: f64) -> (f64, f64) {
-    (y.cos() * x.sin(), y.sin())
+    (y.lcos() * x.lsin(), y.lsin())
 }
 
 pub fn gnomonic(x: f64, y: f64) -> (f64, f64) {
-    let cy = y.cos();
-    let k = x.cos() * cy;
-    ((cy * x.sin()) / k, y.sin() / k)
+    let cy = y.lcos();
+    let k = x.lcos() * cy;
+    ((cy * x.lsin()) / k, y.lsin() / k)
 }
 
 pub fn stereographic(x: f64, y: f64) -> (f64, f64) {
-    let cy = y.cos();
-    let k = 1.0 + x.cos() * cy;
-    ((cy * x.sin()) / k, y.sin() / k)
+    let cy = y.lcos();
+    let k = 1.0 + x.lcos() * cy;
+    ((cy * x.lsin()) / k, y.lsin() / k)
 }
 
 pub fn equal_earth(l: f64, p: f64) -> (f64, f64) {
@@ -87,11 +94,11 @@ pub fn equal_earth(l: f64, p: f64) -> (f64, f64) {
     let a3 = 0.000893;
     let a4 = 0.003796;
     let m = 3.0f64.sqrt() / 2.0;
-    let th = crate::math::asin(m * p.sin());
+    let th = crate::math::asin(m * p.lsin());
     let t2 = th * th;
     let t6 = t2 * t2 * t2;
     (
-        (l * th.cos()) / (m * (a1 + 3.0 * a2 * t2 + t6 * (7.0 * a3 + 9.0 * a4 * t2))),
+        (l * th.lcos()) / (m * (a1 + 3.0 * a2 * t2 + t6 * (7.0 * a3 + 9.0 * a4 * t2))),
         th * (a1 + a2 * t2 + t6 * (a3 + a4 * t2)),
     )
 }
@@ -107,18 +114,18 @@ pub fn natural_earth1(l: f64, p: f64) -> (f64, f64) {
 
 /// `eas-geo-raw-conic-equal-area' for parallels Y0 Y1 (radians).
 pub fn conic_equal_area(y0: f64, y1: f64) -> RawFn {
-    let sy0 = y0.sin();
-    let n = (sy0 + y1.sin()) / 2.0;
+    let sy0 = y0.lsin();
+    let n = (sy0 + y1.lsin()) / 2.0;
     if n.abs() < EPS {
-        let cp = y0.cos();
-        Box::new(move |l, p| (l * cp, p.sin() / cp))
+        let cp = y0.lcos();
+        Box::new(move |l, p| (l * cp, p.lsin() / cp))
     } else {
         let c = 1.0 + sy0 * (2.0 * n - sy0);
         let r0 = c.sqrt() / n;
         Box::new(move |x, y| {
-            let r = lmax(0.0, c - 2.0 * n * y.sin()).sqrt() / n;
+            let r = lmax(0.0, c - 2.0 * n * y.lsin()).sqrt() / n;
             let x = x * n;
-            (r * x.sin(), r0 - r * x.cos())
+            (r * x.lsin(), r0 - r * x.lcos())
         })
     }
 }
@@ -130,11 +137,11 @@ fn tany(y: f64) -> f64 {
 
 /// `eas-geo-raw-conic-conformal' for parallels Y0 Y1 (radians).
 pub fn conic_conformal(y0: f64, y1: f64) -> RawFn {
-    let cy0 = y0.cos();
+    let cy0 = y0.lcos();
     let n = if y0 == y1 {
-        y0.sin()
+        y0.lsin()
     } else {
-        (cy0 / y1.cos()).ln() / (tany(y1) / tany(y0)).ln()
+        (cy0 / y1.lcos()).ln() / (tany(y1) / tany(y0)).ln()
     };
     if n == 0.0 {
         return Box::new(mercator);
@@ -150,14 +157,18 @@ pub fn conic_conformal(y0: f64, y1: f64) -> RawFn {
             y = HALF_PI - EPS;
         }
         let r = f / tany(y).powf(n);
-        (r * (n * x).sin(), f - r * (n * x).cos())
+        (r * (n * x).lsin(), f - r * (n * x).lcos())
     })
 }
 
 /// `eas-geo-raw-conic-equidistant' for parallels Y0 Y1 (radians).
 pub fn conic_equidistant(y0: f64, y1: f64) -> RawFn {
-    let cy0 = y0.cos();
-    let n = if y0 == y1 { y0.sin() } else { (cy0 - y1.cos()) / (y1 - y0) };
+    let cy0 = y0.lcos();
+    let n = if y0 == y1 {
+        y0.lsin()
+    } else {
+        (cy0 - y1.lcos()) / (y1 - y0)
+    };
     if n.abs() < EPS {
         return Box::new(equirectangular);
     }
@@ -165,7 +176,7 @@ pub fn conic_equidistant(y0: f64, y1: f64) -> RawFn {
     Box::new(move |x, y| {
         let gy = g - y;
         let nx = n * x;
-        (gy * nx.sin(), g - gy * nx.cos())
+        (gy * nx.lsin(), g - gy * nx.lcos())
     })
 }
 
@@ -278,7 +289,12 @@ pub fn interrupt_sphere(name: &str) -> Option<Vec<(f64, f64)>> {
     for lb in &lobes.0 {
         let (l0, p0, p1, l2, p2) = (lb[0].0, lb[0].1, lb[1].1, lb[2].0, lb[2].1);
         interp(
-            [(l0 + e, p0 + e), (l0 + e, p1 - e), (l2 - e, p1 - e), (l2 - e, p2 + e)],
+            [
+                (l0 + e, p0 + e),
+                (l0 + e, p1 - e),
+                (l2 - e, p1 - e),
+                (l2 - e, p2 + e),
+            ],
             30,
             &mut out,
         );
@@ -286,7 +302,12 @@ pub fn interrupt_sphere(name: &str) -> Option<Vec<(f64, f64)>> {
     for lb in lobes.1.iter().rev() {
         let (l0, p0, p1, l2, p2) = (lb[0].0, lb[0].1, lb[1].1, lb[2].0, lb[2].1);
         interp(
-            [(l2 - e, p2 - e), (l2 - e, p1 + e), (l0 + e, p1 + e), (l0 + e, p0 - e)],
+            [
+                (l2 - e, p2 - e),
+                (l2 - e, p1 + e),
+                (l0 + e, p1 + e),
+                (l0 + e, p0 - e),
+            ],
             30,
             &mut out,
         );

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //! Adaptive resampling, rotation and recorded streams (eas-geo-stream.el).
 
+use crate::math::Libm;
 use crate::math::{asin, cartesian, Rotation, EPS, RAD};
 use crate::stream::{BoxStream, Stream};
 use std::sync::Arc;
@@ -15,7 +16,7 @@ pub type ProjectRc = Arc<dyn Project + Send + Sync>;
 const MAX_DEPTH: i32 = 16;
 
 fn cos_min_distance() -> f64 {
-    (30.0 * RAD).cos()
+    (30.0 * RAD).lcos()
 }
 
 /// `eas-geo--resample-far'.
@@ -77,7 +78,14 @@ fn resample_line(
             let a = a / m;
             let b = b / m;
             let delta4 = 4.0 * delta2;
-            let e2 = End { x: x2, y: y2, l: l2, a, b, c };
+            let e2 = End {
+                x: x2,
+                y: y2,
+                l: l2,
+                a,
+                b,
+                c,
+            };
             if far(delta4, depth, e0.x, e0.y, x2, y2) {
                 resample_line(project, delta2, cmin, e0, e2, depth, sink);
             }
@@ -113,7 +121,14 @@ pub struct Resample {
 
 impl Resample {
     pub fn new(project: ProjectRc, delta2: f64, sink: BoxStream) -> Resample {
-        let zero = End { x: 0.0, y: 0.0, l: 0.0, a: 0.0, b: 0.0, c: 0.0 };
+        let zero = End {
+            x: 0.0,
+            y: 0.0,
+            l: 0.0,
+            a: 0.0,
+            b: 0.0,
+            c: 0.0,
+        };
         Resample {
             project,
             delta2,
@@ -121,7 +136,11 @@ impl Resample {
             sink,
             plain_only: !(delta2 > 0.0),
             e00: zero,
-            e0: End { x: f64::NAN, y: f64::NAN, ..zero },
+            e0: End {
+                x: f64::NAN,
+                y: f64::NAN,
+                ..zero
+            },
             point_mode: PointMode::Plain,
             ring_start: false,
             ring_end: false,
@@ -131,8 +150,23 @@ impl Resample {
     fn line_point(&mut self, l: f64, p: f64) {
         let c = cartesian(l, p);
         let (x, y) = self.project.project(l, p);
-        let e1 = End { x, y, l, a: c[0], b: c[1], c: c[2] };
-        resample_line(&*self.project, self.delta2, self.cmin, self.e0, e1, MAX_DEPTH, &mut *self.sink);
+        let e1 = End {
+            x,
+            y,
+            l,
+            a: c[0],
+            b: c[1],
+            c: c[2],
+        };
+        resample_line(
+            &*self.project,
+            self.delta2,
+            self.cmin,
+            self.e0,
+            e1,
+            MAX_DEPTH,
+            &mut *self.sink,
+        );
         self.e0 = e1;
         self.sink.point(x, y, 0);
     }
@@ -187,7 +221,15 @@ impl Stream for Resample {
             return self.sink.line_end();
         }
         if self.ring_end {
-            resample_line(&*self.project, self.delta2, self.cmin, self.e0, self.e00, MAX_DEPTH, &mut *self.sink);
+            resample_line(
+                &*self.project,
+                self.delta2,
+                self.cmin,
+                self.e0,
+                self.e00,
+                MAX_DEPTH,
+                &mut *self.sink,
+            );
             self.ring_end = false;
         }
         self.plain_line_end();
@@ -283,8 +325,8 @@ impl Stream for Recorder {
             .line
             .iter()
             .map(|&(l, p)| {
-                let c = p.cos();
-                [l, p, c * l.cos(), c * l.sin(), p.sin()]
+                let c = p.lcos();
+                [l, p, c * l.lcos(), c * l.lsin(), p.lsin()]
             })
             .collect();
         self.events.push(Event::Line(flat));
@@ -305,9 +347,20 @@ impl Stream for Recorder {
 /// `eas-geo-replay': EVENTS through d3's resampling of PROJECT into SINK.
 pub fn replay(events: &[Event], project: &dyn Project, delta2: f64, sink: &mut dyn Stream) {
     let cmin = cos_min_distance();
-    let zero = End { x: 0.0, y: 0.0, l: 0.0, a: 0.0, b: 0.0, c: 0.0 };
+    let zero = End {
+        x: 0.0,
+        y: 0.0,
+        l: 0.0,
+        a: 0.0,
+        b: 0.0,
+        c: 0.0,
+    };
     let mut e00 = zero;
-    let mut e0 = End { x: f64::NAN, y: f64::NAN, ..zero };
+    let mut e0 = End {
+        x: f64::NAN,
+        y: f64::NAN,
+        ..zero
+    };
     let mut ring = false;
     let delta4 = 4.0 * delta2;
     let depth = MAX_DEPTH;
@@ -318,7 +371,14 @@ pub fn replay(events: &[Event], project: &dyn Project, delta2: f64, sink: &mut d
                 sink.line_start();
                 for (i, pt) in flat.iter().enumerate() {
                     let (x, y) = project.project(pt[0], pt[1]);
-                    let e1 = End { x, y, l: pt[0], a: pt[2], b: pt[3], c: pt[4] };
+                    let e1 = End {
+                        x,
+                        y,
+                        l: pt[0],
+                        a: pt[2],
+                        b: pt[3],
+                        c: pt[4],
+                    };
                     if far(delta4, depth, e0.x, e0.y, x, y) {
                         resample_line(project, delta2, cmin, e0, e1, depth, sink);
                     }

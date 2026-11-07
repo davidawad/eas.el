@@ -30,7 +30,11 @@ fn same(a: f64, b: f64) -> bool {
 fn ev_eq(a: &Ev, b: &Ev) -> bool {
     match (a, b) {
         (Ev::P(x, y, m), Ev::P(u, v, n)) => same(*x, *u) && same(*y, *v) && m == n,
-        (Ev::Ls, Ev::Ls) | (Ev::Le, Ev::Le) | (Ev::Ps, Ev::Ps) | (Ev::Pe, Ev::Pe) | (Ev::Sph, Ev::Sph) => true,
+        (Ev::Ls, Ev::Ls)
+        | (Ev::Le, Ev::Le)
+        | (Ev::Ps, Ev::Ps)
+        | (Ev::Pe, Ev::Pe)
+        | (Ev::Sph, Ev::Sph) => true,
         _ => false,
     }
 }
@@ -77,7 +81,9 @@ fn run(make: impl FnOnce(BoxStream) -> BoxStream, input: &[Ev]) -> Vec<Ev> {
     let mut clip = make(Box::new(Rec(acc.clone())));
     feed(&mut *clip, input);
     drop(clip);
-    Rc::try_unwrap(acc).map(|c| c.into_inner()).unwrap_or_default()
+    Rc::try_unwrap(acc)
+        .map(|c| c.into_inner())
+        .unwrap_or_default()
 }
 
 fn pf(s: &str) -> f64 {
@@ -112,12 +118,20 @@ fn parse_ev(t: &[&str]) -> Ev {
 
 /// The Elisp reference: QUICK for the hand-made cases, else the world.
 fn generate(quick: bool) -> Option<String> {
-    let src = std::env::var("EAS_SRC").unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/../src").to_string());
+    let src = std::env::var("EAS_SRC")
+        .unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/../src").to_string());
     if !std::path::Path::new(&src).join("eas-geo-clip.el").exists() {
-        crate::stream::test_skip("clip reference tests", &format!("no eas-geo-clip.el under {src}"));
+        crate::stream::test_skip(
+            "clip reference tests",
+            &format!("no eas-geo-clip.el under {src}"),
+        );
         return None;
     }
-    let dir = std::env::temp_dir().join(format!("eas-geo-clip-test-{}-{}", std::process::id(), quick));
+    let dir = std::env::temp_dir().join(format!(
+        "eas-geo-clip-test-{}-{}",
+        std::process::id(),
+        quick
+    ));
     std::fs::create_dir_all(&dir).ok()?;
     let gen = dir.join("gen.el");
     let out = dir.join("out.txt");
@@ -126,7 +140,11 @@ fn generate(quick: bool) -> Option<String> {
         .args(["-Q", "--batch", "-L", &src, "-l"])
         .arg(&gen)
         .arg("--eval")
-        .arg(format!("(gen-run {:?} {})", out.to_str()?, if quick { "t" } else { "nil" }))
+        .arg(format!(
+            "(gen-run {:?} {})",
+            out.to_str()?,
+            if quick { "t" } else { "nil" }
+        ))
         .status();
     match status {
         Ok(s) if s.success() => {}
@@ -184,12 +202,26 @@ fn check_cases(cases: &[Case]) -> usize {
         events += c.output.len();
         let n = got.len().min(c.output.len());
         if let Some(i) = (0..n).find(|&i| !ev_eq(&got[i], &c.output[i])) {
-            bad.push(format!("{}: event {i}: rust {:?} elisp {:?}", c.name, got[i], c.output[i]));
+            bad.push(format!(
+                "{}: event {i}: rust {:?} elisp {:?}",
+                c.name, got[i], c.output[i]
+            ));
         } else if got.len() != c.output.len() {
-            bad.push(format!("{}: rust {} events, elisp {}", c.name, got.len(), c.output.len()));
+            bad.push(format!(
+                "{}: rust {} events, elisp {}",
+                c.name,
+                got.len(),
+                c.output.len()
+            ));
         }
     }
-    assert!(bad.is_empty(), "{} of {} cases differ:\n{}", bad.len(), cases.len(), bad.join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} of {} cases differ:\n{}",
+        bad.len(),
+        cases.len(),
+        bad.join("\n")
+    );
     events
 }
 
@@ -218,20 +250,34 @@ fn clips_match_elisp_on_the_rotated_world() {
         match t.first().copied() {
             Some("kpoly") => polys.push(Vec::new()),
             Some("kring") => polys.last_mut().unwrap().push(Vec::new()),
-            Some("kp") => polys.last_mut().unwrap().last_mut().unwrap().push((pf(t[1]), pf(t[2]))),
+            Some("kp") => polys
+                .last_mut()
+                .unwrap()
+                .last_mut()
+                .unwrap()
+                .push((pf(t[1]), pf(t[2]))),
             Some("kq") => {
                 queries += 1;
                 let want = t[3] == "1";
                 let poly = polys.last().unwrap();
                 if polygon_contains(poly, (pf(t[1]), pf(t[2]))) != want {
-                    bad.push(format!("polygon {} point {} {}", polys.len() - 1, t[1], t[2]));
+                    bad.push(format!(
+                        "polygon {} point {} {}",
+                        polys.len() - 1,
+                        t[1],
+                        t[2]
+                    ));
                 }
             }
             _ => {}
         }
     }
     assert!(queries > 3000);
-    assert!(bad.is_empty(), "polygon_contains differs:\n{}", bad.join("\n"));
+    assert!(
+        bad.is_empty(),
+        "polygon_contains differs:\n{}",
+        bad.join("\n")
+    );
 }
 
 #[test]
@@ -244,7 +290,10 @@ fn antimeridian_sphere_walks_the_whole_edge() {
 
 #[test]
 fn rectangle_cuts_a_line() {
-    let got = run(|s| clip_rectangle(0.0, 0.0, 10.0, 10.0, s), &[Ev::Ls, Ev::P(-5.0, 5.0, 0), Ev::P(15.0, 5.0, 0), Ev::Le]);
+    let got = run(
+        |s| clip_rectangle(0.0, 0.0, 10.0, 10.0, s),
+        &[Ev::Ls, Ev::P(-5.0, 5.0, 0), Ev::P(15.0, 5.0, 0), Ev::Le],
+    );
     let want = [Ev::Ls, Ev::P(0.0, 5.0, 0), Ev::P(10.0, 5.0, 0), Ev::Le];
     assert_eq!(got.len(), want.len());
     assert!(got.iter().zip(want.iter()).all(|(a, b)| ev_eq(a, b)));

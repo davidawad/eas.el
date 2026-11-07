@@ -268,6 +268,14 @@ The cached lines equal an uncached render, and a buffer patched with
                               (apply #'propertize (make-string (1+ (random 6)) (aref "ab\u2801\u28ff " (random 5)))
                                      props))))))
 
+(defun eas-text-frames-test--aset (string k char)
+  "A copy of STRING with CHAR at K, keeping every text property.
+Not `aset': neomacs 0.0.20 refuses to store a non-ASCII char into a
+string that is not already holding it (notes/neomacs-aset.md)."
+  (concat (substring string 0 k)
+          (apply #'propertize (string char) (text-properties-at k string))
+          (substring string (1+ k))))
+
 (defun eas-text-frames-test--unfontified ()
   "The buffer's text without the `fontified' redisplay adds."
   (let ((s (buffer-string))) (remove-list-of-text-properties 0 (length s) '(fontified) s) s))
@@ -287,8 +295,9 @@ model (and its shadows)."
                                        (1 (let ((copy (copy-sequence line)))
                                             (when (> (length copy) 0)
                                               (dotimes (_ (1+ (random 3)))
-                                                (let ((k (random (length copy))))
-                                                  (aset copy k (aref "ab\u2802" (random 3))))))
+                                                (setq copy (eas-text-frames-test--aset
+                                                            copy (random (length copy))
+                                                            (aref "ab\u2802" (random 3))))))
                                             copy))
                                        (_ line))))
         (setq written (+ written (eas-mode-patch-lines lines)))

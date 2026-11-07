@@ -52,7 +52,12 @@ fn check_raw(data: &str) -> (usize, Vec<String>) {
 fn raw_projections_match_elisp() {
     let (n, bad) = check_raw(RAW);
     assert!(n > 2000);
-    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad.join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} mismatches:\n{}",
+        bad.len(),
+        bad.join("\n")
+    );
 }
 
 #[test]
@@ -67,7 +72,12 @@ fn raw_projections_match_elisp_reference_file() {
     let data = std::fs::read_to_string(path).unwrap();
     let (n, bad) = check_raw(&data);
     eprintln!("{n} reference points");
-    assert!(bad.is_empty(), "{} mismatches:\n{}", bad.len(), bad.join("\n"));
+    assert!(
+        bad.is_empty(),
+        "{} mismatches:\n{}",
+        bad.len(),
+        bad.join("\n")
+    );
 }
 
 #[test]
@@ -142,7 +152,11 @@ fn berghaus_sphere_matches_elisp() {
 
 #[test]
 fn interrupt_spheres_match_elisp() {
-    for name in ["interruptedSinusoidal", "interruptedMollweide", "interruptedMollweideHemispheres"] {
+    for name in [
+        "interruptedSinusoidal",
+        "interruptedMollweide",
+        "interruptedMollweideHemispheres",
+    ] {
         let got: Vec<String> = interrupt_sphere(name)
             .unwrap()
             .iter()

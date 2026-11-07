@@ -98,8 +98,10 @@
            (eas-live-visible-function (lambda (_) visible))
            (view (eas-view-open "clock" :bindings (eas-template-example "clock") :id "clock"))
            (play (eas-play-attach view)))
+      (setq visible t)
       (eas-play-start view)
       (should (eas-play-timer play))
+      (setq visible nil)
       (should (= 0 (eas-live-test--compiles (lambda () (eas-play--timer-fire "clock")))))
       (should-not (eas-play-timer play))
       (should (= (eas-play-skipped play) 1))
@@ -249,3 +251,68 @@ time (best of several alternating runs) as a looser guard."
 
 (provide 'eas-live-test)
 ;;; eas-live-test.el ends here
+
+(ert-deftest eas-live-play-start-hidden-creates-no-timer ()
+  "Starting a play whose view is hidden schedules nothing until it is shown."
+  (eas-live-test--with
+    (let* ((visible nil)
+           (eas-play-visible-function (lambda (_) visible))
+           (eas-live-visible-function (lambda (_) visible))
+           (view (eas-view-open "clock" :bindings (eas-template-example "clock") :id "clock"))
+           (play (eas-play-attach view)))
+      (eas-play-start view)
+      (should-not (eas-play-timer play))
+      (should (gethash "clock" eas-live--hidden))
+      (setq visible t)
+      (eas-live-wake)
+      (should (eas-play-timer play))
+      (eas-play-stop view))))
+
+(ert-deftest eas-live-restart-and-reload-never-duplicate-play-timers ()
+  "Restarting, or losing the play's timer pointer (a reload), leaves one timer."
+  (eas-live-test--with
+    (let* ((eas-play-visible-function (lambda (_) t))
+           (view (eas-view-open "clock" :bindings (eas-template-example "clock") :id "clock"))
+           (play (eas-play-attach view))
+           (count (lambda ()
+                    (seq-count (lambda (tm) (and (eq (timer--function tm) #'eas-play--timer-fire)
+                                                 (equal (car (timer--args tm)) "clock")))
+                               timer-list))))
+      (unwind-protect
+          (progn (eas-play-start view)
+                 (eas-play-start view)
+                 (should (= 1 (funcall count)))
+                 ;; Simulate a reload that forgot the timer.
+                 (setf (eas-play-timer play) nil)
+                 (eas-play-start view)
+                 (should (= 1 (funcall count))))
+        (eas-play-stop view))
+      (should (= 0 (funcall count))))))
+
+(ert-deftest eas-live-wake-soon-keeps-one-timer ()
+  "A storm of window hooks leaves one pending wake timer."
+  (eas-live-test--with
+    (let ((eas-live--wake-timer nil))
+      (unwind-protect
+          (progn (eas-live-defer (eas-view-open (eas-json-encode eas-live-test--ladder) :id "w1"))
+                 (dotimes (_ 5) (eas-live--wake-soon))
+                 (should (= 1 (seq-count (lambda (tm) (eq (timer--function tm) #'eas-live--wake))
+                                         timer-list))))
+        (cancel-function-timers #'eas-live--wake)))))
+
+(ert-deftest eas-live-wake-caps-views-per-call ()
+  "Only `eas-live-wake-max' hidden views are drawn per wake; the rest wait."
+  (eas-live-test--with
+    (let ((eas-live-wake-max 2) (seen nil))
+      (dotimes (i 5)
+        (eas-live-defer (eas-view-open (eas-json-encode eas-live-test--ladder)
+                                       :id (format "c%d" i))))
+      (let ((f (lambda (v) (push (eas-view-id v) seen))))
+        (add-hook 'eas-live-wake-functions f)
+        (unwind-protect
+            (progn (should (= 2 (length (eas-live-wake))))
+                   (should (= 3 (hash-table-count eas-live--hidden)))
+                   (eas-live-wake) (eas-live-wake)
+                   (should (= 5 (length seen)))
+                   (should (= 0 (hash-table-count eas-live--hidden))))
+          (remove-hook 'eas-live-wake-functions f))))))

@@ -276,11 +276,20 @@ Return the new inspect, or nil when no handler listens to KEY."
   (let ((buffer (eas-view-buffer (eas-view-get view))))
     (and (buffer-live-p buffer) (get-buffer-window buffer 'visible) t)))
 
+(defun eas-play--cancel-orphans (id)
+  "Cancel every `eas-play--timer-fire' timer whose argument is view ID."
+  (dolist (tm timer-list)
+    (when (and (eq (timer--function tm) #'eas-play--timer-fire)
+               (equal (car (timer--args tm)) id))
+      (cancel-timer tm))))
+
 (defun eas-play--cancel (play)
   "Cancel PLAY's timer."
   (when (eas-play-timer play)
     (cancel-timer (eas-play-timer play))
-    (setf (eas-play-timer play) nil)))
+    (setf (eas-play-timer play) nil))
+  ;; Reloading this file can orphan a timer its play no longer points to.
+  (eas-play--cancel-orphans (eas-play-view play)))
 
 (defun eas-play--timer-fire (id)
   "The timer callback of view ID: tick when visible, else skip."
@@ -307,8 +316,11 @@ declares no timer."
   (let ((play (eas-play--ensure view)))
     (when (eas-play-interval play)
       (eas-play--cancel play)
-      (setf (eas-play-timer play)
-            (run-at-time 0 (/ (eas-play-interval play) 1000.0) #'eas-play--timer-fire (eas-play-view play)))
+      (if (funcall eas-play-visible-function (eas-play-view play))
+          (setf (eas-play-timer play)
+                (run-at-time 0 (/ (eas-play-interval play) 1000.0) #'eas-play--timer-fire (eas-play-view play)))
+        ;; Hidden: no timer at all until a window shows the view.
+        (eas-live-defer (eas-play-view play)))
       play)))
 
 (defun eas-play--wake (view)

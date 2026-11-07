@@ -531,7 +531,10 @@ hidden chart buffers forever."
 
 (defun eas-mode--reaper-start ()
   "Start the hidden chart buffer reaper unless it is running."
-  (unless (or noninteractive (timerp eas-mode--reaper))
+  (unless (or noninteractive (and (timerp eas-mode--reaper)
+                                  (memq eas-mode--reaper timer-idle-list)))
+    ;; A reload loses the variable's timer; never leave the old one running.
+    (cancel-function-timers #'eas-mode-reap-hidden)
     (setq eas-mode--reaper (run-with-idle-timer 60 t #'eas-mode-reap-hidden))))
 
 (defun eas-mode-reap-hidden (&optional now)

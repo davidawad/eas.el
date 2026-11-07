@@ -71,24 +71,46 @@ In batch Emacs (no display) every view counts as visible."
   "Note that hidden VIEW skipped work and wants `eas-live-wake'."
   (puthash (eas-view-id (eas-view-get view)) t eas-live--hidden))
 
+(defvar eas-live-wake-max 4
+  "Most deferred views `eas-live-wake' draws per call.
+The rest stay deferred and a timer wakes them next, so showing many
+hidden views at once never makes one long pause.")
+
+(defvar eas-live--wake-timer nil
+  "The pending `eas-live-wake' timer, or nil: at most one runs.")
+
 (defun eas-live-wake (&optional _)
   "Run `eas-live-wake-functions' for deferred views that are visible now.
-Called from window hooks with an ignored argument."
-  (let (woken)
+At most `eas-live-wake-max' views are drawn per call; when more are
+visible and waiting, another wake is scheduled.  Called from window
+hooks with an ignored argument.  Return the ids handled."
+  (let (woken (drawn 0) more)
     (maphash (lambda (id _)
                (let ((view (gethash id eas-views)))
                  (cond ((null view) (push id woken))
-                       ((eas-live-visible-p view)
-                        (push id woken)
-                        (run-hook-with-args 'eas-live-wake-functions view)))))
+                       ((not (eas-live-visible-p view)))
+                       ((>= drawn eas-live-wake-max) (setq more t))
+                       (t (cl-incf drawn)
+                          (push id woken)
+                          (run-hook-with-args 'eas-live-wake-functions view)))))
              eas-live--hidden)
     (dolist (id woken) (remhash id eas-live--hidden))
+    (when (and more (not noninteractive)) (eas-live--wake-soon))
     woken))
 
 (defun eas-live--wake-soon (&optional _)
-  "Wake deferred views from a timer: window hooks run inside redisplay."
+  "Wake deferred views from a timer: window hooks run inside redisplay.
+Keyed on `eas-live--wake-timer' and on the function itself, so hook
+storms and reloading this file never stack timers."
   (when (> (hash-table-count eas-live--hidden) 0)
-    (run-at-time 0 nil #'eas-live-wake)))
+    (when (timerp eas-live--wake-timer) (cancel-timer eas-live--wake-timer))
+    (cancel-function-timers #'eas-live--wake)
+    (setq eas-live--wake-timer (run-at-time 0 nil #'eas-live--wake))))
+
+(defun eas-live--wake ()
+  "Timer body of `eas-live--wake-soon'."
+  (setq eas-live--wake-timer nil)
+  (eas-live-wake))
 
 (add-hook 'window-buffer-change-functions #'eas-live--wake-soon)
 (add-hook 'window-configuration-change-hook #'eas-live--wake-soon)

@@ -687,7 +687,15 @@ changed (`eas-output-sync')."
 (defun eas-output--timer-sync ()
   "Redisplay, then `eas-output-sync' (from the timer)."
   (setq eas-output--timer nil)
-  (when (> (hash-table-count eas-output--surfaces) 0)
+  (when (and (> (hash-table-count eas-output--surfaces) 0)
+             ;; No surface in a window of a visible frame: nothing to place.
+             (catch 'shown
+               (maphash (lambda (buffer _)
+                          (when (and (bufferp buffer) (buffer-live-p buffer)
+                                     (get-buffer-window buffer 'visible))
+                            (throw 'shown t)))
+                        eas-output--surfaces)
+               nil))
     (redisplay)
     (eas-output-sync)))
 
